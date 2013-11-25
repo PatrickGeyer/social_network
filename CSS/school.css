@@ -1,0 +1,45 @@
+input[type="file"] {
+	font-family: Calibri, Tahoma, Geneva, sans-serif;
+	position: center; 
+	padding-bottom: 50px;
+	top: 1em; 
+	width: 100%;
+	background-color: white;
+	color:red;
+	padding:5;
+}
+
+div.pseudonym{
+	margin-top: 30px;
+	padding: 20px;
+	font-family: Calibri, Tahoma, Geneva, sans-serif;
+	position: center; 
+	top: 1em; 
+	margin-left: 0; 
+	width: 80%;
+	background-color: transparent;
+}
+
+div.about{
+	margin-top: 30px;
+	padding: 20px;
+	font-family: Calibri, Tahoma, Geneva, sans-serif;
+	position: center; 
+	left: 2em; top: 1em; 
+	margin-left: 0; 
+	width: 80%;
+	background-color: rgba(255,255,255,0.5);
+}
+
+img.profilepicture{
+	width:98%;
+	border-style: solid;
+	border-color: rgba(255,255,255,0.5);
+}
+
+
+h1.myheader{
+	top: 1em; 
+	width: 60%;
+	color: white;
+}

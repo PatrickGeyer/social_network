@@ -1,0 +1,48 @@
+div.name_selector{
+	background-color: white;
+	cursor: pointer;
+	min-height: 40px;
+	padding:5px;
+	vertical-align: top;
+	border-bottom: 0px lightgrey dotted;
+}
+
+div.match{
+	background-color: #FAFAFA;
+	cursor: pointer;
+	min-height: 40px;
+	padding:5px;
+	vertical-align: top;
+	border-bottom: 0px lightgrey dotted;
+}
+
+div.name_selector:hover{
+	background-color: #FAFAFA
+}
+
+span.name{
+	margin-left: 5px;
+	font-family: century gothic;
+}
+span.school{
+	margin-left: 5px;
+	font-family: century gothic;
+	color:grey;
+}
+img.profile_picture{
+	background-color:lightgrey; 
+	width:40;
+	height:40px; 
+	float:left;
+}
+a.search_option{
+	color:black;
+	text-decoration: none;
+}
+span.name{
+	color: black;
+	font-weight: thin;
+}
+span.school{
+	font-size: 12px;
+}

@@ -1,0 +1,35 @@
+div.tasks{
+	padding-top:45px;
+	font-family: Calibri, Tahoma, Geneva, sans-serif;
+	width: 60%;
+	padding-bottom: 50px;
+	background-color: transparent;
+}
+div.mytasks{
+	font-family: Calibri, Tahoma, Geneva, sans-serif;
+	top: 1em; 
+	width: 60%;
+	padding-bottom: 50px;
+}
+div.schooltasks{
+	font-family: Calibri, Tahoma, Geneva, sans-serif;
+	top: 1em; 
+	width: 60%;
+	padding-bottom: 50px;
+}
+div.everyonetasks{
+	font-family: Calibri, Tahoma, Geneva, sans-serif;
+	top: 1em; 
+	width: 60%;
+	padding-bottom: 50px;
+}
+
+h1.homeheader{
+	background-color: #F2D9BF;
+	font-family: Calibri, Tahoma, Geneva, sans-serif;
+	width: 60%;
+}
+table.tasks{
+	border-style: solid;
+	text-align: center;
+}

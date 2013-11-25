@@ -1,0 +1,1 @@
+<embed src="http://curvefever.com/play2.php" width="100%" height="98%" frameborder="no" scrolling="no"></embed>

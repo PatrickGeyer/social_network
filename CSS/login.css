@@ -1,0 +1,89 @@
+div.login{
+	font-family: Calibri, Tahoma, Geneva, sans-serif;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	display: inline-block;
+	vertical-align: top;
+}
+
+div.loginbox{
+	top: 0px;
+	right: 50px;
+	position: absolute;
+}
+
+h1.loginheader{
+	font-family: Calibri, Tahoma, Geneva, sans-serif;
+	position: absolute;
+	color: #3578FC;
+	font-size: 3em;
+	left:100px;
+	top: 0;
+	margin:0;
+}
+
+div.container{
+	min-height: 700px;
+	height: 90%;
+	background-color: lightgrey;
+}
+
+div.login_container{
+
+}
+div.CMM{
+	position: fixed;
+	bottom: 0;
+	left:250;
+}
+
+span.name{
+	font-family: century gothic, Tahoma, Geneva, sans-serif;
+	position: fixed;
+	color: lightgrey;
+	font-size: 10em;
+	float: left;
+	font-weight: bold;
+	text-shadow: -1px 0 lightgrey, 0 1px lightgrey, 1px 0 lightgrey, 0 -1px lightgrey;
+}
+
+
+span.about{
+	font-family: century gothic, Tahoma, Geneva, sans-serif;
+	position: absolute;
+	color: black;
+	font-size: 1.2em;
+	left: 100px;
+	top: 135px;
+	margin-right: 550px;
+	max-width: 50%;
+	line-height: 40px;
+}
+
+
+div.signup{
+	font-family: Calibri, Tahoma, Geneva, sans-serif;
+	position: fixed;
+	right: 130px;
+	top: 100px;
+}
+
+div.signupbox{
+	
+}
+h1.signupheader{
+	font-family: century gothic, Tahoma, Geneva, sans-serif;
+	font-size: 2em;
+	font-weight: lighter;
+}
+
+a.loginas{
+	text-decoration:underline;
+	font-size:1em;
+}
+a.loginas:hover{
+	text-decoration:underline;
+	font-size:1em;
+	color:blue;
+}

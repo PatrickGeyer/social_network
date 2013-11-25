@@ -1,0 +1,71 @@
+input[type="file"] {
+	top: 1em; 
+	width: 100%;
+	background-color: white;
+	color:red;
+	padding:5px;
+}
+
+div.settingsbox{
+	
+	position: center; 
+	top: 1em; 	
+	margin-left: 0; 
+	width: 60%;
+	background-color: lightblue;
+}
+
+div.mysettings{
+	position: center; 
+	top: 1em; 
+	margin-left: 0; 
+	width: 80%;
+	background-color: transparent;
+}
+div.profilepicturediv{
+	top: 1em; 
+	width: 80%;
+}
+
+div.about{
+	margin-top: 30px;
+	padding: 20px;
+	position: center; 
+	left: 2em; top: 1em; 
+	margin-left: 0; 
+	width: 80%;
+}
+
+img.profilepicture{
+	width:20%;
+	border: 1px solid grey;
+	border-radius: 35px;
+   	border-top-left-radius: 10px;
+ 	border-bottom-right-radius: 10px;
+}
+
+h1.myheader{
+	background-color: dimgrey;	
+	font-family: Calibri, Tahoma, Geneva, sans-serif;
+	top: 1em; 
+	width: 60%;
+	color: white;
+}
+
+
+div.added_name{
+	text-align: center;
+	background-color: lightblue;
+	padding: 10px;
+}
+
+span.delete_receiver{
+	font-size:1.2em; 
+	color:grey; 
+	cursor:pointer;
+	margin-left: 10px;
+}
+
+span.delete_receiver:hover{
+	color:black;
+}
