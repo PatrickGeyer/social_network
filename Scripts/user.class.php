@@ -1,18 +1,5 @@
 <?php
 include_once('database.class.php');
-if($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['about']))
-{
-	$user = new User;
-	if(!isset($_POST['email']))
-	{
-		$email = $user->getEmail();
-	}
-	else
-	{
-		$email = $_POST['email'];
-	}
-	$user->updateSettings($_POST['about'], $email, $_POST['year']);
-}
 
 class User extends Database
 {
@@ -224,4 +211,18 @@ class User extends Database
 		return $user;
 	}
 }
+if($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['about']))
+{
+	$user = new User;
+	if(!isset($_POST['email']))
+	{
+		$email = $user->getEmail();
+	}
+	else
+	{
+		$email = $_POST['email'];
+	}
+	$user->updateSettings($_POST['about'], $email, $_POST['year']);
+}
+
 ?>

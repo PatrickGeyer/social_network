@@ -199,10 +199,10 @@ $(function()
 <body id="else" class="welcome">
 	<div class="headerbar">
 		<div id="refresh">
-			<!-- <img id='logo' style='position:absolute;left:40px;top:4px;max-height:25px;opacity:0.2;cursor:pointer;' onclick='window.location.assign("home");' src='Images/reallogo.png'></img> -->
+			<img id='logo' style='position:absolute;left:40px;top:4px;max-height:25px;opacity:0.2;cursor:pointer;' onclick='window.location.assign("home");' src='Images/reallogo.png'></img>
 			<div class="navigation">
 				<a href='user?id=<?php echo urlencode(base64_encode($user->getId())); ?>'>
-					<div class="user_info <?php if($page_identifier == "user"){echo "current_page";} ?>" style='cursor:pointer; padding-left:5px; margin-left:-5px;margin-bottom:10px;'>
+					<div class="user_info <?php if($page_identifier == "user"){echo "current_page_user";} ?>" style='cursor:pointer; padding-left:5px; margin-left:-5px;margin-bottom:10px;'>
 						<table style='border-collapse: collapse;'>
 							<tr>
 								<td rowspan='2' style='vertical-align:bottom;'>
@@ -241,7 +241,7 @@ $(function()
 						</li>
 					</ul>
 				</div> -->
-				<div style="position:absolute;left:50px;top:0;">
+				<div style="position:absolute;right:500px;top:0;">
 					<div class="message" id="message_click">
 						<img id="message" class ="message" src='Images/Icons/Icon Pacs/glyph-icons/glyph-icons/PNG/Mail.png'></img>
 						<div id="messagediv" class="popup_div">

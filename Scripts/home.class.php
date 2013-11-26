@@ -115,7 +115,7 @@ class Home extends Database
 		$who_liked_query->execute(array(":activity_id" => $activity['id']));
 		$like_count = $who_liked_query->rowCount();
 		echo '</td>
-		<td style="vertical-align:top; left:0;min-width:50px;">
+		<td style="vertical-align:top; left:0;min-width:100px;">
 		<span class="who_liked_hover" activity_id="'.$activity['id'].'" style="text-decoration:none;" onclick="submitlike('.$activity["id"].', '.$activity['user_id'].' ,1);">
 		<img class="icon" src="Images/Icons/icons/thumb-up.png"></img>
 		<span id='.$activity['id'].'likes>'.$like_count.'</span>

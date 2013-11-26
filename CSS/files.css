@@ -110,13 +110,29 @@ span.files{
   	-moz-transition: width 0.5s ease-in;
   	-o-transition: width 0.5s ease-in;
   	transition: width 0.5s ease-in;
-	margin-top: -4px;
 	width:45px;
 	background-color: red;
 	color: white;
 	margin-right:10px;
+	display: inline-block;
 }
 .player:hover{
-	margin-top: -4px;
 	width:300px;
+}
+
+.audio_info{
+
+}
+.audio_progress_container{
+	width:99%;
+	height:5px;
+	background-color: #EDEDED;
+	border-radius: 5px;
+	cursor: pointer;
+}
+.audio_progress{
+	border-radius: 5px;
+	height:100%;
+	width:0%;
+	background-color: orange;
 }

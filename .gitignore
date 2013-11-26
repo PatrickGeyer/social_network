@@ -219,3 +219,5 @@ pip-log.txt
 #############
 Images/
 Audio/
+User/
+Scripts/config.php

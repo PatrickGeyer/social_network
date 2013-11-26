@@ -457,11 +457,11 @@ table td tr{
 }
 
 .who_liked{
-	position: relative;
-	right:0px;
-	margin-top: 20px;
+	position: absolute;
+	/*left:0px;*/
+	margin-top: 10px;
 	background-color: lightgrey;
-	margin-left: 20px;
+	/*margin-left: 20px;*/
 	padding:10px;
 	display:none;
 	font-size: 12px;
@@ -472,12 +472,12 @@ table td tr{
 	content: '';
 	position: absolute;
 	border-style: solid;
-	border-width: 0px 15px 15px;
+	border-width: 0px 5px 5px;
 	border-color: lightgrey transparent;
 	display: block;
 	width: 0px;
-	top: -15px;
-	left: 0px;
+	top: -5px;
+	left: 15px;
 }
 
 
@@ -486,13 +486,12 @@ div#friends_container{
 	position:fixed; 
 	left:50px;
 	top:200px; 
-	width:198px; 
+	width:199px; 
 	bottom: 0px;
 }
 div#friends_bar{
 	border-top: 1px solid #EDEDED;
 	height: 70%;
-	-webkit-box-shadow: 5px 0px 0px -0px #EDEDED;
 }
 div#friend_load{
 

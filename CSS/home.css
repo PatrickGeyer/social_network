@@ -129,7 +129,7 @@ div.imagewrap{
 	left: 0;	
 }
 td.update{
-	width: 60%;
+	width: 70%;
 	vertical-align: top;
 }
 
@@ -158,7 +158,7 @@ div.inputtext{
 	border:2px solid lightgrey;
 }
 div.friends_bar{
-	width:31;
+	width:31px;
 	background-color: black;
 }
 

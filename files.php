@@ -9,6 +9,10 @@ else
 {
 	$current_dir = "User/Files/".$user->getId()."/";
 }
+if(!is_dir($current_dir))
+{
+	mkdir($current_dir, 0777);
+}
 
 function rrmdir($dir) {
 	if (is_dir($dir)) {
@@ -243,6 +247,45 @@ function stripexts ($filename)
 		   			}, 1000);
 				}
 			});
+		}
+		function audioPlay(id)
+		{
+			var src = $('#image_' + id).attr('src');
+			if(src.indexOf("play") >= 0)
+			{
+				startAudioInfo(id);
+				$("#audio_info_"+id).slideDown();
+				$('#audio_' + id).get(0).play();
+				$('#image_' + id).attr('src', "../Images/pause-button.png");
+			}
+			else
+			{
+				$('#audio_' + id).get(0).pause();
+				$('#image_' + id).attr('src', "../Images/play-button.png");
+			}
+		}
+		function startAudioInfo(id)
+		{
+			$("#audio_" + id).bind('timeupdate', function(){
+                var track_length = $("#audio_" + id).get(0).duration;
+                var secs = $("#audio_" + id).get(0).currentTime;
+                var progress = (secs/track_length) * 100;
+                $("#audio_progress_" + id).css('width', progress + "%");
+            });
+
+			$("#audio_progress_container_" + id).click(function(e)
+            {
+                var x = $(this).offset().left;
+               	var width_click = e.pageX - x;
+               	var width = $(this).width();
+               	var percent_width = (width_click / width) * 100;
+               	$("#audio_progress_" + id).css('width', percent_width + "%");
+
+               	var secs = $("#audio_" + id).get(0).duration;
+               	var new_secs = secs * (percent_width/100);
+
+               	$("#audio_" + id).get(0).currentTime = new_secs;
+            });
 		}
 		</script>
 

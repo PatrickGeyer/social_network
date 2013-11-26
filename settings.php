@@ -103,6 +103,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 	}
 	else
 	{
+		if(!is_dir($dir))
+		{
+			mkdir($dir, 0777);
+		}
 		$handle = opendir($dir);
 		if($_FILES['image']['name'] != "")
 		{

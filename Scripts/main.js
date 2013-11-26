@@ -15,7 +15,6 @@ $(function(){
 		}
 	});
 
-
 	$('body').delegate('div[data-placeholder]', 'keydown keypress input', function() 
 	{
 		if ($(this).html() == "") 
@@ -52,7 +51,7 @@ function alignNavFriend()
 	$('#friends_container').css('left', container_left);
 	var top_height = $('.navigation').offset().top + $('.navigation').height();
 	$('#friends_container').css('top', top_height + 22);
-	$('#friends_container').css('width', 197);
+	$('#friends_container').css('width', 200);
 
 	var height = $('#friend_load').height();
 	$('#friends_bar').css('max-height', height);

@@ -1,7 +1,6 @@
 <?php 
-include_once('welcome.php');
-include_once('chat.php');
-include_once('friends_list.php');
+include_once('Scripts/lock.php');
+$user = new User;
 $profilepicexists = false;
 if(isset($_GET['id']))
 {
@@ -11,6 +10,10 @@ if(isset($_GET['id']))
 		$page_identifier = 'user';
 	}
 }
+include_once('welcome.php');
+include_once('chat.php');
+include_once('friends_list.php');
+
 ?>
 
 <head>

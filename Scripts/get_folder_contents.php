@@ -100,8 +100,11 @@ if($_SERVER['REQUEST_METHOD'] == "POST")
 			echo "<span class='files_actions'>";
 			if($extn == "Audio")
 			{
-				echo '<audio controls="controls" class="player" preload="auto" autobuffer> <source src="'.($dir.$result).'" />
+				$rndm = rand();
+				echo '<audio hidden id="audio_'.$rndm.'" style="display:none;" controls="controls" class="player" preload="auto" autobuffer> <source src="'.($dir.$result).'" />
 				Your browser doesn\'t support the audio element, please download to listen instead...</audio>';
+				echo "<img id='image_".$rndm."' onclick='audioPlay(".$rndm.");' style='position:absolute;height:30px;left:0;margin-left:-40px;' src='../Images/play-button.png'></img>";
+				echo "<div style='display:none;' id='audio_info_".$rndm."' class='audio_info'><div id='audio_progress_container_".$rndm."'class='audio_progress_container'><div id='audio_progress_".$rndm."' class='audio_progress'></div></div></div>";
 			}
 			if($extn != "Folder")
 			{
