@@ -1,7 +1,7 @@
 <?php
-	$dsn = 'mysql:dbname=social_network;host=localhost';
-	$user = 'root';
-	$password = 'Filmaker1';
+	$dsn = '**:dbname=***;host=***';
+	$user = '****';
+	$password = '****';
 
 	try 
 	{
