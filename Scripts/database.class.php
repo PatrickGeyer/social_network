@@ -1,7 +1,7 @@
 <?php
 class Database
 {
-	private $database_user = 'root';
+	private $database_user = 'social_network';
 	private $database_password = 'Filmaker1';
 	private $database_dsn = 'mysql:dbname=social_network;host=localhost';
 	public $database_connection;
