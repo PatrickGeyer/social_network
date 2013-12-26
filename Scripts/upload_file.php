@@ -1,12 +1,13 @@
 <?php
 include_once('lock.php');
+require_once '../Thumbnail/ThumbLib.inc.php';
 
 $tmpFilePath = $_FILES['file']['tmp_name'];
 $savename = preg_replace("/[^A-Za-z0-9.]/", '_', $_FILES['file']['name']);
 $savename = str_replace('/', '_', $savename);
 $savename = str_replace(' ', '_', $savename);
-$savepath = $_POST['dir'];
-$dir = $_SERVER['DOCUMENT_ROOT'].'/'.$_POST['dir'];
+$savepath = 'User/Files/'.$user->getId()."/";
+$parent_folder = $_POST['parent_folder'];
 if (!file_exists($dir)) 
 {
 	mkdir ($dir, 0777, true);
@@ -29,7 +30,7 @@ if($_FILES['file']['error'] > 0)
 		break;
 
 		case 4:
-					//echo "No file was uploaded.";
+			//echo "No file was uploaded.";
 		break;
 
 		case 6:
@@ -55,7 +56,37 @@ else
 	{
 		if(move_uploaded_file($tmpFilePath, "../".$savepath.$_FILES['file']['name']))
 		{
-			echo "success/".$savepath;
+			$thumbsavepath 	= $savepath."thumb_".$_FILES['file']['name'];
+			$iconsavepath 	= $savepath."icon_".$_FILES['file']['name'];
+
+			$type = $files->getType($_FILES['file']['name']);
+			if(strcmp($type, 'Image') === 0)
+			{
+				echo "<Image conversion, ".$type." - ".$_FILES['file']['name'].">";
+				try
+				{
+					$thumb = PhpThumbFactory::create("../".$savepath.$_FILES['file']['name']);
+				}
+				catch(Exception $e)
+				{
+					print_r($e);
+				}
+				$thumb->resize(150);
+				$thumb->save("../".$thumbsavepath);
+				$thumb->resize(20);
+				$thumb->save("../".$iconsavepath);
+			}
+			$sql = "INSERT INTO `files` (user_id, filepath, thumb_filepath, icon_filepath, name, type, parent_folder_id) VALUES (:user_id, :file_path, :thumbsavepath, :iconsavepath,  :name, :type, :parent_folder);";
+			$sql = $database_connection->prepare($sql);
+			$sql->execute(array(
+					":user_id" => $user->getId(), 
+					":file_path" => $savepath.$_FILES['file']['name'], 
+					":thumbsavepath" => $thumbsavepath,
+					":iconsavepath" => $iconsavepath,
+					":name" => $_FILES['file']['name'], 
+					":type" => $files->getType($_FILES['file']['name']), 
+					":parent_folder" => $parent_folder
+			));
 		}
 		else
 		{

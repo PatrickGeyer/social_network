@@ -1,100 +1,142 @@
 <?php
+
 include_once('database.class.php');
 include_once('user.class.php');
 
-class Chat extends Database
-{
-	private $user;
-	public function __construct()
-	{
-		parent::__construct();
-		$this->user = new User;
-	}
-	public function submitChat($aimed, $text)
-	{
-		$text = str_replace("\n", "<br />", $text);
-		if($text == "")
-		{
+class Chat extends Database {
 
-		}
-		else if($aimed == "s" || $aimed == "y")
-		{
-			$sql = "INSERT INTO chat(sender_id, `text`, school_id, sender_year, aimed) VALUES(".$this->user->getId().", '".$text."','".$this->user->getSchoolId()."', ".$this->user->getYear().", '".$aimed."');";
-		}
-		else
-		{
-			$sql = "INSERT INTO chat(group_id, sender_id, `text`) VALUES(".$aimed.", ".$this->user->getId().", '".$text."');";
-		}
-		$sql = $this->database_connection->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-		$sql->execute();
-	}
-	function getContent($chat_identifier)
-	{
-		if($chat_identifier == "y")
-		{
-			$chat_query = "SELECT * FROM chat WHERE school_id = '".$this->user->getSchoolId()."' AND sender_year = ".$this->user->getYear()." AND aimed = 'y';";
-		}	
-		else if($chat_identifier == "s")
-		{
-			$chat_query = "SELECT * FROM chat WHERE school_id = '".$this->user->getSchoolId()."' AND aimed='s';";
-		}
-		else
-		{
-			$chat_query = "SELECT * FROM chat WHERE group_id = ".$chat_identifier.";";
-		}
-		$chat_query = $this->database_connection->prepare($chat_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-		$chat_query->execute();
-		$chat_number = $chat_query->rowCount();
-		$chat_entries = $chat_query->fetchAll(PDO::FETCH_ASSOC);
+    private $user;
 
-		if($chat_number == 0)
-		{
-			echo "<tr class='mychatname'><td class='mychatname'>There are no chat entries here yet!</td></tr>";
-		}
-		foreach($chat_entries as $record)
-		{
-			$online_query = "SELECT online FROM users WHERE id = :id;";
-			$online_query = $this->database_connection->prepare($online_query);
-			$online_query->execute(array(":id" => $record['sender_id']));
-			$onlinefetch = $online_query->fetchColumn();
-			$onlinestatus = $onlinefetch;
-			if($record['sender_id'] == $this->user->getId())
-			{
-				echo "<tr class='mychatname'>";
-				echo "<td class='mychatname'><div class='onlinestatus' style='border-left-color: limegreen;'></div>".$this->user->getName($record['sender_id']).": </td>";
-				echo "</tr><tr class='mychattext'>";
-				echo "<td class='mychattext'>".$record['text']."</td>";
-			}
-			else
-			{
-				echo "<tr class='chatname'>";
-				if($onlinestatus == true)
-				{
-					echo "<td class='chatname'><div class='onlinestatus' style='border-left-color: limegreen;'></div>".$this->user->getName($record['sender_id']).": </td>";
-				}
-				else
-				{
-					echo "<td class='chatname'><div class='onlinestatus' style='border-left-color: orange;'></div>".$this->user->getName($record['sender_id']).": </td>";
-				}
-				echo "</tr>";
-				echo "<tr class='chattext'>";
-				echo "<td class='chattext'>".$record['text']."</td>";
-			}			
-			echo "</tr>";
-		}
-	}
+    public function __construct() {
+        parent::__construct();
+        $this->user = new User;
+    }
+
+    public function submitChat($aimed, $text) {
+        $text = str_replace("\n", "<br />", $text);
+        if ($text == "") {
+            
+        } else if ($aimed == "s" || $aimed == "y") {
+            $sql = "INSERT INTO chat(sender_id, `text`, community_id, sender_year, aimed, time) VALUES(:user_id, :text, :user_community, :user_year, :aimed, :time);";
+            $variables = array(
+                ":user_id" => $this->user->getId(),
+                ":user_community" => $this->user->getCommunityId(),
+                ":user_year" => $this->user->getPosition(),
+                ":text" => $text,
+                ":time" => time(),
+                ":aimed" => $aimed,
+            );
+        } else {
+            $sql = "INSERT INTO chat(sender_id, `text`, group_id, time) VALUES(:user_id, :text, :aimed, :time);";
+            $variables = array(
+                ":user_id" => $this->user->getId(),
+                ":text" => $text,
+                ":time" => time(),
+                ":aimed" => $aimed,
+            );
+        }
+        $sql = $this->database_connection->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $sql->execute($variables);
+    }
+
+    function getContent($chat_identifier, $all = 'false') {
+        $time = time();
+        if ($chat_identifier == "y") {
+            $chat_query = "SELECT * FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND sender_year = " . $this->user->getPosition() . " AND aimed = 'y' ";
+        } else if ($chat_identifier == "s") {
+            $chat_query = "SELECT * FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND aimed='s'";
+        } else {
+            $chat_query = "SELECT * FROM chat WHERE group_id = " . $chat_identifier;
+        }
+        if ($all == 'false') {
+            $chat_query .= " AND time >= " . $time;
+        }
+        $chat_query .= ";";
+        $chat_query = $this->database_connection->prepare($chat_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+
+        if ($all == 'false') {
+            while ((time() - $time) < 30) {
+                $chat_query->execute();
+                $chat_number = $chat_query->rowCount();
+                $chat_entries = $chat_query->fetchAll(PDO::FETCH_ASSOC);
+                if ($chat_number == 0) {
+                    usleep(25000);
+                } else {
+                    foreach ($chat_entries as $record) {
+                        $chat_read_query = "SELECT id FROM chat_read WHERE user_id = :user_id AND chat_id = :chat_id;";
+                        $chat_read_query = $this->database_connection->prepare($chat_read_query);
+                        $chat_read_query->execute(
+                                array(
+                                    ":user_id" => $this->user->getId(),
+                                    ":chat_id" => $record['id'],
+                        ));
+                        $num = $chat_read_query->rowCount();
+                        if ($num == 0) {
+                            $this->chatify($record);
+                            $this->markChatRead($record['id']);
+                        }
+                    }
+                    break;
+                }
+            }
+        } else {
+            $chat_query->execute();
+            $chat_number = $chat_query->rowCount();
+            $chat_entries = $chat_query->fetchAll(PDO::FETCH_ASSOC);
+            if ($chat_number != 0) {
+                foreach ($chat_entries as $record) {
+                    $this->chatify($record);
+                }
+            } else {
+                echo "No chat entries here";
+            }
+        }
+    }
+
+    private function markChatRead($id = NULL) {
+        if ($id != NULL) {
+            $sql = "INSERT INTO chat_read (user_id, chat_id) VALUES (:user_id, :chat_id);";
+            $sql = $this->database_connection->prepare($sql);
+            $sql->execute(
+                    array(
+                        ":user_id" => $this->user->getId(),
+                        ":chat_id" => $id,
+            ));
+        }
+    }
+
+    private function chatify($record) {
+        $online = $this->user->getOnline($record['sender_id']);
+        echo "<li class='single_chat '>";
+        echo "<div class='";
+        if ($record['sender_id'] != $this->user->getId()) {
+            echo "chat_wrapper";
+        } else {
+            echo "chat_my_wrapper";
+        }
+        echo "'>";
+        echo "<table cellspacing='0' cellpadding='0' style='width:100%;'><tr><td style='width:50px;padding-right:5px;'>";
+        echo "<div class='chat_user_profile' style='border-left:2px solid ".($this->user->getOnline($record['sender_id']) == true ? "rgb(28, 184, 65)" : "red")."; float:left;width:40px;height:40px;background-image:url(" . 
+                $this->user->getProfilePicture('chat', $record['sender_id']) . ");background-size:cover;'></div>";
+        echo "</td><td>";
+        echo "<div class='chatname'><span class='user_preview user_preview_name chatname' style='font-size:13px;' user_id='"
+            .$record['sender_id']."'>" . $this->user->getName($record['sender_id']) . "</span></div>";
+        echo "<div class='chattext'>";
+        echo $record['text'];
+        echo "</div>";
+        echo "</td></tr></table></div>";
+        echo "</li>";
+    }
+
 }
-if($_SERVER['REQUEST_METHOD'] == "POST")
-{
-	$chat = new Chat;
-	if(isset($_POST['chat']))
-	{
-		$chat->getContent($_POST['chat']);
-	}
-	if(isset($_POST['action']) && $_POST['action'] == "addchat")
-	{
-		$chat->submitChat($_POST['aimed'], $_POST['chat_text']);
-	}
-}
 
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
+    $chat = new Chat;
+    if (isset($_POST['chat'])) {
+        $chat->getContent($_POST['chat'], $_POST['all']);
+    }
+    if (isset($_POST['action']) && $_POST['action'] == "addchat") {
+        $chat->submitChat($_POST['aimed'], $_POST['chat_text']);
+    }
+}
 ?>
