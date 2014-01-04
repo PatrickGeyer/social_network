@@ -1,0 +1,2 @@
+http://hopto.redirectme.net/login
+http://hopto.redirectme.net/logn?action=school

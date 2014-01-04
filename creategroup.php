@@ -1,15 +1,15 @@
 <?php
-//require_once 'Thumbnail/ThumbLib.inc.php';
-//include_once('Scripts/lock.php');
-//include_once('friends_list.php');
-
 if($_SERVER["REQUEST_METHOD"] == "POST")
 {
 	include_once('Scripts/lock.php');
 
 	$group_name = $_POST['group_name'];
 	$group_about = $_POST['group_about'];
-	$group_type = $_POST['group_type'];
+        if(isset($_POST['group_type'])) {
+            $group_type = $_POST['group_type'];
+        } else {
+            $group_type = 'public';
+        }
 	if(isset($_POST['invited_members']))
 	{
 		$invited_members = $_POST['invited_members'];

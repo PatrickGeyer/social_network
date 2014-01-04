@@ -1,9 +1,9 @@
 <?php
 require_once 'Thumbnail/ThumbLib.inc.php';
+require_once ('Scripts/thumbnail.php');
 include_once('welcome.php');
-include_once('friends_list.php');
 include_once('chat.php'); 
-$allschools = "SELECT * FROM schools";
+$allschools = "SELECT * FROM community";
 $allschools = $database_connection->prepare($allschools);
 $allschools->execute();
 $allschools = $allschools->fetchAll(PDO::FETCH_ASSOC);
@@ -23,12 +23,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 		$language = "de";
 	}
 
-	$school 	= 	$_POST['school'];
+	$community 	= 	$_POST['school'];
 	$year 		= 	$_POST['year'];
-	$newemail 	= 	$_POST['newemail']; 
-	$newabout 	=	$_POST['about']; 
+	$newemail 	= 	$_POST['new email']; 
 
-	$updateEmail='UPDATE users SET about="'.$newabout.'", school = "'.$school.'", year = "'.$year.'", email="'.$newemail.'", default_language="'.$language.'" WHERE id="'.$user->getId().'"';
+	$updateEmail='UPDATE users SET about="'.$newabout.'", position = "'.$year.'", email="'.$newemail.'", default_language="'.$language.'" WHERE id="'.$user->getId().'"';
 	if (!$database_connection->query($updateEmail))
 	{
 		die('Error: ' . mysql_error());
@@ -112,20 +111,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
 			if($savefile = move_uploaded_file($_FILES["image"]["tmp_name"], $savepath))
 			{	
-				try
-				{
-					$thumb = PhpThumbFactory::create($savepath);
-				}
-				catch(Exception $e)
-				{
-					// handle error here however you'd like
-				}
-				$thumb->resize(100);
-				$thumb->save($thumbsavepath);
-				$thumb->cropFromCenter(40);
-				$thumb->save($chatsave);
-				$thumb->resize(10);
-				$thumb->save($iconsavepath);
+				$resizeObj = new resize($savepath);   
+				$resizeObj -> resizeImage(200, 200, 'crop');  
+				$resizeObj -> saveImage($thumbsavepath);  
+				$resizeObj -> resizeImage(40, 40, 'crop');  
+				$resizeObj -> saveImage($chatsave);  
+				$resizeObj -> resizeImage(20, 20, 'crop');  				  
+				$resizeObj -> saveImage($iconsavepath);  
+
 				try
 				{
 					$sql = "UPDATE users SET profile_picture='".$savepath."', profile_picture_thumb = '".$thumbsavepath."', profile_picture_icon='".$iconsavepath."', 
@@ -142,20 +135,18 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 
 					if($user->getGender() == "Male")
 					{
-						$activity_query = "INSERT INTO activity (user_id, user_gender, user_name, school_id, status_text, type) 
-						VALUES(:user_id, :user_gender, :user_name, :school_id,' changed his profile picture','profile');
-						INSERT INTO activity_share(activity_id, school_id) VALUES(".$database_connection->lastInsertId().", :school_id)";
+						$activity_query = "INSERT INTO activity (user_id, status_text, type) 
+						VALUES(:user_id' changed his profile picture','profile');
+						INSERT INTO activity_share(activity_id, community_id) VALUES(".$database_connection->lastInsertId().", :community_id)";
 						$activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-						$activity_query->execute(array(":user_id" => $user->getId(), ":user_gender" => $user->getGender(), ":user_name" => $user->getName(),
-						":school_id" => $user->getSchoolId()));
+						$activity_query->execute(array(":user_id" => $user->getId(), ":community_id" => $user->getCommunityId()));
 					}
 					else
 					{
-						$activity_query = "INSERT INTO activity (user_id, user_gender, user_name, school_id, status_text, type) 
-						VALUES(:user_id, :user_gender, :user_name, :school_id,' changed her profile picture','profile')";
+						$activity_query = "INSERT INTO activity (user_id, status_text, type) 
+						VALUES(:user_id, ' changed her profile picture','profile')";
 						$activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-						$activity_query->execute(array(":user_id" => $user->getId(), ":user_gender" => $user['gender'], ":user_name" => $user['name'],
-						":school_id" => $user['school_id']));
+						$activity_query->execute(array(":user_id" => $user->getId()));
 					}
 					$database_connection->commit(); 	
 			}
@@ -175,8 +166,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 <html>
 <head>
 	<link rel="stylesheet" type="text/css" href="CSS/settings.css">
-	<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
-	<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+	<script src="Scripts/jquery-ui-1.10.3.js"></script>
 	<title>Settings</title>
 </head>
 <body>
@@ -214,8 +204,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 				<a href="user?id=<?php echo urlencode(base64_encode($user->getId()));?>">
 					<p>View as classmate</p>
 				</a>
-			<div class="profilepicturediv">
-				<form action="" method="post" enctype="multipart/form-data">
+			<div class="profilepicturediv" style='background-color:transparent;'>
+				<form id= 'settings_form' action="" method="post" enctype="multipart/form-data">
 					<table id="personal_info" class="none" style="width:100%;">								
 						<tr>
 							<td><img onclick="initiateTheater('<?php echo $user->getProfilePicture('original') ?>', 'no_text');"
@@ -224,16 +214,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 							</td>
 						</tr>
 						<tr>
-							<td><input type="file" name="image"></td>
+							<td><input type="file" name="image" /></td>
 						
-							<td><input class="small" type="submit" name="submit" value="Upload"></td>
+							<td><button class="pure-button-primary small" onclick='$("#settings_form").submit();' name="submit">Upload</button></td>
 						</tr>
 					</table>
 					<hr>
 					<table class="none" style="border-spacing: 10px; width:100%;">
-						<tr>
-							<td><textarea class="thin" placeholder="About..." style="width:100%; height: 100px;" id="about" name="about" autocomplete="off" type="text"><?php echo $user->getAbout();?></textarea></td>
-						</tr>
 						<tr>
 							<td><input type="text" placeholder="Email..."autocomplete="off" name="newemail" value="<?php 
 								if($user->getEmail() != '')
@@ -263,7 +250,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 								<?php
 								foreach($allschools as $schools) 
 								{ 
-									if($schools['name'] == $user->getSchool())
+									if($schools['name'] == $user->getCommunityName())
 									{
 										echo "<option selected>".$schools['name']."</option>";
 									}
@@ -282,7 +269,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 								$years = array(1,2,3,4,5,6,7,8,9,10,11,12,13,14);
 								foreach ($years as $year) 
 								{
-									if($year == $user->getYear())
+									if($year == $user->getPosition())
 									{
 										echo "<option selected>".$year."</option>";
 									}
@@ -296,7 +283,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 						</tr>
 					</table>
 					<hr>
-					<input type="submit" value="Save"><br/>	
+					<button class='pure-button-success' type="submit" onclick='$("#settings_form").submit();'>Save</button>
 				</div>
 			</form>		
 		</div>		

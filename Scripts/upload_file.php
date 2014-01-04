@@ -1,97 +1,138 @@
 <?php
+
 include_once('lock.php');
-require_once '../Thumbnail/ThumbLib.inc.php';
+require_once ('thumbnail.php');
 
 $tmpFilePath = $_FILES['file']['tmp_name'];
 $savename = preg_replace("/[^A-Za-z0-9.]/", '_', $_FILES['file']['name']);
 $savename = str_replace('/', '_', $savename);
 $savename = str_replace(' ', '_', $savename);
-$savepath = 'User/Files/'.$user->getId()."/";
+$savepath = 'User/Files/' . $user->getId() . "/";
+$base_path = 'C:/inetpub/wwwroot/social_network/';
 $parent_folder = $_POST['parent_folder'];
-if (!file_exists($dir)) 
-{
-	mkdir ($dir, 0777, true);
+if (!file_exists($dir)) {
+    mkdir($dir, 0777, true);
 }
 
-if($_FILES['file']['error'] > 0)
-{
-	switch($_FILES['file']['error'])
-	{
-		case 1:
-		echo "Image too large!";
-		break;
+if ($_FILES['file']['error'] > 0) {
+    switch ($_FILES['file']['error']) {
+        case 1:
+            echo "File too large!";
+            break;
 
-		case 2:
-		echo "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.";
-		break;
+        case 2:
+            echo "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.";
+            break;
 
-		case 3:
-		echo "The uploaded file was only partially uploaded.";
-		break;
+        case 3:
+            echo "The uploaded file was only partially uploaded.";
+            break;
 
-		case 4:
-			//echo "No file was uploaded.";
-		break;
+        case 4:
+            //echo "No file was uploaded.";
+            break;
 
-		case 6:
-		echo "Missing a temporary folder. Introduced in PHP 4.3.10 and PHP 5.0.3.";
-		break;
+        case 6:
+            echo "Missing a temporary folder. Introduced in PHP 4.3.10 and PHP 5.0.3.";
+            break;
 
-		case 7:
-		echo "Failed to write file to disk. Introduced in PHP 5.1.0.";
-		break;
+        case 7:
+            echo "Failed to write file to disk. Introduced in PHP 5.1.0.";
+            break;
 
-		case 8:
-		echo "A PHP extension stopped the file upload. PHP does not provide a way to ascertain which extension caused the file upload to stop; examining the list of loaded extensions with phpinfo() may help. Introduced in PHP 5.2.0.";
-		break;
+        case 8:
+            echo "A PHP extension stopped the file upload. PHP does not provide a way to ascertain which extension caused the file upload to stop; examining the list of loaded extensions with phpinfo() may help. Introduced in PHP 5.2.0.";
+            break;
 
-		default:
-		echo "Unknown Image Error.".$_FILES['file']['error'][$count];
-		break;
-	}
+        default:
+            echo "Unknown Image Error." . $_FILES['file']['error'][$count];
+            break;
+    }
 }
-else 
-{
-	if($_FILES['file']['name'] != "")
-	{
-		if(move_uploaded_file($tmpFilePath, "../".$savepath.$_FILES['file']['name']))
-		{
-			$thumbsavepath 	= $savepath."thumb_".$_FILES['file']['name'];
-			$iconsavepath 	= $savepath."icon_".$_FILES['file']['name'];
+else {
+    if ($_FILES['file']['name'] != "" || ".") {
+        $lastInsertId;
+        $pure_name = time();
+        $ext = $files->findexts($_FILES['file']['name']);
+        $file_name = $pure_name . "." . $ext;
+        $thumbnail = $savepath . $pure_name . ".jpg";
+        
+        $flv_path;
+        $mp4_path;
+        $ogg_path;
 
-			$type = $files->getType($_FILES['file']['name']);
-			if(strcmp($type, 'Image') === 0)
-			{
-				echo "<Image conversion, ".$type." - ".$_FILES['file']['name'].">";
-				try
-				{
-					$thumb = PhpThumbFactory::create("../".$savepath.$_FILES['file']['name']);
-				}
-				catch(Exception $e)
-				{
-					print_r($e);
-				}
-				$thumb->resize(150);
-				$thumb->save("../".$thumbsavepath);
-				$thumb->resize(20);
-				$thumb->save("../".$iconsavepath);
-			}
-			$sql = "INSERT INTO `files` (user_id, filepath, thumb_filepath, icon_filepath, name, type, parent_folder_id) VALUES (:user_id, :file_path, :thumbsavepath, :iconsavepath,  :name, :type, :parent_folder);";
-			$sql = $database_connection->prepare($sql);
-			$sql->execute(array(
-					":user_id" => $user->getId(), 
-					":file_path" => $savepath.$_FILES['file']['name'], 
-					":thumbsavepath" => $thumbsavepath,
-					":iconsavepath" => $iconsavepath,
-					":name" => $_FILES['file']['name'], 
-					":type" => $files->getType($_FILES['file']['name']), 
-					":parent_folder" => $parent_folder
-			));
-		}
-		else
-		{
-			echo "Upload Failed!";
-		}
-	}
+        $thumbsavepath;
+        $iconsavepath;
+
+        if (move_uploaded_file($tmpFilePath, "../" . $savepath . $file_name)) {
+            $type = $files->getType($_FILES['file']['name']);
+            if ($type == "Audio") {
+                $convert_path = $base_path . $savepath . $file_name;
+                $result_path = $base_path . $savepath . $pure_name . ".mp3";
+                $iconsavepath = $thumbsavepath = $savepath . $pure_name . ".mp3";
+                $convert = $files->convert($convert_path, $result_path);
+                if ($convert != $result_path) {
+                    die("Error: " . $convert);
+                }
+            }
+            else if ($type == "Video") {
+                $convert_path = $base_path . $savepath . $file_name;
+                $mp4_path = $savepath . $pure_name . ".mp4";
+                $ogg_path = $savepath . $pure_name . ".ogg";
+                $flv_path = $savepath . $pure_name . ".flv";
+                $convert = $files->convert($convert_path, $base_path . $mp4_path, "-f mp4 scale=320:-1");
+                if ($convert != $result_path) {
+                    die("Error: " . $convert);
+                }
+                $convert = $files->convert($convert_path, $base_path . $ogg_path, "-f ogg scale=320:-1");
+                if ($convert != $base_path . $iconsavepath) {
+                    die("Error: " . $convert);
+                }
+                $convert = $files->convert($convert_path, $base_path . $flv_path, "-f flv scale=320:-1");
+                if ($convert != $base_path . $thumbsavepath) {
+                    die("Error: " . $convert);
+                }
+                $convert = $files->convert($convert_path, $base_path . $thumbnail, " -frames:v 1 ", " -ss 00:00:01 ");
+                if ($convert != $base_path . $thumbnail) {
+                    die("Error: " . $convert);
+                }
+            }
+            else {
+                $thumbsavepath = $savepath . "thumb_" . $file_name;
+                $iconsavepath = $savepath . "icon_" . $file_name;
+            }
+
+            if (strcmp($type, 'Image') === 0) {
+                $resizeObj = new resize('../' . $savepath . $file_name);
+                $resizeObj->resizeImage(300, 300, 'auto');
+                $resizeObj->saveImage("../" . $thumbsavepath);
+                $resizeObj->resizeImage(50, 50, 'crop');
+                $resizeObj->saveImage("../" . $iconsavepath);
+            }
+            $database_connection->beginTransaction();
+            $sql = "INSERT INTO `files` (user_id, filepath, thumb_filepath, icon_filepath, thumbnail, flv_path, mp4_path, ogg_path, name, type, parent_folder_id) "
+                    . "VALUES (:user_id, :file_path, :thumbsavepath, :iconsavepath, :thumbnail, :flv_path, :mp4_path, :ogg_path,:name, :type, :parent_folder);";
+            $sql = $database_connection->prepare($sql);
+            $sql->execute(array(
+                ":user_id" => $user->getId(),
+                ":file_path" => $savepath . $file_name,
+                ":thumbsavepath" => $thumbsavepath,
+                ":iconsavepath" => $iconsavepath,
+                ":thumbnail" => $thumbnail,
+                ":name" => $_FILES['file']['name'],
+                ":type" => $type,
+                ":parent_folder" => $parent_folder,
+                ":flv_path" => $flv_path,
+                ":mp4_path" => $mp4_path,
+                ":ogg_path" => $ogg_path,
+            ));
+            $lastInsertId = $database_connection->lastInsertId();
+            $database_connection->commit();
+        }
+        else {
+            echo "Upload Failed!";
+        }
+        echo json_encode(array("file_id" => $lastInsertId, "filename" => $_FILES['file']['name'], "filepath" => $thumbsavepath));
+    }
 }
 ?>

@@ -1,209 +1,246 @@
+<?php
+if (!isset($_COOKIE['showchat'])) {
+    setcookie('showchat', 'y');
+}
+?>
 <head>
-	<link rel="stylesheet" type="text/css" href="CSS/chat.css">
-	<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-	<script src="Scripts/jquery.cookie.js"></script>
-	<script id="chat_loader">
-	var bottom = true;
-	var view = getCookie("showchat");
-	$(function()
-	{
-		scrollToBottom();changeTabColor();
-		var cookie = getCookie("showchat");
-		if(cookie == 0)
-		{
-			$('#chat').hide();
-		}
-		else
-		{
-			if(view == 's')
-			{
-				$('#school_tab').trigger('click');
-			}
-			else if(view == 'y')
-			{
-				$('#year_tab').trigger('click');
-			}
-			else
-			{
-				$('#' + view).trigger('click');
-			}
-		}
-		$("#chat_toggle").click(function() 
-		{
-			var cookie = getCookie("showchat");
-			if(cookie > 0 || isNaN(cookie))
-			{
-				setCookie('showchat', 0, 5);
-				$('#chat_toggle').html("OFF");
-				$('#chat').hide('slide',{direction:'right'},1000);
-			}
-			else
-			{
-				setCookie('showchat', 'y', 5);
-				$('#chat_toggle').html("ON");
-				$('#chat').show('slide',{direction:'right', duration:0},1000);
-			}
-		});
+    <link rel="stylesheet" type="text/css" href="CSS/chat.css">
+    <script id="chat_loader">
 
-		$.post("Scripts/chat.class.php", {chat: view}, function(response)
-		{
-			$('#chatreceive').empty();
-			$('#chatreceive').append(response);
-		});
+        var current_view = getCookie("showchat");
 
-		var auto_refresh = setInterval(
-			function ()
-			{
-				$.post("Scripts/chat.class.php", {chat: view}, function(response)
-				{
-					$('#chatreceive').empty();
-					$('#chatreceive').append(response);
+        var timer;
+        var bottom = true;
 
-					if(bottom == true)
-					{
-						var div = document.getElementById('chatoutput');
-						$(div).scrollTop(99999999999);
-					}
-				});
-			}, 2000);
-	});
-</script>	
-<script type="text/javascript">
-$(function()
-{
-	$('#chatoutput').bind('scroll', function()
-	{
-		if($(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight)
-		{
-			bottom = true;
-		}
-		else
-		{
-			bottom = false;
-		}
-	})
-}
-);
+        $(function()
+        {
+            scroll2Bottom();
+            sendChatRequest('true', current_view);
 
-function scrollToBottom()
-{
-	var div = document.getElementById('chatoutput');
-	$(div).scrollTop(99999999999);
-}
-function scrollIntoView(id)
-{
-	if(id == "s")
-	{
-		id = ".school_tab";
-		scrollIntoViewHelper(id, true);
-	}
-	else if(id == "y")
-	{
-		id = ".year_tab";
-		scrollIntoViewHelper(id, true);
-	}
-	else
-	{
-		id = "#"+id;
-		scrollIntoViewHelper(id, false);
-	}
-}
-function scrollIntoViewHelper(id, beginning)
-{
-	if(beginning == true)
-	{
-		$('#chatencase').animate({scrollLeft: 0}, 400);
-	}
-	else
-	{
-		var previous_scroll = $('#chatencase').scrollLeft();
-		$('#chatencase').scrollLeft(0);
-		var left_offset = $(id).offset().left - $('#chatencase').offset().left - $('#chatencase').width() / 2 + $(id).width() / 2;
-		$('#chatencase').scrollLeft(previous_scroll);
-		$('#chatencase').animate({scrollLeft: left_offset}, 400);
-	}
-}
-function submitchat(chat_text)
-{
-	$.post("Scripts/chat.class.php", { action : "addchat", aimed: view, chat_text: chat_text}, function(response)
-	{
-		$('#text').html('');
-		$('#chatoutput').scrollTop(99999999999);
-	});
-}
+            var cookie = getCookie("showchat");
+            if (cookie == 0)
+            {
+                $('#chat').hide();
+            }
+            else
+            {
+                if (current_view == 's')
+                {
+                    scrollH('#school_tab', '#feed_wrapper_scroller', 400);
+                }
+                else if (current_view == 'y')
+                {
+                    scrollH('#year_tab', '#feed_wrapper_scroller', 400);
+                }
+                else
+                {
+                    scrollH('#' + current_view, '#feed_wrapper_scroller', 400);
+                }
+            }
+            $("#chat_toggle").click(function()
+            {
+                var cookie = getCookie("showchat");
+                if (cookie > 0 || isNaN(cookie))
+                {
+                    setCookie('showchat', 0, 5);
+                    $('#chat_toggle').html("OFF");
+                    $('#chat').hide('slide', {direction: 'right'}, 1000);
+                }
+                else
+                {
+                    setCookie('showchat', 'y', 5);
+                    $('#chat_toggle').html("ON");
+                    $('#chat').show('slide', {direction: 'right', duration: 0}, 1000);
+                }
+            });
 
-function change_chat_view(change_view)
-{
-	view = change_view;
-	$.post("Scripts/chat.class.php", {chat: view}, function(response)
-	{
-		$('#chatreceive').empty();
-		$('#chatreceive').append(response);
-	});
-	changeTabColor();
-	scrollIntoView(change_view);
-	setCookie('showchat', change_view, 5);
-}
+            $(document).on('click', '.feed_selector', function()
+            {
+                $('.chat_selector').removeClass('active_feed');
+                $(this).addClass('active_feed');
 
-function changeTabColor()
-{
-	if(view == "y")
-	{
-		$('#year_tab').css('background-color', 'white');
-		$('#school_tab').css('background-color', '');
-		$('.group_tab').css('background-color', '');
-	}
-	else if(view == "s")
-	{
-		$('#school_tab').css('background-color', 'white');
-		$('#year_tab').css('background-color', '');
-		$('.group_tab').css('background-color', '');
-	}
-	else
-	{
-		$('.group_tab').css('background-color', '');
-		$('#year_tab').css('background-color', '');
-		$('#school_tab').css('background-color', '');
-		$('#'+view).css('background-color', 'white');
-	}
-}
-</script>
+                change_chat_view($(this).attr("chat_feed"));
+            });
+        });
+
+        function sendChatRequest(all, current)
+        {
+            $.post("Scripts/chat.class.php", {chat: current_view, all: all}, function(response)
+            {
+                if (current == current_view)
+                {
+                    if (all == 'true')
+                    {
+                        $('#chatreceive').html(response);
+                    }
+                    else
+                    {
+                        $('#chatreceive').append(response);
+                    }
+                    // time = setTimeout(function(){sendChatRequest('false', current_view), current_view}, 0);
+                    sendChatRequest('false', current_view);
+                    scroll2Bottom();
+                }
+                $('#chat_loading_icon').hide();
+                $('img').error(function() {
+                    $(this).attr('src', 'Images/profile-picture-default-unknown-chat.jpg');
+                    $(this).addClass('chat_broken_image');
+                });
+            });
+        }
+
+        $(function()
+        {
+            $('.chatoutput').bind('scroll', function()
+            {
+                if ($(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight)
+                {
+                    bottom = true;
+                }
+                else
+                {
+                    bottom = false;
+                }
+            })
+        }
+        );
+
+        function scroll2Bottom(force)
+        {
+            if (bottom == true || force == true)
+            {
+                $(".scroll_thin").mCustomScrollbar("update");
+                $(".chatoutput").mCustomScrollbar("scrollTo", 'bottom');
+            }
+        }
+
+        function submitchat(chat_text)
+        {
+            $.post("Scripts/chat.class.php", {action: "addchat", aimed: current_view, chat_text: chat_text}, function(response)
+            {
+                $("#text").css("color", "black");
+                $('#text').html('');
+                scroll2Bottom(true);
+            });
+        }
+
+        function change_chat_view(change_view)
+        {
+            $('#chatreceive').empty();
+            $('#chat_loading_icon').show();
+            clearTimeout(timer);
+
+            current_view = change_view;
+
+            sendChatRequest('true', current_view);
+
+            if (change_view == 's')
+            {
+                //scrollH('#school_tab', '#feed_wrapper_scroller', 400);
+            }
+            else if (change_view == 'y')
+            {
+                //scrollH('#year_tab', '#feed_wrapper_scroller', 400);
+            }
+            else
+            {
+                //scrollH('#' + change_view, '#feed_wrapper_scroller', 400);
+            }
+            setCookie('showchat', change_view, 5);
+        }
+    </script>
 </head>
-<div class="chatoff" id="chat_toggle"><?php if($_COOKIE['showchat'] == '0'){echo 'OFF';}else{echo 'ON';}?></div>
+<div class="chatoff" id="chat_toggle"><?php
+    if ($_COOKIE['showchat'] == '0') {
+        echo 'OFF';
+    }
+    else {
+        echo 'ON';
+    }
+    ?></div>
 <div class="chatcomplete" id="chat">
-	<div id="chatencase" style='padding-bottom:1px;overflow:auto;'>
-		<div id='chatheader' class="chatheader">
-			<?php
-			echo "<div id='school_tab' class='offswitch' onclick='change_chat_view(&quot;s&quot;);'>School</div>";
-			echo "<div id='year_tab' class='offswitch' onclick='change_chat_view(&quot;y&quot;);'>Year ".$user->getYear()."</div>";
-
-			$groups = $group->getUserGroups();
-			foreach($groups as $single_group)
-			{
-				echo "<div class='group_tab' id='".$single_group[0]."' title='".$group->getGroupName($single_group[0])."' 
-				onclick='change_chat_view(&quot;".$single_group[0]."&quot;);'>".$extend->trimStr($group->getGroupName($single_group[0]), 6)."</div>";
-			}
-			?>
-		</div>
-	</div>
-	<div class="chat_text">
-		<div id="chatoutput" class="chatoutput">
-			<table class='chatbox' id="chatreceive"></table>
-		</div>
-		<div class='text_input_container'>
-			<div contenteditable id="text" onkeydown='
-			if (event.keyCode == 13) 
-			{
-				if(event.shiftKey !== true) 
-				{
-					submitchat($(this).html());
-				}
-				else{}
-			}
-			return true;'
-			class="chatinputtext"  data-placeholder="Press Enter to send...">
-			</div>
-		</div>
-	</div>
+                <div id='feed_wrapper_scroller' class='scroll_thin_left chatheader'>
+                    <table>
+                        <tr>
+                            <td>
+                                <div id='school_tab' style='padding:0px;' chat_feed='s' class='feed_selector chat_selector 
+                                <?php
+                                if ($_COOKIE['showchat'] == 's') {
+                                    echo "active_feed";
+                                }
+                                ?>
+                                '><h3 class='chat_header_text'>
+                                         <?php
+                                         echo $system->trimStr($user->getCommunityName(), 10);
+                                         ?>
+                                </h3></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div id='year_tab' style='padding:0px;' chat_feed='y' class='feed_selector chat_selector 
+                                <?php
+                                if ($_COOKIE['showchat'] == 'y') {
+                                    echo "active_feed";
+                                }
+                                ?>
+                                '><h3 class='chat_header_text'>Year <?php echo $user->getPosition();?></h3>
+                                </div>
+                            </td>
+                        </tr>
+                            <?php
+                            $groups = $group->getUserGroups();
+                            foreach ($groups as $single_group) {
+                                echo "<tr><td><div style='padding:0px;' chat_feed='"
+                                . $single_group . "' class='feed_selector chat_selector "
+                                . ($_COOKIE['showchat'] == $single_group ? "active_feed" : "")
+                                . "' id='" . $single_group . "' title='"
+                                . $group->getGroupName($single_group) . "'><h3 class='chat_header_text'>"
+                                . $system->trimStr($group->getGroupName($single_group), 6) . "</h3></div></td></tr>";
+                            }
+                            ?>
+                        </tr>
+                    </table>
+                </div>
+                <div class="chatoutput scroll_thin">
+                    <img id='chat_loading_icon' src='Images/ajax-loader.gif'></img>
+                    <ul style='max-width:225px;' class='chatbox' id="chatreceive"></ul>
+                </div>
+                <div class='text_input_container'>
+                    <div contenteditable id="text" onkeydown='
+                            if (event.keyCode == 13)
+                            {
+                                if (event.shiftKey !== true)
+                                {
+                                    submitchat($(this).html());
+                                    $(this).html("Sending...");
+                                    $(this).css("color", "lightgrey");
+                                    return false;
+                                }
+                            }
+                            detectChange();
+                            return true;'
+                         class="chatinputtext"  data-placeholder="Press Enter to send...">
+                    </div>
+                </div>
 </div>
-<script>var myDiv = document.getElementById('chatoutput'); myDiv.scrollTop = myDiv.scrollHeight;</script>
+</div>
+<script>
+    detectChange();
+    function detectChange()
+    {
+        var key_height = $('.chatinputtext').height() + 5;
+        var bottom = 25 + key_height;
+        $('.chatoutput').css('bottom', bottom + "px");
+        $('.chatheader').css('bottom', bottom + "px");
+        var padding_top = $('.chatoutput').innerHeight() - $('#chatreceive').height() - bottom + 100;
+
+        if (padding_top > 0)
+        {
+            //console.log(padding_top);
+            // $('.chatoutput').css('padding-top', padding_top + "px");
+        }
+        scroll2Bottom();
+        setTimeout(detectChange, 100);
+    }
+</script>

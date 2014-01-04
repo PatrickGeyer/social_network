@@ -2,7 +2,7 @@
 include_once('welcome.php');
 include_once('chat.php');
 $file_name = $_GET['filename'];
-$file_path = $_GET['filepath'];
+$file_id = $_GET['file_id'];
 ?>
 <head>
 	<title><?php echo $file_name; ?></title>
@@ -73,9 +73,9 @@ $file_path = $_GET['filepath'];
 	function share()
 	{
 		var comment = $('#comment').val();
-		var path = "<?php echo $file_path; ?>";
+		var file_id = "<?php echo $file_id; ?>";
 		var name = "<?php echo $file_name; ?>";
-		$.post("Scripts/share_file.php", { file_path: path, file_name: name, comment: comment, receivers: receivers} , function(response)
+		$.post("Scripts/share_file.php", { file_id: file_id, file_name: name, comment: comment, receivers: receivers} , function(response)
 		{
 			var status = response.split("/");
 			alert(response);

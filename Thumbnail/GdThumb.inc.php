@@ -126,7 +126,7 @@ class GdThumb extends ThumbBase
 		
 		$this->setOptions($options);
 		
-		// TODO: Port gatherImageMeta to a separate function that can be called to extract exif data
+		// TODoO: Port gatherImageMeta to a separate function that can be called to extract exif data
 	}
 	
 	/**
@@ -626,7 +626,7 @@ class GdThumb extends ThumbBase
 	 * is set as an option ($this->options['correctPermissions']).  If the target cannot be made writeable, then a
 	 * RuntimeException is thrown.
 	 * 
-	 * TODO: Create additional paramter for color matte when saving images with alpha to non-alpha formats (i.e. PNG => JPG)
+	 * Todoo: Create additional paramter for color matte when saving images with alpha to non-alpha formats (i.e. PNG => JPG)
 	 * 
 	 * @param string $fileName The full path and filename of the image to save
 	 * @param string $format The format to save the image in (optional, must be one of [GIF,JPG,PNG]

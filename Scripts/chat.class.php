@@ -60,7 +60,7 @@ class Chat extends Database {
                 $chat_number = $chat_query->rowCount();
                 $chat_entries = $chat_query->fetchAll(PDO::FETCH_ASSOC);
                 if ($chat_number == 0) {
-                    usleep(25000);
+                    usleep(100000);
                 } else {
                     foreach ($chat_entries as $record) {
                         $chat_read_query = "SELECT id FROM chat_read WHERE user_id = :user_id AND chat_id = :chat_id;";

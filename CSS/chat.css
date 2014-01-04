@@ -3,15 +3,16 @@ input[type="submit"].chatsend {
 }
 div.chatcomplete{
 	border-left: solid;
-	border-color: grey;
+	border-color: lightgrey;
 	border-width: 1px;
 	position:fixed;
 	z-index:104;
 	width: 250px;
-	top: 0;
+	top: 34px;
 	bottom:33px;
 	right:0;
 	font-size: 0.85em;
+	background-color: white;
 }
 div.chatoff{
 	position:fixed;
@@ -27,95 +28,88 @@ div.chatoff{
 	font-weight: bold;
 	background-color:#EDEDED;
 	border-top: 1px solid lightgrey;
-	border-left: 1px solid grey;
+	border-left: 1px solid lightgrey;
+	z-index: 10;
 }
 
 div.chat_text{
-	position: absolute;
-	bottom: 0px;
-	top:40px;
-	left:0;
-	right:0;
+
 }
 div.chatoutput{
-	background-color: #FDFDFE;
-	width: 91%;
-	padding: 10px;
-	overflow-y: hidden;
-	max-height: 93%;
-	height: 93%;
-	    transition: all 0.5s;
-    -webkit-transition: all 0.5s;
-}
-.chatoutput:hover{
-	overflow-y: auto;
-}
-
-.chatinputtext{
-	border-top:1px solid lightgrey;
+	position: absolute;
+	top:-1px;
+	right: 40px;
+    left:0px;
+	bottom:0px;
 	background-color: white;
-	padding:5px;
+	padding-left: 10px;
+        padding-top:10px;
+        -webkit-transition: all 0.1s;
+        -moz-transition: all 0.1s;
+        -ms-transition: all 0.1s;
+        -o-transition: all 0.1s;
+        transition: all 0.1s;
+    /*    -webkit-box-shadow: inset 0 20px 20px -20px lightgrey;
+        -moz-box-shadow: inset 0 20px 20px -20px lightgrey;
+        box-shadow: inset 0 20px 20px -20px lightgrey;*/
+        border-top: 1px solid lightgrey;
 }
 
 .text_input_container{
 	position: absolute;
 	bottom: 0px;
-	right: 0px;
 	left:0px;
-	box-shadow: 0px -12px 12px -12px lightgrey;
+	right:2px;
+	border-top: 1px solid lightgrey;
+	background-color: white;
+	z-index: 100;
+	min-height: 35px;
+	padding: 0px;
+}
+
+div.chatinputtext{
+    padding:5px;
+	min-height: 34px;
+	background-color: white;
+	font-size: 13px;
+	color:black;
 }
 
 div.chatheader{
-	display:table; 
-	height:34px;
-	width:100%;
 	border:0; 
-	text-align:center;
-	overflow:auto;
-
-}
-
-.chatoutput::-webkit-scrollbar {
 	position: absolute;
-    width: 10px;
+	top: 0px;
+	right: 0px;
+	z-index: 123;
 }
-.chatoutput::-webkit-scrollbar-track {
-    border-radius: 5px;
+.chat_selector{
+	border-left: 2px solid #cc181e;
+	border-bottom: 0px;
+	min-width: 0px;
+	width: 30px;
+	overflow: hidden;
+	height: 100px;
+        position: relative;
 }
-.chatoutput::-webkit-scrollbar-track:hover {
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
-    border-radius: 5px;
-}
+.chat_header_text{
+	-webkit-transform: rotate(90deg);
+	-moz-transform: rotate(90deg);
+	-ms-transform: rotate(90deg);
+	-o-transform: rotate(90deg);
+	filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
 
-.chatoutput::-webkit-scrollbar-thumb {
-  	background-color: grey;
-    border-radius: 5px;
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.6); 
-   	background-image: url('../Images/grey_wash_wall.png');
-}
+/*	-webkit-transform-origin: top left;
+        -moz-transform-origin: top left;
+        -ms-transform-origin: top left;
+        -o-transform-origin: top left;
+        transform-origin: top left;*/
 
-#chatencase{
-	overflow: auto;
-}
-#chatencase::-webkit-scrollbar {
-    height: 5px;
-}
+	padding-top: 5px;
+	padding-left: 5px;
+	margin: 0px;
 
-#chatencase::-webkit-scrollbar-track {
-    background-color: white;
-}
-#chatencase{scrollbar-arrow-color: black;}
-
-#chatencase::-webkit-scrollbar-thumb {
-  	background-color: grey;
-    border-radius: 5px;
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.6); 
-}
-#chatencase::-webkit-scrollbar-thumb:hover {
-  	background-color: dimgrey;
-    border-radius: 54px;
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,1); 
-    height: 23px;
+        left: 100%;
+        white-space: nowrap; 
 }
 
 table.chatbox {
@@ -127,34 +121,99 @@ table.chatbox {
 	max-height: 500px;
 }
 
+.chat_wrapper, .chat_my_wrapper{
+	padding-bottom:0px;
+	border-radius: 0px;
+	margin-bottom: 5px;
+	/*box-shadow: inset 0px 0px 5px 3px white;*/
+	border-bottom: 1px solid #EDEDED;
+	position: relative;
+}
+
+li.single_chat{
+	border: 0px;
+}
+
+.chat_my_wrapper{
+	/*background-color: rgba(28, 184, 65, 0.5);*/
+	background-color: white;
+	box-shadow: -0px 0px 1px -1px lightgrey;
+        padding-bottom: 5px;
+}
+.chat_my_wrapper:after{
+	/*content: "";
+	position: absolute;
+	top: 0px;
+	right: -10px;
+	border-style: solid;
+	border-width: 10px 0 10px 10px;
+	border-color: transparent lightgrey ;
+	display: block;
+	width: 0;
+	z-index: 1;*/
+}
+.chat_wrapper:after{
+	/*content: "";
+	position: absolute;
+	top: 0px;
+	left: -10px;
+	border-style: solid;
+	border-width: 10px 10px 10px 0;
+	border-color: transparent lightgrey ;
+	display: block;
+	width: 0;
+	z-index: 1;*/
+}
+.chat_wrapper{
+	/*box-shadow: -0px 0px 0px 1px lightgrey;*/
+	background-color: white;
+}
+
+.chat_user_profile:after{
+/*  content: "";
+  position: absolute;
+  top: 0;
+  left: 30px;
+  width: 0;
+  height: 0;
+  border: 5px solid white;
+  border-left-color: transparent;
+  border-bottom-color: transparent;*/
+}
+
 .chatname{
 	vertical-align: top;
-	color: grey;
 	text-align: left;
-	font-size:12px;
+	font-size:14px;
+        width: 100%;
+        color: rgb(66, 184, 221);
+}
+span.chatname:hover{
+    text-decoration: none;
 }
 .mychatname{
 	margin-top:5px;
 	vertical-align: top;
-	color: grey;
+	color: rgb(66, 184, 221);
 	font-size:12px;
 }
 .chattext{
 	text-align: left;
 	color: black;
-	word-break: break-all;
-	font-style: italic;
+	word-break: break-word;
 	font-weight: lighter;
-	border-bottom: solid lightgrey 1px;
 	font-size:12px;
-	padding-left: 20px;
+}
+.mychattext img, .chattext img{
+	margin:3px;
+	margin-left: 0px;
+	max-width: 150px;
 }
 .mychattext{
 	max-width: 150px;
 	text-align:left;
 	color: black;
-	word-break:break-all;
-	border-bottom: solid lightgrey 1px;
+	word-break:break-word;
 	font-size:12px;
 	padding-left: 20px;
 }
@@ -167,43 +226,24 @@ table.chatbox {
 }
 #school_tab, #year_tab, .group_tab{
 	cursor: pointer;
-	font-size: 14px; 
-	white-space: nowrap;
-	min-width: 60px;
-	vertical-align: middle;
-	display: table-cell;
-	padding: 5px;
-	white-space: nowrap;
-	background-color: #EDEDED;
-	transition:all 0.3s;
-	-webkit-transition: all 0.3s;
-}
-#school_tab{
-	border-bottom: 3px solid orange;
-}
-#year_tab{
-	border-bottom: 3px solid chocolate;
+	/*opacity: 1;	*/
+	display: inline-block;
 }
 #school_tab:hover, #year_tab:hover, .group_tab:hover{
-	background-color: white;
-	border-bottom: 3px grey solid;
-}
-.group_tab{
-	border-bottom:3px blue solid;
+	opacity: 1;
 }
 
 div.onlinestatus{
 	float: left;
 	margin-right: 5px;
-	margin-top: 4px;
-	width: 0px;
-	height: 0px;
-	border-style: solid;
-	border-width: 4px 0 4px 8px;
-	border-color: transparent transparent transparent #007bff;
+	margin-top: 6px;
+	width: 5px;
+	height: 5px;
+	border-radius: 50px;
+	background-color: red;
 }
-
-img{
-	max-width: 90%;
-	max-height: 100px;
+.chat_broken_image{
+    max-height: 50px;
+    width:50px;
+    border: 1px solid red;
 }

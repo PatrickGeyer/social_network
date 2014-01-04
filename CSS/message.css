@@ -1,149 +1,247 @@
 input[type="submit"].chatsend {
-	display: none;
+    display: none;
 }
 div.messagecomplete{
-	bottom:0px;
-	position:fixed;
-	left: 40px;
-	width: 200px;
-	top: 33px;
-	z-index: -1;
+    bottom:0px;
+    position:fixed;
+    left: 40px;
+    width: 200px;
+    top: 33px;
 }
 
 #messagetoolbox{
-	border-top: solid 1px lightgrey;
-	border-left: solid 1px lightgrey;
-	overflow: auto;
-	padding-top: 5px;
-	padding-bottom: 5px;
-	padding-left: 5px;
+    border-top: solid 1px lightgrey;
+    border-leftinbox: solid 1px lightgrey;
+    overflow: auto;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 5px;
 }
 
 div.messagehi{
-	overflow: auto;
-	right: 0em; 
-	width: 100%;
-	height: 100%;
-	background-color: white;
+    overflow: auto;
+    right: 0em; 
+    width: 100%;
+    height: 100%;
+    background-color: white;
 
 }
 
 #title{
-	font-weight:bold;
-}
-
-div.text{
-	padding-left: 0px;
-	width: 100%;
+    font-weight:bold;
 }
 
 div.compose{
-	width: 100%;
+    width: 100%;
 }
 
 div.composebox{
-	height: 100%;
+    height: 100%;
 }
 
 h1.composeheader{
-	font-size: 2em;
-	text-align: center;
-	padding-left: 50px;
-	color: #EDEDED;
-	text-shadow: -1px 0 grey, 0 1px grey, 1px 0 grey, 0 -1px grey
+    font-size: 2em;
+    text-align: center;
+    padding-left: 50px;
+    color: #EDEDED;
+    text-shadow: -1px 0 grey, 0 1px grey, 1px 0 grey, 0 -1px grey
+}
+.message_list_container{
+    border-left:1px solid lightgrey;
+    border-top: 1px solid lightgrey;
+}
+.message_wrapper{
+    background-color: transparent;
+    padding: 5px;
+    border-bottom: 1px solid lightgrey;
+    cursor: pointer;
+}
+.message_wrapper:hover{
+    background-color: #FAFAFA;
+}
+.message_info_preview{
+    margin-top: -3px;
+}
+.message_user_profile{
+    background-size:cover;
+    height:40px;
+    width:40px;
+    margin-right: 5px;
+}
+.message_user_name{
+    color:black;
+    font-size: 13px;
+}
+.message_text_preview{
+    font-size: 12px;
+    color:grey;
 }
 
+div.message_convo_wrapper{
+    padding-left: 0px;
+    width: 100%;
+    padding-top: 10px;
+    position: absolute;
+    bottom:150px;
+    top:55px;
+    min-height: 500px;
+    overflow: hidden;
+}
+
+.message_convo_text{
+    font-size: 14px;
+    color:grey;
+}
+.message_convo_time{
+    font-size: 13px;
+    color:grey;
+    white-space:nowrap;
+}
+.message_convo_header{
+    height: 35px;
+    padding-left: 20px;
+    padding-top: 15px;
+    background-color: white;
+    border-bottom: 1px solid lightgrey;
+    box-shadow: 0 4px 2px -2px #EDEDED;
+    text-align: center;
+}
+.message_convo_receiver{
+    font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+    color:grey;
+    font-weight: bold;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: normal;  
+}
+.message_convo_receiver:hover{
+    color:rgb(66, 184, 221);
+}
 div.reply{
-	width: 100%;
-	position: absolute;
-	border-top: solid;
-	border-color: grey;
-	border-width: 1px;
-	bottom:0;
-	background-color: #EDEDED;
-	height: 200px;
+    width: 98.7%;
+    position: fixed;
+    bottom:20px;
 }
-div.added_name{
-	text-align: center;
-	background-color: lightgrey;
-	padding: 10px;
-	margin:5px;
-	margin-left: 0;
-	opacity: 0.5;
-	box-shadow: inset 0 0 10px grey;
-	border-radius: 2px;
+.message_reply_container{
+    position: absolute;
+    bottom:0px;
+    left:0px;
+    right: 0px;
+    background-color: white;
 }
-div.added_name:hover{
-	opacity: 1;
+.message_reply_box{
+    background-color: white;
+    border:1px solid transparent;
+    border-top: 1px solid lightgrey;
+    min-height:100px; 
+    padding:5px;
+    font-size: 14px;
+    max-height: 250px;
+    position: absolute;
+    bottom: 30px;
+    z-index: 2;
+    resize: none;
+    color: black;
+}
+.message_reply_options{
+    border-top:1px solid #EDEDED;
+    background-color: white;
+    position: absolute;
+    bottom: 0px;
+    left:0px;
+    right:0px;
+    z-index: 1;
+}
+div.message_added_receiver{
+    background-color: #edeff4;
+    padding: 5px;
+    margin-right:5px;
+    margin-bottom: 5px;
+    opacity: 1;
+    border-radius: 2px;
+    font-size: 12px;
+    cursor: pointer;
+    border:1px solid lightblue;
+    color: grey;
+    display: inline-block;
+}
+div.message_added_receiver:hover{
+
 }
 
-span.delete_receiver{
-	font-size:1.2em; 
-	color:grey; 
-	cursor:pointer;
-	margin-left: 10px;
+span.message_delete_receiver{
+    font-size:1.2em; 
+    color:grey; 
+    cursor:pointer;
+    margin-left: 10px;
 }
 
-span.delete_receiver:hover{
-	color:black;
+span.message_delete_receiver:hover{
+    color:black;
 }
-
+.message_search_input{
+    border-radius:0;
+    display:inline-block;
+    width: 200px;
+    height: 30px;
+    font-size: 13px;
+}
 table.message{
-	padding-left: 20px;
-	padding-right: 10px;
-	width: 80%;
-	margin:0 auto;
+    margin-left: 80px;
+    padding-right: -10px;
+    width: 80%;
+    margin-right: 50px;
 }
 textarea, input[type='text']{
-	width: 100%;
+    width: 100%;
 }
 
 table.reply{
-	overflow: auto;
-	background-color: #EDEDED;
-	width: 100%;
+    overflow: auto;
+    background-color: #EDEDED;
+    width: 100%;
 }
 img.composemessage2{
-	right: 20px;
-	height: 20px;
-	width: 20px;
-	cursor: pointer;
-	padding-right: 10px;
+    right: 20px;
+    height: 20px;
+    width: 20px;
+    cursor: pointer;
+    padding-right: 10px;
 }
 
 ul.inboxmessage{
-	width: 100%;
-	border-left: 1px solid lightgrey;
-	border-right: 1px solid lightgrey;
-	border-bottom: 1px solid lightgrey;
-	cursor: pointer;
+    width: 100%;
+    border-left: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;
+    cursor: pointer;
 }
 
-li.inboxmessage, li.inboxmessageread{
-	border-bottom: 0;
-	width: 95%;
-	min-height: 50px;
-	text-align: left;
-	word-wrap:break-word;
-	padding:5px;
-	border-right: 0;
-	border-left:0;
+li.message_inbox_item_read, li.message_inbox_item{
+    width: 100%;
+    min-height: 50px;
+    text-align: left;
+    word-wrap:break-word;
+    padding:0px;
+    border:0;
 }
-li.inboxmessage{
- 	background-color: #FAFAFA;
+li.message_inbox_item{
+    background-color: #FAFAFA;
 }
 
-li.inboxmessageread{
-	background-color: white;
+li.message_inbox_item{
+    background-color: white;
+}
+.message_active_thread{
+    background-color:lightblue;
 }
 tr.message{
-	border: 0px solid black;
+    border: 0px solid black;
 }
 
 textarea.messagebox{
-	height: 50%;
-	max-height:70%;
-	font-size:1em; 
-	font-family: century gothic;
-	padding:7px;
+    height: 50%;
+    max-height:70%;
+    font-size:1em; 
+    font-family: century gothic;
+    padding:7px;
 }
