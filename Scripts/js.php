@@ -2,24 +2,33 @@
 include("lock.php");
 $system->getGlobalMeta();
 ?>
+<link rel="stylesheet" type="text/css" href="CSS/style.min.css" />
+<link rel="shortcut icon" type="image/png" href="Images/Icons/Icon_Pacs/glyph-icons/glyph-icons/PNG/World-small.png"/>
+    
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-<script>window.jQuery || document.write('<script src="Scripts/jquery-1.10.2.js">\x3C/script>');</script>
+<script>window.jQuery || document.write('<script src="Scripts/external/jquery-1.10.2.js">\x3C/script>');</script>
 
 <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/smoothness/jquery-ui.min.css" />
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-<script>window.jQuery.ui || document.write('<script src="Scripts/jquery-1.10.2.js">\x3C/script>');</script>
+<script>window.jQuery.ui || document.write('<script src="Scripts/external/jquery-1.10.2.js">\x3C/script>');</script>
 
-<script src="Scripts/cookie.js"></script>
+<script src="Scripts/external/cookie.min.js"></script>
 
 <script src="//cdn.jsdelivr.net/jquery.mcustomscrollbar/2.8.1/jquery.mCustomScrollbar.min.js"></script>
-<script>window.mCustomScrollbar || document.write('<script src="Scripts/jquery.mCustomScrollbar.min.js">\x3C/script>');</script>
-<!-- <script src="Scripts/jquery.mCustomScrollbar.min.js"></script> -->
-<link href="Scripts/jquery.mCustomScrollbar.css" rel="stylesheet" type="text/css" />
+<script>window.mCustomScrollbar || document.write('<script src="Scripts/external/jquery.mCustomScrollbar.min.js">\x3C/script>');</script>
+<link href="Scripts/external/jquery.mCustomScrollbar.min.css" rel="stylesheet" type="text/css" />
 
-<link href="Scripts/video-js/video-js.css" rel="stylesheet">
-<script src="Scripts/video-js/video.js"></script>
+<link href="Scripts/external/video-js/video-js.min.css" rel="stylesheet">
+<script src="Scripts/external/video-js/video.min.js"></script>
 <script>
-    _V_.options.flash.swf = "Scripts/video-js/video-js.swf";
+    _V_.options.flash.swf = "Scripts/external/video-js/video-js.swf";
+    
+    window.onerror = function(message, url, lineNumber) {  
+        if(message.indexOf("offsetTop") !== -1)
+        {
+            return true;
+        }
+    };
 </script>
 
 <script type="text/javascript">
@@ -114,7 +123,7 @@ $system->getGlobalMeta();
 //    }).disableSelection();
         //$(".scroll_thin").niceScroll({ autohidemode: true,horizrailenabled:false });
         //$(".scroll_thin_horizontal").niceScroll({ autohidemode: true });
-        
+        refreshVideoJs();
         
     });
     //END SEARCH
@@ -197,13 +206,13 @@ $system->getGlobalMeta();
 
         $(document).on('mouseover', "div.files", function()
         {
-            $('.audio_hidden_container').not($(this).prev('.audio_hidden_container')).hide();
-            $(this).prev('.audio_hidden_container').show();
+            $('.audio_hidden_container').not($(this).find('.audio_hidden_container')).fadeOut("fast");
+            $(this).find('.audio_hidden_container').slideDown("fast");
         });
 
         $(document).on('mouseover', "div.folder", function()
         {
-            $('.audio_hidden_container').hide();
+            $('.audio_hidden_container').slideUp("fast");
         });
 
         $('.audio_hidden_container').hover(function() {
@@ -236,6 +245,10 @@ $system->getGlobalMeta();
         else if (type == "file")
         {
             var files = $(name)[0].files;
+            var parent = $(name).parent();
+            var html = $(name).html();
+            $(name).remove();
+            $(parent).append(html).hide();
         }
         var length = files.length;
         for (var count = 0; count < length; count++)
@@ -300,7 +313,7 @@ $system->getGlobalMeta();
         }
         else
         {
-            refreshElement('#file_container','files','pd=' + encrypted_folder, '#main_file');
+            refreshFileContainer(encrypted_folder);
         }
         $("#progressContainer").hide();
     }
@@ -561,6 +574,7 @@ $system->getGlobalMeta();
 
         //$('#logo').css('left', container_left);
         $('.left_bar_container').css('left', container_left-1);
+        $('#friends_container').css('padding-top', 22);
 
         //var top_height = $('.navigation').position().top + $('.navigation').height();
 
@@ -607,6 +621,7 @@ $system->getGlobalMeta();
                 {
                     getHomeContent(share_group_id, function(){
                         removeDialog();
+                        refreshVideoJs();
                     });
                     clearPostArea();
                 }
@@ -925,8 +940,10 @@ $system->getGlobalMeta();
 
         } else if (type == "Video") {
             post_media_classes += " post_media_video";
+            additional_close += " post_media_single_close_file";
             text_to_append += ">";
-            var text = "<?php echo $system->videoPlayer(NULL,NULL,NULL,"width:100%;"); ?>";
+            var text = "<?php echo $system->videoPlayer(NULL, NULL, "post_media_video_element", "width:100%", "home_video_", TRUE); ?>";
+            text = text.replace(/:::webm_path:::/g, object.info.webm_path);
             text = text.replace(/:::mp4_path:::/g, object.info.mp4_path);
             text = text.replace(/:::flv_path:::/g, object.info.flv_path);
             text = text.replace(/:::ogg_path:::/g, object.info.ogg_path);
@@ -974,7 +991,7 @@ $system->getGlobalMeta();
             post_media_classes + '" ' +  post_media_style + "' " + ' id="post_media_single_' + object.file_id + '"';
         if(index != "found")
         {
-            if(type = "Webpage") {
+            if(type == "Webpage") {
                 post_media_added_files.push(object);
             } else {
                 post_media_added_files.push(object.file_id);
@@ -983,12 +1000,19 @@ $system->getGlobalMeta();
             $('.post_media_wrapper').append(post_media + text_to_append + "<div " + extra_params + " class='post_media_single_close" + 
                     additional_close + "'></div><div class='post_media_single_close_background'></div></div>");
         }
-        if(type) {
+        if(type == "Video") {
            // console.log('Attempting to load: file_video_' + object.file_id);
-             _V_('file_video_'+object.file_id, {"autoplay":true}, function(){
-                    vidPlayer = this;
-                    vidPlayer.play(); //autostart it
-                   // alert('done');
+//           $('#file_video_'+object.file_id).append('<source src="'+object.info.mp4_path+'" type="video/mp4" />');
+//           $('#file_video_'+object.file_id).append('<source src="'+object.info.flv_path+'" type="video/x-flv" />');
+//           $('#file_video_'+object.file_id).append('<source src="'+object.info.ogg_path+'" type="application/ogg" />');
+             _V_('home_video_'+object.file_id, {}, function(){
+//                    this.src([
+//                       // { type: "video/mp4", src: object.info.mp4_path },
+//                        //{ type: "video/flv", src: object.info.flv_path },
+//                        //{ type: "video/ogg", src: object.info.ogg_path },
+//                        { type: "video/x-msvideo", src: object.path },
+//                      ]);
+//                    //this.play(); //autostart it
                 });
         }
         $('#status_text').focus();
@@ -1003,20 +1027,20 @@ $system->getGlobalMeta();
             id = '#post_media_single_' + formatToID(object.value);
             for (var i = 0; i < post_media_added_files.length; i++) {
                 if(object.value == post_media_added_files[i].path) {
-                    console.log('Website detected in Post Attachements: '+object.value + " to " + post_media_added_files[i].path + " now REMOVED!");
+                    //console.log('Website detected in Post Attachements: '+object.value + " to " + post_media_added_files[i].path + " now REMOVED!");
                     post_media_added_files.splice(i, 1);
                 } else {
-                    console.log('No Website detected in Post Attachements: '+object.value + " to " + post_media_added_files[i].path);
+                    //console.log('No Website detected in Post Attachements: Submitted value of '+object.value + " to " + post_media_added_files[i].path);
                 }
             }
         } else if(object.type == "File") {
             id = '#post_media_single_' + object.value;
             for (var i = 0; i < post_media_added_files.length; i++) {
-                if(object.value == post_media_added_files[i].file_id) {
-                    console.log('File detected in Post Attachements: '+object.value + " to " + post_media_added_files[i].path + " now REMOVED!");
+                if(object.value == post_media_added_files[i]) {
+                    //console.log('File detected in Post Attachements: '+object.value + " to " + post_media_added_files[i] + " now REMOVED!");
                     post_media_added_files.splice(i, 1);
                 } else {
-                    console.log('No File detected in Post Attachements: '+object.value + " to " + post_media_added_files[i].path);
+                    //console.log('No File detected in Post Attachements: Comparing submitted value of '+object.value + " to " + post_media_added_files[i] + " of " + post_media_added_files);
                 }
             }
             
@@ -1225,10 +1249,30 @@ $system->getGlobalMeta();
             $('#file_div_hidden_container_' + id).remove();
             $('#file_div_' + id).fadeOut(function(){$(this).remove();});
             $('#loading_icon').fadeOut();
-            refreshElement('#file_container','files','pd=' + encrypted_folder, '#main_file');
+            refreshFileContainer(encrypted_folder);
         });
     }
-
+    function refreshFileContainer(encrypted_folder) {
+        refreshElement('#file_container','files','pd=' + encrypted_folder, '#main_file', function(){
+            refreshVideoJs();
+        }); 
+    }
+    function refreshVideoJs() {
+        $('.video-js').each(function(){
+            var video_id = $(this).attr('id');
+           _V_(video_id, {}, function() {
+              this.on('play', function(){
+                  videoPlay(video_id);
+              });
+              this.on('pause', function(){
+                  videoPause(video_id);
+              });
+              this.on('ended', function(){
+                  console.log('ended');
+              });
+           });
+        });
+    }
     function createFolder(parent_folder)
     {
         dialogLoad();
@@ -1261,8 +1305,8 @@ $system->getGlobalMeta();
             $("#audio_info_" + id).slideDown();
             $('#audio_' + id).get(0).play();
             $('#image_' + id).css('background-image', "url('../Images/Icons/Icon_Pacs/glyph-icons/glyph-icons/PNG/Pause.png')");
-            $('#audio_play_icon_' + id).show();
-            $('#audio_play_icon_seperator_' + id).show();
+            $('#audio_play_icon_' + id).slideDown();
+            $('#audio_play_icon_seperator_' + id).slideDown();
         }
         else
         {
@@ -1326,6 +1370,21 @@ $system->getGlobalMeta();
     {
         $('#audio_container_' + id).remove();
     }
+    
+    function videoPlay(id) {
+        id = id.replace(/[A-Za-z_$-]/g, "");
+        $('#audio_play_icon_' + id).css('visibility', 'visible');
+        $('#audio_play_icon_' + id).animate({opacity: "1"}, 200);
+        //$('#audio_play_icon_seperator_' + id).slideDown();
+    }
+    
+    function videoPause(id) {
+        id = id.replace(/[A-Za-z_$-]/g, "");
+        $('#audio_play_icon_' + id).animate({opacity: "0"}, 200, function() {
+            $('#audio_play_icon_' + id).css('visibility', 'hidden');
+        }); 
+        //$('#audio_play_icon_seperator_' + id).hide();
+    }
 
     function showUpload(type)
     {
@@ -1353,11 +1412,12 @@ $system->getGlobalMeta();
     {
         return (number < 10 ? '0' : '') + number;
     }
-    function refreshElement(element_to_load, page, query, div)
+    function refreshElement(element_to_load, page, query, div, onComplete)
     {
         $(element_to_load).load(page + '?' + query + ' ' + div, function()
         {
-            console.log(page + '?' + query + ' ' + div);
+            //console.log(page + '?' + query + ' ' + div);
+            onComplete();
         });
     }
 </script>

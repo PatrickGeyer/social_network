@@ -13,10 +13,10 @@ if (!isset($_COOKIE['id']) || $_COOKIE['id'] == "") {
     include_once('collaborator.class.php');
     include_once('home.class.php');
 
-    $phrases_query = "SELECT * FROM phrases;";
-    $phrases_query = $database_connection->prepare($phrases_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-    $phrases_query->execute();
-    $phrases = $phrases_query->fetch(PDO::FETCH_ASSOC);
+//    $phrases_query = "SELECT * FROM phrases;";
+//    $phrases_query = Database::getConnection()->prepare($phrases_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+//    $phrases_query->execute();
+//    $phrases = $phrases_query->fetch(PDO::FETCH_ASSOC);
 
     $user = new User;
     $files = new Files;
@@ -26,5 +26,6 @@ if (!isset($_COOKIE['id']) || $_COOKIE['id'] == "") {
     $notification = new Notification;
     $collaborator = new Collaborator;
     $home = new Home;
+    $database_connection = Database::getConnection();
 }
 ?>

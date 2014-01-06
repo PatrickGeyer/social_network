@@ -56,10 +56,14 @@ else {
         $ext = $files->findexts($_FILES['file']['name']);
         $file_name = $pure_name . "." . $ext;
         $thumbnail = $savepath . $pure_name . ".jpg";
-        
+
         $flv_path;
         $mp4_path;
         $ogg_path;
+        $swf_path;
+        $webm_path;
+        
+        $mp3_path;
 
         $thumbsavepath;
         $iconsavepath;
@@ -68,11 +72,12 @@ else {
             $type = $files->getType($_FILES['file']['name']);
             if ($type == "Audio") {
                 $convert_path = $base_path . $savepath . $file_name;
-                $result_path = $base_path . $savepath . $pure_name . ".mp3";
-                $iconsavepath = $thumbsavepath = $savepath . $pure_name . ".mp3";
-                $convert = $files->convert($convert_path, $result_path);
-                if ($convert != $result_path) {
-                    die("Error: " . $convert);
+                $iconsavepath = $mp3_path = $thumbsavepath = $savepath . $pure_name . ".mp3";
+                if($ext != "mp3") {
+                    $convert = $files->convert($convert_path, $base_path . $mp3_path);
+                    if ($convert != $base_path . $mp3_path) {
+                        echo ("Error: " . $convert);
+                    }
                 }
             }
             else if ($type == "Video") {
@@ -80,21 +85,27 @@ else {
                 $mp4_path = $savepath . $pure_name . ".mp4";
                 $ogg_path = $savepath . $pure_name . ".ogg";
                 $flv_path = $savepath . $pure_name . ".flv";
-                $convert = $files->convert($convert_path, $base_path . $mp4_path, "-f mp4 scale=320:-1");
-                if ($convert != $result_path) {
-                    die("Error: " . $convert);
+                $webm_path = $savepath . $pure_name . ".webm";
+                $flv_path = $savepath . $pure_name . ".flv";
+                $convert = $files->convert($convert_path, $base_path . $mp4_path, "-b 1500k -vcodec libx264 -vpre slow -vpre baseline -g 30", ""); //-b 1500k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm    -g 30 -s 640x360
+                if ($convert != $base_path . $mp4_path) {
+                    echo("Error: " . $convert);
                 }
-                $convert = $files->convert($convert_path, $base_path . $ogg_path, "-f ogg scale=320:-1");
-                if ($convert != $base_path . $iconsavepath) {
-                    die("Error: " . $convert);
+                $convert = $files->convert($convert_path, $base_path . $webm_path, "-b 1500k -vcodec libvpx -acodec libvorbis -aq 3 -ab 128000 -f webm -g 30 -s 640x360", "");
+                if ($convert != $base_path . $webm_path) {
+                    echo("Error: " . $convert);
                 }
-                $convert = $files->convert($convert_path, $base_path . $flv_path, "-f flv scale=320:-1");
-                if ($convert != $base_path . $thumbsavepath) {
-                    die("Error: " . $convert);
-                }
-                $convert = $files->convert($convert_path, $base_path . $thumbnail, " -frames:v 1 ", " -ss 00:00:01 ");
+//                $convert = $files->convert($convert_path, $base_path . $ogg_path, "");
+//                if ($convert != $base_path . $ogg_path) {
+//                    echo("Error: " . $convert);
+//                }
+//                $convert = $files->convert($convert_path, $base_path . $flv_path, "");
+//                if ($convert != $base_path . $flv_path) {
+//                    echo("Error: " . $convert);
+//                }
+                $convert = $files->convert($base_path . $webm_path, $base_path . $thumbnail, " -vframes 1 ", "-itsoffset -2");
                 if ($convert != $base_path . $thumbnail) {
-                    die("Error: " . $convert);
+                    echo("Error: " . $convert);
                 }
             }
             else {
@@ -110,8 +121,8 @@ else {
                 $resizeObj->saveImage("../" . $iconsavepath);
             }
             $database_connection->beginTransaction();
-            $sql = "INSERT INTO `files` (user_id, filepath, thumb_filepath, icon_filepath, thumbnail, flv_path, mp4_path, ogg_path, name, type, parent_folder_id) "
-                    . "VALUES (:user_id, :file_path, :thumbsavepath, :iconsavepath, :thumbnail, :flv_path, :mp4_path, :ogg_path,:name, :type, :parent_folder);";
+            $sql = "INSERT INTO `files` (user_id, filepath, thumb_filepath, icon_filepath, thumbnail, flv_path, mp4_path, ogg_path, webm_path, name, type, parent_folder_id) "
+                    . "VALUES (:user_id, :file_path, :thumbsavepath, :iconsavepath, :thumbnail, :flv_path, :mp4_path, :ogg_path, :webm_path, :name, :type, :parent_folder);";
             $sql = $database_connection->prepare($sql);
             $sql->execute(array(
                 ":user_id" => $user->getId(),
@@ -125,14 +136,16 @@ else {
                 ":flv_path" => $flv_path,
                 ":mp4_path" => $mp4_path,
                 ":ogg_path" => $ogg_path,
+                ":webm_path" => $webm_path,
             ));
-            $lastInsertId = $database_connection->lastInsertId();
+            $lastInsertId = $database_connection->lastInsertId(); 
             $database_connection->commit();
         }
         else {
             echo "Upload Failed!";
         }
-        echo json_encode(array("file_id" => $lastInsertId, "filename" => $_FILES['file']['name'], "filepath" => $thumbsavepath));
+        die("200");
+        //echo json_encode(array("file_id" => $lastInsertId, "filename" => $_FILES['file']['name'], "filepath" => $thumbsavepath));
     }
 }
 ?>

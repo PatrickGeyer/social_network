@@ -3,17 +3,18 @@
 include_once('database.class.php');
 include_once('user.class.php');
 
-class Chat extends Database {
+class Chat {
 
     private $user;
-
+    protected $database_connection;
     public function __construct() {
-        parent::__construct();
         $this->user = new User;
+        $this->database_connection = Database::getConnection();
     }
 
     public function submitChat($aimed, $text) {
         $text = str_replace("\n", "<br />", $text);
+        $text = strip_tags($text);
         if ($text == "") {
             
         } else if ($aimed == "s" || $aimed == "y") {
@@ -115,10 +116,10 @@ class Chat extends Database {
             echo "chat_my_wrapper";
         }
         echo "'>";
-        echo "<table cellspacing='0' cellpadding='0' style='width:100%;'><tr><td style='width:50px;padding-right:5px;'>";
-        echo "<div class='chat_user_profile' style='border-left:2px solid ".($this->user->getOnline($record['sender_id']) == true ? "rgb(28, 184, 65)" : "red")."; float:left;width:40px;height:40px;background-image:url(" . 
-                $this->user->getProfilePicture('chat', $record['sender_id']) . ");background-size:cover;'></div>";
-        echo "</td><td>";
+        echo "<table cellspacing='0' cellpadding='0' style='width:100%;'><tr>";//<td style='width:50px;padding-right:5px;'>";
+        //echo "<div class='chat_user_profile' style='border-left:2px solid ".($this->user->getOnline($record['sender_id']) == true ? "rgb(28, 184, 65)" : "red")."; float:left;width:40px;height:40px;background-image:url(" . 
+                //$this->user->getProfilePicture('chat', $record['sender_id']) . ");background-size:cover;'></div>";
+        echo "<td>"; //</td>
         echo "<div class='chatname'><span class='user_preview user_preview_name chatname' style='font-size:13px;' user_id='"
             .$record['sender_id']."'>" . $this->user->getName($record['sender_id']) . "</span></div>";
         echo "<div class='chattext'>";

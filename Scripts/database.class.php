@@ -1,14 +1,22 @@
 <?php
-class Database
-{
-	private $database_user = 'social_network';
-	private $database_password = 'Filmaker1';
-	private $database_dsn = 'mysql:dbname=social_network;host=localhost';
-	public $database_connection;
-	public function __construct()
-	{
-		$this->database_connection = new PDO($this->database_dsn, $this->database_user, $this->database_password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING))
-			OR die('ERROR');
-	}
+include_once("base.class.php");
+
+class Database extends Base {
+    private static $link = null ;
+
+    public static function getConnection ( ) {
+        if (self :: $link) {
+            return self :: $link;
+        }
+
+        $dsn = "mysql:dbname=social_network;host=localhost";
+        $user = "social_network";
+        $password = "Filmaker1";
+
+        self :: $link = new PDO($dsn, $user, $password);
+        return self :: $link;
+    }
+
 }
+
 ?>

@@ -1,10 +1,10 @@
 <?php
 
-include_once('Includes_PHP/simple_html_dom.php');
-include('database.class.php');
-include('files.class.php');
+include_once('php_includes/simple_html_dom.php');
+include_once('database.class.php');
+include_once('files.class.php');
 
-class System extends Database {
+class System {
 
     private $url;
     protected $files;
@@ -18,7 +18,6 @@ class System extends Database {
     );
 
     public function __construct() {
-        parent::__construct();
         $this->files = new Files;
     }
 
@@ -63,7 +62,7 @@ class System extends Database {
         }
     }
 
-    public function audioPlayer($path = null, $name = null, $close_button = true, $rndm = null) {
+    public function audioPlayer($path = null, $name = null, $close_button = false, $rndm = null) {
         if ($rndm == "blank") {
             $rndm = ":::uid:::";
         }
@@ -88,18 +87,32 @@ class System extends Database {
                 '"></div></div><div class="audio_time" id="audio_time_' . $rndm . '">0:00</div></div></div>';
         return $string;
     }
-    
-    public function videoPlayer($video_id = NULL, $path = NULL, $classes = NULL, $styles = NULL) {
-        $flv_path;
-        $mp4_path;
-        $ogg_path;
-        $original_path;
-        $thumbnail;
-        
-        if($video_id == NULL) {
+
+    /**
+     * VideoPlayer function
+     * Prints an HTML5 video Tag.
+     * 1. Video ID
+     * 2. Video Path
+     * 3. Video Classes
+     * 4. Video Styles
+     * 5. Video ID Prefix (default:"file_video_")
+     * 6. Print Source Tags (bool)
+     */
+    public function videoPlayer($video_id = NULL, $path = NULL, $classes = NULL, $styles = NULL, $video_id_prefix = "file_video_", $source = FALSE) {
+        $flv_path = \NULL;
+        $mp4_path = \NULL;
+        $ogg_path = \NULL;
+        $swf_path = \NULL;
+        $webm_path = \NULL;
+        $original_path = \NULL;
+        $thumbnail = \NULL;
+        $return = \NULL;
+
+        if ($video_id == NULL) {
             $video_id = ":::vid:::";
         }
-        if($path == NULL) {
+        if ($path == NULL) {
+            $webm_path = ":::webm_path:::";
             $flv_path = ":::flv_path:::";
             $mp4_path = ":::mp4_path:::";
             $ogg_path = ":::ogg_path:::";
@@ -111,20 +124,35 @@ class System extends Database {
             $flv_path = $path . ".flv";
             $mp4_path = $path . ".mp4";
             $ogg_path = $path . ".ogg";
+            $swf_path = $path . ".swf";
+            $webm_path = $path . ".webm";
             $original_path = $path.".avi";
             $thumbnail = $path . ".jpg";
+
+//            REM mp4  (H.264 / ACC)
+//            "c:\program files\ffmpeg\bin\ffmpeg.exe" -i %1 -b 1500k -vcodec libx264 -vpre slow -vpre baseline                                           -g 30 -s 640x360 %1.mp4
+//            REM webm (VP8 / Vorbis)
+//            "c:\program files\ffmpeg\bin\ffmpeg.exe" -i %1 -b 1500k -vcodec libvpx                              -acodec libvorbis -ab 160000 -f webm    -g 30 -s 640x360 %1.webm
+//            REM ogv  (Theora / Vorbis)
+//            "c:\program files\ffmpeg\bin\ffmpeg.exe" -i %1 -b 1500k -vcodec libtheora                           -acodec libvorbis -ab 160000            -g 30 -s 640x360 %1.ogv
+//            REM jpeg (screenshot at 10 seconds)
+//            "c:\program files\ffmpeg\bin\ffmpeg.exe" -i %1 -ss 00:10 -vframes 1 -r 1 -s 640x360 -f image2 %1.jpg
         }
-        return  "<video id='file_video_" . $video_id . "' class='".$classes." video-js vjs-default-skin'"
+        $return .="<video width='100%' height='100%' id='" . $video_id_prefix . $video_id . "' class='video-js vjs-default-skin " . $classes . "'"
                 . "preload='auto' controls poster='" . $thumbnail . "'"
                 . "style='" . $styles . "' "
-                . "data-setup='{}'>"
-                . "<source src='" . $flv_path . "' type='video/x-flv'>" //should be mp4
-                . "<source src='". $ogg_path ."' type='video/ogg'> "
-                . "<source src='" . $mp4_path . "' type='video/mp4'>"
-                . "<object data='" . $original_path . "' width='320' height='240'>"
-                . "<embed src='" . $flv_path . "' width='320' height='240'>"
+                . ">"; //data-setup ={}
+        if ($source == TRUE) {
+            $return .="<source src='" . $webm_path . "' type='video/webm'>";
+                    //. "<source src='". $ogg_path ."' type='video/ogg'> "
+                    //. "<source src='" . $flv_path . "' type='video/x-flv'>"
+                    //. "<source src='" . $original_path . "' type='video/avi'>";
+        }
+        $return .= "<object data='" . $mp4_path . "' width='320' height='240'>"
+                . "<embed src='" . $mp4_path . "' width='320' height='240'>"
                 . "</object>"
                 . "</video>";
+        return $return;
     }
 
     function trimStr($string, $length) {

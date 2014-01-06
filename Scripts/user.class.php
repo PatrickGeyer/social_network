@@ -1,15 +1,14 @@
 <?php
-
 include_once('database.class.php');
 
-class User extends Database {
+class User {
 
     public $user_id;
+    private $database_connection;
 
     public function __construct() {
-        parent::__construct();
         $this->user_id = base64_decode($_COOKIE['id']);
-        return true;
+        $this->database_connection = Database::getConnection();
     }
 
     function getId() {
@@ -109,8 +108,6 @@ class User extends Database {
             $user_query = "SELECT profile_picture_icon FROM users WHERE id = :user_id";
         } else if ($size == "chat") {
             $user_query = "SELECT profile_picture_chat_icon FROM users WHERE id = :user_id";
-        } else {
-            $user_query = "SELECT profile_picture_chat_icon FROM users WHERE id = :user_id";
         }
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
@@ -119,7 +116,7 @@ class User extends Database {
             return $user_profile_picture;
         } else {
             if ($this->getGender($id) == "Male") {
-                return "Images/profile-picture-default-male-" . $size . ".jpg";
+                return Base::MALE_DEFAULT_ICON;
             } else {
                 return "Images/profile-picture-default-female-" . $size . ".jpg";
             }
@@ -142,7 +139,7 @@ class User extends Database {
             $id = $this->user_id;
         }
         $user_query = "SELECT about FROM users WHERE id = :user_id";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query = $this->database_connection->prepare($user_query);
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
         if(strtolower($user) == "null" || $user == "") {
@@ -238,8 +235,8 @@ class User extends Database {
         if ($id == null) {
             $id = $this->user_id;
         }
-        $this->database_connection->query("UPDATE users SET online = 1 WHERE id = " . $id . ";");
-        $this->database_connection->query("UPDATE users SET lastactivity = NOW() WHERE id = " . $id . ";");
+        $this->database_connection->prepare("UPDATE users SET online = 1 WHERE id = " . $id . ";")->execute();
+        $this->database_connection->prepare("UPDATE users SET lastactivity = NOW() WHERE id = " . $id . ";")->execute();
     }
 
     function getOnline($id) {
@@ -261,7 +258,7 @@ class User extends Database {
 
 }
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
-    $user = new User;
+    $user = new User();
     if(isset($_POST['about'])) {
         if (!isset($_POST['email'])) {
             $email = $user->getEmail();

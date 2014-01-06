@@ -166,7 +166,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 <html>
 <head>
 	<link rel="stylesheet" type="text/css" href="CSS/settings.css">
-	<script src="Scripts/jquery-ui-1.10.3.js"></script>
+	<script src="Scripts/external/jquery-ui-1.10.3.js"></script>
 	<title>Settings</title>
 </head>
 <body>

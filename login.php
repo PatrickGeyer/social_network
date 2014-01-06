@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <html>
     <head>
-        <script src="Scripts/jquery.min.js"></script>
+        <script src="Scripts/external/jquery.min.js"></script>
         <link rel="stylesheet" type="text/css" href="CSS/login.css">
         <title>Login</title>
         <link rel="stylesheet" type="text/css" href="CSS/style.css">

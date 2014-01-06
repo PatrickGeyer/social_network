@@ -40,10 +40,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $school_query = $database_connection->prepare($school_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $school_query->execute(array(":community_id" => $user->getCommunityId()));
 
-        $school_query = "INSERT INTO activity_share (activity_id, year, direct) 
-		VALUES(" . $lastInsertId . ", :user_year, 0);";
+        $school_query = "INSERT INTO activity_share (activity_id, community_id, year, direct) 
+		VALUES(" . $lastInsertId . ", :community_id, :user_year, 0);";
         $school_query = $database_connection->prepare($school_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $school_query->execute(array(":user_year" => $user->getPosition()));
+        $school_query->execute(array(":community_id" => $user->getCommunityId(), ":user_year" => $user->getPosition()));
 
         foreach ($group->getUserGroups() as $single_group) {
             $school_query = "INSERT INTO activity_share (activity_id, group_id, direct) 
@@ -59,14 +59,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $school_query->execute(array(":group_id" => $_POST['group_id']));
     }
     foreach ($post_media_added_files as $file) {
-        if(is_numeric($file['file_id'])) {
+        if (is_numeric($file['file_id'])) {
             $media_query = "INSERT INTO activity_media (activity_id, file_id) VALUES (:activity_id, :file_id);";
             $options = array(
                 ":activity_id" => $lastInsertId,
-                ":file_id" => $file['file_id'],
+                ":file_id" => $file,
             );
-            
-        } else {
+        }
+        else {
             $media_query = "INSERT INTO activity_media (activity_id, URL, web_title, web_description, web_favicon) VALUES (:activity_id, :URL, :title, :description, :fav);";
             $options = array(
                 ":activity_id" => $lastInsertId,

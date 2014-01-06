@@ -750,6 +750,7 @@ img.navigationpicture{
     top: 55px;
     bottom: 0px;
     width: 200px;
+    z-index: 123;
 }
 
 td.welcome{
@@ -1804,6 +1805,11 @@ table.singleupdate{
 }
 .post_media_video{
     width: 474px; 
+    height: 300px;
+}
+.post_media_video_element{
+    width: 100% !important;
+    //height: 100% !important;
 }
 .post_media_webpage_favicon{
     background-size: contain;
@@ -1990,7 +1996,6 @@ div.newfile{
 
 div.file{
     position: relative;
-    top: 1em; 
     margin-bottom: 0em; 
     margin-left:20px;
     margin-right: 20px;
@@ -2029,6 +2034,27 @@ h2 {
     position: relative;
     background: white; 
 }
+
+.files_recently_shared{
+    margin-top: 20px;
+    border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;
+    height: 150px;
+    width: 100%;
+}
+
+.files_feed_item{
+    background-color: black;
+    min-width: 150px;
+    height: 100%;
+    display: inline-block;
+}
+
+.files_shared_video{
+    height: 100%;
+    width: 100%;
+}
+
 div.files, div.folder{
     padding:5px;
     padding-right: 0px;
@@ -2045,7 +2071,6 @@ div.files, div.folder{
 
     box-shadow: inset 0 0 0 transparent;
     background-color: transparent;
-    z-index: 0;
     vertical-align: middle;
 }
 div.files:hover, div.folder:hover{
@@ -2067,11 +2092,14 @@ div.files{
 .file_folder_active{
     background-color: grey;
 }
-div.files:hover .files_actions{
-    opacity: 1;
+
+div.files:hover p.files{
+    margin-left: 115px;
+    max-width: 150px;
+    color: rgb(66, 184, 221);
 }
-div.folder:hover > .files_actions{
-    opacity: 1;
+div.files:hover .file_play_icon {
+    color:  rgb(66, 184, 221);
 }
 
 .audio_hidden_container{
@@ -2082,10 +2110,11 @@ div.folder:hover > .files_actions{
     display: none;
     position: absolute;
     right: 0px;
+    top: -1px;
     /*background-image: url("../Images/classy_fabric.png");*/
     background-color: white;
     border: 1px solid rgb(66, 184, 221);
-    min-width: 300px;
+    min-width: 400px;
     width:auto; 
     z-index: 1;
 }
@@ -2093,13 +2122,13 @@ div.folder:hover > .files_actions{
 {
     content: '';
     position: absolute;
-    width: 0; 
-    height: 0; 
+    width: 0px; 
+    height: 0px; 
     border-top: 10px solid transparent;
     border-bottom: 10px solid transparent; 
 
     border-right:10px solid rgb(66, 184, 221); 
-    width: 0;
+    width: 0px;
     top: 10px;
     left: -10px;
 }
@@ -2114,21 +2143,31 @@ p.files{
     font-size: 13px;
     line-height: 30px;
     color: grey;
-    margin:0px;
+    margin: 0px;
     padding: 0px;
-    max-width: 200px;
+    max-width: 300px;
     white-space: nowrap;
+    -webkit-transition: all 300ms ease;
+    -moz-transition: all 300ms ease;
+    -ms-transition: all 300ms ease;
+    -o-transition: all 300ms ease;
+    transition: all 300ms ease;
+    display: inline-block;
 }
+
+.file_play_icon{
+    color: grey;
+    visibility:hidden;
+    display:inline-block;
+    opacity: 0;
+    margin-left: 5px;
+}
+
 .files_actions{
-    -webkit-transition: opacity 0.2s ease-in-out;
-    -moz-transition: opacity 0.2s ease-in-out;
-    -o-transition: opacity 0.2s ease-in-out;
-    transition: opacity 0.2s ease-in-out;
     position: absolute;
     top:0px;
-    right: 340px;
+    left: 0px;
     opacity: 0.6;
-    display: inline-block;
 }
 
 .files_actions:hover{
@@ -2173,8 +2212,8 @@ p.files{
     cursor: pointer;
 }
 .files_actions_item:hover{
-    height:25px;
-    width:25px;
+    height:23px;
+    width:23px;
     /*box-shadow: inset 0px 0px 10px lightgrey;*/
 }
 

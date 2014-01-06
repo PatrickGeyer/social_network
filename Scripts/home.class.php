@@ -1,27 +1,22 @@
 <?php
 
 include_once('database.class.php');
-include_once('extends.class.php');
 include_once('system.class.php');
 include_once('user.class.php');
 include_once('files.class.php');
 
-class Home extends Database {
+class Home {
 
-    private $phrases;
-    private $system;
-    private $user;
-    private $files;
+    protected $system;
+    protected $user;
+    protected $files;
+    protected $database_connection;
 
     public function __construct() {
-        parent::__construct();
-        $phrases_query = "SELECT * FROM phrases;";
-        $phrases_query = $this->database_connection->prepare($phrases_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $phrases_query->execute();
-        $this->phrases = $phrases_query->fetch(PDO::FETCH_ASSOC);
         $this->user = new User;
         $this->system = new System;
         $this->files = new Files;
+        $this->database_connection = Database::getConnection();
     }
 
     function fileList($file) {
@@ -30,37 +25,45 @@ class Home extends Database {
         if ($file['type'] == "Folder") {
             echo "folder' ";
             echo "onclick='addToStatus(&apos;" . $file['type'] . "&apos;, object={path:&apos;" . urlencode($this->system->encrypt($file['folder_id'])) . "&apos;, name:&apos;" . urlencode($this->system->encrypt($this->user->getId())) . "&apos;});'";
-        } else if($file['type'] == "Audio") {
-            echo "file' onclick='addToStatus(&apos;" . $file['type'] . "&apos;, object={path:&apos;" 
-                    . $file['thumb_filepath'] . "&apos;, name:&apos;" . $file['name'] 
-                    . "&apos;, file_id:".$file['id']."});'";
-        } else if($file['type'] == "Video") {
+        }
+        else if ($file['type'] == "Audio") {
+            echo "file' onclick='addToStatus(&apos;" . $file['type'] . "&apos;, object={path:&apos;"
+            . $file['thumb_filepath'] . "&apos;, name:&apos;" . $file['name']
+            . "&apos;, file_id:" . $file['id'] . "});'";
+        }
+        else if ($file['type'] == "Video") {
             $info = array(
                 "thumbnail" => $file['thumbnail'],
-                "flv_path" => $file['thumb_filepath'],
-                "ogg_path" => $file['icon_filepath'],
-                "mp4_path" => $file['filepath'],
+                "flv_path" => $file['flv_path'],
+                "webm_path" => $file['webm_path'],
+                "ogg_path" => $file['ogg_path'],
+                "mp4_path" => $file['mp4_path'],
             );
             $object = array(
+                "path" => $file['filepath'],
                 "info" => $info,
                 "name" => $file['name'],
                 "file_id" => $file['id'],
             );
 
-           echo "file' onclick='var object = (".  json_encode($object).");addToStatus(&apos;" . $file['type'] . "&apos;, object);'";
-        } else {
-            echo "file' onclick='addToStatus(&apos;" . $file['type'] . "&apos;, object={path:&apos;" 
-                    . $file['thumb_filepath'] . "&apos;, name:&apos;" . $file['name'] 
-                    . "&apos;, file_id:".$file['id']."});'";
+            echo "file' onclick='var object = (" . json_encode($object) . ");addToStatus(&apos;" . $file['type'] . "&apos;, object);'";
+        }
+        else {
+            echo "file' onclick='addToStatus(&apos;" . $file['type'] . "&apos;, object={path:&apos;"
+            . $file['thumb_filepath'] . "&apos;, name:&apos;" . $file['name']
+            . "&apos;, file_id:" . $file['id'] . "});'";
         }
         echo ">";
         if ($file['type'] == "Image") {
             echo "<div class='search_picture' style='background-image:url(&quot;" . $file['icon_filepath'] . "&quot;);'></div>";
-        } else if ($file['type'] == "Folder") {
+        }
+        else if ($file['type'] == "Folder") {
             echo "<div class='search_picture' style='background-image:url(&quot;Images/yellow-folder-icon.jpg&quot);'></div>";
-        } else if ($file['type'] == "Audio") {
+        }
+        else if ($file['type'] == "Audio") {
             echo "<div class='search_picture' style='background-image:url(&quot;Images/Icons/music-icon.png&quot);'></div>";
-        } else if($file['type'] == "Video") {
+        }
+        else if ($file['type'] == "Video") {
             echo "<div class='search_picture' style='background-image:url(&quot;" . $file['thumbnail'] . "&quot;);'></div>";
         }
         echo "<span class='search_option_name'>" . $this->system->trimStr($file['name'], 15) . "</span>";
@@ -69,7 +72,7 @@ class Home extends Database {
         echo "</td></tr>";
     }
 
-    function homeify($activity, $database_connection, $user) {
+    function homeify($activity) {
         $post_number = 0;
         $activity_time = strtotime($activity['time']);
 
@@ -84,7 +87,7 @@ class Home extends Database {
 		</a>
 		</td>
 		<td class='update'>";
-        echo "<a class='user_name_post user_preview user_preview_name' user_id='".$activity['user_id']."' href='user?id=" . urlencode(base64_encode($activity['user_id'])) . "'>";
+        echo "<a class='user_name_post user_preview user_preview_name' user_id='" . $activity['user_id'] . "' href='user?id=" . urlencode(base64_encode($activity['user_id'])) . "'>";
         echo $this->user->getName($activity['user_id']);
         echo " </a>";
 
@@ -92,53 +95,60 @@ class Home extends Database {
             echo "<hr class='post_user_name_underline'>";
             $activity['status_text'] = str_replace("<img", "<img onclick='initiateTheater($(this).attr(&quot;real_src&quot;)," . $activity['id'] . ");' ", $activity['status_text']);
             echo "<span class='post_text'>" . $activity['status_text'] . '</span>';
-        } else if ($activity['type'] == "profile") {
-            if ($user['default_language'] == "") {
+        }
+        else if ($activity['type'] == "profile") {
+            if ($this->user->getLanguage() == "") {
                 $phrase_language = "en";
-            } else {
-                $phrase_language = strtolower($user['default_language']);
+            }
+            else {
+                $phrase_language = strtolower($this->user->getLanguage());
             }
             $phrase_string = strtolower($activity['user_gender']) . "_" . $phrase_language;
             $phrase_string = "profile_picture_" . $phrase_string;
             echo $phrases[$phrase_string];
-        } else if ($activity['type'] == "video") {
+        }
+        else if ($activity['type'] == "video") {
             $phrase_string = strtolower($activity['user_gender']) . "_" . $user['default_language'];
             echo $phrases['profile_picture_' . $phrase_string];
             echo "<embed src='" . $activity . "'></embed>";
-        } else if ($activity['type'] == "file") {
+        }
+        else if ($activity['type'] == "file") {
             if ($user->getLanguage() == "") {
                 $phrase_string = "en";
-            } else {
+            }
+            else {
                 $phrase_string = strtolower($user->getLanguage());
             }
             $phrase_query = "file_share_" . $phrase_string;
             echo $this->phrases[$phrase_query] . "<br/><br/>";
             echo "<span style='font-style: italic;'>" . $activity['description'] . "</span>";
             echo "<br><a style='text-decoration:none; color:grey;' href='" . $activity['status_text'] . "'>File</a>";
-        } else if ($activity['type'] == "folder") {
+        }
+        else if ($activity['type'] == "folder") {
             $phrase_string = strtolower($user['default_language']);
             $phrase_string = $this->phrases['folder_share_' . $phrase_string];
             $phrase_string = str_replace('$folder', "<a href='" . $activity['status_text'] . "'>" . $activity['activity_name'] . "'</a>", $phrase_string);
             echo $phrase_string;
-        } else if ($activity['type'] == "abdicate") {
+        }
+        else if ($activity['type'] == "abdicate") {
             $phrase_string = strtolower($user['default_language']);
             $phrase_string = $this->phrases['abdicate_' . $phrase_string];
             $phrase_string = str_replace('$group', "<a href='" . $activity['status_text'] . "'>" . $activity['activity_name'] . "'</a>", $phrase_string);
             echo $phrase_string;
         }
-        
+
         $assocFiles = $this->getAssocFiles($activity['id']);
         $assocFiles_num = count($assocFiles);
-        if($assocFiles_num > 0) {
+        if ($assocFiles_num > 0) {
             echo "<div class='post_feed_media_wrapper'>";
-            foreach($assocFiles as $file) {
-                echo $this->printFileItem($this->files->getType($file['name']), $file, $activity);
+            foreach ($assocFiles as $file) {
+                echo $this->printFileItem($this->files->getType($file['filepath']), $file, $activity);
             }
             echo "</div>";
         }
 
         $who_liked_query = "SELECT * FROM `votes` WHERE post_id = :activity_id AND vote_value = 1;";
-        $who_liked_query = $database_connection->prepare($who_liked_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $who_liked_query = $this->database_connection->prepare($who_liked_query);
         $who_liked_query->execute(array(":activity_id" => $activity['id']));
         $like_count = $who_liked_query->rowCount();
         echo '</td>
@@ -154,12 +164,13 @@ class Home extends Database {
         foreach ($who_liked_all as $who_liked) {
             $iteration++;
             $who_liked_query = "SELECT name FROM `users` WHERE id = :user_id;";
-            $who_liked_query = $database_connection->prepare($who_liked_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+            $who_liked_query = $this->database_connection->prepare($who_liked_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $who_liked_query->execute(array(":user_id" => $who_liked['user_id']));
             $who_liked = $who_liked_query->fetch(PDO::FETCH_ASSOC);
             if ($iteration == 1) {
                 echo $who_liked['name'];
-            } else {
+            }
+            else {
                 echo ",<br>" . $who_liked['name'];
             }
         }
@@ -185,14 +196,15 @@ class Home extends Database {
         echo "<div class='comments' id = 'commentcomplete_" . $activity['id'] . "'>";
         if ($num >= 0) {
             echo '<div id= comment_div_' . $activity['id'] . ' class="comment_box">';
-        } else {
+        }
+        else {
             echo '<div style="border: 0px;" id= comment_div_' . $activity['id'] . ' class="chatinput">';
         }
 
         //echo "<span onclickclass='post_expand_comments' style='font-size:10px;color:blue;text-decoration:underline;'>expand comments</span>";
         //echo "<hr class='post_comment_seperator'>";
 
-        $this->getComments($activity['id'], $database_connection);
+        $this->getComments($activity['id']);
 
         echo "<div id='comment_input_" . $activity['id'] . "' class='comment_input' style='padding-left:2px;padding-top:2px;'><table style='width:100%;'><tr><td style='vertical-align:top;width:40px;'>
 		<div class='post_comment_profile_picture post_comment_profile_picture_user' style='background-image:url(\"" . $this->user->getProfilePicture('chat') . "\");'></div></td><td cellspacing='0' style='vertical-align:top;'>";
@@ -206,12 +218,13 @@ class Home extends Database {
         echo "</td></tr></table></div>";
         if ($num >= 0) {
             echo "</div>";
-        } else {
+        }
+        else {
             echo "</div>";
         }
         echo "</div>";
         echo "<span id='post_time_" . $activity['id'] . "' style='font-size:0.8em; color:grey; float:right;'> " . $this->system->humanTiming($activity_time) . " -</span>";
-        if ($activity['user_id'] == $user->getId()) {
+        if ($activity['user_id'] == $this->user->getId()) {
             echo "<span class='delete' id='delete1_post_" . $activity['id'] . "' onclick='show_Confirm(" . $activity['id'] . ");'
 			style='font-family: century gothic; cursor:pointer;font-size:0.8em; color:grey; float:left;'>delete</span>";
             echo "<span class='delete' id='delete_post_" . $activity['id'] . "' onclick='delete_post(" . $activity['id'] . ");'
@@ -232,7 +245,8 @@ class Home extends Database {
         if ($get_all != null) {
             if ($numRows < 5) {
                 
-            } else {
+            }
+            else {
                 $db_query_comments = "SELECT time,commenter_id, comment_text FROM comments WHERE post_id = :activity_id AND commenter_id IN
 				(SELECT id FROM users WHERE position = " . $this->user->getPosition() . " AND community_id = " . $this->user->getCommunityId() . ")ORDER BY time ASC";
                 $db_query_comments = $this->database_connection->prepare($db_query_comments);
@@ -240,7 +254,8 @@ class Home extends Database {
                 $numRows = $db_query_comments->rowCount();
                 if ($numRows < 5) {
                     
-                } else {
+                }
+                else {
                     $db_query_comments = "SELECT time,commenter_id, comment_text FROM comments WHERE post_id = :activity_id AND commenter_id 
 					IN(SELECT id FROM users WHERE position = " . $this->user->getPosition() . " AND community_id = " . $this->user->getCommunityId() . ") ORDER BY time DESC LIMIT 5 ";
                     $db_query_comments = $this->database_connection->prepare($db_query_comments);
@@ -269,48 +284,56 @@ class Home extends Database {
         $sql = "SELECT * FROM files WHERE id IN (SELECT file_id FROM activity_media WHERE activity_id = :activity_id) ORDER BY type;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(
-            array(
-                ":activity_id" => $activity_id,
-                ));
+                array(
+                    ":activity_id" => $activity_id,
+        ));
         $file_array = $sql->fetchAll(PDO::FETCH_ASSOC);
         $sql = "SELECT * FROM activity_media WHERE activity_id = :activity_id AND file_id IS NULL;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(
-            array(
-                ":activity_id" => $activity_id,
-                ));
+                array(
+                    ":activity_id" => $activity_id,
+        ));
         $web_array = $sql->fetchAll(PDO::FETCH_ASSOC);
         $result_array = array_merge($file_array, $web_array);
         return $result_array;
     }
-    public function printFileItem($file_type, $file, $activity) {
-        $post_classes   =   " class='post_feed_item ";
-        $post_styles    =   " style='";
-        $container      =   "<div";
-        $post_content   =   "";
 
-        if($file_type == "Audio") {
-            $post_classes   .=  "post_media_audio";
-            $post_styles    .=  " height:auto; ";
-            $post_content   .=  $this->system->audioPlayer($file['thumb_filepath'], $file['name'], false, false);
-        } else if($file_type == "Image") {
-            $post_styles    .=  "background-image:url(\"".$file['thumb_filepath']."\")' onclick='initiateTheater(&quot;".$file['filepath']."&quot;, ".$activity['id'].");";
-        } else {
-            $post_classes   .=  "post_media_full";
-            $post_styles    .=  "height:auto;";
-            $post_content   .=  "<table style='height:100%;'><tr><td rowspan='3'>".
-                    "<div class='post_media_webpage_favicon' style='background-image:url(&quot;" . $file['web_favicon'] . "&quot;);'></div></td>".
-                    "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>".
-                    "<a class='user_preview_name' target='_blank' href='" . $file['URL'] . "'><span style='font-size:13px;'>" . $file['web_title'] ."</span></a></div></td></tr>".
+    public function printFileItem($file_type, $file, $activity) {
+        $post_classes = " class='post_feed_item ";
+        $post_styles = " style='";
+        $container = "<div";
+        $post_content = "";
+
+        if ($file_type == "Audio") {
+            $post_classes .= "post_media_audio";
+            $post_styles .= " height:auto; ";
+            $post_content .= $this->system->audioPlayer($file['thumb_filepath'], $file['name'], false, false);
+        }
+        else if ($file_type == "Image") {
+            $post_styles .= "background-image:url(\"" . $file['thumb_filepath'] . "\")' onclick='initiateTheater(&quot;" . $file['filepath'] . "&quot;, " . $activity['id'] . ");";
+        }
+        else if ($file_type == "Video") {
+            $post_classes .= "post_media_video";
+            $post_content .= $this->system->videoPlayer($file['id'], $file['filepath'], $classes, "height:100%;", "home_feed_video_", TRUE);
+        }
+        else {
+            $post_classes .= "post_media_full";
+            $post_styles .= "height:auto;";
+            $post_content .= "<table style='height:100%;'><tr><td rowspan='3'>" .
+                    "<div class='post_media_webpage_favicon' style='background-image:url(&quot;" . $file['web_favicon'] . "&quot;);'></div></td>" .
+                    "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>" .
+                    "<a class='user_preview_name' target='_blank' href='" . $file['URL'] . "'><span style='font-size:13px;'>" . $file['web_title'] . "</span></a></div></td></tr>" .
                     "<tr><td><span style='font-size:12px;' class='user_preview_community'>" . $file['web_description'] . "</span></td></tr></table>";
         }
-        echo "<div ".$post_classes."' ".$post_styles."'>".$post_content."</div>";
+        echo "<div " . $post_classes . "' " . $post_styles . "'>" . $post_content . "</div>";
     }
 
     function deletePost($post_id) {
-        $school_query = "UPDATE activity SET visible = 0 WHERE id = :post_id; DELETE FROM activity_share WHERE activity_id = :post_id;";
-        $school_query = $this->database_connection->prepare($school_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $school_query = "UPDATE activity SET visible = 0 WHERE id = :post_id; "; //DELETE FROM activity_share WHERE activity_id = :post_id;";
+        $school_query = $this->database_connection->prepare($school_query);
         $school_query->execute(array(":post_id" => $post_id));
+        echo "200";
     }
 
     private function hasLikedPost($post_id) {
@@ -321,12 +344,13 @@ class Home extends Database {
 
         if ($num == 1) {
             return true;
-        } else {
+        }
+        else {
             return false;
         }
     }
-    
-    private function hasVotedPost($post_id){
+
+    private function hasVotedPost($post_id) {
         $query = "SELECT id FROM votes WHERE user_id = :user_id AND post_id = :post_id;";
         $query = $this->database_connection->prepare($query);
         $query->execute(array(":user_id" => $this->user->getId(), ":post_id" => $post_id));
@@ -334,7 +358,8 @@ class Home extends Database {
 
         if ($num == 1) {
             return true;
-        } else {
+        }
+        else {
             return false;
         }
     }
@@ -346,32 +371,32 @@ class Home extends Database {
             $insert_query = "INSERT INTO `votes` (post_id, user_id, vote_value) VALUES( :activity_id, :user_id, 1);";
             $insert_query = $this->database_connection->prepare($insert_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $insert_query->execute(
-                    array(":activity_id" => $activity_id, 
+                    array(":activity_id" => $activity_id,
                         ":user_id" => $this->user->getId()
-                    ));
+            ));
             $this->notifyUserLike($activity_id, $receiver_id);
-        } else {
-            if($has_liked === false){
+        }
+        else {
+            if ($has_liked === false) {
                 $insert_query = "UPDATE votes SET vote_value = 1 WHERE post_id = :post_id AND user_id = :user_id;";
                 $insert_query = $this->database_connection->prepare($insert_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
                 $insert_query->execute(
-                        array(":post_id" => $activity_id, 
+                        array(":post_id" => $activity_id,
                             ":user_id" => $this->user->getId()
-                        ));
+                ));
             }
-            else
-            {
+            else {
                 $query = "UPDATE votes SET vote_value = 0 WHERE post_id = :post_id AND user_id = :user_id;";
                 $query = $this->database_connection->prepare($query);
                 $query->execute(
-                        array(":post_id" => $activity_id, 
+                        array(":post_id" => $activity_id,
                             ":user_id" => $this->user->getId()
-                        ));
+                ));
             }
         }
         return $this->getLikeNumber($activity_id);
     }
-    
+
     private function notifyUserLike($activity_id, $receiver_id) {
         $who_liked_query = "INSERT INTO notification (post_id, receiver_id, sender_id, type) VALUES(:activity_id, :receiver_id, :sender_id, :type);";
         $who_liked_query = $this->database_connection->prepare($who_liked_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
@@ -383,7 +408,7 @@ class Home extends Database {
         ));
     }
 
-    private function getLikeNumber($post_id){
+    private function getLikeNumber($post_id) {
         $who_liked_query = "SELECT id FROM `votes` WHERE vote_value = 1 AND post_id = :activity_id;";
         $who_liked_query = $this->database_connection->prepare($who_liked_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $who_liked_query->execute(array(":activity_id" => $post_id));

@@ -2,13 +2,12 @@
 include_once('database.class.php');
 include_once('user.class.php');
 
-class Notification extends Database{
+class Notification {
     private $user;
-
+    protected $database_connection;
     public function __construct() {
-        parent::__construct();
-
         $this->user = new User;
+        $this->database_connection = Database::getConnection();
     }
 
     function getMessage($type = null, $id = null) {
@@ -42,7 +41,7 @@ class Notification extends Database{
 
     function getMessageNum() {
         $user_query = "SELECT id FROM message_share WHERE receiver_id = :user_id AND `seen` = 0;";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query = $this->database_connection->prepare($user_query);
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
         $user = $user_query->rowCount();
         return $user;

@@ -1,5 +1,5 @@
 <?php
-
+include_once 'base.class.php';
 Class resize {
 
     private $image;
@@ -165,7 +165,7 @@ Class resize {
         imagecopyresampled($this->imageResized, $crop, 0, 0, $cropStartX, $cropStartY, $newWidth, $newHeight, $newWidth, $newHeight);
     }
 
-    public function saveImage($savePath, $imageQuality = "100") {
+    public function saveImage($savePath, $imageQuality = "80") {
         // *** Get extension  
         $extension = strrchr($savePath, '.');
         $extension = strtolower($extension);

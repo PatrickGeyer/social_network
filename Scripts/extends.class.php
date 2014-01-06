@@ -1,8 +1,7 @@
 <?php
 include_once('database.class.php');
 
-class Extend extends Database
-{
+class Extend {
 	private $user_id;
 	private $phrases;
 	public function __construct()

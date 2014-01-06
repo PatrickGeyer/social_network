@@ -76,8 +76,7 @@ if (!isset($page_identifier)) {
             $.post("Scripts/checkonline.php");
         }
     </script>
-    <link rel="stylesheet" type="text/css" href="CSS/style.css" />
-    <link rel="icon" type="image/png" href="favicon.png"/>
+
     <script>
         $(function()
         {

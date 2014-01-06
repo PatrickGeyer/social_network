@@ -105,7 +105,7 @@
                     while ($friends = $query->fetch(PDO::FETCH_ASSOC)) {
                         $valid = "";
                         echo "<li class='" . ($user->getOnline($friends['id']) == true ? 'friend_list_on' : 'friend_list_off') . " user_preview' user_id='".$friends['id']."'>"
-                                . "<a class='friend_list ellipsis_overflow' style='background-image:url(" . $user->getProfilePicture('chat', $friends['id']) . ");' 
+                                . "<a class='friend_list ellipsis_overflow' style='background-image:url(" . $user->getProfilePicture('icon', $friends['id']) . ");' 
 						href ='user?id=" . urlencode(base64_encode($friends['id'])) . "'>"
                         . $friends['name'] . "</a></li>";
                     }
@@ -131,7 +131,7 @@ foreach ($groups as $group_id) {
         //die (print_r($database_connection->errorInfo()));
     }
     echo "<li class='friend_list_group group_preview' >
-						<a class='friend_list ellipsis_overflow' style='background-image:url(" . $group->getProfilePicture('chat', $group_info['id']) . ");'
+						<a class='friend_list ellipsis_overflow' style='background-image:url(" . $group->getProfilePicture('icon', $group_info['id']) . ");'
 						href ='group?id=" . urlencode(base64_encode($group_info['id'])) . "'>" . $group_info['group_name'] . "</a></li>";
     $friend_query = "SELECT * FROM group_member WHERE group_id = :group_id AND member_id != :user_id";
     $friend_query = $database_connection->prepare($friend_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));

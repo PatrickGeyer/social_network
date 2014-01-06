@@ -27,7 +27,7 @@ include_once('chat.php');
 ?>
 <html>
     <head>
-        <script src="Scripts/jquery.form.js"></script>
+        <script src="Scripts/external/jquery.form.js"></script>
         <title>My Files</title>
         <script>
             var parent_folder = <?php echo $parent_folder; ?>;
@@ -49,12 +49,22 @@ include_once('chat.php');
                         title:'Create Folder',
                     });
                 });
+                
+                refreshVideoJs();
+                $('div.files_actions').hide();
+                $(document).on('mouseenter', 'div.files', function(){
+                $('div.files_actions').fadeOut(100);
+                    $(this).children('div.files_actions').fadeIn();
+                });
+                $(document).on('mouseleave', 'div.files', function(){
+                    $(this).children('div.files_actions').fadeOut(100);
+                });
             });
         </script>
     </head>
     <body>
         <div class="container" id="files">
-            <table style='margin-left:16px;'>
+            <table style='margin-left:16px;padding-top: 20px;'>
                 <tr>
                     <td>
                         <button id='create_folder' class='pure-button-secondary small'>Create Folder</button>
@@ -96,8 +106,8 @@ include_once('chat.php');
                 </tr>
             </table>
             
-            <div id='file_container'>
-                <div id='main_file' class="file" style='border-bottom:1px solid lightblue;'>
+            <div id='file_container' style='padding-top: 20px;'>
+                <div id='main_file' class="file" style='border-bottom:1px dotted lightblue;'>
                 <?php
                 $nmr = count($files->getContents($parent_folder, $user_id));
                 foreach ($files->getContents($parent_folder, $user_id) as $file) {
@@ -114,7 +124,12 @@ include_once('chat.php');
                     echo "<button class='pure-button-neutral smallest' style='margin-top:20px;' onclick='window.location.assign(&quot;files?pd=" . urlencode($system->encrypt($files->getParentId($parent_folder))) . "&quot;)'>Back</button>";
                 }
                 ?>
-            <hr style="padding-top:50px; visibility:hidden;" />
             <div id="progress_bar_holder"></div>
+            <div class='files_recently_shared'>
+                <?php foreach($files->getSharedList() as $file) {
+                    $files->styleRecentlyShared($file);
+                } ?>
+            </div>
+        </div>
     </body>
 </html>

@@ -1,32 +1,32 @@
 <?php
-include_once('database.class.php');
-class Group extends Database
-{
-	private $user_id;
 
-	public function __construct()
-	{
-		parent::__construct();
+include_once('database.class.php');
+
+class Group {
+    private $user_id;
+    private $database_connection;
+    public function __construct() {
+        $this->database_connection = Database::getConnection();
         $this->user_id = base64_decode($_COOKIE['id']);
         return true;
-	}
-	function getId()
-	{
-		return base64_decode($_COOKIE['id']);
-	}
-	function getGroupName($id)
-	{
-		$user_query = "SELECT group_name FROM `group` WHERE id = :id;";
-		$user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-		$user_query->execute(array(":id" => $id));
-		$user = $user_query->fetchColumn();
-		return $user;
-	}
-	function getAbout($id)
-	{
-		$user_query = "SELECT group_about FROM `group` WHERE id = :id;";
-		$user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-		$user_query->execute(array(":id" => $id));
+    }
+
+    function getId() {
+        return base64_decode($_COOKIE['id']);
+    }
+
+    function getGroupName($id) {
+        $user_query = "SELECT group_name FROM `group` WHERE id = :id;";
+        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query->execute(array(":id" => $id));
+        $user = $user_query->fetchColumn();
+        return $user;
+    }
+
+    function getAbout($id) {
+        $user_query = "SELECT group_about FROM `group` WHERE id = :id;";
+        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query->execute(array(":id" => $id));
 		$user = $user_query->fetchColumn();
 		return $user;
 	}
@@ -71,7 +71,7 @@ class Group extends Database
 		}
 		else
 		{
-			return "Images/profile-picture-default-unknown-".$size.".jpg";
+			return "Images/group-default-chat.png";
 		}
 	}
 	public function getFounderId($group_id)
@@ -88,7 +88,7 @@ class Group extends Database
 			$user_id = $this->user_id;
 		}
 		$user_query = "SELECT group_id FROM group_member WHERE member_id = :user_id;";
-		$user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+		$user_query = $this->database_connection->prepare($user_query);
 		$user_query->execute(array(":user_id" => $user_id));
 		$usergroups = $user_query->fetchAll(PDO::FETCH_COLUMN);
 		return $usergroups;
