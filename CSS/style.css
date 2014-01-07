@@ -390,13 +390,29 @@ input[type="file"] {
 .pure-button-neutral {
     font-family: 'lucida grande', tahoma, sans-serif;
     color: white;
-    border-radius: 0px;
+    border-radius: 5px;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
     border:1px solid grey;
     font-weight: bold;
     padding-left: 10px;
     padding-right: 10px;
+    box-shadow: inset 0 10px 2px -10px white;
+    //-moz-box-shadow: inset 0 10px 10px -2px white;
+    //-webkit-box-shadow: inset 0 10px 10px -2px white;
     margin: 2px;
+    transition: all 0.2s ease-in-out;
+    -webkit-transition: all 0.2s ease-in-out;
+    -moz-transition: all 0.2s ease-in-out;
+    -o-transition: all 0.2s ease-in-out;
+}
+.pure-button-success:hover,
+.pure-button-error:hover,
+.pure-button-warning:hover,
+.pure-button-secondary:hover,
+.pure-button-primary:hover,
+.pure-button-yellow:hover,
+.pure-button-neutral:hover {
+    box-shadow: inset 0 10px 10px -10px white;
 }
 .pure-button-neutral{
     color: black;
@@ -1236,8 +1252,10 @@ table td tr{
 
 .background-overlay{
     position:fixed;
-    width: 100%;
-    height: 100%;
+    top: 0px;
+    bottom: 0px;
+    left:0px;
+    right: 0px;
     opacity: 0.1;
     background-color:black;
     z-index:1000;
@@ -1643,6 +1661,7 @@ div.post_height_restrictor{
     font-size:12px;
     padding-left:5px;
     padding-right:5px;
+    vertical-align: top;
 }
 .post_comment_time{
     font-size: 11px;
@@ -2036,23 +2055,25 @@ h2 {
 }
 
 .files_recently_shared{
-    margin-top: 20px;
     border-top: 1px solid lightgrey;
     border-bottom: 1px solid lightgrey;
     height: 150px;
-    width: 100%;
+    
+    background-color: black;
+    text-align: center;
 }
 
 .files_feed_item{
-    background-color: black;
-    min-width: 150px;
+    width: 300px;
     height: 100%;
     display: inline-block;
+    border-right: 1px solid white;
+    border-left: 1px solid white;
 }
 
 .files_shared_video{
-    height: 100%;
-    width: 100%;
+    //height: 100%;
+    //width: 100%;
 }
 
 div.files, div.folder{

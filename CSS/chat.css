@@ -53,6 +53,7 @@ div.chatoutput{
         -moz-box-shadow: inset 0 20px 20px -20px lightgrey;
         box-shadow: inset 0 20px 20px -20px lightgrey;*/
         border-top: 1px solid lightgrey;
+    border-right: 1px dotted lightgrey;
 }
 
 .text_input_container{

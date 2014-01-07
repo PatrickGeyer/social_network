@@ -141,10 +141,10 @@ class System {
         $return .="<video width='100%' height='100%' id='" . $video_id_prefix . $video_id . "' class='video-js vjs-default-skin " . $classes . "'"
                 . "preload='auto' controls poster='" . $thumbnail . "'"
                 . "style='" . $styles . "' "
-                . ">"; //data-setup ={}
+                . "data-setup={}>"; //data-setup ={}
         if ($source == TRUE) {
-            $return .="<source src='" . $webm_path . "' type='video/webm'>";
-                    //. "<source src='". $ogg_path ."' type='video/ogg'> "
+            $return .="<source src='" . $webm_path . "' type='video/webm'>"
+                    . "<source src='". $mp4_path ."' type='video/mp4'> ";
                     //. "<source src='" . $flv_path . "' type='video/x-flv'>"
                     //. "<source src='" . $original_path . "' type='video/avi'>";
         }

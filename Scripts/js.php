@@ -118,6 +118,17 @@ $system->getGlobalMeta();
                     theme:'dark-thin',
                     autoHideScrollbar : true
                 });
+        $('.scroll_thin_horizontal').mCustomScrollbar({
+                    scrollButtons:{
+                        enable:false
+                    },
+                    advanced:{
+                        updateOnContentResize: true
+                    },
+                    scrollInertia:10,
+                    autoHideScrollbar : true,
+                    horizontalScroll:true,
+                });
 //                 $( ".search_option file, #post_media_wrapper" ).sortable({
 //      connectWith: ".connectedSortable"
 //    }).disableSelection();
@@ -206,13 +217,13 @@ $system->getGlobalMeta();
 
         $(document).on('mouseover', "div.files", function()
         {
-            $('.audio_hidden_container').not($(this).find('.audio_hidden_container')).fadeOut("fast");
+            $('.audio_hidden_container').not($(this).find('.audio_hidden_container')).hide();
             $(this).find('.audio_hidden_container').slideDown("fast");
         });
 
         $(document).on('mouseover', "div.folder", function()
         {
-            $('.audio_hidden_container').slideUp("fast");
+            $('.audio_hidden_container').hide();
         });
 
         $('.audio_hidden_container').hover(function() {
@@ -313,6 +324,10 @@ $system->getGlobalMeta();
         }
         else
         {
+            var response = $.parseJSON(event.responseText);
+            $.post('Scripts/files.class.php', {file_info:response, action:"convert"}, function(){
+                console.log('posted file conversion data');
+            });
             refreshFileContainer(encrypted_folder);
         }
         $("#progressContainer").hide();
@@ -619,7 +634,8 @@ $system->getGlobalMeta();
             {
                 if (data == "200")
                 {
-                    getHomeContent(share_group_id, function(){
+                    getHomeContent(share_group_id, function(data){
+                        $('.home_feed_container').prepend(data);
                         removeDialog();
                         refreshVideoJs();
                     });
@@ -1005,7 +1021,7 @@ $system->getGlobalMeta();
 //           $('#file_video_'+object.file_id).append('<source src="'+object.info.mp4_path+'" type="video/mp4" />');
 //           $('#file_video_'+object.file_id).append('<source src="'+object.info.flv_path+'" type="video/x-flv" />');
 //           $('#file_video_'+object.file_id).append('<source src="'+object.info.ogg_path+'" type="application/ogg" />');
-             _V_('home_video_'+object.file_id, {}, function(){
+             videojs('home_video_'+object.file_id, {}, function(){
 //                    this.src([
 //                       // { type: "video/mp4", src: object.info.mp4_path },
 //                        //{ type: "video/flv", src: object.info.flv_path },
@@ -1257,29 +1273,36 @@ $system->getGlobalMeta();
             refreshVideoJs();
         }); 
     }
+
     function refreshVideoJs() {
-        $('.video-js').each(function(){
+        $('video.video-js').each(function(){
             var video_id = $(this).attr('id');
-           _V_(video_id, {}, function() {
-              this.on('play', function(){
-                  videoPlay(video_id);
-              });
-              this.on('pause', function(){
-                  videoPause(video_id);
-              });
-              this.on('ended', function(){
-                  console.log('ended');
-              });
-           });
+            //console.log('Video: ' + video_id + ", type is: " + typeof _V_.players[video_id]);
+            
+            if(typeof _V_.players[video_id] === "undefined") {
+                console.log('Creating video for: '+ video_id);
+                videojs(video_id, {}, function(){
+                    this.on('play', function(){
+                        videoPlay(video_id);
+                    });
+                    this.on('pause', function(){
+                        videoPause(video_id);
+                    });
+                    this.on('ended', function(){
+                        //videoEnd(video_id);
+                    });
+                });
+
+           }
         });
     }
+
     function createFolder(parent_folder)
     {
         dialogLoad();
         $('#loading_icon').show();
         var folder_name = $('#creat_folder_name').val();
-        $.post("Scripts/files.class.php", {action: "createFolder", parent_folder: parent_folder, folder_name: folder_name}, function(response)
-        {
+        $.post("Scripts/files.class.php", {action: "createFolder", parent_folder: parent_folder, folder_name: folder_name}, function(response) {
             if ("error".indexOf(response) > 0)
             {
                 alert("error!");
@@ -1372,18 +1395,22 @@ $system->getGlobalMeta();
     }
     
     function videoPlay(id) {
-        id = id.replace(/[A-Za-z_$-]/g, "");
-        $('#audio_play_icon_' + id).css('visibility', 'visible');
-        $('#audio_play_icon_' + id).animate({opacity: "1"}, 200);
-        //$('#audio_play_icon_seperator_' + id).slideDown();
+        if($("#" + id).parents('#file_container').length !== 0) {
+            id = id.replace(/[A-Za-z_$-]/g, "");
+            $('#audio_play_icon_' + id).css('visibility', 'visible');
+            $('#audio_play_icon_' + id).animate({opacity: "1"}, 200);
+            //$('#audio_play_icon_seperator_' + id).slideDown();
+        }
     }
     
     function videoPause(id) {
-        id = id.replace(/[A-Za-z_$-]/g, "");
-        $('#audio_play_icon_' + id).animate({opacity: "0"}, 200, function() {
-            $('#audio_play_icon_' + id).css('visibility', 'hidden');
-        }); 
-        //$('#audio_play_icon_seperator_' + id).hide();
+        if($("#" + id).parents('#file_container').length !== 0) {
+            id = id.replace(/[A-Za-z_$-]/g, "");
+            $('#audio_play_icon_' + id).animate({opacity: "0"}, 200, function() {
+                $('#audio_play_icon_' + id).css('visibility', 'hidden');
+            }); 
+            //$('#audio_play_icon_seperator_' + id).hide();
+        }
     }
 
     function showUpload(type)
@@ -1414,10 +1441,9 @@ $system->getGlobalMeta();
     }
     function refreshElement(element_to_load, page, query, div, onComplete)
     {
-        $(element_to_load).load(page + '?' + query + ' ' + div, function()
+        $.get(page + '?' + query, function(data, status)
         {
-            //console.log(page + '?' + query + ' ' + div);
-            onComplete();
+            onComplete(data);
         });
     }
 </script>

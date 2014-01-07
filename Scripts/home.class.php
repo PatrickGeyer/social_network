@@ -72,6 +72,23 @@ class Home {
         echo "</td></tr>";
     }
 
+    public function getActivity($activity_query, $min_activity_id = 0) {
+        $activities = $activity_query->fetchAll(PDO::FETCH_ASSOC);
+        $count = count($activities);
+        $max = $min_activity_id;
+        foreach ($activities as $activity) {
+            $this->homeify($activity);
+            if ($activity['id'] > $max) {
+                $max = $activity['id'];
+            }
+        }
+        
+//        if ($count == 0) {
+//            echo "<hr><center><span style='font-family: century gothic; color:grey;'>You have no notifications in this Live Feed!</span></center>";
+//        }
+        return $max;
+    }
+
     function homeify($activity) {
         $post_number = 0;
         $activity_time = strtotime($activity['time']);

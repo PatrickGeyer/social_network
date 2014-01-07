@@ -16,7 +16,6 @@ class Files{
     public function __construct() {
         $this->user = new User();
         $this->database_connection = Database::getConnection();
-        //$this->system = new System();
     }
 
     function getList_r($id = null, $dir = null) {
@@ -34,7 +33,7 @@ class Files{
         $sql = "SELECT * FROM files WHERE id IN (SELECT file_id FROM file_share WHERE user_id = :viewed_id "
                 . "AND (receiver_id = :user_id OR (position = :user_position AND community_id = :user_school)"
                 . "OR group_id IN(SELECT group_id FROM group_member WHERE member_id = :user_id)));";
-        $sql = $this->system->database_connection->prepare($sql);
+        $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":user_id" => $this->user->user_id, 
             ":user_position" => $this->user->getPosition(), 
@@ -60,6 +59,7 @@ class Files{
     }
     
     public function styleRecentlyShared($file) {
+        $this->system = new System();
         $file_type = $this->getType($file['filepath']);
         $post_classes   =   " class='files_feed_item ";
         $post_styles    =   " style='";
@@ -84,7 +84,7 @@ class Files{
                     "<a class='user_preview_name' target='_blank' href='" . $file['URL'] . "'><span style='font-size:13px;'>" . $file['web_title'] ."</span></a></div></td></tr>".
                     "<tr><td><span style='font-size:12px;' class='user_preview_community'>" . $file['web_description'] . "</span></td></tr></table>";
         }
-        echo "<div ".$post_classes."' ".$post_styles."'>".$post_content."</div>";
+        return "<div ".$post_classes."' ".$post_styles."'>".$post_content."</div>";
     }
     public function findexts($filename) {
         $filename = strtolower($filename);
@@ -96,15 +96,51 @@ class Files{
         return $exts;
     }
     public function convert($from, $to, $args = NULL, $before_args = NULL) {
-        $report = " -report ";
-        try {
+        $report = "";//" -report ";
+        $progress = $to.'.txt';
+        
             chdir('C:/inetpub/wwwroot/Global_Tools/ffmpeg/bin/');
-            $cmd = 'ffmpeg '.$report.$before_args.' -i "'.$from.'" '.$args.' "'.$to.'" 2>&1';
+            $cmd = 'ffmpeg '.$report.$before_args.' -i "'.$from.'" '.$args.' "'.$to.'" 1> '.$progress.' 2>&1';
             $result = shell_exec($cmd);
-        } catch(Exception $e) {
-            return $result.$e;
-        }
+            
         return $to;
+    }
+    public function getConversionProgress($file) {
+        $content = @file_get_contents($file.".txt");
+        if($content){
+        //get duration of source
+        preg_match("/Duration: (.*?), start:/", $content, $matches);
+
+        $rawDuration = $matches[1];
+
+        //rawDuration is in 00:00:00.00 format. This converts it to seconds.
+        $ar = array_reverse(explode(":", $rawDuration));
+        $duration = floatval($ar[0]);
+        if (!empty($ar[1])) $duration += intval($ar[1]) * 60;
+        if (!empty($ar[2])) $duration += intval($ar[2]) * 60 * 60;
+
+        //get the time in the file that is already encoded
+        preg_match_all("/time=(.*?) bitrate/", $content, $matches);
+
+        $rawTime = array_pop($matches);
+
+        //this is needed if there is more than one match
+        if (is_array($rawTime)){$rawTime = array_pop($rawTime);}
+
+        //rawTime is in 00:00:00.00 format. This converts it to seconds.
+        $ar = array_reverse(explode(":", $rawTime));
+        $time = floatval($ar[0]);
+        if (!empty($ar[1])) $time += intval($ar[1]) * 60;
+        if (!empty($ar[2])) $time += intval($ar[2]) * 60 * 60;
+
+        //calculate the progress
+        $progress = round(($time/$duration) * 100);
+
+        echo "Duration: " . $duration . "<br>";
+        echo "Current Time: " . $time . "<br>";
+        echo "Progress: " . $progress . "%";
+
+    }
     }
     function getType($extn) {
         $extn = $this->findexts($extn);
@@ -168,7 +204,7 @@ class Files{
             $user_id = $this->user->user_id;
         }
         $sql = "SELECT * FROM files WHERE user_id = :user_id AND parent_folder_id = :parent_folder ORDER BY name;";
-        $sql = $this->system->database_connection->prepare($sql);
+        $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $user_id, ":parent_folder" => $parent_folder));
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -236,7 +272,7 @@ class Files{
     
     private function printDirections($file, $viewed_id) {
         $sql        = "SELECT * FROM file_share WHERE file_id = :file_id;";
-        $sql        = $this->system->database_connection->prepare($sql);
+        $sql        = $this->database_connection->prepare($sql);
         $sql->execute(array(":file_id" => $file['id']));
         $file_props = $sql->fetch(PDO::FETCH_ASSOC);
            
@@ -267,7 +303,7 @@ class Files{
                 echo $receiver = $this->user->getName($file_props['receiver_id']);
                 break;
         }
-        $sql = $this->system->database_connection->prepare($final_sql);
+        $sql = $this->database_connection->prepare($final_sql);
         $sql->execute($options);
         $receiver = $sql->fetchColumn();
         
@@ -313,7 +349,7 @@ class Files{
     
     function createFolder($parent_folder = 1, $name) {
         $sql = "SELECT MAX(folder_id) FROM files WHERE user_id = :user_id;";
-        $sql = $this->system->database_connection->prepare($sql);
+        $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $this->user->user_id));
         $new_folder_id = $sql->fetchColumn();
         if ($new_folder_id == "") {
@@ -323,21 +359,21 @@ class Files{
         }
 
         $sql = "INSERT INTO files(user_id, name, folder_id,parent_folder_id) VALUES (:user_id, :name, :folder_id, :parent_folder_id);";
-        $sql = $this->system->database_connection->prepare($sql);
+        $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $this->user->user_id, ":name" => $name, ":folder_id" => $new_folder_id, ":parent_folder_id" => $parent_folder));
         return true;
     }
 
     function getParentId($folder_id) {
         $sql = "SELECT parent_folder_id FROM files WHERE user_id = :user_id AND folder_id = :folder_id;";
-        $sql = $this->system->database_connection->prepare($sql);
+        $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $this->user->user_id, ":folder_id" => $folder_id));
         return $sql->fetchColumn();
     }
 
     function delete($id) {
         $sql = "SELECT filepath, thumb_filepath, icon_filepath,flv_path,mp4_path,webm_path,ogg_path, thumbnail, type FROM `files` WHERE user_id = :user_id AND id = :id";
-        $sql = $this->system->database_connection->prepare($sql);
+        $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $this->user->user_id, ":id" => $id));
         $filepath = $sql->fetch();
         //if($type != "Folder") {
@@ -349,7 +385,7 @@ class Files{
             //$sql = "DELETE FROM files WHERE user_id = :user_id AND parent_folder_id = :id";
         //}
 
-        $sql = $this->system->database_connection->prepare($sql);
+        $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $this->user->user_id, ":id" => $id));
         return "200";
     }
@@ -386,6 +422,16 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             die($files->delete($_POST['id']));
         } else if ($_POST['action'] == "createFolder") {
             $files->createFolder($_POST['parent_folder'], $_POST['folder_name']);
+        }
+        if($_POST['action'] == "convert") {
+            foreach ($_POST['file_info'] as $file) {
+                $files->convert($file['from'], $file['to'], $file['args'], $file['before_args']);
+            }
+        }
+        if($_POST['action'] == "get_conversion_progress") {
+            foreach ($_POST['file_info'] as $file) {
+                $files->getConversionProgress($file['to']);
+            }
         }
     }
 }

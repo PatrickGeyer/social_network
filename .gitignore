@@ -215,7 +215,7 @@ pip-log.txt
 .mr.developer.cfg
 
 #############
-## Images
+## social_network
 #############
 Images/
 Audio/
@@ -223,3 +223,4 @@ User/
 Scripts/config.php
 config.php
 /nbproject/private/
+Scripts/external/

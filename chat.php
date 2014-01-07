@@ -8,6 +8,10 @@ if (!isset($_COOKIE['showchat'])) {
     <script id="chat_loader">
 
         var current_view = getCookie("showchat");
+        if(current_view == "undefined") {
+            current_view = "s";
+            setCookie("showchat", 's');
+        }
 
         var timer;
         var bottom = true;
@@ -78,7 +82,7 @@ if (!isset($_COOKIE['showchat'])) {
                         $('#chatreceive').append(response);
                     }
                     // time = setTimeout(function(){sendChatRequest('false', current_view), current_view}, 0);
-                    sendChatRequest('false', current_view);
+                    setTimeout(function(){sendChatRequest('false', current_view)}, 5000);
                     scroll2Bottom();
                 }
                 $('#chat_loading_icon').hide();
@@ -169,9 +173,9 @@ if (!isset($_COOKIE['showchat'])) {
                                     echo "active_feed";
                                 }
                                 ?>
-                                '><h3 class='chat_header_text'>
+                                '><h3 class='chat_header_text ellipsis-overflow'>
                                          <?php
-                                         echo $system->trimStr($user->getCommunityName(), 10);
+                                         echo $user->getCommunityName();
                                          ?>
                                 </h3></div>
                             </td>
@@ -184,7 +188,7 @@ if (!isset($_COOKIE['showchat'])) {
                                     echo "active_feed";
                                 }
                                 ?>
-                                '><h3 class='chat_header_text'>Year <?php echo $user->getPosition();?></h3>
+                                '><h3 class='chat_header_text ellipsis-overflow'>Year <?php echo $user->getPosition();?></h3>
                                 </div>
                             </td>
                         </tr>
@@ -195,8 +199,8 @@ if (!isset($_COOKIE['showchat'])) {
                                 . $single_group . "' class='feed_selector chat_selector "
                                 . ($_COOKIE['showchat'] == $single_group ? "active_feed" : "")
                                 . "' id='" . $single_group . "' title='"
-                                . $group->getGroupName($single_group) . "'><h3 class='chat_header_text'>"
-                                . $system->trimStr($group->getGroupName($single_group), 6) . "</h3></div></td></tr>";
+                                . $group->getGroupName($single_group) . "'><h3 class='chat_header_text ellipsis-overflow'>"
+                                . $group->getGroupName($single_group) . "</h3></div></td></tr>";
                             }
                             ?>
                         </tr>

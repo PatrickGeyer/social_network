@@ -51,6 +51,7 @@ if ($_FILES['file']['error'] > 0) {
 }
 else {
     if ($_FILES['file']['name'] != "" || ".") {
+        $return_info = array();
         $lastInsertId;
         $pure_name = time();
         $ext = $files->findexts($_FILES['file']['name']);
@@ -87,14 +88,23 @@ else {
                 $flv_path = $savepath . $pure_name . ".flv";
                 $webm_path = $savepath . $pure_name . ".webm";
                 $flv_path = $savepath . $pure_name . ".flv";
-                $convert = $files->convert($convert_path, $base_path . $mp4_path, "-b 1500k -vcodec libx264 -vpre slow -vpre baseline -g 30", ""); //-b 1500k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm    -g 30 -s 640x360
-                if ($convert != $base_path . $mp4_path) {
-                    echo("Error: " . $convert);
-                }
-                $convert = $files->convert($convert_path, $base_path . $webm_path, "-b 1500k -vcodec libvpx -acodec libvorbis -aq 3 -ab 128000 -f webm -g 30 -s 640x360", "");
-                if ($convert != $base_path . $webm_path) {
-                    echo("Error: " . $convert);
-                }
+                
+                array_push($return_info, array(
+                    "from"=>$convert_path, 
+                    "to"=>$base_path . $mp4_path, 
+                    "args" => " -vcodec copy -acodec copy ", 
+                    "before_args" => ""));
+
+                array_push($return_info, array(
+                    "from"=>$convert_path, 
+                    "to"=>$base_path . $webm_path,
+                    "args" => "-b 1500k -vcodec libvpx -acodec libvorbis -aq 3 -ab 128000 -f webm -g 30 -s 640x360", 
+                    "before_args" => ""
+                    ));
+                //$files->convert($convert_path, $base_path . $webm_path, "-b 1500k -vcodec libvpx -acodec libvorbis -aq 3 -ab 128000 -f webm -g 30 -s 640x360", "");
+//                if ($convert != $base_path . $webm_path) {
+//                    echo("Error: " . $convert);
+//                }
 //                $convert = $files->convert($convert_path, $base_path . $ogg_path, "");
 //                if ($convert != $base_path . $ogg_path) {
 //                    echo("Error: " . $convert);
@@ -103,10 +113,12 @@ else {
 //                if ($convert != $base_path . $flv_path) {
 //                    echo("Error: " . $convert);
 //                }
-                $convert = $files->convert($base_path . $webm_path, $base_path . $thumbnail, " -vframes 1 ", "-itsoffset -2");
-                if ($convert != $base_path . $thumbnail) {
-                    echo("Error: " . $convert);
-                }
+                array_push($return_info, array(
+                    "from"=>$base_path . $webm_path, 
+                    "to"=>$base_path . $thumbnail,
+                    "args" => " -vframes 1 ", 
+                    "before_args" => "-itsoffset -2"));
+
             }
             else {
                 $thumbsavepath = $savepath . "thumb_" . $file_name;
@@ -144,7 +156,7 @@ else {
         else {
             echo "Upload Failed!";
         }
-        die("200");
+        die(json_encode($return_info));
         //echo json_encode(array("file_id" => $lastInsertId, "filename" => $_FILES['file']['name'], "filepath" => $thumbsavepath));
     }
 }

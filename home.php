@@ -1,17 +1,19 @@
 <?php
+if (isset($_GET['min_activity_id'])) {
+    $min_activity_id = $_GET['min_activity_id'];
+    $min_activity_id_query = "AND id >" . $min_activity_id;
+} else {
+    $min_activity_id = 0;
+    $min_activity_id_query = "AND id >" . $min_activity_id;
+}
+
 include_once('Scripts/lock.php');
-$page_identifier = "home";
-
-include_once('welcome.php');
-include_once('chat.php');
-
 if (isset($_GET['fg'])) {
     $feed_id = $_GET['fg'];
 
-    $activity_query = "SELECT * FROM activity WHERE 
-	id IN (SELECT activity_id FROM activity_share WHERE group_id = :group_id AND direct = 1)
-	AND visible = 1
-	ORDER BY time DESC";
+    $activity_query = "SELECT * FROM activity WHERE id IN "
+            . "(SELECT activity_id FROM activity_share WHERE group_id = :group_id AND direct = 1) "
+            . "AND visible = 1 " . $min_activity_id_query . " ORDER BY time DESC";
     $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
     $activity_query->execute(array(":group_id" => urldecode($_GET['fg'])));
 }
@@ -19,16 +21,17 @@ else if (isset($_GET['f'])) {
     if ($_GET['f'] == 's') {
         $feed_id = 's';
 
-        $activity_query = "SELECT * FROM activity WHERE id IN (SELECT activity_id FROM activity_share 
-			WHERE community_id = :community_id AND direct=1) ORDER BY time DESC";
+        $activity_query = "SELECT * FROM activity WHERE id IN (SELECT activity_id FROM activity_share "
+                . "WHERE community_id = :community_id AND direct=1) " . $min_activity_id_query . " ORDER BY time DESC";
         $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $activity_query->execute(array(":community_id" => $user->getCommunityId()));
     }
     else {
         $feed_id = 'y';
 
-        $activity_query = "SELECT * FROM activity WHERE id IN (SELECT activity_id FROM activity_share WHERE 
-			community_id = :community_id AND year = :user_year AND direct = 1) AND visible = 1 ORDER BY time DESC";
+        $activity_query = "SELECT * FROM activity WHERE id IN (SELECT activity_id FROM activity_share WHERE "
+                . "community_id = :community_id AND year = :user_year AND direct = 1) AND visible = 1 " 
+                . $min_activity_id_query . " ORDER BY time DESC";
         $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $activity_query->execute(array(":community_id" => $user->getCommunityId(), ":user_year" => $user->getPosition()));
     }
@@ -36,19 +39,25 @@ else if (isset($_GET['f'])) {
 else {
     $feed_id = 'a';
 
-    $activity_query = "SELECT * FROM activity WHERE id IN 
-	(SELECT activity_id FROM activity_share WHERE 
-		(community_id = :community_id 
-			OR (year = :user_year AND community_id = :community_id) 
-			OR group_id in 
-			(SELECT group_id FROM group_member WHERE member_id = :user_id) 
-			OR receiver_id = :user_id))
-	AND visible = 1 ORDER BY time DESC";
+    $activity_query = "SELECT * FROM activity WHERE id IN "
+            . "(SELECT activity_id FROM activity_share WHERE "
+            . "(community_id = :community_id "
+            . "OR (year = :user_year AND community_id = :community_id) "
+            . "OR group_id in (SELECT group_id FROM group_member WHERE member_id = :user_id) "
+            . "OR receiver_id = :user_id))"
+            . " AND visible = 1 " . $min_activity_id_query . " ORDER BY time DESC";
     $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
     $activity_query->execute(array(":user_id" => $user->getId(), ":community_id" => $user->getCommunityId(), ":user_year" => $user->getPosition()));
 }
+if($min_activity_id > 0) {
+    die("<script>min_activity_id = ".$home->getActivity($activity_query, $min_activity_id).";</script>");
+}
+$page_identifier = "home";
+
+include_once('welcome.php');
+include_once('chat.php');
 ?>
-<!doctype html>
+
 <html>
     <head>	
         <script>
@@ -60,14 +69,15 @@ else {
             }
 
             var share_group_id = <?php
-if (is_int($feed_id)) {
-    echo $feed_id;
-}
-else {
-    echo "'$feed_id'";
-}
-?>;
-
+            if (is_int($feed_id)) {
+                echo $feed_id;
+            }
+            else {
+                echo "'$feed_id'";
+            }
+            ?>;
+            var min_activity_id = 0;
+    
             $(function($)
             {
                 $(document).on('click', '.home_like_icon', function() {
@@ -82,7 +92,7 @@ else {
                 {
                     uploadFile('file', '#post_file', 'addToStatus');
                 });
-                
+
                 $('#status_text').focus(function() {
                     $(this).css('min-height', '100px');
                     $('#file_share').show();
@@ -90,10 +100,10 @@ else {
                     $('.post_wrapper').css('padding-bottom', $('.post_more_options').height());
                     $('.post_media_wrapper').show();
                 });
-                
-                $('#status_text').on('input', function(){
+
+                $('#status_text').on('input', function() {
                     $(this).css('height', '0px');
-                    $(this).css('height', $(this)[0].scrollHeight+"px");
+                    $(this).css('height', $(this)[0].scrollHeight + "px");
                 });
 
                 $('.default_dropdown_item').click(function()
@@ -126,26 +136,37 @@ else {
         <div class="container_home" id="home_container">
             <div class='home_feed_post_container' style="padding-top:20px;">
                 <div class='post_wrapper'>
-                    <table style='width:100%;' cellspacing='0' cellpadding='0'><tr><td>
-                        <table style='width:100%;' cellspacing='0' cellpadding='0'><tr style='height:100%;'><td>
-                            <textarea tabindex='1' id="status_text" placeholder= "Update Status..." class="status_text scroll_thin"></textarea>
-                                </td></tr><tr><td class='post_content_wrapper'>
-                                    <div class="post_media_wrapper">
-                                        <div class='post_media_wrapper_background user_preview_name'>Attach Files to Dropbox &#10138;</div>
-                                        <img class='post_media_loader' src='Images/ajax-loader.gif'></img>
-                                    </div>
-                        </td></tr></table>
-                    </td><td style='width:200px;height:100%;position: relative;'>
-                    <div id='file_share' class='scroll_thin'>
-                        <table id='file_dialog' style='width:100%;' cellspacing="0" cellpadding="0">
-                            <?php
-                            foreach ($files->getList_r() as $file) {
-                                $home->fileList($file);
-                            }
-                            ?>
-                        </table>
-                    </div>
-                    </td></tr></table>
+                    <table style='width:100%;' cellspacing='0' cellpadding='0'>
+                        <tr>
+                            <td>
+                                <table style='width:100%;' cellspacing='0' cellpadding='0'><tr style='height:100%;'>
+                                        <td>
+                                            <textarea tabindex='1' id="status_text" placeholder= "Update Status..." class="status_text scroll_thin"></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class='post_content_wrapper'>
+                                            <div class="post_media_wrapper">
+                                                <div class='post_media_wrapper_background user_preview_name'>Attach Files to Dropbox &#10138;</div>
+                                                <img class='post_media_loader' src='Images/ajax-loader.gif'></img>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td style='width:200px;height:100%;position: relative;'>
+                                <div id='file_share' class='scroll_thin'>
+                                    <table id='file_dialog' style='width:100%;' cellspacing="0" cellpadding="0">
+                                        <?php
+                                        foreach ($files->getList_r() as $file) {
+                                            $home->fileList($file);
+                                        }
+                                        ?>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
                     <div id='post_more_options' class='post_more_options'>
                         <button onclick="submitPost();" class="pure-button-success small">POST</button>
                         <button id='attach_file_button' class='pure-button-neutral smallest' style="cursor:pointer;" onclick="$('#post_file').trigger('click');">+</button>
@@ -176,7 +197,7 @@ else {
                     </div>
                 </div>	
                 <div style="width:100%" id="progress_bar_holder"></div>
-                <div id='feed_wrapper_scroller' style='width:100%;' class='scroll_thin_horizontal'>
+                <div id='feed_wrapper_scroller' style='width:100%;height:38px;' class='scroll_thin_horizontal'>
                     <table>
                         <tr>
                             <td>
@@ -196,7 +217,7 @@ else {
                                 }
                                 ?>
                                      ">
-                                <?php echo $system->trimStr($user->getCommunityName(), 15); ?>
+                                         <?php echo $system->trimStr($user->getCommunityName(), 15); ?>
                                 </div>
                             </td>
                             <td>
@@ -221,21 +242,13 @@ else {
             <div id='home_refresh'> 
                 <div class='home_feed_container'>
                     <?php
-                    $count = $activity_query->rowCount();
-                    while ($activity = $activity_query->fetch(PDO::FETCH_ASSOC)) {
-                        $home->homeify($activity, $database_connection, $user);
-                    }
-
-                    if ($count == 0) {
-                        echo "<hr><center><span style='font-family: century gothic;'>You have no notifications in this Live Feed!</span></center>";
-                    }
-                    else {
-                        echo '</div>'; // close container div
-                    }
+                    $max = $home->getActivity($activity_query, $min_activity_id);
                     ?>	
                 </div>
             </div>
+        </div>
             <script>
+                min_activity_id = <?php echo $max; ?>;
                 function showhide(element)
                 {
                     $(element).toggle("slide");
@@ -245,13 +258,7 @@ else {
 
                 $('.home_feed_selector').click(function(event)
                 {
-                    $('#home_refresh').fadeOut(100, function()
-                    {
-                        $(this).empty();
-                        $('#home_refresh').append('<center><img style="margin-top:50px;" src="Images/ajax-loader.gif"></img></center>');
-                        $(this).fadeIn();
-                    });
-                    $
+                    //$('#home_refresh').prepend('<center><img style="margin-top:50px;" src="Images/ajax-loader.gif"></img></center>');
                     $('.home_feed_selector').removeClass('active_feed');
                     $(this).addClass('active_feed');
 
@@ -283,39 +290,29 @@ else {
                             setCookie('current_feed', value);
                         }
                     }
-                    getHomeContent(value);
+                    getHomeContent(value, function(data){$('.home_feed_container').prepend(data);});
+                    event.stopPropagation();
                 });
                 function getHomeContent(feed_id, callback)
                 {
-                    if (typeof feed_id === "undefined")
-                    {
-
-                    }
-                    else
+                    if(typeof feed_id !== "undefined")
                     {
                         if (isNaN(feed_id))
                         {
                             if (feed_id == 'a')
                             {
-                                $('#home_refresh').load("home #home_refresh", function(response) {
-
-                                });
+                                refreshElement('#home_refresh', "home", "min_activity_id=" + min_activity_id, "#home_refresh", callback);
                             }
                             else
                             {
-                                $('#home_refresh').load("home?f=" + feed_id + " #home_refresh", function(response) {
-
-                                });
+                                refreshElement('#home_refresh', "home", "f=" + feed_id + "&min_activity_id=" + min_activity_id, "#home_refresh", callback);
                             }
                         }
                         else
                         {
-                            $('#home_refresh').load("home?fg=" + feed_id + " #home_refresh", function(response) {
-
-                            });
+                            refreshElement('#home_refresh', "home", "fg=" + feed_id + "&min_activity_id=" + min_activity_id, "#home_refresh", callback);
                         }
                     }
-                    callback();
                 }
             </script>
     </body>

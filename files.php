@@ -53,17 +53,24 @@ include_once('chat.php');
                 refreshVideoJs();
                 $('div.files_actions').hide();
                 $(document).on('mouseenter', 'div.files', function(){
-                $('div.files_actions').fadeOut(100);
+                $('div.files_actions').hide();
                     $(this).children('div.files_actions').fadeIn();
                 });
                 $(document).on('mouseleave', 'div.files', function(){
-                    $(this).children('div.files_actions').fadeOut(100);
+                    $(this).children('div.files_actions').hide();
                 });
             });
         </script>
     </head>
     <body>
         <div class="container" id="files">
+            <div class='files_recently_shared scroll_thin_horizontal'>
+                <?php 
+                foreach($files->getSharedList() as $file) {
+                    echo $files->styleRecentlyShared($file);
+                } 
+                ?>
+            </div>
             <table style='margin-left:16px;padding-top: 20px;'>
                 <tr>
                     <td>
@@ -74,7 +81,7 @@ include_once('chat.php');
                             <table cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td>
-                                        <input type="file" name="file" id="folder" multiple directory="" webkitdirectory="" mozdirectory="" />
+                                        <input type="file" name="file" id="folder" directory="" webkitdirectory="" mozdirectory="" />
                                     </td>
                                     <td>
                                         <button class='pure-button-success small' onclick='uploadFile("folder", "#folder");'>Upload Folder</button>
@@ -84,7 +91,6 @@ include_once('chat.php');
                         </div>
                         <button style='float:right;' id="folder_upload_option" class="pure-button-success small" onclick="showUpload('folder');">Upload Folder</button>
                     </td>
-
                     <td>
                         <div style='display:none' id='file_upload_dialog'>
                             <table cellpadding="0" cellspacing="0">
@@ -105,12 +111,12 @@ include_once('chat.php');
                     </td>
                 </tr>
             </table>
-            
             <div id='file_container' style='padding-top: 20px;'>
                 <div id='main_file' class="file" style='border-bottom:1px dotted lightblue;'>
                 <?php
-                $nmr = count($files->getContents($parent_folder, $user_id));
-                foreach ($files->getContents($parent_folder, $user_id) as $file) {
+                $files_list = $files->getContents($parent_folder, $user_id);
+                $nmr = count($files_list);
+                foreach ($files_list as $file) {
                     $files->tableSort($file);
                 }
                 if (isset($nmr) && $nmr <= 0) {
@@ -119,17 +125,13 @@ include_once('chat.php');
                 ?>
                 </div>
             </div>
+            
                 <?php
                 if ($parent_folder != 1) {
                     echo "<button class='pure-button-neutral smallest' style='margin-top:20px;' onclick='window.location.assign(&quot;files?pd=" . urlencode($system->encrypt($files->getParentId($parent_folder))) . "&quot;)'>Back</button>";
                 }
                 ?>
             <div id="progress_bar_holder"></div>
-            <div class='files_recently_shared'>
-                <?php foreach($files->getSharedList() as $file) {
-                    $files->styleRecentlyShared($file);
-                } ?>
-            </div>
         </div>
     </body>
 </html>
