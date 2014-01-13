@@ -1,23 +1,21 @@
 <?php
 
 class Community {
-
-    private $link;
-    private $dsn;
-    private $user = 'root';
-    private $password;
+    private static $community = NULL;
     private $database_connection;
 
     public function __construct() {
-        $this->username = 'root';
-        $this->password = 'Filmaker1';
-        $this->dsn = 'mysql:dbname=social_network;host=localhost';
-
-        $this->link = new PDO($this->dsn, $this->user, $this->password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING)) OR die("There was a problem connecting to the database.");
-
+        $this->database_connection = Database::getConnection();
         return true;
     }
+    public static function getInstance ( ) {
+        if (self :: $community) {
+            return self :: $community;
+        }
 
+        self :: $community = new Community();
+        return self :: $community;
+    }
     function getId() {
         return base64_decode($_COOKIE['id']);
     }
@@ -47,7 +45,7 @@ class Community {
     }
 
     public function getMembers($id) {
-        $user_query = "SELECT * FROM users WHERE community_id = :id";
+        $user_query = "SELECT id, year, name, joined FROM users WHERE community_id = :id";
         $user_query = $this->link->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":id" => $id));
         $user = $user_query->fetchAll();

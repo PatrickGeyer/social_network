@@ -18,14 +18,14 @@ if (!isset($_COOKIE['id']) || $_COOKIE['id'] == "") {
 //    $phrases_query->execute();
 //    $phrases = $phrases_query->fetch(PDO::FETCH_ASSOC);
 
-    $user = new User;
-    $files = new Files;
-    $group = new Group;
-    $community = new Community;
-    $system = new System;
-    $notification = new Notification;
-    $collaborator = new Collaborator;
-    $home = new Home;
+    $user           =   User::getInstance();
+    $files          =   Files::getInstance();
+    $group          =   Group::getInstance();
+    $community      =   Community::getInstance();
+    $system         =   System::getInstance();
+    $notification   =   Notification::getInstance();
+    $collaborator   =   new Collaborator;
+    $home           =   Home::getInstance();
     $database_connection = Database::getConnection();
 }
 ?>

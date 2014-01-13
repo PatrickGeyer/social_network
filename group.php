@@ -5,7 +5,7 @@ include_once('chat.php');
 
 $group_id = urldecode(base64_decode($_GET['id']));
 
-$leader_query = "SELECT * FROM users WHERE id = ".$group->getFounderId($group_id)."";
+$leader_query = "SELECT id, name, position FROM users WHERE id = ".$group->getFounderId($group_id)."";
 $leader_query = $database_connection->prepare($leader_query);
 $leader_query->execute();
 $leader = $leader_query->fetch();
@@ -13,7 +13,7 @@ $leader = $leader_query->fetch();
 
 $is_member = $group->isMember($user->getId(), $group_id);
 
-$activity_query = "SELECT * FROM activity WHERE 
+$activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE 
 id IN (SELECT activity_id FROM activity_share WHERE group_id = :group_id  AND direct = true)
 ORDER BY time DESC";
 $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));

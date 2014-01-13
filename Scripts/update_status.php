@@ -20,6 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         die("Error:" . $e->getMessage());
     }
     $lastInsertId = $database_connection->lastInsertId();
+    $database_connection->commit();
 
     if ($_POST['group_id'] == "s") {
         $school_query = "INSERT INTO activity_share (activity_id, community_id, direct) 
@@ -67,19 +68,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             );
         }
         else {
-            $media_query = "INSERT INTO activity_media (activity_id, URL, web_title, web_description, web_favicon) VALUES (:activity_id, :URL, :title, :description, :fav);";
+            $database_connection->beginTransaction();
+            $file_query = "INSERT INTO files (user_id, type) VALUES (:user_id, :type);";
+            $file_query = $database_connection->prepare($file_query);
+            $file_query->execute(array(
+                ":user_id" => $user->user_id,
+                ":type" => "Webpage"
+            ));
+            $file_id = $database_connection->lastInsertId();
+
+            $media_query = "INSERT INTO activity_media (activity_id, file_id, URL, web_title, web_description, web_favicon) "
+                    . "VALUES (:activity_id, :file_id, :URL, :title, :description, :fav);";
             $options = array(
                 ":activity_id" => $lastInsertId,
+                ":file_id" => $file_id,
                 ":URL" => $file['path'],
                 ":title" => $file['info']['title'],
                 ":description" => $file['info']['description'],
                 ":fav" => $file['info']['favicon'],
             );
+            $database_connection->commit();
         }
         $media_query = $database_connection->prepare($media_query);
         $media_query->execute($options);
     }
-    $database_connection->commit();
     die("200");
 }
 ?>

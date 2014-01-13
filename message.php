@@ -88,7 +88,7 @@ if (isset($_POST['action']) && $_POST['action'] == 'delete') {
                             new_receiver + "'><span style='font-family:century gothic;'>" + 
                             new_receiver_name + "</span>" +
                         "<span class='message_delete_receiver' onclick='removereceivermessage(" + 
-                        "new_receiver + ");'>x" +
+                        new_receiver + ");'>x" +
                         "</span></div>";
                     $('.message_search_input').before(html);
                 }
@@ -158,9 +158,9 @@ if (isset($_POST['action']) && $_POST['action'] == 'delete') {
                 var html = $('#compose_dialog').html();
                 dialog(
                         {type: "html", content: html},
-                {text: "Send", type: "success", onclick: function() {
+                [{text: "Send", type: "success", onclick: function() {
                         sendMessage(false);
-                    }},
+                    }}],
                 {modal: false, width: "50%", title: "Compose"}
                 );
             }
@@ -168,9 +168,9 @@ if (isset($_POST['action']) && $_POST['action'] == 'delete') {
     </head>
     <body>
         <div hidden id='compose_dialog' style='display: none;'>
-            <input autocomplete='off' onkeyup='getnamesmessage(this.value);' id='names_input' class='message_search_input' placeholder='To...'>
-            <div style='max-height: 100px;border:1px solid lightblue;margin-bottom: 5px; display:none;' class='message_names scroll_thin'></div>
-            <textarea id='1message' placeholder='Message...' class='thin message_compose_box'></textarea><br/><br/>
+            <input autocomplete='off' onkeyup='search(this.value, &quot;message&quot;, &quot;.message_names&quot;, function(){});' id='names_input' class='message_search_input' placeholder='To...'>
+            <div style='max-height: 100px;border:1px solid lightblue;margin-bottom: 5px; display:none;' class='search_results message_names'></div>
+            <textarea id='1message' placeholder='Message...' class='thin message_compose_box' style='height:200px;'></textarea><br/><br/>
         </div>
         <div class="messagecomplete">
             <div id="message" class="messagehi">
@@ -237,16 +237,6 @@ if (isset($_POST['action']) && $_POST['action'] == 'delete') {
                 . $system->humantiming($message['time']) . "</span></td></tr>"
                 . "<tr><td><span class='message_convo_text'>" . $message['message'] . "</span></td></tr>"
                 . "<tr><td colspan='3'><hr style='width:100%; border-bottom:1px solid lightgrey;'></td></tr>";
-            }
-            if (isset($messageid)) {
-                $querymesid = "SELECT * FROM messages WHERE id = " . $messageid . " AND receiver_id = " . $user->getId() . ";";
-
-                $message2 = $querymesid;
-            }
-            else {
-                $querymesid = "SELECT * FROM messages WHERE thread = " . $current_thread . " AND receiver_id = " . $user->getId() . " ORDER BY thread ASC LIMIT 1;";
-
-                $message2 = $querymesid;
             }
             echo"</table></div><div class='message_reply_container'>"
             . "<textarea placeholder='Write a Reply...' class='message_reply_box' id='reply_value'></textarea>"

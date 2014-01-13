@@ -11,7 +11,7 @@ include_once('Scripts/lock.php');
 if (isset($_GET['fg'])) {
     $feed_id = $_GET['fg'];
 
-    $activity_query = "SELECT * FROM activity WHERE id IN "
+    $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN "
             . "(SELECT activity_id FROM activity_share WHERE group_id = :group_id AND direct = 1) "
             . "AND visible = 1 " . $min_activity_id_query . " ORDER BY time DESC";
     $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
@@ -21,7 +21,7 @@ else if (isset($_GET['f'])) {
     if ($_GET['f'] == 's') {
         $feed_id = 's';
 
-        $activity_query = "SELECT * FROM activity WHERE id IN (SELECT activity_id FROM activity_share "
+        $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN (SELECT activity_id FROM activity_share "
                 . "WHERE community_id = :community_id AND direct=1) " . $min_activity_id_query . " ORDER BY time DESC";
         $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $activity_query->execute(array(":community_id" => $user->getCommunityId()));
@@ -29,7 +29,7 @@ else if (isset($_GET['f'])) {
     else {
         $feed_id = 'y';
 
-        $activity_query = "SELECT * FROM activity WHERE id IN (SELECT activity_id FROM activity_share WHERE "
+        $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN (SELECT activity_id FROM activity_share WHERE "
                 . "community_id = :community_id AND year = :user_year AND direct = 1) AND visible = 1 " 
                 . $min_activity_id_query . " ORDER BY time DESC";
         $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
@@ -39,7 +39,7 @@ else if (isset($_GET['f'])) {
 else {
     $feed_id = 'a';
 
-    $activity_query = "SELECT * FROM activity WHERE id IN "
+    $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN "
             . "(SELECT activity_id FROM activity_share WHERE "
             . "(community_id = :community_id "
             . "OR (year = :user_year AND community_id = :community_id) "
@@ -99,6 +99,7 @@ include_once('chat.php');
                     $('#post_more_options').show();
                     $('.post_wrapper').css('padding-bottom', $('.post_more_options').height());
                     $('.post_media_wrapper').show();
+                    $('#file_share').mCustomScrollbar("update");
                 });
 
                 $('#status_text').on('input', function() {
@@ -112,6 +113,9 @@ include_once('chat.php');
                     share_group_id = $(this).attr('share_id');
                     //console.log(share_group_id);
                 });
+                $('#file_share').mCustomScrollbar();
+                $('#file_share').mCustomScrollbar("update");
+                
             });
 
             function clearPostArea()
@@ -155,7 +159,7 @@ include_once('chat.php');
                                 </table>
                             </td>
                             <td style='width:200px;height:100%;position: relative;'>
-                                <div id='file_share' class='scroll_thin'>
+                                <div id='file_share'>
                                     <table id='file_dialog' style='width:100%;' cellspacing="0" cellpadding="0">
                                         <?php
                                         foreach ($files->getList_r() as $file) {

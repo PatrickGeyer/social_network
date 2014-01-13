@@ -1,6 +1,6 @@
 <?php
-	include_once('lock.php');
+	//include_once('lock.php');
 
-	$user->setOnline();
+	//$user->setOnline();
 
 ?>

@@ -4,14 +4,21 @@ include_once('database.class.php');
 include_once('user.class.php');
 
 class Chat {
-
+    private static $chat = NULL;
     private $user;
     protected $database_connection;
     public function __construct() {
-        $this->user = new User;
+        $this->user = User::getInstance();
         $this->database_connection = Database::getConnection();
     }
+    public static function getInstance ( ) {
+        if (self :: $chat) {
+            return self :: $chat;
+        }
 
+        self :: $chat = new Chat();
+        return self :: $chat;
+    }
     public function submitChat($aimed, $text) {
         $text = str_replace("\n", "<br />", $text);
         $text = strip_tags($text);
@@ -38,16 +45,17 @@ class Chat {
         }
         $sql = $this->database_connection->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $sql->execute($variables);
+        echo "200";
     }
 
     function getContent($chat_identifier, $all = 'false') {
         $time = time();
         if ($chat_identifier == "y") {
-            $chat_query = "SELECT * FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND sender_year = " . $this->user->getPosition() . " AND aimed = 'y' ";
+            $chat_query = "SELECT sender_id, text, time FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND sender_year = " . $this->user->getPosition() . " AND aimed = 'y' ";
         } else if ($chat_identifier == "s") {
-            $chat_query = "SELECT * FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND aimed='s'";
+            $chat_query = "SELECT sender_id, text, time FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND aimed='s'";
         } else {
-            $chat_query = "SELECT * FROM chat WHERE group_id = " . $chat_identifier;
+            $chat_query = "SELECT sender_id, text, time FROM chat WHERE group_id = " . $chat_identifier;
         }
         if ($all == 'false') {
             $chat_query .= " AND time >= " . $time;
@@ -61,7 +69,7 @@ class Chat {
                 $chat_number = $chat_query->rowCount();
                 $chat_entries = $chat_query->fetchAll(PDO::FETCH_ASSOC);
                 if ($chat_number == 0) {
-                    usleep(100000);
+                    usleep(500000);
                 } else {
                     foreach ($chat_entries as $record) {
                         $chat_read_query = "SELECT id FROM chat_read WHERE user_id = :user_id AND chat_id = :chat_id;";
@@ -132,7 +140,7 @@ class Chat {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
-    $chat = new Chat;
+    $chat = Chat::getInstance();
     if (isset($_POST['chat'])) {
         $chat->getContent($_POST['chat'], $_POST['all']);
     }

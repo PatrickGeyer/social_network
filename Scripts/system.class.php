@@ -2,12 +2,11 @@
 
 include_once('php_includes/simple_html_dom.php');
 include_once('database.class.php');
-include_once('files.class.php');
+include_once('base.class.php');
 
-class System {
-
+class System extends Base{
+    private static $system = NULL;
     private $url;
-    protected $files;
     private $meta_tag = array(
         "charset" => "utf-8",
         "description" => "This is a description of my site.",
@@ -18,9 +17,15 @@ class System {
     );
 
     public function __construct() {
-        $this->files = new Files;
     }
+    public static function getInstance ( ) {
+        if (self :: $system) {
+            return self :: $system;
+        }
 
+        self :: $system = new System();
+        return self :: $system;
+    }
     function getSchoolNames() {
         $query = "SELECT name FROM community;";
     }
@@ -56,10 +61,22 @@ class System {
         return trim($plaintext);
     }
 
+    function getRandomString($length = 8) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $string = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $string .= $characters[mt_rand(0, strlen($characters) - 1)];
+        }
+
+        return $string;
+    }
+
     public function getGlobalMeta() {
         foreach ($this->meta_tag as $meta => $value) {
             echo "<meta name='" . $meta . "' content='" . $value . "' />";
         }
+        echo "<link rel='stylesheet' href='CSS/style.min.css' type='text/css'>";
     }
 
     public function audioPlayer($path = null, $name = null, $close_button = false, $rndm = null) {
@@ -120,7 +137,7 @@ class System {
             $path = ":::path:::";
             $thumbnail = ":::thumb:::";
         } else {
-            $path = $this->files->stripexts($path);
+            $path = $this->stripexts($path);
             $flv_path = $path . ".flv";
             $mp4_path = $path . ".mp4";
             $ogg_path = $path . ".ogg";
@@ -139,9 +156,9 @@ class System {
 //            "c:\program files\ffmpeg\bin\ffmpeg.exe" -i %1 -ss 00:10 -vframes 1 -r 1 -s 640x360 -f image2 %1.jpg
         }
         $return .="<video width='100%' height='100%' id='" . $video_id_prefix . $video_id . "' class='video-js vjs-default-skin " . $classes . "'"
-                . "preload='auto' controls poster='" . $thumbnail . "'"
+                . "preload='none' controls poster='" . $thumbnail . "'"
                 . "style='" . $styles . "' "
-                . "data-setup={}>"; //data-setup ={}
+                . ">"; //data-setup ={}
         if ($source == TRUE) {
             $return .="<source src='" . $webm_path . "' type='video/webm'>"
                     . "<source src='". $mp4_path ."' type='video/mp4'> ";
@@ -158,6 +175,16 @@ class System {
     function trimStr($string, $length) {
         $string = (strlen($string) > $length) ? substr($string, 0, $length) . '...' : $string;
         return $string;
+    }
+    
+    public function findexts($filename) {
+        $filename = strtolower($filename);
+        return pathinfo($filename, PATHINFO_EXTENSION);
+    }
+
+    public function stripexts($filename) {
+        $exts = preg_replace("/\\.[^.\\s]{3,4}$/", "", $filename);
+        return $exts;
     }
 
     function humanTiming($time) {
@@ -194,6 +221,7 @@ class System {
     }
 
     public function getPagePreview($url) {
+        error_reporting(0);
         $this->url = $url;
         $parse = parse_url($this->url);
         $scheme = $parse['scheme'];
@@ -232,7 +260,7 @@ class System {
         }
         $parse_path = parse_url($icon);
         $parse_url = parse_url($this->url);
-        if ($parse_path['scheme'] == NULL && substr($icon, 0, 2) != "//") {
+        if (!isset($parse_path['scheme']) && substr($icon, 0, 2) != "//") {
             $icon = $parse_url['scheme'] . "://" . $parse_url['host'] . $icon;
         }
         return $icon;

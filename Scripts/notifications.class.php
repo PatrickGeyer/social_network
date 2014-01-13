@@ -3,26 +3,34 @@ include_once('database.class.php');
 include_once('user.class.php');
 
 class Notification {
+    private static $notifiction = NULL;
     private $user;
     protected $database_connection;
     public function __construct() {
         $this->user = new User;
         $this->database_connection = Database::getConnection();
     }
+    public static function getInstance ( ) {
+        if (self :: $notifiction) {
+            return self :: $notifiction;
+        }
 
+        self :: $notifiction = new Notification();
+        return self :: $notifiction;
+    }
     function getMessage($type = null, $id = null) {
         if (!isset($type)) {
             
-            $user_query = "SELECT * FROM messages WHERE thread IN "
+            $user_query = "SELECT sender_id, message, thread, time, u_id FROM messages WHERE thread IN "
                     . "(SELECT thread_id FROM message_share WHERE receiver_id = :user_id) "
                     . "AND id IN (SELECT max(id) FROM messages GROUP BY thread) "
                     . "ORDER BY id DESC;";
             
         } else if ($type == 'thread') {
-            $user_query = "SELECT * FROM messages WHERE thread IN (SELECT thread_id FROM message_share WHERE receiver_id = :user_id AND thread_id = " . $id . ") 
+            $user_query = "SELECT sender_id, message, thread, time, u_id FROM messages WHERE thread IN (SELECT thread_id FROM message_share WHERE receiver_id = :user_id AND thread_id = " . $id . ") 
              ORDER BY id ASC;";
         } else {
-            $user_query = "SELECT * FROM messages WHERE id = " . $id . " ORDER BY id DESC;";
+            $user_query = "SELECT sender_id, message, thread, time, u_id FROM messages WHERE id = " . $id . " ORDER BY id DESC;";
         }
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));

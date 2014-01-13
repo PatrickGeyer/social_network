@@ -2,8 +2,6 @@
 include("lock.php");
 $system->getGlobalMeta();
 ?>
-<link rel="stylesheet" type="text/css" href="CSS/style.min.css" />
-<link rel="shortcut icon" type="image/png" href="Images/Icons/Icon_Pacs/glyph-icons/glyph-icons/PNG/World-small.png"/>
     
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script>window.jQuery || document.write('<script src="Scripts/external/jquery-1.10.2.js">\x3C/script>');</script>
@@ -20,6 +18,8 @@ $system->getGlobalMeta();
 
 <link href="Scripts/external/video-js/video-js.min.css" rel="stylesheet">
 <script src="Scripts/external/video-js/video.min.js"></script>
+
+<script src="Scripts/external/jquery.scrollTo-1.4.3.1.js"></script>
 <script>
     _V_.options.flash.swf = "Scripts/external/video-js/video-js.swf";
     
@@ -32,6 +32,14 @@ $system->getGlobalMeta();
 </script>
 
 <script type="text/javascript">
+    //var audioPlayer = <?php ?>;
+    //var videoPlayer = <?php ?>;
+    var WORD_THUMB = '<?php echo System::WORD_THUMB; ?>';
+    var PDF_THUMB = '<?php echo System::PDF_THUMB; ?>';
+    var AUDIO_THUMB = '<?php echo System::WORD_THUMB; ?>';
+    var VIDEO_THUMB = '<?php echo System::WORD_THUMB; ?>';
+    
+    
     function createMap(city, country) {
         var geocoder = new google.maps.Geocoder();
         geocoder.geocode({'address': city + ", " + country}, function(results, status) {
@@ -56,11 +64,11 @@ $system->getGlobalMeta();
                                 type: "html",
                                 content: "Are you sure you want to update your location?",
                             },
-                            buttons={
+                            buttons=[{
                                 type: "primary",
                                 text: "Yes",
                                 onclick: function(){updateLocation(" + marker.position.lat() + ", " + marker.position.lng() + ");},
-                            },
+                            }],
                             properties={
                                 modal: false,
                                 title:'Location',
@@ -77,9 +85,44 @@ $system->getGlobalMeta();
             alert(response);
         });
     }
+    </script>
+    <script>
+    function getType(extension) {
+        switch (extension)
+        {
+            case "png":
+            case "jpg":
+            case "jpeg":
+            case "gif":
+                return "Image";
+                break;
+                
+            case "mov":
+            case "wmv":
+            case "mp4":
+            case "avi":
+                return "Video";
+                break;
+                
+            default:
+                return "File";           
+        }
+    }
 </script>
 
 <script>
+function delay(elem, time, callback) {
+    var timeout = null;
+    elem.onmouseover = function() {
+        // Set timeout to be a timer which will invoke callback after 1s
+        timeout = setTimeout(callback, time);
+    };
+
+    elem.onmouseout = function() {
+        // Clear any timers set to timeout
+        clearTimeout(timeout);
+    }
+}
 
     // SEARCH
     $(function() {
@@ -98,12 +141,12 @@ $system->getGlobalMeta();
                         enable:false
                     },
                     advanced:{
-                        updateOnContentResize: true
+                        updateOnContentResize: true,
+                        updateOnBrowserResize:true,
                     },
-                    scrollInertia:10,
-                    theme:'dark-thick',
-                    autoHideScrollbar : true,
-                    updateOnBrowserResize:true,
+                    scrollInertia:100,
+                    theme:'dark',
+                    autoHideScrollbar: false,
                     mouseWheelPixels: 20 
                     
                 });
@@ -112,22 +155,39 @@ $system->getGlobalMeta();
                         enable:false
                     },
                     advanced:{
-                        updateOnContentResize: true
+                        updateOnContentResize: true,
+                        autoScrollOnFocus: true,
                     },
                     scrollInertia:10,
                     theme:'dark-thin',
                     autoHideScrollbar : true
                 });
+
         $('.scroll_thin_horizontal').mCustomScrollbar({
                     scrollButtons:{
                         enable:false
                     },
                     advanced:{
-                        updateOnContentResize: true
+                        updateOnContentResize: true,
+                        autoScrollOnFocus: true,
                     },
                     scrollInertia:10,
                     autoHideScrollbar : true,
                     horizontalScroll:true,
+                });
+       $('.search_results').mCustomScrollbar({
+                    scrollButtons:{
+                        enable:false
+                    },
+                    advanced:{
+                        updateOnContentResize: true,
+                        updateOnBrowserResize:true,
+                    },
+                    scrollInertia:100,
+                    theme:'dark',
+                    autoHideScrollbar: false,
+                    mouseWheelPixels: 20 
+                    
                 });
 //                 $( ".search_option file, #post_media_wrapper" ).sortable({
 //      connectWith: ".connectedSortable"
@@ -175,7 +235,61 @@ $system->getGlobalMeta();
 
         return viewportheight;
     }
-
+    
+    function addReceiver(array, receiver_id, community_id, group_id, callback) {
+        var to_push = {
+            receiver_id : receiver_id,
+            community_id: community_id, 
+            group_id: group_id
+        };
+        array.push(to_push);
+        callback();
+        console.log(array);
+        return array;
+    }
+    
+    function removeReceiver(array, value, callback) {
+        var index = receivers.indexOf(receiver_id);
+                if (index > -1)
+                {
+                    receivers.splice(index, 1);
+                }
+                $('.message_added_receiver_' + receiver_id).remove();
+                alignDialog();
+    }
+    
+    function search(text, mode, element, callback) {
+        if(text == "") {
+            $(element).hide();
+        } else {
+            var loader = $("<img src='Images/ajax-loader.gif'></img>");
+            $(element).prepend(loader);
+            $(element).show();
+        }
+        $.post("Scripts/searchbar.php", {search: mode, input_text: text}, function(response) {
+            $(element).find('.search_slider').slideUp("fast", function(){$(this).remove();});
+            var slider = $("<div class='search_slider'></div>").hide();
+            slider.append(response);
+            $(element).append(slider);
+            loader.remove();
+            var scrollElement = document.querySelector(element);
+            slider.slideDown(function(){
+                if( scrollElement.offsetHeight < scrollElement.scrollHeight || scrollElement.offsetWidth < scrollElement.scrollWidth){
+                    $(element).mCustomScrollbar();
+                    $(element).find('.mCustomScrollBox ').height('');
+                    $(element).mCustomScrollbar("update");
+                    $(element).find('.mCS_container').css('top', '0px');
+                }
+                callback();
+            });
+        });
+        $(element).off('click');
+        $(element).on('click', function(e){
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    }
+    
     function getViewPortWidth()
     {
         var viewportwidth;
@@ -213,23 +327,6 @@ $system->getGlobalMeta();
 
     $(function()
     {
-        $('#loading_icon').fadeOut();
-
-        $(document).on('mouseover', "div.files", function()
-        {
-            $('.audio_hidden_container').not($(this).find('.audio_hidden_container')).hide();
-            $(this).find('.audio_hidden_container').slideDown("fast");
-        });
-
-        $(document).on('mouseover', "div.folder", function()
-        {
-            $('.audio_hidden_container').hide();
-        });
-
-        $('.audio_hidden_container').hover(function() {
-        }, function() {
-        });
-
         $('.image_placeholder').load(function() {
             resizeDiv($(this).attr('f_id'));
         });
@@ -326,7 +423,8 @@ $system->getGlobalMeta();
         {
             var response = $.parseJSON(event.responseText);
             $.post('Scripts/files.class.php', {file_info:response, action:"convert"}, function(){
-                console.log('posted file conversion data');
+                //console.log('posted file conversion data');
+                removeDialog();
             });
             refreshFileContainer(encrypted_folder);
         }
@@ -550,7 +648,17 @@ $system->getGlobalMeta();
             }
         });
 
-        $(document).click(function()
+        $(document).on('click', function()
+        {
+            $('#names_universal').hide();
+            removeUserPreview("force");
+        });
+        
+        $(document).on('click', '.search_box', function(e){
+            e.stopPropagation();
+        });
+        
+        $(document).on('click', function()
         {
             $('#names_universal').hide();
             removeUserPreview("force");
@@ -586,10 +694,14 @@ $system->getGlobalMeta();
     {
         var container_left = $('.container_headerbar').offset().left;
         container_left = container_left - $('.left_bar_container').outerWidth();
+        
+        var nav_height = $('.navigation').outerHeight(true);
 
         //$('#logo').css('left', container_left);
         $('.left_bar_container').css('left', container_left-1);
+        $('.messagecomplete').css('left', container_left-1);
         $('#friends_container').css('padding-top', 22);
+        $('.messagecomplete').css('padding-top', nav_height + 30);
 
         //var top_height = $('.navigation').position().top + $('.navigation').height();
 
@@ -618,11 +730,11 @@ $system->getGlobalMeta();
                     content:"Your post is being sent... Please wait."
                 },
                 buttons=
-                {
+                [{
                     type:"success", 
                     text:"OK",
                     onclick: function(){alert('the_function');}
-                },
+                }],
                 properties=
                 {
                     modal:false,
@@ -659,7 +771,7 @@ $system->getGlobalMeta();
     {
         return $('.dialog_container');
     }
-    function dialog(content, button, properties)
+    function dialog(content, buttons, properties)
     {
         properties.modal = (typeof properties.modal === "undefined") ? true : properties.modal;
         properties.loading = (typeof properties.loading === "undefined") ? false : properties.loading;
@@ -671,29 +783,34 @@ $system->getGlobalMeta();
 
         var dialog_title = $("<div class='dialog_title'>" + properties.title + 
             "<span onclick='removeDialog();' class='dialog_close_button'>x</span></div>");
-        $(dialog_container).append(dialog_title);
+        var content_container = $("<div class='dialog_content_container'></div>");
+        dialog_container.append(dialog_title);
+        dialog_container.append(content_container);
 
         if (content.type == "text")
         {
-            $(dialog_container).append(content.content);
+            dialog_container.append(content.content);
         }
         else if (content.type == "html")
         {
-            $(dialog_container).append(content.content);
+            content_container.append(content.content);
         }
-        $(dialog_container).width(properties.width);
+        dialog_container.width(properties.width);
+        var button_complete = $('<div></div>');
+        for(var i = 0; i < buttons.length; i++ ) {
+            var single_button = document.createElement('button');
+            $(single_button).addClass('small');
+            $(single_button).addClass('pure-button-' + buttons[i].type);
+            $(single_button).css('float', 'right'); 
+            $(single_button).text(buttons[i].text);
+            single_button.onclick = buttons[i].onclick;
+            button_complete.append(single_button);
+        }
 
-        var single_button = document.createElement('button');
-        $(single_button).addClass('small');
-        $(single_button).addClass('pure-button-' + button.type);
-        $(single_button).css('float', 'right'); 
-        $(single_button).text(button.text);
-        single_button.onclick = (function(){button.onclick()});
-
-        var dialog_buttons = $("<div class='dialog_buttons'><img class='dialog_loading' src='Images/ajax-loader.gif'></img>" +
-                "</div>");
-        $('.dialog_container').append(dialog_buttons);
-        $('.dialog_buttons').append(single_button);
+        var dialog_buttons = $("<div class='dialog_buttons'><img class='dialog_loading' src='Images/ajax-loader.gif'></img></div>");
+        dialog_container.append(dialog_buttons);
+        dialog_buttons.append(button_complete);
+        
         if (properties.modal == true) {
             $('body').append("<div class='background-overlay'></div>");
         } else {
@@ -705,9 +822,15 @@ $system->getGlobalMeta();
             dialogLoad();
         }
         alignDialog();
-        var real_height = $(dialog_container).height();
-        $(dialog_container).css({height: "0px"});
-        $('.dialog_container').animate({ minHeight: real_height + "px", opacity: 1}, 'fast', function(){$(dialog_container).css({height: "auto"});});
+        var real_height = dialog_container.height();
+        dialog_container.css({height: "0px"});
+        dialog_container.animate({ minHeight: real_height + "px", opacity: 1}, 'fast', function(){dialog_container.css({height: "auto"});});
+        content_container.mCustomScrollbar({
+                    scrollInertia:10,
+                    autoHideScrollbar : true,
+                });
+        content_container.mCustomScrollbar("update");
+        setTimeout(function(){content_container.mCustomScrollbar("update"); }, 200);
     }
 
     function alignDialog()
@@ -931,12 +1054,7 @@ $system->getGlobalMeta();
         var text_to_append = '';
         var additional_close = '';
         var extra_params = " post_file_id='" + object.file_id + "' ";
-        if (type == "Folder")
-        {
-            additional_close += " post_media_single_close_file";
-            text_to_append += "><a href='files?pd=" + object.path + "&u=" + object.file_id + "'><div "+
-                    "style='background-repeat:no-repeat;background-size:contain;background-image: url(&quot;Images/yellow-folder-icon.jpg&quot;); height:80px;width:80px;cursor:pointer;'></div></a>";
-        } else if (type == "Image")
+        if (type == "Image")
         {
             post_media_style += "background-image:url(&quot;" + object.path + "&quot;);";
             additional_close += " post_media_single_close_file";
@@ -978,13 +1096,29 @@ $system->getGlobalMeta();
                     "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>"+
                     "<a class='user_preview_name' target='_blank' href='" + object.path + "'><span style='font-size:13px;'>" + object.info.title + "</span></a></div></td></tr>"+
                     "<tr><td><span style='font-size:12px;' class='user_preview_community'>" + object.info.description + "</span></td></tr></table>";
+        } else if(type == "Folder") {
+            additional_close += " post_media_single_close_file";
+            text_to_append += "><div class='post_media_folder_image'></div>"+
+                    "<span style='font-size:13px;'></span>";
+        } else if(type == "WORD Document"){ 
+            text_to_append += documentStatus(object.path, object.name, object.description, WORD_THUMB);
+            
+        } else if(type == "PDF Document") {
+            text_to_append += documentStatus(object.path, object.name, object.description, PDF_THUMB);
         } else {
-
+            alert(type);
+            text_to_append += "Type undetected";
+        }
+        if(type == "WORD Document" || type == "PDF Document" ){ 
+            post_media_classes += " post_media_double";
+            post_media_style += "height:auto;";
+            additional_close += " post_media_single_close";
+            extra_params = " post_file_id='" + object.path + "' ";
         }
         var index;
         for(var i=0;i<post_media_added_files.length;i++) 
         {
-           if (post_media_added_files[i].file_id == object.file_id)
+           if (post_media_added_files[i].file_id == object.file_id || post_media_added_files[i] == object.file_id)
            { 
                index = "found";
                dialog(
@@ -992,11 +1126,11 @@ $system->getGlobalMeta();
                    type:'html',
                    content:"Sorry, but you have already added this file to your post. Please choose another instead!"
                 },
-                buttons={
+                buttons=[{
                     type:"error",
                     text:"OK",
                     onclick:function(){removeDialog();}
-                },
+                }],
                 properties={
                     modal:false,
                     title: "Whoops!"
@@ -1032,9 +1166,15 @@ $system->getGlobalMeta();
                 });
         }
         $('#status_text').focus();
-        resizeScrollers();
+        $('#file_share').mCustomScrollbar("update");
     }
-    
+    function documentStatus(path, name, description, image) {
+        return "><table style='margin:10px;height:100%;'><tr><td rowspan='3'>" + 
+                    "<div style='margin-right:10px;height:63px;width:64px;background-size:contain;background-image:url(&quot;" + image + "&quot;);'></div></td>"+
+                    "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>"+
+                    "<a class='user_preview_name' target='_blank' href=''><span style='font-size:13px;'>" + name + "</span></a></div></td></tr>"+
+                    "<tr><td><span style='font-size:12px;' class='user_preview_community'>" + description + "</span></td></tr></table>"
+    }
     function removeFromStatus(object)
     {
         var id;
@@ -1086,26 +1226,37 @@ $system->getGlobalMeta();
     }
     function resizeScrollers()
     {
-        //$('.scroll_thin').mCustomScrollbar().resize();
-        //$('.scroll_thin_horizontal').getNiceScroll().resize();
+        //$('.scroll_thin').mCustomScrollbar("update");
+       // $('.scroll_thin_horizontal').mCustomScrollbar("update");
     }
     
 // END HOME
-    function initiateTheater(src, id, no_text)
+
+    function initiateTheater(src, id, no_text, file_id)
     {
+        var background = $("<div hidden onclick='hideTheater();' class='background-overlay'></div>");
+        var close_theater = $("<div onclick='hideTheater();' class='close-theater'></div>");
+        $('body').append(background);
+        fileView(file_id);
+        //console.log(src + " --- " + id +" --- "+ no_text);
         var checker = $('.theater-picture-container');
         if (checker.length != 0)
         {
             $('.theater-picture').remove();
-            $(".background-overlay").remove();
+            //$(".background-overlay").remove();
         }
-        $('body').append("<div hidden onclick='hideTheater();' class='background-overlay'></div>");
-        $('body').append("<div id='theater-picture' class='theater-picture'></div>");
-        $('.theater-picture').append("<div onclick='hideTheater();' class='close-theater'></div>");
-        $('.theater-picture').append("<div id='theater-picture-container' style='background-image: url(&apos;" + src + "&apos;);' class='theater-picture-container'></div>");
+        var theater_picture = $("<div id='theater-picture' class='theater-picture'></div>");
+        $('body').append(theater_picture);
+        theater_picture.append(close_theater);
+        
+        var theater_picture_container = $("<div id='theater-picture-container' " + 
+                "style='background-image: url(&apos;" + src + "&apos;);' class='theater-picture-container'></div>")
+        theater_picture.append(theater_picture_container);
+        
         if (id != "no_text")
         {
-            $('.theater-picture').append("<div id='theater-info-container' class='theater-info-container scroll_medium'></div>");
+            var theater_info_container = $("<div id='theater-info-container' class='theater-info-container'></div>");
+            theater_picture.append(theater_info_container);
 
             var info_html = $('#single_post_' + id).clone();
             info_html = info_html.find("*").each(function()
@@ -1139,11 +1290,12 @@ $system->getGlobalMeta();
         }
 
         $('.background-overlay').show();
-        $('.theater-picture').show();
+        theater_picture.show();
         $("body").css("overflow", "hidden");
         adjustTheater(no_text, src);
     }
-
+</script>
+<script>
     function adjustTheater(no_text, src)
     {
         var theater = $('.theater-picture');
@@ -1280,7 +1432,7 @@ $system->getGlobalMeta();
             //console.log('Video: ' + video_id + ", type is: " + typeof _V_.players[video_id]);
             
             if(typeof _V_.players[video_id] === "undefined") {
-                console.log('Creating video for: '+ video_id);
+                //console.log('Creating video for: '+ video_id);
                 videojs(video_id, {}, function(){
                     this.on('play', function(){
                         videoPlay(video_id);
@@ -1289,14 +1441,18 @@ $system->getGlobalMeta();
                         videoPause(video_id);
                     });
                     this.on('ended', function(){
-                        //videoEnd(video_id);
+                        videoEnded(video_id);
                     });
                 });
 
            }
         });
     }
-
+    function fileView(id) {
+        $.post("Scripts/files.class.php", {file_id: id, action: "view"}, function(response){
+            console.log("ID: " + id + " -Viewed File: " + response);
+        });
+    }
     function createFolder(parent_folder)
     {
         dialogLoad();
@@ -1321,6 +1477,7 @@ $system->getGlobalMeta();
     }
     function audioPlay(id)
     {
+        fileView(id);
         var src = $('#image_' + id).css('background-image');
         if (src.indexOf("Play") >= 0)
         {
@@ -1393,26 +1550,62 @@ $system->getGlobalMeta();
     {
         $('#audio_container_' + id).remove();
     }
+    </script>
+    <script>
     
     function videoPlay(id) {
+        var file_id = id.replace(/[A-Za-z_$-]/g, "");
+        fileView(file_id);
         if($("#" + id).parents('#file_container').length !== 0) {
-            id = id.replace(/[A-Za-z_$-]/g, "");
+            id = file_id;
             $('#audio_play_icon_' + id).css('visibility', 'visible');
             $('#audio_play_icon_' + id).animate({opacity: "1"}, 200);
-            //$('#audio_play_icon_seperator_' + id).slideDown();
+        } else if($("#" + id).parents('.files_recently_shared').length !== 0) {      
+            $('.files_recently_shared').find(".files_feed_active").not(":has(#" + id + ")").removeClass("files_feed_active").find('video').each(function(){
+                        if(videojs("#" + $(this).attr('id')).paused() === false) {
+                            videojs("#" + $(this).attr('id')).player().pause();
+                        }
+            });
+            $('.files_recently_shared_container').mCustomScrollbar("scrollTo", "#" + id, {
+                scrollInertia: 600,
+                scrollOffset: "200px"
+            }); 
+                
+            $("#" + id).parents('.files_feed_item').not(".files_feed_active").addClass("files_feed_active");
+            
         }
     }
-    
+</script>
+<script>
+    function getContentWidth(element) {
+        var width = 0;
+        $(element).children().each(function(){
+            width += $(this).outerWidth(true);
+        });
+        return width;
+    }
     function videoPause(id) {
+         console.log('paise');
         if($("#" + id).parents('#file_container').length !== 0) {
             id = id.replace(/[A-Za-z_$-]/g, "");
             $('#audio_play_icon_' + id).animate({opacity: "0"}, 200, function() {
                 $('#audio_play_icon_' + id).css('visibility', 'hidden');
             }); 
-            //$('#audio_play_icon_seperator_' + id).hide();
+        }
+        // } else if($("#" + id).parents('.files_recently_shared').length !== 0) {
+        //     $("#" + id).parents(".files_feed_active").animate({height :"-=200px", width: "-=200"},200, function(){
+        //         resizeScrollers();
+        //         //$('.files_recently_shared').mCustomScrollbar("scollTo", "#" + id);
+        //     }).removeClass("files_feed_active");
+        // }
+    }
+    function videoEnded(id) {
+        if($("#" + id).parents('#file_container').length !== 0) {
+
+        } else if($("#" + id).parents('.files_recently_shared').length !== 0) {
+            //$("#" + id).parents().animate({height :"-=200px", width: "-=200"},200);
         }
     }
-
     function showUpload(type)
     {
         if (type == "folder")
@@ -1427,11 +1620,11 @@ $system->getGlobalMeta();
         else if (type == "file")
         {
             $('#file').trigger('click');
-            $('#file_upload_option').hide();
-            $('#file_upload_dialog').show();
+            //$('#file_upload_option').hide();
+            //$('#file_upload_dialog').show();
 
-            $('#folder_upload_option').show();
-            $('#folder_upload_dialog').hide();
+            //$('#folder_upload_option').show();
+            //$('#folder_upload_dialog').hide();
         }
     }
 

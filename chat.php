@@ -8,16 +8,41 @@ if (!isset($_COOKIE['showchat'])) {
     <script id="chat_loader">
 
         var current_view = getCookie("showchat");
-        if(current_view == "undefined") {
+        if (current_view == "undefined") {
             current_view = "s";
             setCookie("showchat", 's');
         }
 
         var timer;
         var bottom = true;
-
+        function iniScrollChat() {
+            $('.chatoutput').mCustomScrollbar({
+                    scrollButtons:{
+                        enable:false
+                    },
+                    advanced:{
+                        updateOnContentResize: true,
+                        updateOnBrowserResize:true,
+                    },
+                    callbacks:{
+                        onScroll: bindChatScroll,
+                        onTotalScroll: function(){bottom=true;}
+                    },
+                    scrollInertia:100,
+                    autoHideScrollbar: false,
+                    mouseWheelPixels: 20
+                    
+                });
+        }
+        $(window).resize(function(){
+            $('.chatoutput').mCustomScrollbar("update");
+            if(bottom == true) {
+                $('.chatoutput').mCustomScrollbar("scrollTo", "bottom");
+            }
+        });
         $(function()
         {
+            iniScrollChat();
             scroll2Bottom();
             sendChatRequest('true', current_view);
 
@@ -66,6 +91,30 @@ if (!isset($_COOKIE['showchat'])) {
                 change_chat_view($(this).attr("chat_feed"));
             });
         });
+        </script>
+        <script>
+        
+        function detectChange()
+        {
+            var text = $('.chatinputtext').val();
+            $('.chat_input_clone').text(text);
+            $('.chatinputtext').height($('.chat_input_clone').height());
+            var key_height = $('.chatinputtext').height() + 5;
+            var bottom = 10 + key_height;
+            $('.chatoutput').css('bottom', bottom + "px");
+            $('.chatheader').css('bottom', bottom + "px");
+            var padding_top = $('.chatoutput').innerHeight() - $('#chatreceive').height() - bottom + 100;
+            scroll2Bottom();
+        }
+        $(function(){
+            detectChange();
+            $(document).on("propertychange keyup input change", '.chatinputtext', function(){
+                detectChange();
+            });
+        })
+        </script>
+        <script>
+            
 
         function sendChatRequest(all, current)
         {
@@ -82,7 +131,9 @@ if (!isset($_COOKIE['showchat'])) {
                         $('#chatreceive').append(response);
                     }
                     // time = setTimeout(function(){sendChatRequest('false', current_view), current_view}, 0);
-                    setTimeout(function(){sendChatRequest('false', current_view)}, 5000);
+                    setTimeout(function() {
+                        sendChatRequest('false', current_view)
+                    }, 1000);
                     scroll2Bottom();
                 }
                 $('#chat_loading_icon').hide();
@@ -93,37 +144,28 @@ if (!isset($_COOKIE['showchat'])) {
             });
         }
 
-        $(function()
-        {
-            $('.chatoutput').bind('scroll', function()
-            {
-                if ($(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight)
-                {
-                    bottom = true;
-                }
-                else
-                {
-                    bottom = false;
-                }
-            })
+        function bindChatScroll() {
+            bottom = false;
         }
-        );
+
 
         function scroll2Bottom(force)
         {
             if (bottom == true || force == true)
             {
-                $(".scroll_thin").mCustomScrollbar("update");
+                $(".chatoutput").mCustomScrollbar("update");
                 $(".chatoutput").mCustomScrollbar("scrollTo", 'bottom');
             }
         }
 
         function submitchat(chat_text)
         {
+            $('.chatinputtext').val("Sending...");
+            $('.chatinputtext').css("color", "lightgrey");
             $.post("Scripts/chat.class.php", {action: "addchat", aimed: current_view, chat_text: chat_text}, function(response)
             {
                 $("#text").css("color", "black");
-                $('#text').html('');
+                $('#text').val('');
                 scroll2Bottom(true);
             });
         }
@@ -163,88 +205,73 @@ if (!isset($_COOKIE['showchat'])) {
     }
     ?></div>
 <div class="chatcomplete" id="chat">
-                <div id='feed_wrapper_scroller' class='scroll_thin_left chatheader'>
-                    <table>
-                        <tr>
-                            <td>
-                                <div id='school_tab' style='padding:0px;' chat_feed='s' class='feed_selector chat_selector 
-                                <?php
-                                if ($_COOKIE['showchat'] == 's') {
-                                    echo "active_feed";
-                                }
-                                ?>
-                                '><h3 class='chat_header_text ellipsis-overflow'>
-                                         <?php
-                                         echo $user->getCommunityName();
-                                         ?>
-                                </h3></div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div id='year_tab' style='padding:0px;' chat_feed='y' class='feed_selector chat_selector 
-                                <?php
-                                if ($_COOKIE['showchat'] == 'y') {
-                                    echo "active_feed";
-                                }
-                                ?>
-                                '><h3 class='chat_header_text ellipsis-overflow'>Year <?php echo $user->getPosition();?></h3>
-                                </div>
-                            </td>
-                        </tr>
-                            <?php
-                            $groups = $group->getUserGroups();
-                            foreach ($groups as $single_group) {
-                                echo "<tr><td><div style='padding:0px;' chat_feed='"
-                                . $single_group . "' class='feed_selector chat_selector "
-                                . ($_COOKIE['showchat'] == $single_group ? "active_feed" : "")
-                                . "' id='" . $single_group . "' title='"
-                                . $group->getGroupName($single_group) . "'><h3 class='chat_header_text ellipsis-overflow'>"
-                                . $group->getGroupName($single_group) . "</h3></div></td></tr>";
-                            }
-                            ?>
-                        </tr>
-                    </table>
-                </div>
-                <div class="chatoutput scroll_thin">
-                    <img id='chat_loading_icon' src='Images/ajax-loader.gif'></img>
-                    <ul style='max-width:225px;' class='chatbox' id="chatreceive"></ul>
-                </div>
-                <div class='text_input_container'>
-                    <div contenteditable id="text" onkeydown='
-                            if (event.keyCode == 13)
-                            {
-                                if (event.shiftKey !== true)
-                                {
-                                    submitchat($(this).html());
-                                    $(this).html("Sending...");
-                                    $(this).css("color", "lightgrey");
-                                    return false;
-                                }
-                            }
-                            detectChange();
-                            return true;'
-                         class="chatinputtext"  data-placeholder="Press Enter to send...">
+    <div id='feed_wrapper_scroller' class='scroll_thin_left chatheader'>
+        <table>
+            <tr>
+                <td>
+                    <div id='school_tab' style='padding:0px;' chat_feed='s' class='feed_selector chat_selector 
+                    <?php
+                    if ($_COOKIE['showchat'] == 's') {
+                        echo "active_feed";
+                    }
+                    ?>
+                         '><h3 class='chat_header_text ellipsis-overflow'>
+                                 <?php
+                                 echo $user->getCommunityName();
+                                 ?>
+                        </h3></div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div id='year_tab' style='padding:0px;' chat_feed='y' class='feed_selector chat_selector 
+                    <?php
+                    if ($_COOKIE['showchat'] == 'y') {
+                        echo "active_feed";
+                    }
+                    ?>
+                         '><h3 class='chat_header_text ellipsis-overflow'>Year <?php echo $user->getPosition(); ?></h3>
                     </div>
-                </div>
-</div>
+                </td>
+            </tr>
+            <?php
+            $groups = $group->getUserGroups();
+            foreach ($groups as $single_group) {
+                echo "<tr><td><div style='padding:0px;' chat_feed='"
+                . $single_group . "' class='feed_selector chat_selector "
+                . ($_COOKIE['showchat'] == $single_group ? "active_feed" : "")
+                . "' id='" . $single_group . "' title='"
+                . $group->getGroupName($single_group) . "'><h3 class='chat_header_text ellipsis-overflow'>"
+                . $group->getGroupName($single_group) . "</h3></div></td></tr>";
+            }
+            ?>
+            </tr>
+        </table>
+    </div>
+    <div class="chatoutput">
+        <img id='chat_loading_icon' src='Images/ajax-loader.gif'></img>
+        <ul style='max-width:225px;' class='chatbox' id="chatreceive"></ul>
+    </div>
+    <div class='text_input_container'>
+        <textarea id="text" class="thin chatinputtext"  placeholder="Press Enter to send..." style='font-size: 12px;border:0px;width:100%;resize:none;overflow:hidden;'></textarea>
+        <div class='chat_input_clone' style='display:none;white-space: pre-wrap; width: 100%; min-height: 50px;  
+    font-family: century gothic,Tahoma,Geneva,sans-serif;
+    font-size: 12px;  
+    padding: 0px;  
+    word-wrap: break-word;  '></div>
+    </div>
 </div>
 <script>
-    detectChange();
-    function detectChange()
-    {
-        var key_height = $('.chatinputtext').height() + 5;
-        var bottom = 25 + key_height;
-        $('.chatoutput').css('bottom', bottom + "px");
-        $('.chatheader').css('bottom', bottom + "px");
-        var padding_top = $('.chatoutput').innerHeight() - $('#chatreceive').height() - bottom + 100;
-
-        if (padding_top > 0)
-        {
-            //console.log(padding_top);
-            // $('.chatoutput').css('padding-top', padding_top + "px");
-        }
-        scroll2Bottom();
-        setTimeout(detectChange, 100);
-    }
+    // onkeydown='
+    //                         if (event.keyCode == 13)
+    //                         {
+    //                             if (event.shiftKey !== true)
+    //                             {
+    //                                 submitchat($(this).val());
+    //                                 return false;
+    //                             }
+    //                         }
+    //                         detectChange();
+    //                         alert("d");
+    //                         return true;'
 </script>

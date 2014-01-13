@@ -6,28 +6,42 @@ include_once('user.class.php');
 include_once('files.class.php');
 
 class Home {
-
+    
+    private static $home = NULL;
     protected $system;
     protected $user;
     protected $files;
     protected $database_connection;
 
     public function __construct() {
-        $this->user = new User;
-        $this->system = new System;
-        $this->files = new Files;
+        $this->user = User::getInstance();
+        $this->system = System::getInstance();
+        $this->files = Files::getInstance();
         $this->database_connection = Database::getConnection();
+    }
+    public static function getInstance ( ) {
+        if (self :: $home) {
+            return self :: $home;
+        }
+
+        self :: $home = new Home();
+        return self :: $home;
     }
 
     function fileList($file) {
         echo "<tr><td>";
         echo "<div id='home_file_list_item_" . $file['id'] . "' style='padding:0px;border:0px;margin:0px;top:0;background:transparent;min-height:40px;' class='search_option ";
         if ($file['type'] == "Folder") {
-            echo "folder' ";
-            echo "onclick='addToStatus(&apos;" . $file['type'] . "&apos;, object={path:&apos;" . urlencode($this->system->encrypt($file['folder_id'])) . "&apos;, name:&apos;" . urlencode($this->system->encrypt($this->user->getId())) . "&apos;});'";
+            echo "file' ";
+            echo "onclick='addToStatus(&apos;" . $file['type'] . "&apos;, object={path:&apos;" . urlencode($this->system->encrypt($file['folder_id'])) . "&apos;, name:&apos;" . $file['folder_id'] . "&apos;, file_id:".$file['id']."});'";
         }
         else if ($file['type'] == "Audio") {
             echo "file' onclick='addToStatus(&apos;" . $file['type'] . "&apos;, object={path:&apos;"
+            . $file['thumb_filepath'] . "&apos;, name:&apos;" . $file['name']
+            . "&apos;, file_id:" . $file['id'] . "});'";
+        }
+        else if ($file['type'] == "Folder") {
+            echo "file' onclick='addToStatus(&apos;Folder&apos;, object={path:&apos;"
             . $file['thumb_filepath'] . "&apos;, name:&apos;" . $file['name']
             . "&apos;, file_id:" . $file['id'] . "});'";
         }
@@ -49,23 +63,24 @@ class Home {
             echo "file' onclick='var object = (" . json_encode($object) . ");addToStatus(&apos;" . $file['type'] . "&apos;, object);'";
         }
         else {
-            echo "file' onclick='addToStatus(&apos;" . $file['type'] . "&apos;, object={path:&apos;"
-            . $file['thumb_filepath'] . "&apos;, name:&apos;" . $file['name']
-            . "&apos;, file_id:" . $file['id'] . "});'";
+            $info = array(
+                "thumbnail" => $file['id'],
+                "flv_path" => $file['id'],
+                "webm_path" => $file['id'],
+                "ogg_path" => $file['id'],
+                "mp4_path" => $file['id'],
+            );
+            $object = array(
+                "path" => $file['filepath'],
+                "info" => $info,
+                "name" => $file['name'],
+                "description" => $file['description'],
+                "file_id" => $file['id'],
+            );
+            echo "file' onclick='var object = (" . json_encode($object) . ");addToStatus(&apos;" . $file['type'] . "&apos;, object);'";
         }
         echo ">";
-        if ($file['type'] == "Image") {
-            echo "<div class='search_picture' style='background-image:url(&quot;" . $file['icon_filepath'] . "&quot;);'></div>";
-        }
-        else if ($file['type'] == "Folder") {
-            echo "<div class='search_picture' style='background-image:url(&quot;Images/yellow-folder-icon.jpg&quot);'></div>";
-        }
-        else if ($file['type'] == "Audio") {
-            echo "<div class='search_picture' style='background-image:url(&quot;Images/Icons/music-icon.png&quot);'></div>";
-        }
-        else if ($file['type'] == "Video") {
-            echo "<div class='search_picture' style='background-image:url(&quot;" . $file['thumbnail'] . "&quot;);'></div>";
-        }
+        echo $this->files->filePreview($file, 'icon');
         echo "<span class='search_option_name'>" . $this->system->trimStr($file['name'], 15) . "</span>";
         //echo "<span class='search_option_info'> - ".$file['type']."</span>";
         echo "</div>";
@@ -110,7 +125,6 @@ class Home {
 
         if ($activity['type'] == "text") {
             echo "<hr class='post_user_name_underline'>";
-            $activity['status_text'] = str_replace("<img", "<img onclick='initiateTheater($(this).attr(&quot;real_src&quot;)," . $activity['id'] . ");' ", $activity['status_text']);
             echo "<span class='post_text'>" . $activity['status_text'] . '</span>';
         }
         else if ($activity['type'] == "profile") {
@@ -159,7 +173,10 @@ class Home {
         if ($assocFiles_num > 0) {
             echo "<div class='post_feed_media_wrapper'>";
             foreach ($assocFiles as $file) {
-                echo $this->printFileItem($this->files->getType($file['filepath']), $file, $activity);
+                if(!isset($file['filepath'])) {
+                    
+                }
+                echo $this->printFileItem($file, $activity);
             }
             echo "</div>";
         }
@@ -298,41 +315,53 @@ class Home {
     }
 
     public function getAssocFiles($activity_id = NULL) {
-        $sql = "SELECT * FROM files WHERE id IN (SELECT file_id FROM activity_media WHERE activity_id = :activity_id) ORDER BY type;";
+        $sql = "SELECT * FROM files AS files "
+                . "LEFT JOIN (SELECT file_id, URL, web_title, web_description, web_favicon FROM activity_media) AS act ON files.id = act.file_id "
+                . "WHERE files.id IN (SELECT file_id FROM activity_media WHERE activity_id = :activity_id); ";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(
                 array(
                     ":activity_id" => $activity_id,
         ));
         $file_array = $sql->fetchAll(PDO::FETCH_ASSOC);
-        $sql = "SELECT * FROM activity_media WHERE activity_id = :activity_id AND file_id IS NULL;";
-        $sql = $this->database_connection->prepare($sql);
-        $sql->execute(
-                array(
-                    ":activity_id" => $activity_id,
-        ));
-        $web_array = $sql->fetchAll(PDO::FETCH_ASSOC);
-        $result_array = array_merge($file_array, $web_array);
-        return $result_array;
+//        $sql = "SELECT * FROM activity_media WHERE activity_id = :activity_id AND `URL` IS NOT NULL;";
+//        $sql = $this->database_connection->prepare($sql);
+//        $sql->execute(
+//                array(
+//                    ":activity_id" => $activity_id,
+//        ));
+//        $web_array = $sql->fetchAll(PDO::FETCH_ASSOC);
+//        $result_array = array_merge($file_array, $web_array);
+        return $file_array;
     }
 
-    public function printFileItem($file_type, $file, $activity) {
+    public function printFileItem($file, $activity) {
         $post_classes = " class='post_feed_item ";
         $post_styles = " style='";
         $container = "<div";
         $post_content = "";
+        $classes = "";
 
-        if ($file_type == "Audio") {
+        if ($file['type'] == "Audio") {
             $post_classes .= "post_media_audio";
             $post_styles .= " height:auto; ";
             $post_content .= $this->system->audioPlayer($file['thumb_filepath'], $file['name'], false, false);
         }
-        else if ($file_type == "Image") {
-            $post_styles .= "background-image:url(\"" . $file['thumb_filepath'] . "\")' onclick='initiateTheater(&quot;" . $file['filepath'] . "&quot;, " . $activity['id'] . ");";
+        else if ($file['type'] == "Image") {
+            $post_styles .= "background-image:url(\"" . $file['thumb_filepath'] . "\")' onclick='initiateTheater(&quot;" . $file['filepath'] . "&quot;, " . $activity['id'] . ", \"text\", " . $file['id'] . ");";
         }
-        else if ($file_type == "Video") {
+        else if ($file['type'] == "Video") {
             $post_classes .= "post_media_video";
             $post_content .= $this->system->videoPlayer($file['id'], $file['filepath'], $classes, "height:100%;", "home_feed_video_", TRUE);
+        }
+        else if ($file['type'] == "WORD Document" || $file['type'] == "PDF Document" || $file['type'] == "EXCEL Document") {
+            $post_styles .= "height:auto;";
+            $post_classes .= "post_media_double";
+            $post_content .= $this->showDocFile($file);
+        }
+        else if ($file['type'] == "Folder") {
+            $post_classes .= "post_media_single";
+            $post_content .= "<div class='post_media_folder_image'></div>";
         }
         else {
             $post_classes .= "post_media_full";
@@ -344,6 +373,29 @@ class Home {
                     "<tr><td><span style='font-size:12px;' class='user_preview_community'>" . $file['web_description'] . "</span></td></tr></table>";
         }
         echo "<div " . $post_classes . "' " . $post_styles . "'>" . $post_content . "</div>";
+    }
+
+    private function showDocFile($file) {
+        $return;
+        $path;
+        if($file['type'] == "WORD Document") {
+            $path = System::WORD_THUMB;
+        } else if($file['type'] == "PDF Document") {
+            $path = System::PDF_THUMB;
+        } else if($file['type'] == "EXCEL Document") {
+            $path = System::EXCEL_THUMB;
+        }
+        
+        $return = "<table style='margin:10px;height:100%;'><tr><td rowspan='3'>"
+                . "<div style='margin-right:10px;height:63px;width:64px;"
+                . "background-repeat:no-repeat;background-size:contain;background-image:url(&quot;"
+                . $path . "&quot;);'></div></td>"
+                . "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>"
+                . "<a class='user_preview_name' target='_blank' href='viewer?id=" . $file['id'] . "'><span style='font-size:13px;'>"
+                . $file['name'] . "</span></a></div></td></tr>"
+                . "<tr><td><span style='font-size:12px;' class='user_preview_community'>"
+                . $file['description'] . "</span></td></tr></table>";
+        return $return;
     }
 
     function deletePost($post_id) {

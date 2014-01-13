@@ -3,6 +3,7 @@
 include_once('database.class.php');
 
 class Group {
+    private static $group = NULL;
     private $user_id;
     private $database_connection;
     public function __construct() {
@@ -10,7 +11,14 @@ class Group {
         $this->user_id = base64_decode($_COOKIE['id']);
         return true;
     }
+    public static function getInstance ( ) {
+        if (self :: $group) {
+            return self :: $group;
+        }
 
+        self :: $group = new Group();
+        return self :: $group;
+    }
     function getId() {
         return base64_decode($_COOKIE['id']);
     }

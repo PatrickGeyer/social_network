@@ -3,7 +3,7 @@ require_once 'Thumbnail/ThumbLib.inc.php';
 require_once ('Scripts/thumbnail.php');
 include_once('welcome.php');
 include_once('chat.php'); 
-$allschools = "SELECT * FROM community";
+$allschools = "SELECT id, name, FROM community";
 $allschools = $database_connection->prepare($allschools);
 $allschools->execute();
 $allschools = $allschools->fetchAll(PDO::FETCH_ASSOC);

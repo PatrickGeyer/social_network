@@ -10,15 +10,6 @@ if (!isset($page_identifier)) {
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <script>
-        function getnames(value)
-        {
-            $.post("Scripts/searchbar.php", {search: "universal", input_text: value}, function(data) {
-                $('#names_universal').empty();
-                $('#names_universal').append(data);
-            });
-        }
-    </script>
-    <script>
         $(document).click(function(e)
         {
             $("#names_universal").hide();
@@ -224,11 +215,13 @@ if (!isset($page_identifier)) {
                                         else {
                                             echo "message";
                                         }
-                                        echo "'><a class='message' href='message?thread=" . $message['thread'] . "&id=" . $message['id'] . "'>
-										<div style='display:table-row;'>
-										<div class='notification_user_image' style='background-image:url(" . $picture . ");'>
-										</div><p style='vertical-align:middle; display:table-cell;'><span class='notification_name'>" . $name .
-                                        "</span><br><span class='notification_info'>" . $system->trimStr($message['message'], 20) . "</span></p></div></a></li> ";
+                                        echo "'><a class='message' href='message?thread=" . $message['thread'] . "&id=" . $message['id'] . "'>"
+                                        . "<div style='display:table-row;'>"
+                                        . "<div class='notification_user_image' style='background-image:url(" . $picture . ");'>"
+                                        . "</div><p style='vertical-align:middle; display:table-cell;'>"
+                                        . "<span class='notification_name'>" . $name . "</span><br>"
+                                        . "<span class='notification_info'>" . $system->trimStr($message['message'], 20)
+                                        . "</span></p></div></a></li> ";
                                     }
                                     $total_message_count = count($messages);
                                     if ($total_message_count == 0) {
@@ -272,10 +265,9 @@ if (!isset($page_identifier)) {
                                         }
 
                                         if ($notify['type'] == 'like' || $notify['type'] == 'dislike') {
-                                            echo "'>
-											<div style='display:table-row;'>
-											<img class='notification_user_image' src='" . $picture . "'>
-											</img><p style='vertical-align:top; display:table-cell;'><b>" . $name . "</b> liked on your post</p></div></li> ";
+                                            echo "'><div style='display:table-row;'>"
+                                            . "<img class='notification_user_image' src='" . $picture . "'></img>"
+                                            . "<p style='vertical-align:top; display:table-cell;'><b>" . $name . "</b> liked on your post</p></div></li> ";
                                         }
                                     }
                                     $total_notify_count = count($notifications);
@@ -324,29 +316,33 @@ if (!isset($page_identifier)) {
                                         else {
                                             echo "message";
                                         }
-                                        echo "'>
-										<table>
-										<tr style='vertical-align:top;'>
-										<td style='min-width:40px;'>
-										<img class='notification_user_image' src='" . $picture . "'>
-										</img></td><td><p style='margin:0;text-align:left;padding-left:10px;'>" .
-                                        str_replace('$group', '"' . $group_name . '"', str_replace('$user', $network['inviter_name'], $phrases['group_invite_en'])) . "</p>
-										</td><td>
-										<table cellspacing='0' cellpadding='0'><tr><td>";
+                                        echo "'><table><tr style='vertical-align:top;'>"
+                                        . "<td style='min-width:40px;'>"
+                                        . "<img class='notification_user_image' src='" . $picture . "'></img>"
+                                        . "</td><td>"
+                                        . "<p style='margin:0;text-align:left;padding-left:10px;'>"
+                                        . str_replace('$group', '"' . $group_name . '"', str_replace('$user', $network['inviter_name'], $phrases['group_invite_en']))
+                                        . "</p></td><td><table cellspacing='0' cellpadding='0'><tr><td>";
                                         if ($network['invite_status'] == 2) {
-                                            echo "<button style='margin:0;' onclick='rejectGroup(" . $group_id . ", " . $network['id'] . ");' 
-											class='pure-button-yellow small' id='leave_group_" . $network['id'] . "'>Leave</button>";
+                                            echo "<button style='margin:0;' onclick='rejectGroup("
+                                            . $group_id . ", " . $network['id'] . ");' "
+                                            . "class='pure-button-yellow small' id='leave_group_" . $network['id'] . "'>Leave</button>";
                                         }
                                         else if ($network['invite_status'] == 0) {
-                                            echo "<button style='margin:0;' onclick='joinGroup(" . $group_id . ", " . $network['id'] . ");' 
-											class='pure-button-primary small' id='join_button_" . $network['id'] . "'>Join</button>";
+                                            echo "<button style='margin:0;' onclick='joinGroup("
+                                            . $group_id . ", " . $network['id'] . ");' "
+                                            . "class='pure-button-primary small' id='join_button_" . $network['id'] . "'>Join</button>";
                                         }
                                         else {
-                                            echo "<button style='margin:0;' onclick='joinGroup(" . $group_id . ", " . $network['id'] . ");' 
-											class='pure-button-success small' id='join_button_" . $network['id'] . "' >Join</button></td></tr><tr><td><button onclick='rejectGroup(" . $group_id . ", " . $network['id'] . ");'
-											class='pure-button-error small' id='reject_button_" . $network['id'] . "'>Reject</button>";
-                                            echo "<button style='margin:0;display:none;' onclick='rejectGroup(" . $group_id . ", " . $network['id'] . ");' 
-											class='pure-button-yellow small' id='leave_button_" . $network['id'] . "'>Leave</button>";
+                                            echo "<button style='margin:0;' onclick='joinGroup("
+                                            . $group_id . ", " . $network['id'] . ");' "
+                                            . "class='pure-button-success small' "
+                                            . "id='join_button_" . $network['id'] . "' >Join</button>"
+                                            . "</td></tr><tr><td><button onclick='rejectGroup(" . $group_id . ", " . $network['id'] . ");' "
+                                            . "class='pure-button-error small' id='reject_button_" . $network['id'] . "'>Reject</button>";
+                                            echo "<button style='margin:0;display:none;' onclick='rejectGroup("
+                                            . $group_id . ", " . $network['id'] . ");' "
+                                            . "class='pure-button-yellow small' id='leave_button_" . $network['id'] . "'>Leave</button>";
                                         }
                                         echo "</td></tr></table></td></tr></table></li>";
                                     }
@@ -367,13 +363,15 @@ if (!isset($page_identifier)) {
                     </div>
                 </div>
                 <div style="z-index:11;" class="search">
-                    <input class="search_box" autocomplete='off' style='background-position: 98% 50%; padding-right:35px;background-repeat: no-repeat;
-                           background-image: url("Images/Icons/Icon_Pacs/Batch-master/Batch-master/PNG/16x16/search-2-grey.png");' onkeyup='getnames(this.value);
+                    <input class="search_box" autocomplete='off'
+                           onkeyup='
+                                   search(this.value, "universal", "#names_universal", function() {
+                                   });
                                    if (event.keyCode == 13)
                                    {
                                        $("#match").click();
                                    }' type='text' id='names_input' placeholder='Search...' name='receiver'>
-                    <div style="display:none" class="search_results scroll_medium" id='names_universal'></div>
+                    <div class="search_results" id='names_universal'></div>
                 </div>
                 <div class="gear">
                     <a style = "cursor:pointer;">
@@ -391,72 +389,72 @@ if (!isset($page_identifier)) {
     </div>
     <div class='left_bar_container'>
                 <!-- <img id='logo' style='position:absolute;left:40px;top:4px;max-height:25px;opacity:0.2;cursor:pointer;' onclick='window.location.assign("home");' src='Images/reallogo.png'></img> -->
-                <div class="navigation">
-                    <a href='user?id=<?php echo urlencode(base64_encode($user->getId())); ?>'>
-                        <div class="user_info 
-                        <?php
-                        if ($page_identifier == "user") {
-                            echo "current_page_user";
-                        }
-                        ?>
-                             " style='cursor:pointer; margin-bottom:10px;'>
-                            <table cellspacing='0' cellpadding='0'>
-                                <tr style='vertical-align:top;'>
-                                    <td>
-                                        <div class='welcome_user_profile_picture' style='background-image:url("<?php echo $user->getProfilePicture("chat"); ?>");'></div>
-                                    </td>
-                                    <td>
-                                        <div class='welcome_user_info'>
-                                            <span class="current_user_name_edit">
-                                                <?php
-                                                echo $system->trimStr($user->getName(), 20);
-                                                ?>
-                                            </span>
-                                            <br />
-                                            <span class='edit_user_text'>
-                                                <?php
-                                                echo $system->trimStr($user->getCommunityName(), 15);
-                                                ?>
-                                            </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                    </a>
-                    <hr style='z-index:-1;width:200px;border:0px;border-bottom: 0px solid lightgrey;'>
-                    <ul class="navigation_list"> 
-                        <li style='background-image:url("Images/Icons/icons/home.png");' class="nav_option ellipsis_overflow 
-                        <?php
-                        if ($page_identifier == "home") {
-                            echo "current_page";
-                        }
-                        ?>
-                            "><a class="nav_option ellipsis_overflow" href="home">Home</a></li> 
-                        <li style='background-image:url("Images/Icons/icons/paper-plane.png");' class="nav_option 
-                        <?php
-                        if ($page_identifier == "school") {
-                            echo "current_page";
-                        }
-                        ?>
-                            "><a class="nav_option ellipsis_overflow" href="community?id=<?php echo urlencode(base64_encode($user->getCommunityId())); ?>"><?php echo $user->getCommunityName(); ?></a></li> 
-                        <li style='background-image:url("Images/Icons/icons/paper-clip.png");' class="nav_option <?php
-                        if ($page_identifier == "files") {
-                            echo "current_page";
-                        }
-                        ?>"><a class="nav_option ellipsis_overflow" href="files">My Files</a></li> 
-                        <li style='background-image:url("Images/Icons/icons/mail.png");' class="nav_option <?php
-                        if ($page_identifier == "inbox") {
-                            echo "current_page";
-                        }
-                        ?>"><a class="nav_option ellipsis_overflow" href="message">Inbox</a></li>
-                    </ul>
-                </div>
+        <div class="navigation">
+            <a href='user?id=<?php echo urlencode(base64_encode($user->getId())); ?>'>
+                <div class="user_info 
                 <?php
-                if ($page_identifier != "inbox") {
-                    include_once ("friends_list.php");
+                if ($page_identifier == "user") {
+                    echo "current_page_user";
                 }
                 ?>
-            </div>
+                     " style='cursor:pointer; margin-bottom:10px;'>
+                    <table cellspacing='0' cellpadding='0'>
+                        <tr style='vertical-align:top;'>
+                            <td>
+                                <div class='welcome_user_profile_picture' style='background-image:url("<?php echo $user->getProfilePicture("chat"); ?>");'></div>
+                            </td>
+                            <td>
+                                <div class='welcome_user_info'>
+                                    <span class="current_user_name_edit">
+                                        <?php
+                                        echo $system->trimStr($user->getName(), 20);
+                                        ?>
+                                    </span>
+                                    <br />
+                                    <span class='edit_user_text'>
+                                        <?php
+                                        echo $system->trimStr($user->getCommunityName(), 15);
+                                        ?>
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </a>
+            <hr style='z-index:-1;width:200px;border:0px;border-bottom: 0px solid lightgrey;'>
+            <ul class="navigation_list"> 
+                <li style='background-image:url("Images/Icons/icons/home.png");' class="nav_option ellipsis_overflow 
+                <?php
+                if ($page_identifier == "home") {
+                    echo "current_page";
+                }
+                ?>
+                    "><a class="nav_option ellipsis_overflow" href="home">Home</a></li> 
+                <li style='background-image:url("Images/Icons/icons/paper-plane.png");' class="nav_option 
+                <?php
+                if ($page_identifier == "school") {
+                    echo "current_page";
+                }
+                ?>
+                    "><a class="nav_option ellipsis_overflow" href="community?id=<?php echo urlencode(base64_encode($user->getCommunityId())); ?>"><?php echo $user->getCommunityName(); ?></a></li> 
+                <li style='background-image:url("Images/Icons/icons/paper-clip.png");' class="nav_option <?php
+                if ($page_identifier == "files") {
+                    echo "current_page";
+                }
+                ?>"><a class="nav_option ellipsis_overflow" href="files">My Files</a></li> 
+                <li style='background-image:url("Images/Icons/icons/mail.png");' class="nav_option <?php
+                if ($page_identifier == "inbox") {
+                    echo "current_page";
+                }
+                ?>"><a class="nav_option ellipsis_overflow" href="message">Inbox</a></li>
+            </ul>
+        </div>
+        <?php
+        if ($page_identifier != "inbox") {
+            include_once ("friends_list.php");
+        }
+        ?>
+    </div>
 </body>
 </html>

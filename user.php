@@ -26,18 +26,19 @@ include_once('chat.php');
     <script>
         function showInvite(group, id, group_id)
         {
-            dialog("Invite",
-                    {
+            dialog(
+                    content={
                         type: "text",
                         content: "Invite <em><?php echo $user->getName($userid); ?></em> to join the group <em>" + group + "</em>.</p>",
                     },
-                    {
+                    buttons=[{
                         type: "success",
                         text: "Invite",
                         onclick: "inviteUser(" + id + ", " + group_id + ");dialogLoad();"
-                    },
-            {
-                modal: false
+                    }],
+            properties={
+                modal: false,
+                title: "Invite"
             });
         }
         function inviteUser(id, group_id)
@@ -109,7 +110,7 @@ include_once('chat.php');
                          onclick='initiateTheater("
                          <?php
                          echo $user->getProfilePicture('original', $userid);
-                         ?> ", "no_text");
+                         ?> ", "no_text", NULL);
                                  adjustTheater("no_text");'>
                              <?php
                              if ($user->getId() == $userid) {
@@ -171,7 +172,7 @@ include_once('chat.php');
 
                             if ($query1 == "") {
                                 echo "<script name='text_append'>$('#invite_text_holder').show();</script>";
-                                $query_group1 = "SELECT * FROM `group` WHERE id = :group_id AND allow_member_invite = 1;";
+                                $query_group1 = "SELECT group_name, id FROM `group` WHERE id = :group_id AND allow_member_invite = 1;";
                                 $query_group = $database_connection->prepare($query_group1, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
                                 $query_group->execute(array(":group_id" => $users_group));
                                 $group_info = $query_group->fetch(PDO::FETCH_ASSOC);

@@ -3,7 +3,7 @@ include_once('Scripts/lock.php');
 
 $community_id = urldecode(base64_decode($_GET['id']));
 
-$activity_query = "SELECT * FROM activity WHERE id IN (SELECT activity_id FROM activity_share 
+$activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN (SELECT activity_id FROM activity_share 
 	WHERE community_id = :community_id AND direct=1) ORDER BY time DESC";
 $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
 $activity_query->execute(array(":community_id" => $user->getCommunityId()));
@@ -23,7 +23,7 @@ if (isset($_GET['f'])) {
     else if ($_GET['f'] == 'f') {
         $feed_id = 'f';
 
-        $activity_query = "SELECT * FROM activity WHERE id IN (SELECT activity_id FROM activity_share WHERE 
+        $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN (SELECT activity_id FROM activity_share WHERE 
 			community_id = :community_id AND year = :user_year AND direct = 1) AND visible = 1 ORDER BY time DESC";
         $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $activity_query->execute(array(":community_id" => $user->getCommunityId(), ":user_year" => $user->getPosition()));
@@ -31,7 +31,7 @@ if (isset($_GET['f'])) {
     else if ($_GET['f'] == 'm') {
         $feed_id = 'm';
 
-        $activity_query = "SELECT * FROM activity WHERE id IN (SELECT activity_id FROM activity_share WHERE 
+        $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN (SELECT activity_id FROM activity_share WHERE 
 		community_id = :community_id AND year = :user_year AND direct = 1) AND visible = 1 ORDER BY time DESC";
         $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $activity_query->execute(array(":community_id" => $user->getCommunityId(), ":user_year" => $user->getPosition()));
@@ -115,8 +115,7 @@ else {
         echo "</tr>";
     }
 
-    echo "</tbody>
-				</table>";
+    echo "</tbody></table>";
 }
 else if ($feed_id == 'p') {
     echo "<div class='home_feed_container'>";

@@ -5,12 +5,19 @@ class User {
 
     public $user_id;
     private $database_connection;
-
+    private static $user = null ;
     public function __construct() {
         $this->user_id = base64_decode($_COOKIE['id']);
         $this->database_connection = Database::getConnection();
     }
+    public static function getInstance ( ) {
+        if (self :: $user) {
+            return self :: $user;
+        }
 
+        self :: $user = new User;
+        return self :: $user;
+    }
     function getId() {
         return $this->user_id;
     }
@@ -42,7 +49,7 @@ class User {
         if(!isset($id)) {
             $id = $this->user_id;
         }
-        $location_query = "SELECT * FROM marker WHERE user_id = :user_id ORDER BY time LIMIT 1;";
+        $location_query = "SELECT id, country, region, city, lat, lng, type, name, time FROM marker WHERE user_id = :user_id ORDER BY time LIMIT 1;";
         $location_query = $this->database_connection->prepare($location_query);
         $location_query->execute(array(":user_id" => $id));
         $location = $location_query->fetch(PDO::FETCH_ASSOC);
@@ -186,7 +193,7 @@ class User {
             $id = $this->user_id;
         }
 
-        $activity_query = "SELECT * FROM activity WHERE id IN (SELECT activity_id FROM activity_share WHERE 
+        $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN (SELECT activity_id FROM activity_share WHERE 
 		community_id = :community_id
 		OR (year = :user_year AND community_id = :community_id) 
 		OR group_id in (SELECT group_id FROM group_member WHERE member_id = :user_id) 
@@ -224,7 +231,7 @@ class User {
         if (!isset($id) || $id == "") {
             $id = $this->user_id;
         }
-        $user_query = "SELECT * FROM bookmark WHERE user_id = :user_id";
+        $user_query = "SELECT id, name, link FROM bookmark WHERE user_id = :user_id";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetch();

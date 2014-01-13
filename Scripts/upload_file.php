@@ -53,8 +53,8 @@ else {
     if ($_FILES['file']['name'] != "" || ".") {
         $return_info = array();
         $lastInsertId;
-        $pure_name = time();
-        $ext = $files->findexts($_FILES['file']['name']);
+        $pure_name = preg_replace("/[^A-Za-z0-9 ]/", '', $_FILES['file']['name']);
+        $ext = $system->findexts($_FILES['file']['name']);
         $file_name = $pure_name . "." . $ext;
         $thumbnail = $savepath . $pure_name . ".jpg";
 
@@ -88,12 +88,13 @@ else {
                 $flv_path = $savepath . $pure_name . ".flv";
                 $webm_path = $savepath . $pure_name . ".webm";
                 $flv_path = $savepath . $pure_name . ".flv";
-                
-                array_push($return_info, array(
-                    "from"=>$convert_path, 
-                    "to"=>$base_path . $mp4_path, 
-                    "args" => " -vcodec copy -acodec copy ", 
-                    "before_args" => ""));
+                if($ext != "mp4") {
+                    array_push($return_info, array(
+                        "from"=>$convert_path, 
+                        "to"=>$base_path . $mp4_path, 
+                        "args" => " -vcodec copy -acodec copy ", 
+                        "before_args" => ""));
+                }
 
                 array_push($return_info, array(
                     "from"=>$convert_path, 
