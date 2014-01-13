@@ -6,7 +6,7 @@ div.messagecomplete{
     position:fixed;
     left: 40px;
     width: 200px;
-    top: 33px;
+    z-index: 1200;
 }
 
 #messagetoolbox{
@@ -180,7 +180,6 @@ span.message_delete_receiver:hover{
     color:black;
 }
 .message_search_input{
-    border-radius:0;
     display:inline-block;
     width: 200px;
     height: 30px;
