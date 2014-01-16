@@ -1,10 +1,35 @@
 <head>
     <script>
+        $(function() {
+            $('.friends_bar').mCustomScrollbar(SCROLL_OPTIONS);
+            $(document).on('input', '#names_input', function() {
+                search($(this).val(), 'group', '.group_search_results', function() {
+                });
+            });
+            $(window).on('resize', function(){
+                $('.friends_bar').mCustomScrollbar("update");
+            });
+        });
         function show_group() {
             dialog(
                     content = {
                         type: "html",
-                        content: '<div id="dialog" title="Create a Group" style="overflow:hidden;margin-bottom:20px;"> <div class="pseudonym"> <table class="none" style="width:100%;"> <tr> <td> <input style="border-radius:0; width:100%;" id="group_name_input" type="text" autocomplete="off" onkeyup="if(this.value == &apos;&apos;) {$(&apos;#group_warning&apos;).show(); } else {$(&apos;#group_warning&apos;).hide(); }"placeholder="Group Name" /> </td> <td style="display:none;" id="group_warning"><div class="warning_red">Group name cannot be blank!</div> </td> </tr> <tr> <td><textarea style="border-radius:0; width:100%; height:100px;" id = "group_about" class="thin" style="width:100%; height: 100px;" placeholder="About..." autocomplete="off" type="text"></textarea></td> </tr> <tr> <td> <div style="border-radius:0;"> </div> </td> </tr> </table> <table class="none" style="width:100%;"> <tr> <td><input autocomplete="off" style="border-radius:0; width:100%;" onkeyup="getnamesgroup(this.value);" type="text" id="names_input" placeholder="Add Member..." /></td> </tr> <tr> <td id ="names_slot"></td> </tr> </table> <div class="scroll_medium" style="display:none;overflow:auto;max-height:100px; position:relative; padding:2px;border: 1px solid lightgrey; background-color:white;" id="names"> </div> </div> </div>'
+                        content: '<div class="pseudonym">\n\
+             <table class="none" style="width:100%;">\n\
+ <tr>\n\
+ <td>\n\
+ <input style="border-radius:0; width:100%;" id="group_name_input" type="text" autocomplete="off" placeholder="Group Name" />\n\
+ </td>  </tr> <tr> <td>\n\
+<textarea style="border-radius:0; width:100%; height:100px;" id = "group_about" class="thin" placeholder="About..."></textarea>\n\
+</td> </tr> <tr> <td> <div style="border-radius:0;"> \n\
+</div> </td> </tr> </table> \n\
+<table class="none" style="width:100%;"> <tr> <td id ="names_slot"></td> </tr><tr><td>\n\
+<input autocomplete="off" style="border-radius:0; width:100%;" type="text" id="names_input" class="search_input" placeholder="Add Member..." />\n\
+</td> </tr> \n\
+</table> \n\
+<div class="search_results group_search_results" \n\
+style="max-height:100px; position:relative; padding:2px;border: 1px solid lightgrey; background-color:white;" id="names">\n\
+ </div> </div>'
                     },
             buttons = [{
                     type: "success",
@@ -19,52 +44,31 @@
                 title: "Create a Group"
             });
         }
-    </script>
-    <script>
+
         var auto_refresh = setInterval(
                 function()
                 {
                     $('#friends_load').load('friends_list.php #friends_load');
-                }, 5000);
-    </script>
+                }, 10000);
 
-    <script>
-        function getnamesgroup(value)
-        {
-            $.post("Scripts/searchbar.php", {search: "group", input_text: value}, function(data) {
-                $('#names').empty();
-                $('#names').append(data);
-            });
-        }
-    </script>
-    <script>
         var invited_members = [];
-        function addreceivergroup(new_receiver, new_receiver_name)
+        function addGroupReceiver(new_receiver_name, id)
         {
-            var found = $.inArray(new_receiver, invited_members);
-            if (found != -1)
-            {
-
-            }
-            else
-            {
-                invited_members.push(new_receiver);
-                $('#names_input').val("");
-                var html = "<tr><td style='min-width:100px;' id = '" + new_receiver + "'> \
-                    <div class='tag-triangle'></div><div class='added_name'><span style='font-family:century gothic;'>" + new_receiver_name + "</span> \
-                    <span class='delete_receiver' onclick='removereceiver(" + new_receiver + ");'>x \
-                    </span></div></td></tr>";
-                $('#names_slot').before(html);
-            }
+            var html = "<div class='message_added_receiver' id='group_added_receiver_" + id + "'><span>"
+                    + new_receiver_name + "</span> \
+                    <span class='delete_receiver message_delete_receiver' onclick='removeGroupReceiver(" + id + ");'>x \
+                    </span></div>";
+            $('#names_slot').before(html);
         }
-        function removereceiver(receiver_id)
+        function removeGroupReceiver(receiver_id)
         {
-            var index = invited_members.indexOf(receiver_id);
-            if (index > -1)
-            {
-                invited_members.splice(index, 1);
+            for (var key in invited_members) {
+                if (invited_members[key].receiver_id = receiver_id) {
+                    invited_members.splice(key, 1);
+                    console.log(invited_members);
+                }
             }
-            $('#' + receiver_id).remove();
+            $('#group_added_receiver_' + receiver_id).remove();
         }
         function createGroup()
         {
@@ -73,7 +77,7 @@
             {
                 var group_about = $('#group_about').val();
                 var group_type = $("#dialog input[type='radio']:checked").val();
-                $.post("creategroup.php", {group_name: group_name, group_about: group_about, group_type: group_type, invited_members: invited_members}, function(response)
+                $.post("Scripts/group.class.php", {action: "create", group_name: group_name, group_about: group_about, group_type: group_type, invited_members: invited_members}, function(response)
                 {
                     var status = response.split("/");
                     if (status[0] == "success")
@@ -88,10 +92,12 @@
             }
         }
     </script>
-
 </head>
-<div id='friends_container'>
-    <div id="friends_bar" class="scroll_thin" style='overflow-x:hidden;'>
+<div id='friends_container' style='position:relative;'>
+    <table style='height:100%;width:100%;' cellspacing='0' cellpadding='0'>
+        <tr>
+            <td>
+                <div id="friends_bar" class="friends_bar" style='overflow-x:hidden;width:100%;height:100%;'>
         <div id="friend_load">
             <div id="friend_on">
                 <ul style="width:100%;">
@@ -108,8 +114,8 @@
                     while ($friends = $query->fetch(PDO::FETCH_ASSOC)) {
                         $valid = "";
                         echo "<li class='" . ($user->getOnline($friends['id']) == true ? 'friend_list_on' : 'friend_list_off') . " user_preview' user_id='" . $friends['id'] . "'>"
-                        . "<a class='friend_list ellipsis_overflow' style='background-image:url(" . $user->getProfilePicture('icon', $friends['id']) . ");' 
-						href ='user?id=" . urlencode(base64_encode($friends['id'])) . "'>"
+                        . "<a class='friend_list ellipsis_overflow' style='background-image:url(" . $user->getProfilePicture('chat', $friends['id']) . ");' 
+                        href ='user?id=" . urlencode(base64_encode($friends['id'])) . "'>"
                         . $friends['name'] . "</a></li>";
                     }
                     if (isset($valid)) {
@@ -135,7 +141,7 @@
                         }
                         echo "<li class='friend_list_group group_preview' >"
                         . "<a class='friend_list ellipsis_overflow' "
-                        . "style='background-image:url(" . $group->getProfilePicture('icon', $group_info['id']) . ");'"
+                        . "style='background-image:url(" . $group->getProfilePicture('chat', $group_info['id']) . ");'"
                         . "href ='group?id=" . urlencode(base64_encode($group_info['id'])) . "'>" . $group_info['group_name']
                         . "</a></li>";
                         $friend_query = "SELECT user_id FROM group_member WHERE group_id = :group_id AND member_id != :user_id";
@@ -149,12 +155,12 @@
                                 if ($user->getOnline($friend_profile['id']) == true) {
                                     echo "<li class='friend_list_on user_preview' user_id='" . $friends_in_group['member_id'] . "'>"
                                     . "<a class='friend_list ellipsis_overflow' style='background-image:url(" . $friend_profile['profile_picture_chat_icon'] . ");' 
-									href ='user?id=" . urlencode(base64_encode($friend_profile['id'])) . "'>" . $friend_profile['name'] . "</a></li>";
+                                    href ='user?id=" . urlencode(base64_encode($friend_profile['id'])) . "'>" . $friend_profile['name'] . "</a></li>";
                                 }
                                 else {
                                     echo "<li class='friend_list_off user_preview' user_id='" . $friends_in_group['member_id'] . "'>"
                                     . "<a class='friend_list ellipsis_overflow' style='background-image:url(" . $friend_profile['profile_picture_chat_icon'] . ");' 
-									href ='user?id=" . urlencode(base64_encode($friend_profile['id'])) . "'>" . $friend_profile['name'] . "</a></li>";
+                                    href ='user?id=" . urlencode(base64_encode($friend_profile['id'])) . "'>" . $friend_profile['name'] . "</a></li>";
                                 }
                             }
                         }
@@ -163,12 +169,12 @@
                         if ($user->getOnline($friends['id']) == true) {
                             echo "<li class='friend_list_on user_preview' user_id='" . $friends['id'] . "'>"
                             . "<a class='friend_list ellipsis_overflow' style='background-image:url(" . $friends['profile_picture_chat_icon'] . ");' 
-							href ='user?id=" . urlencode(base64_encode($friends['id'])) . "'>" . $friends['name'] . "</a></li>";
+                            href ='user?id=" . urlencode(base64_encode($friends['id'])) . "'>" . $friends['name'] . "</a></li>";
                         }
                         else {
                             echo "<li class='friend_list_off user_preview' user_id='" . $friends['id'] . "'>"
                             . "<a class='friend_list ellipsis_overflow' style='background-image:url(" . $friends['profile_picture_chat_icon'] . ");' 
-							href ='user?id=" . urlencode(base64_encode($friends['id'])) . "'>" . $friends['name'] . "</a></li>";
+                            href ='user?id=" . urlencode(base64_encode($friends['id'])) . "'>" . $friends['name'] . "</a></li>";
                         }
                     }
                     if (isset($valid2)) {
@@ -191,13 +197,13 @@
                         if ($user->getOnline($friends['id']) == true) {
                             echo "<li class='friend_list_on user_preview' user_id='" . $friends['id'] . "'>"
                             . "<a class='friend_list ellipsis_overflow' "
-                            . "style='background-image:url(" . $user->getProfilePicture('icon', $friends['id']) . ");' "
+                            . "style='background-image:url(" . $user->getProfilePicture('chat', $friends['id']) . ");' "
                             . "href ='user?id=" . urlencode(base64_encode($friends['id'])) . "'>" . $friends['name'] . "</a></li>";
                         }
                         else {
                             echo "<li class='friend_list_off user_preview' user_id='" . $friends['id'] . "'>"
                             . "<a class='friend_list ellipsis_overflow' "
-                            . "style='background-image:url(" . $user->getProfilePicture('icon', $friends['id']) . ");' "
+                            . "style='background-image:url(" . $user->getProfilePicture('chat', $friends['id']) . ");' "
                             . "href ='user?id=" . urlencode(base64_encode($friends['id'])) . "'>" . $friends['name'] . "</a></li>";
                         }
                     }
@@ -209,8 +215,15 @@
             </div>
         </div>
     </div>
-    <button style='margin-top:10px;' class='pure-button-primary smallest' onclick='show_group();' title='Create a Group'>Create Group</button>
-</div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <button style='margin-top:10px;' class='pure-button-primary smallest' onclick='show_group();' title='Create a Group'>Create Group</button>
+            </td>
+        </tr>
+    </table>
+    
 </div>
 
 

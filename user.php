@@ -57,6 +57,8 @@ include_once('chat.php');
         }
         $(function()
         {
+            getFeedContent('u_<?php echo $userid; ?>', min_activity_id, 'user', function(){});
+
             $('#about_edit_show').mouseenter(function() {
                 $('#profile_about_edit').show();
             }).mouseleave(
@@ -95,7 +97,6 @@ include_once('chat.php');
                 {
                     $('#about_saved').fadeOut(1000);
                 });
-
                 //alert(response);
             });
         }
@@ -202,14 +203,14 @@ include_once('chat.php');
             <table cellspacing='0'>
                 <tr>
                     <td style='margin-right:5px;'>
-                        <div id='a' filter_id = 'p' class="feed_selector user_feed_selector <?php
+                        <div id='a' feed_id='user' filter_id = 'u_<?php echo $userid; ?>' class="feed_selector user_feed_selector <?php
                         if ($feed_id == 'p') {
                             echo 'active_feed';
                         }
                         ?>">Posts</div>
                     </td>
                     <td>
-                        <div id='s' filter_id = 'f' class="feed_selector user_feed_selector <?php
+                        <div id='s' feed_id='user' action='user_files' filter_id = 'f' class="feed_selector user_feed_selector <?php
                         if ($feed_id == 'f') {
                             echo 'active_feed';
                         }
@@ -219,17 +220,17 @@ include_once('chat.php');
             </table>
         </div>
         <div id='user_refresh'>
-            <div style='' id="user_activity">
+            <div class='feed_container' id="feed_refresh">
                 <?php
                 if ($feed_id == "p") {
-                    $array = $user->getActivity($userid);
-                    $count = count($array);
-                    foreach ($array as $activity) {
-                        $home->homeify($activity, $database_connection, $user);
-                    }
+                    // $array = $user->getActivity($userid);
+                    // $count = count($array);
+                    // foreach ($array as $activity) {
+                    //     $home->homeify($activity, $database_connection, $user);
+                    // }
                 }
                 else {
-                    echo "<div id='main_file' class='file' style='border-bottom:1px solid lightblue;'>";
+                    echo "<div id='main_file' class='file post_height_restrictor' style='border-bottom:1px solid lightblue;'>";
                     foreach ($files->getSharedList($userid, $user->getId()) as $file) {
                         $files->tableSort($file, false, true, $userid);
                     }
@@ -244,36 +245,14 @@ include_once('chat.php');
 <script>
     $('.user_feed_selector').click(function(event)
     {
-        $('.user_feed_selector').removeClass('active_feed');
-        $(this).addClass('active_feed');
-
-        $('#user_refresh').fadeOut(100, function()
-        {
-            $(this).empty();
-            $('#user_refresh').append('<center><img style="margin-top:50px;" src="Images/ajax-loader.gif"></img></center>');
-            $(this).fadeIn();
-        });
-
-        var element_id = "#" + $(this).attr('id');
-        var wrapper = "#" + $(this).parents('div[id]').attr('id');
-
-        scrollH(element_id, wrapper, 400);
-
         var value = $(this).attr('filter_id');
-        if (typeof value === "undefined")
-        {
-
-        }
-        else
-        {
-            setCookie('user_feed', value);
-        }
+        if(value == 'f')
         getUserContent(value);
     });
     function getUserContent(feed_id)
     {
         var encrypted_id = "<?php echo $_GET['id']; ?>";
-        $('#user_refresh').load("user?id=" + encrypted_id + "&f=" + feed_id + " #user_refresh", function(response) {
+        $('.feed_container').load("user?id=" + encrypted_id + "&f=" + feed_id + " .feed_container", function(response) {
         });
     }
-</script>
+// </script>

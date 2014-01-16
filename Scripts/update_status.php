@@ -60,11 +60,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $school_query->execute(array(":group_id" => $_POST['group_id']));
     }
     foreach ($post_media_added_files as $file) {
-        if (is_numeric($file['file_id'])) {
+        $num = NULL;
+        if(!isset($file['file_id']) || empty($file['id']) || !is_array($file)) {
+            $num = $file; //not set
+        } else {
+            $num = $file['file_id'];
+        }
+        if (is_numeric($num)) {
             $media_query = "INSERT INTO activity_media (activity_id, file_id) VALUES (:activity_id, :file_id);";
             $options = array(
                 ":activity_id" => $lastInsertId,
-                ":file_id" => $file,
+                ":file_id" => $num,
             );
         }
         else {

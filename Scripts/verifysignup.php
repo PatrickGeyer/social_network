@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($count == 1) {
         echo '<p style = "background-color:orange;">This email has already been registered by ' . $user['name'] . ' from ' . $user['school'] . '?</p>';
         //setcookie("id", $user['id'], time()+3600000, '/');
-        //setcookie("showchat", 1, time()+3600000, '/');  
+        //setcookie("chat_feed", 1, time()+3600000, '/');  
     }
     else {
 
@@ -76,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         mkdir($dir, 0777);
 
         setcookie("id", base64_encode($user['id']), time() + 3600000, '/');
-        setcookie("showchat", 's', time() + 3600000, '/');
+        setcookie("chat_feed", 's', time() + 3600000, '/');
         header("location: ../settings");
     }
 }

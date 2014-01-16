@@ -1,56 +1,35 @@
 <?php
+include_once('Scripts/lock.php');
+
+$min_activity_id = $user_id = $group_id = $filter = NULL;
 if (isset($_GET['min_activity_id'])) {
     $min_activity_id = $_GET['min_activity_id'];
-    $min_activity_id_query = "AND id >" . $min_activity_id;
-} else {
-    $min_activity_id = 0;
-    $min_activity_id_query = "AND id >" . $min_activity_id;
 }
 
-include_once('Scripts/lock.php');
 if (isset($_GET['fg'])) {
-    $feed_id = $_GET['fg'];
-
-    $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN "
-            . "(SELECT activity_id FROM activity_share WHERE group_id = :group_id AND direct = 1) "
-            . "AND visible = 1 " . $min_activity_id_query . " ORDER BY time DESC";
-    $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-    $activity_query->execute(array(":group_id" => urldecode($_GET['fg'])));
+    $group_id = $feed_id = $_GET['fg'];
 }
 else if (isset($_GET['f'])) {
-    if ($_GET['f'] == 's') {
-        $feed_id = 's';
-
-        $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN (SELECT activity_id FROM activity_share "
-                . "WHERE community_id = :community_id AND direct=1) " . $min_activity_id_query . " ORDER BY time DESC";
-        $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $activity_query->execute(array(":community_id" => $user->getCommunityId()));
+    if($_GET['f'] == 'a') {
+        $filter = $feed_id = 'a';
     }
     else {
-        $feed_id = 'y';
-
-        $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN (SELECT activity_id FROM activity_share WHERE "
-                . "community_id = :community_id AND year = :user_year AND direct = 1) AND visible = 1 " 
-                . $min_activity_id_query . " ORDER BY time DESC";
-        $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $activity_query->execute(array(":community_id" => $user->getCommunityId(), ":user_year" => $user->getPosition()));
+        $filter = $feed_id = $_GET['f'];
     }
+    
 }
+else if (isset($_GET['u'])) {
+    $user_id = $_GET['u'];
+    $feed_id = 'u_'.$user_id;
+} 
 else {
-    $feed_id = 'a';
-
-    $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN "
-            . "(SELECT activity_id FROM activity_share WHERE "
-            . "(community_id = :community_id "
-            . "OR (year = :user_year AND community_id = :community_id) "
-            . "OR group_id in (SELECT group_id FROM group_member WHERE member_id = :user_id) "
-            . "OR receiver_id = :user_id))"
-            . " AND visible = 1 " . $min_activity_id_query . " ORDER BY time DESC";
-    $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-    $activity_query->execute(array(":user_id" => $user->getId(), ":community_id" => $user->getCommunityId(), ":user_year" => $user->getPosition()));
+    $filter = $feed_id = 'a';
 }
-if($min_activity_id > 0) {
-    die("<script>min_activity_id = ".$home->getActivity($activity_query, $min_activity_id).";</script>");
+
+$activity_query = $entity->getActivityQuery($filter, $group_id, $user_id, $min_activity_id);
+
+if (isset($_GET['min_activity_id'])) {
+    die("<script>min_activity_id = " . $home->getActivity($activity_query, $min_activity_id) . ";</script>");
 }
 $page_identifier = "home";
 
@@ -68,18 +47,12 @@ include_once('chat.php');
                 $("#status_image_selector").click();
             }
 
-            var share_group_id = <?php
-            if (is_int($feed_id)) {
-                echo $feed_id;
-            }
-            else {
-                echo "'$feed_id'";
-            }
-            ?>;
-            var min_activity_id = 0;
-    
+            var share_group_id = <?php echo (is_int($feed_id) ? $feed_id : "'$feed_id'"); ?>;
+            
             $(function($)
             {
+                getFeedContent(share_group_id, min_activity_id, 'home', function(){});
+
                 $(document).on('click', '.home_like_icon', function() {
                     if ($(this).css('opacity') == '1') {
                         $(this).css('opacity', '0.3');
@@ -115,7 +88,7 @@ include_once('chat.php');
                 });
                 $('#file_share').mCustomScrollbar();
                 $('#file_share').mCustomScrollbar("update");
-                
+
             });
 
             function clearPostArea()
@@ -137,13 +110,14 @@ include_once('chat.php');
     </head>
 
     <body>
-        <div class="container_home" id="home_container">
+        <div class="container" id="home_container">
             <div class='home_feed_post_container' style="padding-top:20px;">
                 <div class='post_wrapper'>
                     <table style='width:100%;' cellspacing='0' cellpadding='0'>
                         <tr>
                             <td>
-                                <table style='width:100%;' cellspacing='0' cellpadding='0'><tr style='height:100%;'>
+                                <table style='width:100%;' cellspacing='0' cellpadding='0'>
+                                    <tr style='height:100%;'>
                                         <td>
                                             <textarea tabindex='1' id="status_text" placeholder= "Update Status..." class="status_text scroll_thin"></textarea>
                                         </td>
@@ -190,7 +164,8 @@ include_once('chat.php');
                                     </li>
                                     <?php
                                     foreach ($group->getUserGroups() as $single_group) {
-                                        echo "<li class='default_dropdown_item' controller_id='audience_selector' share_id='" . $single_group . "'>";
+                                        echo "<li class='default_dropdown_item' "
+                                        . "controller_id='audience_selector' share_id='" . $single_group . "'>";
                                         echo "<span>" . $group->getGroupName($single_group) . "</span>";
                                         echo "</li>";
                                     }
@@ -205,119 +180,58 @@ include_once('chat.php');
                     <table>
                         <tr>
                             <td>
-                                <div id='a' filter_id = 'a' class="feed_selector home_feed_selector 
+                                <div id='a' feed_id='home' filter_id = 'a' class="feed_selector home_feed_selector 
                                 <?php
                                 if ($feed_id === 'a') {
                                     echo 'active_feed';
                                 }
-                                ?>
-                                     ">All</div>
+                                ?>">All</div>
                             </td>
                             <td>
-                                <div id='s' filter_id = 's' class="feed_selector home_feed_selector 
+                                <div id='s' feed_id='home' filter_id = 's' class="feed_selector home_feed_selector 
                                 <?php
                                 if ($feed_id === 's') {
                                     echo 'active_feed';
                                 }
-                                ?>
-                                     ">
-                                         <?php echo $system->trimStr($user->getCommunityName(), 15); ?>
+                                ?>">
+                                         <?php
+                                         echo $system->trimStr($user->getCommunityName(), 15);
+                                         ?>
                                 </div>
                             </td>
                             <td>
-                                <div id='y' filter_id = 'y' class="feed_selector home_feed_selector 
+                                <div id='y' feed_id='home' filter_id = 'y' class="feed_selector home_feed_selector 
                                 <?php
                                 if ($feed_id === 'y') {
                                     echo 'active_feed';
                                 }
-                                ?>
-                                     ">Year <?php echo $user->getPosition(); ?>
+                                ?>">Year <?php
+                                         echo $user->getPosition();
+                                         ?>
                                 </div>
                             </td>
                             <?php
                             foreach ($group->getUserGroups() as $single_group) {
-                                echo '<td id="feed_wrapper_scroller"><div style="border-bottom:3px solid blue;" id="' . $single_group . '" filter_id = "' . $single_group . '" class="feed_selector home_feed_selector ' . ($feed_id == $single_group ? "active_feed" : "") . '">' . $system->trimStr($group->getGroupName($single_group), 15) . '</div></td>';
+                                echo '<td id="feed_wrapper_scroller"><div feed_id="home" style="border-bottom:3px solid blue;" id="' . $single_group . '" filter_id = "' . $single_group . '" class="feed_selector home_feed_selector ' . ($feed_id == $single_group ? "active_feed" : "") . '">' . $system->trimStr($group->getGroupName($single_group), 15) . '</div></td>';
                             }
                             ?>
                         </tr>
                     </table>
                 </div>
             </div>
-            <div id='home_refresh'> 
-                <div class='home_feed_container'>
-                    <?php
-                    $max = $home->getActivity($activity_query, $min_activity_id);
-                    ?>	
+            <div id='feed_refresh'> 
+                <div class='feed_container'>
+                    <!--  Activity Here -->
                 </div>
             </div>
         </div>
-            <script>
-                min_activity_id = <?php echo $max; ?>;
-                function showhide(element)
-                {
-                    $(element).toggle("slide");
-                }
-            </script>
-            <script>
+        <script>
+            min_activity_id = <?php echo (isset($max) ? $max : '0'); ?>;
+            function showhide(element)
+            {
+                $(element).toggle("slide");
+            }
 
-                $('.home_feed_selector').click(function(event)
-                {
-                    //$('#home_refresh').prepend('<center><img style="margin-top:50px;" src="Images/ajax-loader.gif"></img></center>');
-                    $('.home_feed_selector').removeClass('active_feed');
-                    $(this).addClass('active_feed');
-
-                    var element_id = "#" + $(this).attr('id');
-                    var wrapper = "#" + $(this).parents('div[id]').attr('id');
-
-                    scrollH(element_id, wrapper, 400);
-
-                    var value = $(this).attr('filter_id');
-                    if (typeof value === "undefined")
-                    {
-
-                    }
-                    else
-                    {
-                        if (isNaN(value))
-                        {
-                            if (value == 'a')
-                            {
-                                setCookie('current_feed', 'a');
-                            }
-                            else
-                            {
-                                setCookie('current_feed', value);
-                            }
-                        }
-                        else
-                        {
-                            setCookie('current_feed', value);
-                        }
-                    }
-                    getHomeContent(value, function(data){$('.home_feed_container').prepend(data);});
-                    event.stopPropagation();
-                });
-                function getHomeContent(feed_id, callback)
-                {
-                    if(typeof feed_id !== "undefined")
-                    {
-                        if (isNaN(feed_id))
-                        {
-                            if (feed_id == 'a')
-                            {
-                                refreshElement('#home_refresh', "home", "min_activity_id=" + min_activity_id, "#home_refresh", callback);
-                            }
-                            else
-                            {
-                                refreshElement('#home_refresh', "home", "f=" + feed_id + "&min_activity_id=" + min_activity_id, "#home_refresh", callback);
-                            }
-                        }
-                        else
-                        {
-                            refreshElement('#home_refresh', "home", "fg=" + feed_id + "&min_activity_id=" + min_activity_id, "#home_refresh", callback);
-                        }
-                    }
-                }
-            </script>
+        </script>
     </body>
 </html>

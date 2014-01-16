@@ -121,7 +121,7 @@ if (isset($_POST['search']) && $_POST['search'] == "universal") {
                 NULL, 
                 NULL, 
                 $class, 
-                "addReceiver(&quot;group&quot;, " . $row['id'] . ", &quot;" . $group->getGroupName($row['id']) . "&quot;);", 
+                "addReceiver(invited_members, " . $row['id'] . ", false, false, function(){addGroupReceiver(&quot;".$user->getName($row['id'])."&quot, ".$row['id'].")});", 
                 $user->getProfilePicture('chat', $row['id']), 
                 $user->getName($row['id']), 
                 $user->getAbout($row['id']));

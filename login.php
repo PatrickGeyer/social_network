@@ -1,17 +1,6 @@
 <?php
-include_once("Scripts/config.php");
-include_once("Scripts/demo.php");
-include_once("Scripts/system.class.php");
-$allschools = "SELECT name FROM community;";
-$allschools = $database_connection->prepare($allschools, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-$allschools->execute();
-$system = new System;
-$system->getGlobalMeta();
-if (isset($_COOKIE['id']) && $_COOKIE['id'] != "") {
-    header("location: home");
-}
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    include_once 'Scripts/lock.php';
     $user_query = "SELECT id FROM users WHERE email = :entered_name AND password = :entered_password";
     $user_query = $database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
     $user_query->execute(array(":entered_name" => $_POST['name'], ":entered_password" => $_POST['password']));
@@ -19,7 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (!empty($user_data)) {
         setcookie("id", base64_encode($user_data), time() + 3600000);
-        setcookie("showchat", 'y', time() + 3600000);
+        setcookie("chat_feed", 'y', time() + 3600000);
         include_once('Scripts/user.class.php');
         $user = new User;
         $user->setLocation($user_data);
@@ -28,14 +17,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo '<p style="background-color:red;">Your Email or Password is invalid</p>';
     }
 }
+
+include_once("Scripts/config.php");
+include_once("Scripts/demo.php");
+include_once("Scripts/system.class.php");
+include_once("Scripts/js.php");
+$allschools = "SELECT name FROM community;";
+$allschools = $database_connection->prepare($allschools, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+$allschools->execute();
+$system = System::getInstance();
+$system->getGlobalMeta();
+if (isset($_COOKIE['id']) && $_COOKIE['id'] != "") {
+    header("location: home");
+}
 ?>
 
 <html>
     <head>
-        <script src="Scripts/external/jquery.min.js"></script>
         <link rel="stylesheet" type="text/css" href="CSS/login.css">
         <title>Login</title>
-        <link rel="stylesheet" type="text/css" href="CSS/style.css">
     </head>
     <body class="login">
         <div class="login_container">
@@ -52,16 +52,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
             </form>
         </div>
-        <div>
-                <!-- <img style="height:50%;margin-top:19%;margin-left:20%;opacity:0.3;"src="Images/social_network.gif"></img> -->
-            <span class="about">This site is in its development. You are welcome to sign-up, register schools and store your files here. However, I cannot guarantee the safety/availability of any of your data yet. Release date: 2014, March 8th. You can watch the site develop everyday :)</span>
+        <div class='bottom_bar'>
+            <span>This site is in its development. You are welcome to sign-up, register schools and store your files here. However, I cannot guarantee the safety/availability of any of your data yet. Release date: 2014, March 8th. You can watch the site develop everyday.</span>
         </div>
-        <div class="signup">
+        <div class="signup"  style='background-image: url("https://flipboard.com/static/img/feature-gradient-transparent.png");'>
 <?php
 if (!isset($_GET['action'])) {
-    echo '
-
-			<h1 class="signupheader">Join</h1>
+    echo '              <h1 class="signupheader">Join</h1>
 			<form action="Scripts/verifysignup.php" method="POST">
 			<div class="signupbox">
 			<table border="0">
@@ -69,17 +66,23 @@ if (!isset($_GET['action'])) {
 			<td><input type="text" placeholder="First Name"autocomplete="off" name="firstname"/></td><td><input type="text" placeholder="Last Name"autocomplete="off" name="lastname"/></td>
 			</tr>
 			<tr>
-			<td colspan="2"><input type="text" style="width:100%;" placeholder="Password" autocomplete="off" name="newpassword"/></td>
+			<td colspan="2"><input type="password" style="width:100%;" placeholder="Password" autocomplete="off" name="newpassword"/></td>
 			</tr>
 			<tr>
 			<td colspan="2"><input type="text" style="width:100%;" autocomplete="off" placeholder="Email" name="email"/></td>
 			</tr>
 			<tr>
-			<td colspan="2"><div class="styled-select"><select id="schoolselect" style="width:100%;" name="school">';
-    foreach ($allschools->fetch(PDO::FETCH_ASSOC) as $schools) {
-        echo "<option>" . $schools . "</option>";
-    }
-    echo '<option selected>Select your School</option><option>*Register a new School</option>
+			<td colspan="2">';
+                        echo "<div wrapper_id='organization_choose' class='default_dropdown_selector'>Choose School";
+                        echo "<div id='organization_choose' class='default_dropdown_wrapper' style=''>";
+                        echo "<ul class='default_dropdown_menu'>";
+                        foreach ($allschools->fetchAll(PDO::FETCH_ASSOC) as $schools) {
+                                echo "<li class='default_dropdown_item'>"
+                                . $schools['name'] . "</li>";
+                        }
+                        echo "</ul>";
+                        echo "</div></div></td></tr>";
+                        echo '
 			<tr>
 			<td><label>Select Year:</label></td><td><div class="styled-select"><select style="width:100%;" name="year"> <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option></select></div></td>
 			</tr>
@@ -133,7 +136,7 @@ if (!isset($_GET['action'])) {
 ?>
         </div>
     </div>
-    <div class="links">
+    <div class="links" style='display:none;'>
         <a id="schoollink" href="login" style="text-decoration:none; font-size:0.8em;">Register a User</a>/
         <a id="schoollink" href="login?action=school" style="text-decoration:none; font-size:0.8em;">Register a School + User</a>/
         <a id="schoollink" href="about" style="text-decoration:none; font-size:0.8em;">About</a><br/>

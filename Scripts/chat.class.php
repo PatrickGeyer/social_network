@@ -20,8 +20,9 @@ class Chat {
         return self :: $chat;
     }
     public function submitChat($aimed, $text) {
-        $text = str_replace("\n", "<br />", $text);
+        
         $text = strip_tags($text);
+        $text = nl2br($text);
         if ($text == "") {
             
         } else if ($aimed == "s" || $aimed == "y") {
@@ -51,11 +52,11 @@ class Chat {
     function getContent($chat_identifier, $all = 'false') {
         $time = time();
         if ($chat_identifier == "y") {
-            $chat_query = "SELECT sender_id, text, time FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND sender_year = " . $this->user->getPosition() . " AND aimed = 'y' ";
+            $chat_query = "SELECT sender_id, `text`, time, id FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND sender_year = " . $this->user->getPosition() . " AND aimed = 'y' ";
         } else if ($chat_identifier == "s") {
-            $chat_query = "SELECT sender_id, text, time FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND aimed='s'";
+            $chat_query = "SELECT sender_id, `text`, time, id FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND aimed='s'";
         } else {
-            $chat_query = "SELECT sender_id, text, time FROM chat WHERE group_id = " . $chat_identifier;
+            $chat_query = "SELECT sender_id, `text`, time, id FROM chat WHERE group_id = " . $chat_identifier;
         }
         if ($all == 'false') {
             $chat_query .= " AND time >= " . $time;
@@ -76,7 +77,7 @@ class Chat {
                         $chat_read_query = $this->database_connection->prepare($chat_read_query);
                         $chat_read_query->execute(
                                 array(
-                                    ":user_id" => $this->user->getId(),
+                                    ":user_id" => $this->user->user_id,
                                     ":chat_id" => $record['id'],
                         ));
                         $num = $chat_read_query->rowCount();

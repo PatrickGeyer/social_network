@@ -1,5 +1,5 @@
 <?php
-
+$country=$city=$ip=$query_string=$http_referer=$http_user_agent=$isbot=NULL;
 include_once('config.php');
 include_once('ip2locationlite.class.php');
 

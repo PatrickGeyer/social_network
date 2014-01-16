@@ -1,16 +1,16 @@
 <?php
 if (!isset($_COOKIE['showchat'])) {
-    setcookie('showchat', 'y');
+    //setcookie('chat_feed', 'y');
 }
 ?>
 <head>
     <link rel="stylesheet" type="text/css" href="CSS/chat.css">
     <script id="chat_loader">
 
-        var current_view = getCookie("showchat");
+        var current_view = getCookie("chat_feed");
         if (current_view == "undefined") {
             current_view = "s";
-            setCookie("showchat", 's');
+            //setCookie("chat_feed", 's');
         }
 
         var timer;
@@ -46,7 +46,7 @@ if (!isset($_COOKIE['showchat'])) {
             scroll2Bottom();
             sendChatRequest('true', current_view);
 
-            var cookie = getCookie("showchat");
+            var cookie = getCookie("chat_feed");
             if (cookie == 0)
             {
                 $('#chat').hide();
@@ -68,26 +68,23 @@ if (!isset($_COOKIE['showchat'])) {
             }
             $("#chat_toggle").click(function()
             {
-                var cookie = getCookie("showchat");
+                var cookie = getCookie("chat_feed");
                 if (cookie > 0 || isNaN(cookie))
                 {
-                    setCookie('showchat', 0, 5);
+                    setCookie('chat_feed', 0, 5);
                     $('#chat_toggle').html("OFF");
                     $('#chat').hide('slide', {direction: 'right'}, 1000);
                 }
                 else
                 {
-                    setCookie('showchat', 'y', 5);
+                    setCookie('chat_feed', 'y', 5);
                     $('#chat_toggle').html("ON");
                     $('#chat').show('slide', {direction: 'right', duration: 0}, 1000);
                 }
             });
 
-            $(document).on('click', '.feed_selector', function()
+            $(document).on('click', '.chat_selector', function()
             {
-                $('.chat_selector').removeClass('active_feed');
-                $(this).addClass('active_feed');
-
                 change_chat_view($(this).attr("chat_feed"));
             });
         });
@@ -108,7 +105,16 @@ if (!isset($_COOKIE['showchat'])) {
         }
         $(function(){
             detectChange();
-            $(document).on("propertychange keyup input change", '.chatinputtext', function(){
+            $(document).on("propertychange keyup input change", '.chatinputtext', function(e){
+                //Add type='application/pdf' to embed tags to prevent auto download
+                if (e.keyCode == 13)
+                {
+                    if (e.shiftKey !== true)
+                    {
+                        submitchat($(this).val());
+                        e.preventDefault();
+                    }
+                }
                 detectChange();
             });
         })
@@ -192,12 +198,12 @@ if (!isset($_COOKIE['showchat'])) {
             {
                 //scrollH('#' + change_view, '#feed_wrapper_scroller', 400);
             }
-            setCookie('showchat', change_view, 5);
+            setCookie('chat_feed', change_view, 5);
         }
     </script>
 </head>
 <div class="chatoff" id="chat_toggle"><?php
-    if ($_COOKIE['showchat'] == '0') {
+    if ($_COOKIE['chat_feed'] == '0') {
         echo 'OFF';
     }
     else {
@@ -211,7 +217,7 @@ if (!isset($_COOKIE['showchat'])) {
                 <td>
                     <div id='school_tab' style='padding:0px;' chat_feed='s' class='feed_selector chat_selector 
                     <?php
-                    if ($_COOKIE['showchat'] == 's') {
+                    if ($_COOKIE['chat_feed'] == 's') {
                         echo "active_feed";
                     }
                     ?>
@@ -226,7 +232,7 @@ if (!isset($_COOKIE['showchat'])) {
                 <td>
                     <div id='year_tab' style='padding:0px;' chat_feed='y' class='feed_selector chat_selector 
                     <?php
-                    if ($_COOKIE['showchat'] == 'y') {
+                    if ($_COOKIE['chat_feed'] == 'y') {
                         echo "active_feed";
                     }
                     ?>
@@ -239,7 +245,7 @@ if (!isset($_COOKIE['showchat'])) {
             foreach ($groups as $single_group) {
                 echo "<tr><td><div style='padding:0px;' chat_feed='"
                 . $single_group . "' class='feed_selector chat_selector "
-                . ($_COOKIE['showchat'] == $single_group ? "active_feed" : "")
+                . ($_COOKIE['chat_feed'] == $single_group ? "active_feed" : "")
                 . "' id='" . $single_group . "' title='"
                 . $group->getGroupName($single_group) . "'><h3 class='chat_header_text ellipsis-overflow'>"
                 . $group->getGroupName($single_group) . "</h3></div></td></tr>";
@@ -254,8 +260,7 @@ if (!isset($_COOKIE['showchat'])) {
     </div>
     <div class='text_input_container'>
         <textarea id="text" class="thin chatinputtext"  placeholder="Press Enter to send..." style='font-size: 12px;border:0px;width:100%;resize:none;overflow:hidden;'></textarea>
-        <div class='chat_input_clone' style='display:none;white-space: pre-wrap; width: 100%; min-height: 50px;  
-    font-family: century gothic,Tahoma,Geneva,sans-serif;
+        <div class='chat_input_clone' style='display:none;white-space: pre-wrap; width: 100%; min-height: 30px;  
     font-size: 12px;  
     padding: 0px;  
     word-wrap: break-word;  '></div>
@@ -263,15 +268,5 @@ if (!isset($_COOKIE['showchat'])) {
 </div>
 <script>
     // onkeydown='
-    //                         if (event.keyCode == 13)
-    //                         {
-    //                             if (event.shiftKey !== true)
-    //                             {
-    //                                 submitchat($(this).val());
-    //                                 return false;
-    //                             }
-    //                         }
-    //                         detectChange();
-    //                         alert("d");
-    //                         return true;'
+    //                         
 </script>

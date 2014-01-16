@@ -2,10 +2,7 @@ input[type="submit"].chatsend {
     display: none;
 }
 div.messagecomplete{
-    bottom:0px;
-    position:fixed;
-    left: 40px;
-    width: 200px;
+    margin-top: 10px;
     z-index: 1200;
 }
 
@@ -56,8 +53,8 @@ h1.composeheader{
     border-bottom: 1px solid lightgrey;
     cursor: pointer;
 }
-.message_wrapper:hover{
-    background-color: #FAFAFA;
+.message_inactive_thread:hover{
+    background-color: #f4f6f9;
 }
 .message_info_preview{
     margin-top: -3px;
@@ -69,6 +66,7 @@ h1.composeheader{
     margin-right: 5px;
 }
 .message_user_name{
+    font-weight: bolder;
     color:black;
     font-size: 13px;
 }
@@ -152,38 +150,19 @@ div.reply{
     right:0px;
     z-index: 1;
 }
-div.message_added_receiver{
-    background-color: #edeff4;
-    padding: 5px;
-    margin-right:5px;
-    margin-bottom: 5px;
-    opacity: 1;
-    border-radius: 2px;
-    font-size: 12px;
-    cursor: pointer;
-    border:1px solid lightblue;
-    color: grey;
-    display: inline-block;
-}
-div.message_added_receiver:hover{
-
-}
-
-span.message_delete_receiver{
-    font-size:1.2em; 
-    color:grey; 
-    cursor:pointer;
-    margin-left: 10px;
-}
-
-span.message_delete_receiver:hover{
-    color:black;
-}
 .message_search_input{
     display:inline-block;
     width: 200px;
     height: 30px;
     font-size: 13px;
+    border: 1px solid lightgrey;
+    padding-left: 5px;
+    margin-bottom: 5px;
+}
+.message_convo_seperator {
+    width:100%; 
+    border: 0px;
+    border-bottom:1px solid lightgrey;
 }
 table.message{
     margin-left: 80px;
@@ -221,17 +200,21 @@ li.message_inbox_item_read, li.message_inbox_item{
     text-align: left;
     word-wrap:break-word;
     padding:0px;
-    border:0;
+    border:0px;
 }
-li.message_inbox_item{
-    background-color: #FAFAFA;
-}
-
 li.message_inbox_item{
     background-color: white;
 }
-.message_active_thread{
-    background-color:lightblue;
+li.message_active_thread{
+    background-color: rgb(66, 184, 221);
+    background-image: -webkit-linear-gradient(left, rgb(66, 184, 221), rgb(66, 184, 221));
+}
+.message_user_name.message_active_thread {
+    color: white;
+    font-weight: bold;
+}
+.message_text_preview.message_active_thread {
+    color: white;
 }
 tr.message{
     border: 0px solid black;

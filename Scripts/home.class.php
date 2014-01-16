@@ -97,10 +97,6 @@ class Home {
                 $max = $activity['id'];
             }
         }
-        
-//        if ($count == 0) {
-//            echo "<hr><center><span style='font-family: century gothic; color:grey;'>You have no notifications in this Live Feed!</span></center>";
-//        }
         return $max;
     }
 
@@ -243,12 +239,11 @@ class Home {
         echo "<div id='comment_input_" . $activity['id'] . "' class='comment_input' style='padding-left:2px;padding-top:2px;'><table style='width:100%;'><tr><td style='vertical-align:top;width:40px;'>
 		<div class='post_comment_profile_picture post_comment_profile_picture_user' style='background-image:url(\"" . $this->user->getProfilePicture('chat') . "\");'></div></td><td cellspacing='0' style='vertical-align:top;'>";
 
-        echo '<div data-placeholder="Write a comment..." contenteditable class="inputtext" id="comment_' . $activity['id'] . '" name="text" onkeydown="if (event.keyCode == 13) 
-		{ submitcomment($(this).html(), ' . $activity['id'] . '); return false; }"></div>';
+        echo '<textarea data-activity_id="'. $activity['id'].'" placeholder="Write a comment..." '
+                . 'class="home_comment_input_text inputtext" id="comment_' . $activity['id'] 
+                . '"></textarea>';
+        echo "<div class='home_comment_input_text textarea_clone' id='comment_" . $activity['id']. "_clone'></div>";
 
-        echo "</td><td style='vertical-align:top;width:60px;'><button
-		onclick='submitcomment($(&quot;#comment_" . $activity['id'] . "&quot;).html(), " . $activity['id'] . ");'
-		style='margin-left:10px;margin-top:1px;' class='pure-button-secondary smallest inputtext_send'>send</button>";
         echo "</td></tr></table></div>";
         if ($num >= 0) {
             echo "</div>";
@@ -309,14 +304,14 @@ class Home {
             echo "<span class='user_preview user_preview_name post_comment_user_name' user_id='" . $comment['commenter_id'] . "'>" . $this->user->getName($comment['commenter_id']) . " </span></a>";
             echo "";
             echo "<span class='post_comment_text'>" . $comment['comment_text'] . "</span>
-			</td></tr><tr><td colspan=2><span class='post_comment_time'>" . $this->system->humanTiming($time) . "</span>";
+			</td></tr><tr><td colspan=2 style='vertical-align:bottom;' ><span class='post_comment_time'>- " . $this->system->humanTiming($time) . "</span>";
             echo "</tr></table></div><hr class='post_comment_seperator'>";
         }
     }
 
     public function getAssocFiles($activity_id = NULL) {
         $sql = "SELECT * FROM files AS files "
-                . "LEFT JOIN (SELECT file_id, URL, web_title, web_description, web_favicon FROM activity_media) AS act ON files.id = act.file_id "
+                . "LEFT JOIN (SELECT file_id, URL, web_title, web_description, web_favicon FROM activity_media WHERE activity_id = :activity_id) AS act ON files.id = act.file_id "
                 . "WHERE files.id IN (SELECT file_id FROM activity_media WHERE activity_id = :activity_id); ";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(
@@ -360,8 +355,9 @@ class Home {
             $post_content .= $this->showDocFile($file);
         }
         else if ($file['type'] == "Folder") {
-            $post_classes .= "post_media_single";
-            $post_content .= "<div class='post_media_folder_image'></div>";
+            $post_styles .= "height:auto;";
+            $post_classes .= "post_media_double";
+            $post_content .= $this->showDocFile($file);
         }
         else {
             $post_classes .= "post_media_full";
@@ -376,22 +372,24 @@ class Home {
     }
 
     private function showDocFile($file) {
-        $return;
-        $path;
+        $return = $link = $path = NULL;
         if($file['type'] == "WORD Document") {
             $path = System::WORD_THUMB;
         } else if($file['type'] == "PDF Document") {
             $path = System::PDF_THUMB;
+            $link = "viewer?id=" . $file['id'];
         } else if($file['type'] == "EXCEL Document") {
             $path = System::EXCEL_THUMB;
+        } else if($file['type'] == "Folder") {
+            $path = System::FOLDER_THUMB;
+            $link = "files?pd=".urlencode($this->system->encrypt($file['folder_id']));
         }
         
-        $return = "<table style='margin:10px;height:100%;'><tr><td rowspan='3'>"
-                . "<div style='margin-right:10px;height:63px;width:64px;"
-                . "background-repeat:no-repeat;background-size:contain;background-image:url(&quot;"
+        $return = "<table style='height:100%;'><tr><td rowspan='3'>"
+                . "<div class='post_media_webpage_favicon' style='background-image:url(&quot;"
                 . $path . "&quot;);'></div></td>"
                 . "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>"
-                . "<a class='user_preview_name' target='_blank' href='viewer?id=" . $file['id'] . "'><span style='font-size:13px;'>"
+                . "<a class='user_preview_name' target='_blank' href='".$link."'><span style='font-size:13px;'>"
                 . $file['name'] . "</span></a></div></td></tr>"
                 . "<tr><td><span style='font-size:12px;' class='user_preview_community'>"
                 . $file['description'] . "</span></td></tr></table>";

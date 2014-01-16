@@ -320,8 +320,8 @@ if (!isset($page_identifier)) {
                                         . "<td style='min-width:40px;'>"
                                         . "<img class='notification_user_image' src='" . $picture . "'></img>"
                                         . "</td><td>"
-                                        . "<p style='margin:0;text-align:left;padding-left:10px;'>"
-                                        . str_replace('$group', '"' . $group_name . '"', str_replace('$user', $network['inviter_name'], $phrases['group_invite_en']))
+                                        . "<p style='margin:0;text-align:left;font-size:13px;'>"
+                                        . str_replace('$group', '"' . $group_name . '"', str_replace('$user', $user->getName($network['inviter_id']), $phrase->get('group_invite', 'en')))
                                         . "</p></td><td><table cellspacing='0' cellpadding='0'><tr><td>";
                                         if ($network['invite_status'] == 2) {
                                             echo "<button style='margin:0;' onclick='rejectGroup("
@@ -363,7 +363,7 @@ if (!isset($page_identifier)) {
                     </div>
                 </div>
                 <div style="z-index:11;" class="search">
-                    <input class="search_box" autocomplete='off'
+                    <input class="search_box search_input" autocomplete='off'
                            onkeyup='
                                    search(this.value, "universal", "#names_universal", function() {
                                    });

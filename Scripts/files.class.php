@@ -32,7 +32,7 @@ class Files {
     }
 
     function getList_r($id = null, $dir = null) {
-        $sql = "SELECT * FROM files WHERE user_id = :user_id ORDER BY name;";
+        $sql = "SELECT * FROM files WHERE user_id = :user_id AND type != 'Webpage' ORDER BY name;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $this->user->user_id));
         $return_array = $sql->fetchAll(PDO::FETCH_ASSOC);
@@ -43,7 +43,7 @@ class Files {
         if ($id == null) {
             $id = $this->user->user_id;
         }
-        $sql = "SELECT * FROM files WHERE id IN (SELECT file_id FROM file_share WHERE user_id = :viewed_id "
+        $sql = "SELECT * FROM files WHERE type != 'Webpage' AND id IN (SELECT file_id FROM file_share WHERE user_id = :viewed_id "
                 . "AND (receiver_id = :user_id OR (position = :user_position AND community_id = :user_school)"
                 . "OR group_id IN(SELECT group_id FROM group_member WHERE member_id = :user_id)));";
         $sql = $this->database_connection->prepare($sql);
@@ -55,19 +55,19 @@ class Files {
         ));
         $return_array = $sql->fetchAll();
 
-        $sql = "SELECT * FROM files WHERE id IN "
-                . "(SELECT file_id FROM activity_media WHERE activity_id IN "
-                . "(SELECT activity_id FROM activity_share WHERE "
-                . "receiver_id = :user_id OR (year = :user_position AND community_id = :user_community)"
-                . "OR group_id IN(SELECT group_id FROM group_member WHERE member_id = :user_id)));";
-        $sql = $this->database_connection->prepare($sql);
-        $sql->execute(array(
-            ":user_id" => $this->user->user_id,
-            ":user_position" => $this->user->getPosition(),
-            ":user_community" => $this->user->getCommunityId(),
-            ":viewed_id" => $viewed_id,
-        ));
-        $return_array = array_merge($return_array, $sql->fetchAll());
+        // $sql = "SELECT * FROM files WHERE type != 'Webpage' AND id IN "
+        //         . "(SELECT file_id FROM activity_media WHERE activity_id IN "
+        //         . "(SELECT activity_id FROM activity_share WHERE "
+        //         . "receiver_id = :user_id OR (year = :user_position AND community_id = :user_community)"
+        //         . "OR group_id IN(SELECT group_id FROM group_member WHERE member_id = :user_id)));";
+        // $sql = $this->->prepare($sql);
+        // $sql->execute(arrdatabase_connectionay(
+        //     ":user_id" => $this->user->user_id,
+        //     ":user_position" => $this->user->getPosition(),
+        //     ":user_community" => $this->user->getCommunityId(),
+        //     ":viewed_id" => $viewed_id,
+        // ));
+        // $return_array = array_merge($return_array, $sql->fetchAll());
         return $return_array;
     }
 
@@ -92,7 +92,8 @@ class Files {
                     $file['id'], $file['filepath'], $classes, "height:100%;", "home_feed_video_", TRUE, "display:none;");
         }
         else if($file['type'] == "PDF Document") {
-            echo "PDF";
+            //$post_styles .= " display:none; ";
+            $post_content .= "<embed src='viewer?id=".$file['id']."' width='100%' height='100%'>";
         }
         else if($file['type'] == "Webpage") {
             $post_classes .= "post_media_full";
@@ -226,7 +227,7 @@ class Files {
         if ($user_id == null) {
             $user_id = $this->user->user_id;
         }
-        $sql = "SELECT * FROM files WHERE user_id = :user_id AND parent_folder_id = :parent_folder ORDER BY name;";
+        $sql = "SELECT * FROM files WHERE type != 'Webpage' AND user_id = :user_id AND parent_folder_id = :parent_folder ORDER BY name;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $user_id, ":parent_folder" => $parent_folder));
         return $sql->fetchAll(PDO::FETCH_ASSOC);
@@ -388,7 +389,7 @@ class Files {
             echo $this->folderPreview($file);
         }
         else if ($file['type'] == "PDF Document") {
-            //echo $this->folderPreview($file);
+            echo $this->pdfPreview($file);
         }
     }
 
@@ -424,6 +425,14 @@ class Files {
         if (isset($nmr) && $nmr <= 0) {
             //echo "<div class='files' onclick='if(event.stopPropagation){event.stopPropagation();}event.cancelBubble=true;'>No Files in this Directory</div>";
         }
+        $return .= "</div>";
+
+        return $return;
+    }
+
+    private function pdfPreview($file) {
+        $return = "<div style='max-height:300px;' class='audio_hidden_container' id='file_div_hidden_container_" . $file['id'] . "'>";
+        $return .= "<embed src='viewer?id=".$file['id']."' height='100%' width='100%' >";
         $return .= "</div>";
 
         return $return;
