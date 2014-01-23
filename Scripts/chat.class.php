@@ -2,6 +2,7 @@
 
 include_once('database.class.php');
 include_once('user.class.php');
+include_once('system.class.php');
 
 class Chat {
     private static $chat = NULL;
@@ -10,6 +11,7 @@ class Chat {
     public function __construct() {
         $this->user = User::getInstance();
         $this->database_connection = Database::getConnection();
+        $this->system = System::getInstance();
     }
     public static function getInstance ( ) {
         if (self :: $chat) {
@@ -23,6 +25,7 @@ class Chat {
         
         $text = strip_tags($text);
         $text = nl2br($text);
+        $text = $this->system->linkReplace($text, NULL, "[", "]");
         if ($text == "") {
             
         } else if ($aimed == "s" || $aimed == "y") {
@@ -46,7 +49,6 @@ class Chat {
         }
         $sql = $this->database_connection->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $sql->execute($variables);
-        echo "200";
     }
 
     function getContent($chat_identifier, $all = 'false') {
@@ -59,21 +61,22 @@ class Chat {
             $chat_query = "SELECT sender_id, `text`, time, id FROM chat WHERE group_id = " . $chat_identifier;
         }
         if ($all == 'false') {
-            $chat_query .= " AND time >= " . $time;
+            $chat_query .= "AND time >= " . $time;
         }
-        $chat_query .= ";";
+        //$chat_query .= " AND id NOT IN(SELECT )"
+        $chat_query .= " ORDER BY time;";
         $chat_query = $this->database_connection->prepare($chat_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
 
         if ($all == 'false') {
             while ((time() - $time) < 30) {
                 $chat_query->execute();
                 $chat_number = $chat_query->rowCount();
-                $chat_entries = $chat_query->fetchAll(PDO::FETCH_ASSOC);
                 if ($chat_number == 0) {
                     usleep(500000);
                 } else {
+                    $chat_entries = $chat_query->fetchAll(PDO::FETCH_ASSOC);
                     foreach ($chat_entries as $record) {
-                        $chat_read_query = "SELECT id FROM chat_read WHERE user_id = :user_id AND chat_id = :chat_id;";
+                        $chat_read_query = "SELECT id, chat_id FROM chat_read WHERE user_id = :user_id AND chat_id = :chat_id;";
                         $chat_read_query = $this->database_connection->prepare($chat_read_query);
                         $chat_read_query->execute(
                                 array(
@@ -81,9 +84,11 @@ class Chat {
                                     ":chat_id" => $record['id'],
                         ));
                         $num = $chat_read_query->rowCount();
-                        if ($num == 0) {
+                        $num1 = $chat_read_query->fetch(PDO::FETCH_ASSOC);
+                        if ($num === 0) {
                             $this->chatify($record);
                             $this->markChatRead($record['id']);
+//                            die(var_dump($num1));
                         }
                     }
                     break;
@@ -92,10 +97,11 @@ class Chat {
         } else {
             $chat_query->execute();
             $chat_number = $chat_query->rowCount();
-            $chat_entries = $chat_query->fetchAll(PDO::FETCH_ASSOC);
             if ($chat_number != 0) {
+                $chat_entries = $chat_query->fetchAll(PDO::FETCH_ASSOC);
                 foreach ($chat_entries as $record) {
                     $this->chatify($record);
+                    $this->markChatRead($record['id']);
                 }
             } else {
                 echo "No chat entries here";
@@ -105,7 +111,8 @@ class Chat {
 
     private function markChatRead($id = NULL) {
         if ($id != NULL) {
-            $sql = "INSERT INTO chat_read (user_id, chat_id) VALUES (:user_id, :chat_id);";
+            $sql = "DELETE FROM chat_read WHERE user_id = :user_id AND chat_id = :chat_id;"
+                    . " INSERT INTO chat_read (user_id, chat_id) VALUES (:user_id, :chat_id);";
             $sql = $this->database_connection->prepare($sql);
             $sql->execute(
                     array(
@@ -129,12 +136,16 @@ class Chat {
         //echo "<div class='chat_user_profile' style='border-left:2px solid ".($this->user->getOnline($record['sender_id']) == true ? "rgb(28, 184, 65)" : "red")."; float:left;width:40px;height:40px;background-image:url(" . 
                 //$this->user->getProfilePicture('chat', $record['sender_id']) . ");background-size:cover;'></div>";
         echo "<td>"; //</td>
-        echo "<div class='chatname'><span class='user_preview user_preview_name chatname' style='font-size:13px;' user_id='"
-            .$record['sender_id']."'>" . $this->user->getName($record['sender_id']) . "</span></div>";
+        echo "<div class='chatname'><span class='user_preview user_preview_name chatname' style='margin-right:5px;font-size:13px;' user_id='"
+            . $record['sender_id']."'>" . $this->user->getName($record['sender_id']) . "</span>"
+            . "</div>";
         echo "<div class='chattext'>";
         echo $record['text'];
         echo "</div>";
-        echo "</td></tr></table></div>";
+        
+        echo "</td></tr><tr><td style='text-align:right;'>"
+            . "<span class='chat_time post_comment_time'>".$this->system->humanTiming($record['time'])."</span>"
+            . "</td></tr></table></div>";
         echo "</li>";
     }
 

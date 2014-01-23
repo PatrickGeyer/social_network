@@ -69,10 +69,16 @@ h1.composeheader{
     font-weight: bolder;
     color:black;
     font-size: 13px;
+    max-width: 90%;
+    margin: 0px;
+    white-space: nowrap;
 }
 .message_text_preview{
     font-size: 12px;
     color:grey;
+    max-width: 90%;
+    margin: 0px;
+    white-space: nowrap;
 }
 
 div.message_convo_wrapper{
@@ -82,7 +88,6 @@ div.message_convo_wrapper{
     position: absolute;
     bottom:150px;
     top:55px;
-    min-height: 500px;
     overflow: hidden;
 }
 

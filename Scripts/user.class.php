@@ -7,8 +7,10 @@ class User {
     private $database_connection;
     private static $user = null ;
     public function __construct() {
-        $this->user_id = base64_decode($_COOKIE['id']);
-        $this->database_connection = Database::getConnection();
+        if(isset($_COOKIE['id'])) {
+            $this->user_id = base64_decode($_COOKIE['id']);
+            $this->database_connection = Database::getConnection();
+        }
     }
     public static function getInstance ( ) {
         if (self :: $user) {
@@ -22,11 +24,19 @@ class User {
         return $this->user_id;
     }
 
-    function getName($id = null) {
+    function getName($id = null, $name = 3) {
         if (!isset($id) || $id == "") {
             $id = $this->user_id;
         }
-        $user_query = "SELECT name FROM users WHERE id = :user_id";
+        if($name === 3) {
+            $user_query = "SELECT name FROM users WHERE id = :user_id";
+        }
+        else if($name === 1) {
+            $user_query = "SELECT first_name FROM users WHERE id = :user_id";
+        }
+        else if($name === 2) {
+            $user_query = "SELECT last_name FROM users WHERE id = :user_id";
+        }
         //print_r($this);
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
@@ -188,23 +198,6 @@ class User {
         return $user;
     }
 
-    function getActivity($id = null) {
-        if (!isset($id) || $id == "") {
-            $id = $this->user_id;
-        }
-
-        $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN (SELECT activity_id FROM activity_share WHERE 
-		community_id = :community_id
-		OR (year = :user_year AND community_id = :community_id) 
-		OR group_id in (SELECT group_id FROM group_member WHERE member_id = :user_id) 
-		OR receiver_id = :user_id) AND user_id = " . $id . "
-		ORDER BY time DESC";
-        $activity_query = $this->database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $activity_query->execute(array(":user_id" => $id, ":community_id" => $this->getCommunityId($id), ":user_year" => $this->getPosition($id)));
-        $return = $activity_query->fetchAll(PDO::FETCH_ASSOC);
-        return $return;
-    }
-
     function updateSettings($about = null, $community = null, $year = null, $email = null, $language = null) {
         $sql = "UPDATE users SET ";
         if (isset($about)) {
@@ -232,10 +225,31 @@ class User {
             $id = $this->user_id;
         }
         $user_query = "SELECT id, name, link FROM bookmark WHERE user_id = :user_id";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query = $this->database_connection->prepare($user_query);
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetch();
         return $user;
+    }
+    /**
+     * function notify (Send a notification to a User)
+     * @param string $type
+     * @param int $receiver_id
+     * @param int $activity_id
+     * @param int $read
+     * @param int $seen
+     */
+    public function notify($type, $receiver_id, $activity_id, $read = 0, $seen = 0) {
+        $who_liked_query = "INSERT INTO notification (`type`, post_id, receiver_id, sender_id, `read`, seen) "
+                . "VALUES(:type, :activity_id, :receiver_id, :sender_id, :read, :seen);";
+        $who_liked_query = $this->database_connection->prepare($who_liked_query);
+        $who_liked_query->execute(array(
+            ":activity_id" => $activity_id,
+            ":receiver_id" => $receiver_id,
+            ":sender_id" => $this->user_id,
+            ":type" => $type,
+            ":read" => $read,
+            ":seen" => $seen
+        ));
     }
 
     function setOnline($id = null) {
@@ -253,7 +267,6 @@ class User {
         $sql = "SELECT id FROM users WHERE id = " . $id . " AND lastactivity > DATE_SUB(NOW(), INTERVAL 30 SECOND);";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute();
-        $online = $sql->fetchColumn();
         $num = $sql->rowCount();
 
         if ($num == 0) {

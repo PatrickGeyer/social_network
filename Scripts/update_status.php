@@ -4,9 +4,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     include_once('lock.php');
     $status_text = $_POST['status_text'];
     $status_text = strip_tags($status_text);
-    $status_text= preg_replace( 
-        "/(?<!a href=\")(?<!src=\")((http|ftp)+(s)?:\/\/[^<>\s]+)/i", 
-        "<a href=\"\\0\" target=\"blank\" class=\"post_feed_link\">\\0</a>", $status_text);
+    $status_text = $system->linkReplace($status_text);
     $post_media_added_files = (isset($_POST['post_media_added_files']) ? $_POST['post_media_added_files']: array());
     $status_text = nl2br($status_text);
 
@@ -98,6 +96,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $media_query = $database_connection->prepare($media_query);
         $media_query->execute($options);
     }
-    die("200");
 }
 ?>

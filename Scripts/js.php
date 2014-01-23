@@ -1,6 +1,7 @@
 <?php
 include("lock.php");
 $system->getGlobalMeta();
+$system->jsVars();
 ?>
     
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
@@ -20,6 +21,10 @@ $system->getGlobalMeta();
 <script src="Scripts/external/video-js/video.min.js"></script>
 
 <script src="Scripts/external/jquery.scrollTo-1.4.3.1.js"></script>
+
+<script src="Scripts/eventhandlers.js"></script>
+<script src="Scripts/js.js"></script>
+
 <script>
     _V_.options.flash.swf = "Scripts/external/video-js/video-js.swf";
     
@@ -32,31 +37,6 @@ $system->getGlobalMeta();
 </script>
 
 <script type="text/javascript">
-    //var audioPlayer = <?php ?>;
-    //var videoPlayer = <?php ?>;
-    var WORD_THUMB = '<?php echo System::WORD_THUMB; ?>';
-    var PDF_THUMB = '<?php echo System::PDF_THUMB; ?>';
-    var AUDIO_THUMB = '<?php echo System::AUDIO_THUMB; ?>';
-    var AUDIO_PLAY_THUMB = '<?php echo System::AUDIO_PLAY_THUMB; ?>';
-    var AUDIO_PAUSE_THUMB = '<?php echo System::AUDIO_PAUSE_THUMB; ?>';
-    var VIDEO_THUMB = '<?php echo System::WORD_THUMB; ?>';
-    
-    var RELOAD_STILL_BLACK = '<?php echo System::RELOAD_STILL_BLACK; ?>';
-    
-    var SCROLL_OPTIONS = {
-        scrollButtons:{
-                        enable:false
-                    },
-                    advanced:{
-                        updateOnContentResize: true,
-                        updateOnBrowserResize:true,
-                    },
-                    scrollInertia:100,
-                    theme:'dark',
-                    autoHideScrollbar: false,
-                    mouseWheelPixels: 20 
-                };
-
     var min_activity_id = 0;
     
     function createMap(city, country) {
@@ -104,25 +84,6 @@ $system->getGlobalMeta();
             alert(response);
         });
     }
-    $(function(){
-        $(document).on('keyup', '.inputtext', function(event){
-            var id = $(this).attr('id');
-            var clone = $('#' + id + "_clone")
-            if (event.keyCode == 13) { 
-                submitcomment($(this).val(), $(this).data('activity_id'), function(){emptyText(id);}); 
-                return false; 
-            }
-            resizeTextarea($(this), clone);
-        });
-    });
-    function resizeTextarea(element, clone) {
-        var text = $(element).val();
-        $(clone).text(text);
-        $(element).height($(clone).height());
-    }
-    function emptyText(id) {
-        $('#' + id).val('');
-    }
     </script>
     <script>
     function getType(extension) {
@@ -162,171 +123,7 @@ function delay(elem, time, callback) {
     }
 }
 
-    //FEED SELECTORs
-    function getFeedContent(feed_id, min_activity_id, page, callback)
-            {
-                var link = page;
-                if(page == "user") {
-                    link = "home"
-                }
-
-                else if(page == "user_files") {
-                    link ='user';
-                    page = 'f';
-                }
-
-                if (typeof feed_id !== "undefined")
-                {
-                    var container = $('.container').find('.feed_container');
-                    
-
-                    var none = $("<div class='post_height_restrictor'>"
-                                    +"<center><p style='color:grey;'>"
-                                    +"There are no notifications in this Live Feed! <br /> "
-                                    +"You can post files and shizzle up the in the box.</p></center></div>");
-
-                    var prev_feed_id = getCookie(page + '_feed');
-                    if (feed_id != prev_feed_id) {
-                        min_activity_id = 0;
-                        container.find('.post_height_restrictor').remove();
-                    } else {
-                        none = "";
-                    }
-                    setCookie(page + '_feed', feed_id);
-                    modal(container, properties={text:"Loading content..."})
-                    var callbak = function(data){
-                        container.prepend(data);
-                        if (data.length < 100) {
-                            container.append(none); 
-                        }
-                        //console.log("feed=" + feed_id + " && min_activity_id=" + min_activity_id + " && response=" + data);
-                        console.log('refreshed feed');
-                        removeModal();
-                        
-                        callback();
-                    }
-
-                    if (isNaN(feed_id))
-                    {
-                        if(feed_id == 'a' || feed_id == 's' || feed_id == 'y') {
-                            refreshElement('#feed_refresh', link, "f=" + feed_id + "&min_activity_id=" + min_activity_id, "#feed_refresh", callbak);
-                        }
-                        else {
-                            feed_id = feed_id.replace('u_', '');
-                            refreshElement('#feed_refresh', link, "u=" + feed_id + "&min_activity_id=" + min_activity_id, "#feed_refresh", callbak);
-                        }
-                    }
-                    else
-                    {
-                        refreshElement('#feed_refresh', link, "fg=" + feed_id + "&min_activity_id=" + min_activity_id, "#feed_refresh", callbak);
-                    }
-                }
-            }
-            
     $(function(){
-        $('.feed_selector').click(function()
-        {                 
-            var type = $(this).attr('feed_id');
-            var action = $(this).attr('action');
-            $('.' + type + '_feed_selector').removeClass('active_feed');
-            $(this).addClass('active_feed');
-            if(type != "chat" && action != 'prevent_activity') {
-                if(action == "user_files") {
-                    getFeedContent(value, 0, 'user_files', function(){});
-                }
-                else {
-                    var value = $(this).attr('filter_id');
-                    getFeedContent(value, min_activity_id, type, function(){});
-                }
-            }
-            else {
-                //console.log('feed loading prohibited (chat or action_prevented property)!');
-            }
-        });
-    });
-    
-    //END FEED SELECTORS
-
-    // SEARCH
-    $(function() {
-        $('.name_selector').hover(function() {
-            $('.match').css('background-color', 'transparent');
-        }, function()
-        {
-            //mouseleave
-        });
-        $('.match').hover(function() {
-            $('.match').css('background-color', '#FAFAFA');
-        });
-
-        $('.scroll_thin').mCustomScrollbar({
-                    scrollButtons:{
-                        enable:false
-                    },
-                    advanced:{
-                        updateOnContentResize: true,
-                        updateOnBrowserResize:true,
-                    },
-                    scrollInertia:100,
-                    theme:'dark',
-                    autoHideScrollbar: false,
-                    mouseWheelPixels: 20 
-                    
-                });
-        $('.scroll_thin_left').mCustomScrollbar({
-                    scrollButtons:{
-                        enable:false
-                    },
-                    advanced:{
-                        updateOnContentResize: true,
-                        autoScrollOnFocus: true,
-                    },
-                    scrollInertia:10,
-                    theme:'dark-thin',
-                    autoHideScrollbar : true
-                });
-
-        $('.scroll_thin_horizontal').mCustomScrollbar({
-                    scrollButtons:{
-                        enable:false
-                    },
-                    advanced:{
-                        updateOnContentResize: true,
-                        autoScrollOnFocus: true,
-                    },
-                    scrollInertia:10,
-                    autoHideScrollbar : true,
-                    horizontalScroll:true,
-                });
-       $('.search_results').mCustomScrollbar({
-                    scrollButtons:{
-                        enable:false
-                    },
-                    advanced:{
-                        updateOnContentResize: true,
-                        updateOnBrowserResize:true,
-                    },
-                    scrollInertia:100,
-                    theme:'dark',
-                    autoHideScrollbar: false,
-                    mouseWheelPixels: 20 
-                    
-                });
-                $(document).on('click', '.search_input', function(){
-                     var box = $(this).next('.search_results');
-                     if(box.find('.search_result, .match').length == 0) {
-                        
-                     }
-                     else{
-                         box.slideDown();
-                     }
-                });
-                $(document).on('click', '.search_results, .search_input', function(e){
-                     e.stopPropagation();
-                });
-                $(document).on('click', function(){
-                     $('.search_results').slideUp();
-                });
 //                 $( ".search_option file, #post_media_wrapper" ).sortable({
 //      connectWith: ".connectedSortable"
 //    }).disableSelection();
@@ -335,130 +132,6 @@ function delay(elem, time, callback) {
         refreshVideoJs();
         
     });
-    //END SEARCH
-    var alignment;
-    var needs_loading = true;
-    setInterval(function() {
-        $.post('Scripts/user.class.php', {action: 'setOnline'}, function() {
-
-        });
-    }, 10000);
-    function getViewPortHeight()
-    {
-        var viewportwidth;
-        var viewportheight;
-
-        //Standards compliant browsers (mozilla/netscape/opera/IE7)
-        if (typeof window.innerWidth != 'undefined')
-        {
-            viewportwidth = window.innerWidth,
-                    viewportheight = window.innerHeight
-        }
-
-        // IE6
-        else if (typeof document.documentElement != 'undefined'
-                && typeof document.documentElement.clientWidth !=
-                'undefined' && document.documentElement.clientWidth != 0)
-        {
-            viewportwidth = document.documentElement.clientWidth,
-                    viewportheight = document.documentElement.clientHeight
-        }
-
-        //Older IE
-        else
-        {
-            viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-                    viewportheight = document.getElementsByTagName('body')[0].clientHeight
-        }
-
-        return viewportheight;
-    }
-    
-    function addReceiver(array, receiver_id, community_id, group_id, callback) {
-        var to_push = {
-            receiver_id : receiver_id,
-            community_id: community_id, 
-            group_id: group_id
-        };
-        array.push(to_push);
-        callback();
-        console.log(array);
-        return array;
-    }
-    
-    function removeReceiver(array, value, callback) {
-        var index = receivers.indexOf(receiver_id);
-                if (index > -1)
-                {
-                    receivers.splice(index, 1);
-                }
-                $('.message_added_receiver_' + receiver_id).remove();
-                alignDialog();
-    }
-    
-    function search(text, mode, element, callback) {
-        if(text == "") {
-            $(element).hide();
-        } else {
-            var loader = $("<img src='Images/ajax-loader.gif'></img>");
-            $(element).prepend(loader);
-            $(element).show();
-        }
-        $.post("Scripts/searchbar.php", {search: mode, input_text: text}, function(response) {
-            $(element).find('.search_slider').slideUp("fast", function(){$(this).remove();});
-            var slider = $("<div class='search_slider'></div>").hide();
-            slider.append(response);
-            $(element).append(slider);
-            loader.remove();
-            var scrollElement = document.querySelector(element);
-            slider.slideDown(function(){
-                if( scrollElement.offsetHeight < scrollElement.scrollHeight || scrollElement.offsetWidth < scrollElement.scrollWidth){
-                    $(element).mCustomScrollbar();
-                    $(element).find('.mCustomScrollBox ').height('');
-                    $(element).mCustomScrollbar("update");
-                    $(element).find('.mCS_container').css('top', '0px');
-                }
-                callback();
-            });
-        });
-        $(element).off('click');
-        $(element).on('click', function(e){
-            e.preventDefault();
-            e.stopPropagation();
-        });
-    }
-    
-    function getViewPortWidth()
-    {
-        var viewportwidth;
-        var viewportheight;
-
-        //Standards compliant browsers (mozilla/netscape/opera/IE7)
-        if (typeof window.innerWidth != 'undefined')
-        {
-            viewportwidth = window.innerWidth,
-                    viewportheight = window.innerHeight
-        }
-
-        // IE6
-        else if (typeof document.documentElement != 'undefined'
-                && typeof document.documentElement.clientWidth !=
-                'undefined' && document.documentElement.clientWidth != 0)
-        {
-            viewportwidth = document.documentElement.clientWidth,
-                    viewportheight = document.documentElement.clientHeight
-        }
-
-        //Older IE
-        else
-        {
-            viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-                    viewportheight = document.getElementsByTagName('body')[0].clientHeight
-        }
-
-        return viewportwidth;
-    }
-
 // FILES
 
     var parent_folder = <?php echo (isset($parent_folder) ? $parent_folder : "1" ); ?>;
@@ -617,135 +290,7 @@ function delay(elem, time, callback) {
             $(above).css('bottom', height + offset);
         });
     }
-    function showUserPreview(element, user_id) {
-        if (element == "force") {
-            $('.user_preview_info').show();
-        }
-        else
-        {
-            $('.user_preview_info').not(element.children('.user_preview_info').first()).remove();
-            if (element.children('.user_preview_info').length == 0)
-            {
-                createUserPreview(element, user_id);
-            }
-            else
-            {
-                //console.log("Preview is already in place.");
-            }
-        }
-    }
-    function createUserPreview(element, user_id)
-    {
-        var bg = "<div id='user_preview_initial_loader' style='width:100%;height:100px;background-image:url(Images/ajax-loader.gif);background-position:center;background-repeat:no-repeat;'></div>";
-        var cont = $('<div style="display:none;" class="user_preview_info">' + bg + '</div>');
-        element.append(cont);
-        var createTimeout = setTimeout(function() {
-            if ($('*[user_id="' + user_id + '"]:hover').length > 0)
-            {
-                $.post('Scripts/user.class.php', {action: "get_preview_info", id: user_id}, function(response) {
-                    fillUserPreview(response);
-                });
-                cont.fadeIn();
-                alignUserPreview(element);
 
-                //console.log("User preview was successfully created!");
-            }
-            else
-            {
-                //$('.user_preview_info').remove();
-                //console.log("User preview was NOT created because the hover status disappeared.");
-            }
-        }, 500);
-    }
-    function alignUserPreview(element)
-    {
-        $(document).off('scroll');
-        $(document).on('scroll', function() {
-            alignUserPreview(element);
-        });
-        //console.log('align');
-        var left = element.offset().left;
-        var width = element.width();
-        var left_total = left + width + 20;
-        if (left_total > getViewPortWidth() / 2) {
-            left_total = left - 40 - $('.user_preview_info').width();
-            alignment = "left";
-        } else {
-            alignment = "right";
-        }
-        var arrow;
-        if (alignment == "left")
-        {
-            arrow = 'user_preview_arrow-right';
-        } else if (alignment == "top") {
-
-        } else if (alignment == "bottom") {
-        }
-        else
-        {
-            arrow = 'user_preview_arrow-left';
-        }
-
-        $('.user_preview_info').append('<div class="' + arrow + '-border"></div>');
-        $('.user_preview_info').append('<div class="' + arrow + '"></div>');
-
-        var top = element.offset().top;
-        var element_height = element.outerHeight(true);
-        var scrolled_height = $(document).scrollTop();
-        var top_total = top - scrolled_height - element_height / 2;
-        var arrow_height = $('.' + arrow + "-border").outerHeight(true) / 2 - 2;
-        //top_total = top_total + arrow_height;
-
-        $('.user_preview_info').css('left', left_total + "px");
-        $('.user_preview_info').css('top', top_total + "px");
-    }
-    function fillUserPreview(response)
-    {
-        response = $.parseJSON(response);
-        var user_string;
-        user_string = ("<table style='height:100%;width:100%;' cellspacing='0'><tr><td rowspan='3' style='width:80px;'><div style='width:70px;height:70px;background-image:url(" +
-                response[2] + ");background-size:cover;background-repeat:no-repeat;'></div></td>");
-        user_string += ("<td><a style='padding:0px;' href='user?id=" + response[0] +
-                "'><span class='user_preview_name'>" + response[1] + "</span></a></td></tr>");
-
-        user_string += "<tr><td><a style='padding:0px;display:inline;' href='community?id=" + response[6] +
-                "'><span class='user_preview_community'>" + response[4] + "</span></a><span class='user_preview_position'> &bull; " + response[5] + "</span></td></tr>";
-        user_string += "<tr><td><span class='user_preview_about'>" + response[3] + "</span></td></tr>";
-
-        user_string += "<tr><td></td><td><div class='user_preview_buttons'>" +
-                "<button class='pure-button-primary smallest'>Chat</button><button class='pure-button-success smallest'>Message</button></div></td></tr>";
-
-        user_string += "</table>";
-
-        $('.user_preview_info').find('*').not('.user_preview_arrow-right, .user_preview_arrow-right-border, .user_preview_arrow-left, .user_preview_arrow-left-border').remove();
-        $('.user_preview_info').append(user_string);
-    }
-
-    function removeUserPreview(mode, event)
-    {
-        if ($('.user_preview_info').length > 0)
-        {
-            if (mode == "check mouse")
-            {
-                if (calculateDistance($('.user_preview_info'), event.pageX, event.pageY) > 300)
-                {
-                    $('.user_preview_info').fadeOut('fast', function() {
-                        $(this).remove();
-                    });
-                    //console.log('Removed Preview in Mode: ' + mode + ", successfully");
-                }
-            }
-            else
-            {
-                $('.user_preview_info').remove();
-            }
-        }
-    }
-
-    function calculateDistance(elem, mouseX, mouseY)
-    {
-        return Math.floor(Math.sqrt(Math.pow(mouseX - (elem.offset().left + (elem.width() / 2)), 2) + Math.pow(mouseY - (elem.offset().top + (elem.height() / 2)), 2)));
-    }
     $(function() {
         var id;
         $(document).on('mouseenter', '.who_liked_hover', function() {
@@ -758,20 +303,6 @@ function delay(elem, time, callback) {
         $(document).on('mouseout', '.who_liked_hover', function() {
             id = $(this).attr("activity_id");
             $('#who_liked_' + id).fadeOut();
-        });
-
-
-        $(document).on('click', ".default_dropdown_selector", function(event)
-        {
-            event.stopPropagation();
-            $(this).toggleClass('default_dropdown_active');
-            var wrapper = '#' + $(this).attr('wrapper_id');
-            $(wrapper).toggle();
-        });
-        $(document).on('click', "html", function(event)
-        {
-            $('.default_dropdown_selector').removeClass('default_dropdown_active');
-            $('.default_dropdown_wrapper').hide();
         });
 
         $('body').delegate('div[data-placeholder]', 'keydown keypress input', function()
@@ -859,33 +390,13 @@ function delay(elem, time, callback) {
         var text = $('#status_text').val();
         if (text != "" || post_media_added_files.length != 0)
         {
-            dialog(
-                content=
-                {
-                    type:"html", 
-                    content:"Your post is being sent... Please wait."
-                },
-                buttons=
-                [{
-                    type:"success", 
-                    text:"OK",
-                    onclick: function(){alert('the_function');}
-                }],
-                properties=
-                {
-                    modal:false,
-                    loading:true,
-                    title:"Posting..."
-                }
-            );
+            modal($('body'), properties={type:"", text:"Posting content..."});
             $.post("Scripts/update_status.php", {status_text: text, group_id: share_group_id, post_media_added_files : post_media_added_files}, function(data)
             {
-                if (data == "200")
+                if (data == "")
                 {
-                    getHomeContent(share_group_id, function(data){
-                        $('.home_feed_container').prepend(data);
-                        removeDialog();
-                        refreshVideoJs();
+                    removeModal('', function() {
+                        getFeedContent(share_group_id, min_activity_id, 'home', function(){});
                     });
                     clearPostArea();
                 }
@@ -903,22 +414,7 @@ function delay(elem, time, callback) {
 
 
 // POPUP
-    
-    function modal(container, properties) {
-        var overlay = $('<div class="background_white_overlay">'
-                                +'<img class="rotate_loader" style="opacity:0.3;" src="' 
-                                + RELOAD_STILL_BLACK + '"></img><br /></div>');
-
-        properties.text = (typeof properties.text === "undefined") ? '' : properties.text;
-        var text = "<span>" + properties.text + "</span>";
-        overlay.append(text);
-        container.append(overlay).hide().fadeIn();
-    }
-
-    function removeModal() {
-        $('.background_white_overlay').fadeOut(function(){$(this).remove();});
-    }
-
+   
     function getDialog()
     {
         return $('.dialog_container');
@@ -1035,7 +531,7 @@ function delay(elem, time, callback) {
         $.post("Scripts/extends.class.php", {comment_text: comment_text, post_id: post_id, action: 'submitComment'}, function(data)
         {
             $('#comment_' + post_id).html("").blur();
-            $('div[actual_id="comment_' + post_id + '"]').blur().html('');
+            $('[actual_id="comment_' + post_id + '"]').blur().html('');
             refreshContent(post_id);
             callback();
         });
@@ -1043,16 +539,17 @@ function delay(elem, time, callback) {
 
     function refreshContent(id)
     {
-        var number_of_updates = 10;
-        var updates_done = 0;
-        refreshPure(id); //Refresh immediately after comment
-        var refresh_interval = setInterval(function() {
-            refreshPure(id)
-        }, 10000);
-        if (++updates_done >= number_of_updates)
-        {
-            window.clearInterval(refresh_interval);
-        }
+        //console.log('refeshing post');
+//        var number_of_updates = 10;
+//        var updates_done = 0;
+//        refreshPure(id); //Refresh immediately after comment
+//        var refresh_interval = setInterval(function() {
+//            refreshPure(id)
+//        }, 10000);
+//        if (++updates_done >= number_of_updates)
+//        {
+//            window.clearInterval(refresh_interval);
+//        }
     }
 
     function refreshPure(id)
@@ -1389,22 +886,26 @@ function delay(elem, time, callback) {
     {
         var background = $("<div hidden onclick='hideTheater();' class='background-overlay'></div>");
         var close_theater = $("<div onclick='hideTheater();' class='close-theater'></div>");
-        $('body').append(background);
         fileView(file_id);
         //console.log(src + " --- " + id +" --- "+ no_text);
         var checker = $('.theater-picture-container');
         if (checker.length != 0)
         {
             $('.theater-picture').remove();
-            //$(".background-overlay").remove();
+            $(".background-overlay").remove();
         }
         var theater_picture = $("<div id='theater-picture' class='theater-picture'></div>");
+         $('body').append(background);
         $('body').append(theater_picture);
         theater_picture.append(close_theater);
-        
+        $('<img/>').attr('src', src).load(function() {
+            $(this).remove();
+            $('#load_popup').remove();
+        });
         var theater_picture_container = $("<div id='theater-picture-container' " + 
                 "style='background-image: url(&apos;" + src + "&apos;);' class='theater-picture-container'></div>")
         theater_picture.append(theater_picture_container);
+        theater_picture_container.append("<table id='load_popup' style='height:100%;width:100%;'><tr style='vertical-align:middle;'><td style='text-align:center;'><img src='Images/ajax-loader.gif'></img></td></tr></table>");
         
         if (id != "no_text")
         {

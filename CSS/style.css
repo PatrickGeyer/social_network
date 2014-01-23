@@ -15,45 +15,6 @@
     -webkit-animation:spin 2s linear infinite;
     -moz-animation:spin 2s linear infinite;
     animation:spin 2s linear infinite;
-    opacity: 0.3;
-}
-input[type="submit"] {
-    background-color:white;
-    color:orange;
-    padding:10px;
-    font-size: 1.05em;
-    border-width: 1px;
-    border-style:solid;
-    border-color:lightgrey;
-    text-decoration:none;
-    cursor:pointer;
-    border-radius: 5px;
-}
-
-input[type="submit"]:hover {
-    background-color: #FAFAFA;
-}
-
-input[type="submit"].small_round, input[type="button"].small_round, button.small_round{
-    height: 35px;
-    font-size: 12px;
-    line-height: 10px;
-    border-radius: 5px;
-    border-width: 1px;
-    border-color: lightgrey;
-}
-
-input[type="submit"].small_style, input[type="button"].small_style, button.small_style{
-    height: 35px;
-    font-size: 12px;
-    line-height: 10px;
-    border-width: 1px;
-    border-color: grey;
-    color:grey;
-}
-input[type="submit"].small_style:hover, input[type="button"].small_style:hover, button.small_style:hover{
-
-    color:orange;
 }
 
 button {
@@ -81,10 +42,10 @@ input[type="button"] {
     border-radius: 5px;
 }
 
-input[type="text"] {
+input[type="text"], input[type="password"] {
     font-family: century gothic, Tahoma, Geneva, sans-serif;
     background-color:white;
-    font-size: 1.05em;
+    font-size: 13px;
     padding:7px;
     border-style:solid;
     border-color:lightgrey;
@@ -92,42 +53,21 @@ input[type="text"] {
     border-radius: 0px;
     text-decoration:none;
     border-radius: 5px;
+    transition: all 0.2s ease-in-out;
+    -webkit-transition: all 0.2s ease-in-out;
+    -moz-transition: all 0.2s ease-in-out;
+    -o-transition: all 0.2s ease-in-out;
 }
 
-input[type="text"]:focus {
-    color:black;
-    border-radius: 0px;
-}
-
-input[type="password"] {
-    font-family: century gothic, Tahoma, Geneva, sans-serif;
-    background-color:white;
-    font-size: 1.05em;
-    padding:7px;
-    border-width: 1px;
-    border-style:solid;
-    border-color:lightgrey;
-    text-decoration:none;
-    border-radius: 0px;
-    border-radius: 5px;
-}
-
-input[type="password"]:focus {
-    font-family: century gothic, Tahoma, Geneva, sans-serif;
-    background-color:white;
-    color:black;
-    padding:7px;
-    border-width: 1px;
-    border-style:solid;
-    border-color:lightgrey;
-    text-decoration:none;
-    border-radius: 0px;
-}
-
-input:focus, textarea:focus, div[contenteditable]:focus{
+input:focus, textarea:focus, div[contenteditable]:focus{  
     outline: none !important;
     border:1px solid rgb(66, 184, 221) !important;
     box-shadow: 0 0 5px #EDEDED !important;
+}
+.default_dropdown_selector:focus {
+    outline: none !important;
+    border:1px solid rgb(66, 184, 221) !important;
+    -webkit-box-shadow: inset 0 -10px 30px -10px lightgrey;
 }
 input[type="file"] {
     cursor:pointer;
@@ -138,7 +78,7 @@ input[type="file"] {
 
 .default_dropdown_selector{
     position: relative;
-    background-color:white;
+    background-color:transparent;
     background-image: url('../Images/down1.png');
     background-position: 95% 50%;
     background-repeat: no-repeat;
@@ -151,10 +91,19 @@ input[type="file"] {
     cursor: pointer;
     max-width: 200px;
     min-width: 100px;
+    
+        transition: all 0.2s ease-in-out;
+    -webkit-transition: all 0.2s ease-in-out;
+    -moz-transition: all 0.2s ease-in-out;
+    -o-transition: all 0.2s ease-in-out;
 }
 .default_dropdown_selector:hover{
     -webkit-box-shadow: inset 0 -10px 30px -10px lightgrey;
     border:1px solid lightgrey;
+}
+
+.default_dropdown_text{
+    padding-left: 5px;
 }
 
 .default_dropdown_wrapper{
@@ -167,6 +116,8 @@ input[type="file"] {
     left:-1px;
     z-index: 2164178;
     box-shadow: 0px 5px 10px lightgrey;
+    max-height: 200px;
+    overflow-y: scroll;
     display: none;
 }
 
@@ -413,6 +364,7 @@ input[type="file"] {
 .pure-button-neutral {
     font-family: 'lucida grande', tahoma, sans-serif;
     color: white;
+    cursor: pointer;
     border-radius: 0px;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
     border:1px solid grey;
@@ -459,6 +411,7 @@ input[type="file"] {
 
 .pure-button-secondary {
     background: rgb(66, 184, 221); /* this is a light blue */
+    border: 1px solid rgb(66, 184, 221);
 }
 .pure-button-primary{
     background-color: #0078e7;
@@ -611,7 +564,7 @@ span.message_delete_receiver:hover{
 
 div.headerbar{
     width: 100%;
-    background-color: #F8F8F8;
+    background-color: rgb(68, 184, 221);
     margin: none;
     height: 33px;
     position: fixed;
@@ -619,7 +572,7 @@ div.headerbar{
     z-index: 10;
     display: block;
     /*box-shadow: 0px 0px 5px 5px white;*/
-    border-bottom: 1px solid lightgrey;
+    /*border-bottom: 1px solid lightgrey;*/
 }
 
 div.navigation{
@@ -773,8 +726,8 @@ img.message{
     height:20px;
     width:20px; 
     cursor: pointer;
-    opacity:0.2;
-    filter:alpha(opacity=20); /* For IE8 and earlier */
+    opacity:1;
+    filter:alpha(opacity=1); /* For IE8 and earlier */
 }
 
 img.message:hover{
@@ -795,17 +748,31 @@ img.network{
     height:20px;
     width:20px; 
     cursor: pointer;
+    -webkit-transform: rotate(270deg);
+    -moz-transform: rotate(270deg);
+    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+    padding-top:3px;
 }
 #network{
     padding-top: 1px;
 }
-img.message_notification{
+.active_image {
+    border-radius: 50%;
+    box-shadow: 0px 0px 5px white;
+}
+span.message_notification{
     position: absolute;
-    top:-5px;
-    left: 10px;
+    top: 0px;
+    left: 15px;
     cursor: pointer;
-    width:20px;
-    height:20px;
+    background-color: red;
+    border: 1px solid white;
+    border-radius: 50%;
+    min-width: 10px;
+    color: white;
+    font-size: 9px;
+    text-align: center;
+    display: none;
 }
 
 td.navigation{
@@ -1016,6 +983,7 @@ div.geardiv{
 }
 div.popup_content{
     overflow: auto;
+    overflow-x: hidden;
     max-height: 335px;
 }
 
@@ -1092,19 +1060,24 @@ a.message:hover{
 }
 
 .notification_user_image{
-    /*border:1px solid lightgrey; */
     margin-right:10px;
     height: 50px;
     width: 50px;
-    background-size: cover;
+    display: inline-block;
 }
 .notification_name{
-    /*font-weight: bold;*/
+    font-weight: bold;
     font-size: 13px;
+    white-space: nowrap;
+    margin: 0px;
+    max-width: 90%;
 }
 .notification_info{
     color:grey;
     font-size: 12px;
+    white-space: nowrap;
+    margin: 0px;
+    max-width: 90%;
 }
 /*END WELCOME*/
 
@@ -1228,16 +1201,6 @@ div.container_headerbar{
     max-width: 800px;
     margin: 0px auto;
 }
-div.login_container{
-    position: absolute;
-    right: 0px;
-    left: 0px;
-    height: 55px;
-    text-align: middle;	
-    position: center; 
-    background-color: rgba(155,130,255,0.05);
-    border:1px solid lightgrey;
-}
 
 div.links{
     position: absolute;
@@ -1299,6 +1262,7 @@ table td tr{
     background-color:white;
     z-index:1000;
     text-align: center;
+    display:table-cell;
     vertical-align: middle;
 }
 
@@ -1392,7 +1356,6 @@ table td tr{
 /*FRIEND LIST*/
 div.friends_bar{
     width:31px;
-    background-color: black;
 }
 
 div#friends_container{
@@ -1453,10 +1416,6 @@ a.friend_list{
     background-size: contain;
     max-width: 90%;
     white-space: nowrap;
-}
-
-span:hover{
-    border:0px;
 }
 
 .thin_blue_header{
@@ -1736,7 +1695,15 @@ div.post_height_restrictor{
     font-size: 11px;
     color:grey;
     vertical-align: bottom;
+    margin-right: 5px;
 }
+.post_comment_vote {
+}
+
+.post_comment_liked_num{
+    margin-right: 5px; 
+}
+
 hr.post_user_name_underline{
     border:1px solid lightgrey;
     border-bottom: 0px;
@@ -1850,11 +1817,13 @@ table.singleupdate{
 }
 
 .post_feed_media_wrapper{
-    margin-top: 20px;
-    border: 1px dotted lightblue;
-    border-top: 1px solid lightgrey;
+    background-size: 0px 0px;
+    margin-top: 10px;
+    border: 0px dotted lightblue;
+    //border-top: 1px solid lightgrey;
     text-align: center;
-    display: block;
+    background-color: transparent;
+    display: inline-block;
 }
 
 .post_media_wrapper{
@@ -2077,6 +2046,7 @@ div.inputtext{
 }
 .post_feed_link{
     color:rgb(66, 184, 221);
+    display: inline-block;
 }
 .post_feed_link:hover{
     text-decoration: underline;
@@ -2444,8 +2414,8 @@ div.login{
 }
 
 div.loginbox{
-    top: 0px;
-    right: 50px;
+    top: 5px;
+    right: 10px;
     position: absolute;
 }
 
@@ -2458,40 +2428,25 @@ h1.loginheader{
     margin:0;
 }
 div.login_container{
-
-}
-div.CMM{
-    position: fixed;
-    bottom: 0;
-    left:250;
-}
-
-span.name{
-    position: fixed;
-    color: lightgrey;
-    font-size: 10em;
-    float: left;
-    font-weight: bold;
-    text-shadow: -1px 0 lightgrey, 0 1px lightgrey, 1px 0 lightgrey, 0 -1px lightgrey;
-}
-
-
-span.about{
     position: absolute;
-    color: black;
-    font-size: 1.2em;
-    left: 100px;
-    top: 135px;
-    margin-right: 550px;
-    max-width: 50%;
-    line-height: 40px;
+    right: 0px;
+    left: 0px;
+    height: 55px;
+    background-color: rgb(66, 184, 221);
+    border:1px solid lightgrey;
+    border-top: 0px !important;
 }
-
 
 div.signup{
     position: fixed;
-    right: 130px;
-    top: 100px;
+    padding-right: 75px;
+    padding-top: 100px;
+    right: 0px;
+    top: 56px;
+    padding-left: 35px;
+    bottom: 0px;
+    border-left: 1px solid lightgrey;
+    background-color: white;
 }
 
 div.signupbox{
@@ -2500,6 +2455,10 @@ div.signupbox{
 h1.signupheader{
     font-size: 2em;
     font-weight: lighter;
+    color: rgb(66, 184, 221);
+    text-align: left;
+    text-indent: 5px;
+    margin-bottom: 5px;
 }
 
 a.loginas{

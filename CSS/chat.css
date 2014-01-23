@@ -52,7 +52,7 @@ div.chatoutput{
     /*    -webkit-box-shadow: inset 0 20px 20px -20px lightgrey;
         -moz-box-shadow: inset 0 20px 20px -20px lightgrey;
         box-shadow: inset 0 20px 20px -20px lightgrey;*/
-    border-top: 1px solid lightgrey;
+    /*border-top: 1px solid lightgrey;*/
     border-right: 1px dotted lightgrey;
 }
 
@@ -83,7 +83,7 @@ div.chatheader{
     right: 0px;
     z-index: 123;
 }
-.chat_selector{
+.chat_feed_selector{
     border-left: 2px solid #cc181e;
     border-bottom: 0px;
     min-width: 0px;
@@ -133,6 +133,7 @@ table.chatbox {
 
 li.single_chat{
     border: 0px;
+    padding-right: 10px;
 }
 
 .chat_my_wrapper{
@@ -140,6 +141,9 @@ li.single_chat{
     background-color: white;
     box-shadow: -0px 0px 1px -1px lightgrey;
     padding-bottom: 5px;
+}
+.chat_wrapper:hover .chat_time, .chat_my_wrapper:hover .chat_time{
+    opacity: 1;
 }
 .chat_my_wrapper:after{
     /*content: "";
@@ -192,6 +196,7 @@ li.single_chat{
 span.chatname:hover{
     text-decoration: none;
 }
+
 .mychatname{
     margin-top:5px;
     vertical-align: top;
@@ -218,12 +223,14 @@ span.chatname:hover{
     font-size:12px;
     padding-left: 20px;
 }
-.chattime{
-    color: grey;
-}
-.mychattime{
-    color: grey;
-    padding-left:140;
+
+.chat_time{
+    opacity: 0;
+    -webkit-transition: all 0.5s;
+    -moz-transition: all 0.5s;
+    -ms-transition: all 0.5s;
+    -o-transition: all 0.5s;
+    transition: all 0.5s;
 }
 #school_tab, #year_tab, .group_tab{
     cursor: pointer;

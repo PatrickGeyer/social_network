@@ -119,7 +119,7 @@ include_once('chat.php');
                                 <table style='width:100%;' cellspacing='0' cellpadding='0'>
                                     <tr style='height:100%;'>
                                         <td>
-                                            <textarea tabindex='1' id="status_text" placeholder= "Update Status..." class="status_text scroll_thin"></textarea>
+                                            <textarea tabindex='1' id="status_text" placeholder= "Update Status or Share Files..." class="status_text scroll_thin"></textarea>
                                         </td>
                                     </tr>
                                     <tr>

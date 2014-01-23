@@ -172,7 +172,7 @@ class Home {
                 if(!isset($file['filepath'])) {
                     
                 }
-                echo $this->printFileItem($file, $activity);
+                echo $this->printFileItem($file, $activity, $assocFiles_num);
             }
             echo "</div>";
         }
@@ -252,12 +252,16 @@ class Home {
             echo "</div>";
         }
         echo "</div>";
-        echo "<span id='post_time_" . $activity['id'] . "' style='font-size:0.8em; color:grey; float:right;'> " . $this->system->humanTiming($activity_time) . " -</span>";
+        echo "<span id='post_time_" . $activity['id'] . "' style='font-size:0.8em; color:grey; float:right;'> "
+        . $this->system->humanTiming($activity_time) . " -</span>";
         if ($activity['user_id'] == $this->user->getId()) {
-            echo "<span class='delete' id='delete1_post_" . $activity['id'] . "' onclick='show_Confirm(" . $activity['id'] . ");'
-			style='font-family: century gothic; cursor:pointer;font-size:0.8em; color:grey; float:left;'>delete</span>";
-            echo "<span class='delete' id='delete_post_" . $activity['id'] . "' onclick='delete_post(" . $activity['id'] . ");'
-			style='font-family: century gothic; visibility:hidden; cursor:pointer;font-size:0.8em; color:red; float:left;'>Confirm</span>";
+            echo "<span class='delete' id='delete1_post_" . $activity['id'] . "' "
+            . "onclick='show_Confirm(" . $activity['id'] . ");' "
+            . "style='font-family: century gothic; cursor:pointer;font-size:0.8em; color:grey; float:left;'>delete</span>";
+            echo "<span class='delete' id='delete_post_" . $activity['id'] . "' "
+            . "onclick='delete_post(" . $activity['id'] . ");' "
+            . "style='font-family: century gothic; visibility:hidden; "
+            . "cursor:pointer;font-size:0.8em; color:red; float:left;'>Confirm</span>";
         }
         echo "</td></tr></table>";
         echo "</div>";
@@ -267,7 +271,8 @@ class Home {
     }
 
     function getComments($activity_id, $get_all = null) {
-        $db_query_comments = "SELECT time,commenter_id, comment_text FROM comments WHERE post_id = :activity_id ORDER BY time DESC";
+        $db_query_comments = "SELECT id,time,commenter_id, comment_text FROM comments"
+                . " WHERE post_id = :activity_id ORDER BY time DESC";
         $db_query_comments = $this->database_connection->prepare($db_query_comments);
         $db_query_comments->execute(array(":activity_id" => $activity_id));
         $numRows = $db_query_comments->rowCount();
@@ -276,8 +281,10 @@ class Home {
                 
             }
             else {
-                $db_query_comments = "SELECT time,commenter_id, comment_text FROM comments WHERE post_id = :activity_id AND commenter_id IN
-				(SELECT id FROM users WHERE position = " . $this->user->getPosition() . " AND community_id = " . $this->user->getCommunityId() . ")ORDER BY time ASC";
+                $db_query_comments = "SELECT id,time,commenter_id, comment_text FROM comments"
+                        . " WHERE post_id = :activity_id AND commenter_id IN "
+                        . "(SELECT id FROM users WHERE position = " . $this->user->getPosition() 
+                        . " AND community_id = " . $this->user->getCommunityId() . ")ORDER BY time ASC";
                 $db_query_comments = $this->database_connection->prepare($db_query_comments);
                 $db_query_comments->execute(array(":activity_id" => $activity_id));
                 $numRows = $db_query_comments->rowCount();
@@ -285,8 +292,11 @@ class Home {
                     
                 }
                 else {
-                    $db_query_comments = "SELECT time,commenter_id, comment_text FROM comments WHERE post_id = :activity_id AND commenter_id 
-					IN(SELECT id FROM users WHERE position = " . $this->user->getPosition() . " AND community_id = " . $this->user->getCommunityId() . ") ORDER BY time DESC LIMIT 5 ";
+                    $db_query_comments = "SELECT id,time,commenter_id, comment_text FROM comments "
+                            . "WHERE post_id = :activity_id AND commenter_id IN "
+                            . "(SELECT id FROM users WHERE position = " . $this->user->getPosition() . " "
+                            . "AND community_id = " . $this->user->getCommunityId() . ") "
+                            . "ORDER BY time DESC LIMIT 5 ";
                     $db_query_comments = $this->database_connection->prepare($db_query_comments);
                     $db_query_comments->execute(array(":activity_id" => $activity_id));
                 }
@@ -303,8 +313,15 @@ class Home {
             echo "<a class='userdatabase_connection' href='user?id=" . urlencode(base64_encode($comment['commenter_id'])) . "'>";
             echo "<span class='user_preview user_preview_name post_comment_user_name' user_id='" . $comment['commenter_id'] . "'>" . $this->user->getName($comment['commenter_id']) . " </span></a>";
             echo "";
-            echo "<span class='post_comment_text'>" . $comment['comment_text'] . "</span>
-			</td></tr><tr><td colspan=2 style='vertical-align:bottom;' ><span class='post_comment_time'>- " . $this->system->humanTiming($time) . "</span>";
+            echo "<span class='post_comment_text'>" . $comment['comment_text'] . "</span>"
+            . "</td></tr><tr><td colspan=2 style='vertical-align:bottom;' >"
+            . "<span class='post_comment_time'>- " . $this->system->humanTiming($time) . "</span>"
+            . "<span comment_id='" . $comment['id'] . "' class='post_comment_time post_comment_liked_num'>- "
+            . $this->comment_like_count($comment['id']) . " likes</span>"
+            . "<span has_liked='" . ($this->has_liked_comment($comment['id']) == TRUE ? "true" : "false") . "' "
+            . "comment_id='" . $comment['id'] . "' "
+            . "class='user_preview_name post_comment_time post_comment_vote'>"
+            . ($this->has_liked_comment($comment['id']) == FALSE ? System::LIKE_TEXT : System::UNLIKE_TEXT) . "</span>";
             echo "</tr></table></div><hr class='post_comment_seperator'>";
         }
     }
@@ -330,7 +347,26 @@ class Home {
         return $file_array;
     }
 
-    public function printFileItem($file, $activity) {
+    public function printFileItem($file, $activity, $num_files) {
+        $width = 100/$num_files;
+        $width = $width."%";
+        $width_class = '';
+        $image_styles = '';
+        switch ($num_files) {
+            case 1:
+                $width_class = 'post_media_full ';
+                $image_styles = 'max-height:400px;max-width:400px;height:auto;width:auto;';
+                break;
+            case 2:
+                $width_class = 'post_media_single ';
+                break;
+            case 3:
+                $width_class = 'post_media_single ';
+                break;
+            default:
+                $width_class = 'post_media_full ';
+                break;
+        }
         $post_classes = " class='post_feed_item ";
         $post_styles = " style='";
         $container = "<div";
@@ -343,6 +379,10 @@ class Home {
             $post_content .= $this->system->audioPlayer($file['thumb_filepath'], $file['name'], false, false);
         }
         else if ($file['type'] == "Image") {
+            $post_classes .= $width_class;
+            $post_styles .= "border:0px;";
+            $post_styles .= $image_styles;
+            $post_content .= "<img style='opacity:0;".$image_styles."' src='".$file['thumb_filepath']."'></img>";
             $post_styles .= "background-image:url(\"" . $file['thumb_filepath'] . "\")' onclick='initiateTheater(&quot;" . $file['filepath'] . "&quot;, " . $activity['id'] . ", \"text\", " . $file['id'] . ");";
         }
         else if ($file['type'] == "Video") {
@@ -463,16 +503,17 @@ class Home {
         }
         return $this->getLikeNumber($activity_id);
     }
-
+    
     private function notifyUserLike($activity_id, $receiver_id) {
-        $who_liked_query = "INSERT INTO notification (post_id, receiver_id, sender_id, type) VALUES(:activity_id, :receiver_id, :sender_id, :type);";
-        $who_liked_query = $this->database_connection->prepare($who_liked_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $who_liked_query->execute(
-                array(":activity_id" => $activity_id,
-                    ":receiver_id" => $receiver_id,
-                    ":sender_id" => $this->user->getId(),
-                    ":type" => "like",
-        ));
+        $this->user->notify("like", $receiver_id, $activity_id);
+//        $who_liked_query = "INSERT INTO notification (post_id, receiver_id, sender_id, type) VALUES(:activity_id, :receiver_id, :sender_id, :type);";
+//        $who_liked_query = $this->database_connection->prepare($who_liked_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+//        $who_liked_query->execute(
+//                array(":activity_id" => $activity_id,
+//                    ":receiver_id" => $receiver_id,
+//                    ":sender_id" => $this->user->getId(),
+//                    ":type" => "like",
+//        ));
     }
 
     private function getLikeNumber($post_id) {
@@ -482,15 +523,94 @@ class Home {
         $like_count = $who_liked_query->rowCount();
         echo $like_count;
     }
-
+    
+    function comment_like_count($comment_id) {
+        $sql = "SELECT id FROM comment_like WHERE comment_id = :comment_id AND visible=1;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":comment_id" => $comment_id
+        ));
+        $num = $sql->rowCount();
+        return $num;
+    }
+    
+    function has_liked_comment($comment_id) {
+        $sql = "SELECT id FROM comment_like WHERE user_id = :user_id AND comment_id = :comment_id AND visible=1;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":user_id" => $this->user->user_id,
+            ":comment_id" => $comment_id
+        ));
+        $num = $sql->rowCount();
+        if($num === 0) {
+            return FALSE;
+        }
+        else {
+            return TRUE;
+        }
+    }
+    
+    function has_voted_comment($comment_id) {
+        $sql = "SELECT id FROM comment_like WHERE user_id = :user_id AND comment_id = :comment_id";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":user_id" => $this->user->user_id,
+            ":comment_id" => $comment_id
+        ));
+        $num = $sql->rowCount();
+        if($num === 0) {
+            return FALSE;
+        }
+        else {
+            return TRUE;
+        }
+    }
+    
+    function comment_like($comment_id) {
+        if ($this->has_voted_comment($comment_id) == TRUE) {
+            $sql = "UPDATE notification SET visible=0 WHERE type='comment_like' AND post_id=:comment_id AND sender_id=:user_id;"
+                    . "UPDATE comment_like SET visible = 1 WHERE user_id= :user_id AND comment_id = :comment_id;";
+        }
+        else {
+            $sql = "INSERT INTO comment_like (user_id, comment_id) VALUES (:user_id, :comment_id)";
+            $user_sql = "SELECT commenter_id FROM comments WHERE id = :comment_id;";
+            $user_sql = $this->database_connection->prepare($user_sql);
+            $user_sql->execute(array(
+                ":comment_id" => $comment_id
+            ));
+            $user_id = $user_sql->fetchColumn();
+            $this->user->notify('comment_like', $user_id, $comment_id, 0, 0);
+        }
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":user_id" => $this->user->user_id,
+            ":comment_id" => $comment_id
+        ));
+    }
+    function remove_comment_like($comment_id) {
+        $sql = "UPDATE comment_like SET visible=0 WHERE user_id = :user_id AND comment_id = :comment_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":user_id" => $this->user->user_id,
+            ":comment_id" => $comment_id
+        ));
+        
+        $sql = "UPDATE notification SET visible=0 WHERE type='comment_like' AND post_id=:comment_id AND sender_id=:user_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":user_id" => $this->user->user_id,
+            ":comment_id" => $comment_id
+        ));
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
-    $home = new Home;
+    $home = Home::getInstance();
     if (isset($_POST['activity_id'])) {
         if (isset($_POST['get_all'])) {
             $home->getComments($_POST['activity_id'], $_POST['get_all']);
-        } else {
+        }
+        else {
             $home->getComments($_POST['activity_id']);
         }
     }
@@ -498,10 +618,18 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         if ($_POST['action'] == "deletePost") {
             $home->deletePost($_POST['post_id']);
         }
-        if($_POST['action'] == 'like')
-	{
+        if ($_POST['action'] == 'like') {
             $home->like($_POST['id'], $_POST['receiver_id']);
-	}
+        }
+        if ($_POST['action'] == 'comment_vote') {
+            if ($home->has_liked_comment($_POST['comment_id']) === true) {
+                echo $home->remove_comment_like($_POST['comment_id']);
+            }
+            else {   
+                echo $home->comment_like($_POST['comment_id']);
+            }
+            echo $home->comment_like_count($_POST['comment_id']);
+        }
     }
 }
 ?>

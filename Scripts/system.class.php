@@ -75,12 +75,57 @@ class System extends Base{
 
         return $string;
     }
-
+    function linkReplace($string, $classes = 'post_feed_link', $before = '', $after = '') {
+        if($classes == NULL) {
+            $classes = 'post_feed_link';
+        }
+        $string = preg_replace("/(?<!a href=\")(?<!src=\")((http|ftp)+(s)?:\/\/[^<>\s]+)/i", 
+            "<a href=\"\\0\" target=\"blank\" class=\"".$classes."\">".$before."\\0".$after."</a>", $string);
+//        $string = str_replace($string, ':::BEFORE:::', $before);
+//        $string = str_replace($string, ':::AFTER:::', $after);
+//        $string = str_replace($string, ':::CLASSES:::', $classes);
+        return $string;
+    }
     public function getGlobalMeta() {
         foreach ($this->meta_tag as $meta => $value) {
             echo "<meta name='" . $meta . "' content='" . $value . "' />";
         }
-        echo "<link rel='stylesheet' href='CSS/style.min.css' type='text/css'>";
+        echo "<link rel='stylesheet' href='CSS/style.css' type='text/css'>"; //change to minified version after development
+        echo "<link rel='shortcut icon' href='" . self::SHORTCUT_ICON . "'>";
+        echo "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>";
+    }
+
+    public function jsVars() {
+        echo "<script>var WORD_THUMB = '" . self::WORD_THUMB . "';
+            var PDF_THUMB = '" . self::PDF_THUMB . "';
+            var AUDIO_THUMB = '" . self::AUDIO_THUMB . "';
+            var AUDIO_PLAY_THUMB = '" . self::AUDIO_PLAY_THUMB . "';
+            var AUDIO_PAUSE_THUMB = '" . self::AUDIO_PAUSE_THUMB . "';
+            var VIDEO_THUMB = '" . self::VIDEO_THUMB . "';
+                
+            var LIKE_TEXT = '" . self::LIKE_TEXT . "';
+            var UNLIKE_TEXT = '" . self::UNLIKE_TEXT . "';
+            
+            var LOADING_ICON = '" . self::LOADING_ICON . "';
+                
+            var RELOAD_STILL_BLACK = '" . self::RELOAD_STILL_BLACK . "';
+            var ERROR_RED = '" . self::ERROR_RED . "';
+            var SCROLL_OPTIONS = {
+                scrollButtons:  
+                {
+                    enable:false
+                },
+                advanced:
+                {
+                     updateOnContentResize: true,
+                     updateOnBrowserResize:true,
+                },
+                scrollInertia:100,
+                theme:'dark',
+                autoHideScrollbar: true,
+                mouseWheelPixels: 100 
+            };
+            </script>";
     }
 
     public function audioPlayer($path = null, $name = null, $close_button = false, $rndm = null) {

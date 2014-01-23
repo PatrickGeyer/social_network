@@ -5,17 +5,41 @@ if (!isset($page_identifier)) {
     $page_identifier = "none_set";
 }
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-
+<!DOCTYPE HTML>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <script>
         $(document).click(function(e)
         {
             $("#names_universal").hide();
         });	// ***ADD*** if element is input do nothing!
-    </script>
-    <script>
+        getNotificationNumber();
+        function getNotificationNumber() {
+            $.post('Scripts/notifications.class.php', {action:"alert_num"}, function(response){
+                response = JSON.parse(response);
+                if(response.message != '0') {
+                    $('#message_num').text(response.message);
+                    $('#message_num').show();
+                }
+                else {
+                    $('#message_num').hide();
+                }
+                if(response.notification != '0') {
+                    $('#notification_num').text(response.notification);
+                    $('#notification_num').show();
+                }
+                else {
+                    $('#notification_num').hide();
+                }
+                if(response.network != '0') {
+                    $('#network_num').text(response.network);
+                    $('#network_num').show();
+                }
+                else {
+                    $('#network_num').hide();
+                }
+                setTimeout(getNotificationNumber, 10000);
+            });
+        }
         var invited_members = [];
         function addreceiver(new_receiver, new_receiver_name)
         {
@@ -57,14 +81,6 @@ if (!isset($page_identifier)) {
                     window.location.replace("group?id=" + status[1]);
                 }
             });
-        }
-    </script>
-
-    <script>
-        setInterval("update()", 10000);
-        function update()
-        {
-            $.post("Scripts/checkonline.php");
         }
     </script>
 
@@ -156,10 +172,7 @@ if (!isset($page_identifier)) {
         });
         function markAllSeen(type)
         {
-            $.post("Scripts/notifications.class.php", {action: "mark", type: type}, function(response)
-            {
-                //alert(response);
-            });
+            $.post("Scripts/notifications.class.php", {action: "mark", type: type}, function(response){});
         }
         function markNotificationRead(id, nextPage)
         {
@@ -168,11 +181,7 @@ if (!isset($page_identifier)) {
                 window.location.assign(nextPage);
             });
         }
-    </script>
 
-    <script>
-    </script>
-    <script>
         $(function()
         {
             if (document.title != "")
@@ -190,15 +199,14 @@ if (!isset($page_identifier)) {
     <div class="headerbar">
         <div id="refresh">
             <div class="container_headerbar">
+                <span style='cursor:pointer;margin-left:-200px;color:white;font-size:1.8em;' onclick='window.location.assign("home");'>Collaborator</span>
                 <div style="position:absolute;right:500px;top:0;">
                     <div class="message" id="message_click">
-                        <img id="message" class ="message" src='Images/Icons/Icon_Pacs/glyph-icons/glyph-icons/PNG/Mail.png'></img>
+                        <img id="message" class ="message" src='<?php echo System::INBOX_IMG; ?>'></img>
                         <div id="messagediv" class="popup_div">
                             <div class="popup_top">
                                 <span class='popup_header'>Messages</span>
-                                <a href="message">
-                                    <img class ="composemessage" src='Images/Icons/icons/mail--pencil.png'></img>
-                                </a>
+                                <a href="message" class='user_preview_name' style='top:2px;font-size:12px;position:absolute;right:10px;'>- Compose</a>
                             </div>
                             <div class="popup_content scroll_medium">
                                 <ul class="message"> 
@@ -206,8 +214,9 @@ if (!isset($page_identifier)) {
                                     $message_count = $notification->getMessageNum();
                                     $messages = $notification->getMessage();
                                     foreach ($messages as $message) {
+                                        $participants = $notification->getReceivers($message['thread'], 'list');
                                         $picture = $user->getProfilePicture('chat', $message['sender_id']);
-                                        $name = $user->getName($message['sender_id']);
+                                        //$names = $notification->styleReceiverList($participants, 'list');
                                         echo "<li class='";
                                         if ($message['read'] == 0) {
                                             echo "messageunread";
@@ -217,11 +226,12 @@ if (!isset($page_identifier)) {
                                         }
                                         echo "'><a class='message' href='message?thread=" . $message['thread'] . "&id=" . $message['id'] . "'>"
                                         . "<div style='display:table-row;'>"
-                                        . "<div class='notification_user_image' style='background-image:url(" . $picture . ");'>"
-                                        . "</div><p style='vertical-align:middle; display:table-cell;'>"
-                                        . "<span class='notification_name'>" . $name . "</span><br>"
-                                        . "<span class='notification_info'>" . $system->trimStr($message['message'], 20)
-                                        . "</span></p></div></a></li> ";
+                                        . "<div class='notification_user_image'>"
+                                        . $notification->getMessagePicture(NULL, $message['thread'])
+                                        . "</div><div style='display:table-cell;vertical-align:top;'>"
+                                        . "<p class='ellipsis_overflow notification_name'>" . $participants . "</p>"
+                                        . "<p class='ellipsis_overflow notification_info'>" . $message['message']
+                                        . "</p></div></div></a></li> ";
                                     }
                                     $total_message_count = count($messages);
                                     if ($total_message_count == 0) {
@@ -231,19 +241,10 @@ if (!isset($page_identifier)) {
                                 </ul>
                             </div>
                         </div>
-                        <?php
-                        if ($message_count > 0) {
-                            if ($message_count > 20) {
-                                echo'<img class ="message_notification" src="Images/Icons/icons/notification-counter-20-plus.png"></img>';
-                            }
-                            else {
-                                echo'<img class ="message_notification" src="Images/Icons/icons/notification-counter-' . $message_count . '.png"></img>';
-                            }
-                        }
-                        ?>
+                        <span id='message_num' class="message_notification"></span>
                     </div>
                     <div class="notification" id="notification_click">
-                        <img style='height:18px;' id="notification" class ="message" src='Images\Icons\Icon_Pacs\glyph-icons\glyph-icons\PNG\Network.png'></img><br>
+                        <img style='height:18px;' id="notification" class ="message" src='<?php echo System::NOTIFICATION_IMG; ?>'></img><br>
                         <div id="notificationdiv" class="popup_div">
                             <div class="popup_top">
                                 <span class='popup_header'>Notifications</span>
@@ -269,6 +270,11 @@ if (!isset($page_identifier)) {
                                             . "<img class='notification_user_image' src='" . $picture . "'></img>"
                                             . "<p style='vertical-align:top; display:table-cell;'><b>" . $name . "</b> liked on your post</p></div></li> ";
                                         }
+                                        else if($notify['type'] == 'comment_like') {
+                                            echo "'><div style='display:table-row;'>"
+                                            . "<img class='notification_user_image' src='" . $picture . "'></img>"
+                                            . "<p style='vertical-align:top; display:table-cell;'><b>" . $name . "</b> liked your comment</p></div></li> ";
+                                        }
                                     }
                                     $total_notify_count = count($notifications);
                                     if ($total_notify_count == 0) {
@@ -278,19 +284,10 @@ if (!isset($page_identifier)) {
                                 </ul>
                             </div>
                         </div>
-                        <?php
-                        if ($notify_count > 0) {
-                            if ($notify_count > 20) {
-                                echo'<img id="notification_counter" class ="message_notification" src="Images/Icons/icons/notification-counter-20-plus.png"></img>';
-                            }
-                            else {
-                                echo'<img id="notification_counter" class ="message_notification" src="Images/Icons/icons/notification-counter-' . $notify_count . '.png"</img>';
-                            }
-                        }
-                        ?>
+                        <span id='notification_num' class="message_notification"></span>
                     </div>
                     <div class="network" id="network_click">
-                        <img  style='padding-top:2px;width:16px;height:16px;' id="network" class ="message" src='Images\Icons\Icon_Pacs\typicons.2.0\png-24px/flow-merge.png'></img><br>
+                        <img id="network" class="message network" src='<?php echo System::NETWORK_IMG; ?>'></img><br>
                         <div id="networkdiv" class="popup_div">
                             <div class="popup_top">
                                 <span class='popup_header'>Network</span>
@@ -350,16 +347,7 @@ if (!isset($page_identifier)) {
                                 </ul>
                             </div>
                         </div>
-                        <?php
-                        if ($network_count > 0) {
-                            if ($network_count > 20) {
-                                echo'<img id="network_counter" class ="message_notification" src="Images/Icons/icons/notification-counter-20-plus.png">';
-                            }
-                            else {
-                                echo'<img id="network_counter" class ="message_notification" src="Images/Icons/icons/notification-counter-' . $network_count . '.png">';
-                            }
-                        }
-                        ?>
+                        <span id='network_num' class="message_notification"></span>
                     </div>
                 </div>
                 <div style="z-index:11;" class="search">

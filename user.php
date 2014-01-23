@@ -239,8 +239,8 @@ include_once('chat.php');
                 ?>
             </div>
         </div>
-
         <div id='invite_text' style='display:none;'></div>
+    </div>
 </body>
 <script>
     $('.user_feed_selector').click(function(event)
@@ -255,4 +255,4 @@ include_once('chat.php');
         $('.feed_container').load("user?id=" + encrypted_id + "&f=" + feed_id + " .feed_container", function(response) {
         });
     }
-// </script>
+</script>

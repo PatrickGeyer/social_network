@@ -14,20 +14,20 @@ if(empty($file)) {
 }
 else {
     $file['filepath'] = $_SERVER['DOCUMENT_ROOT']."/".$file['filepath'];
-//    $fp = fopen ($file['filepath'], "r");
-//    ob_start();
+    $fp = fopen ($file['filepath'], "r");
+    ob_start();
     header('Content-type: application/pdf');
     header('Content-Disposition: inline; filename="'.$file['name'].'"');
     header("Content-length: ".filesize($file['filepath']));
-//    ob_end_flush();
-//    while(!feof($fp)) {
-//        $file_buffer = fread($fp, 2048);
-//        echo $file_buffer;
-//    }
-// 
-//    fclose($fp);
-//    die();
-    @readfile($file['filepath']);
+    ob_end_flush();
+    while(!feof($fp)) {
+        $file_buffer = fread($fp, 2048);
+        echo $file_buffer;
+    }
+ 
+    fclose($fp);
+    die();
+    //@readfile($file['filepath']);
 }
 
 
