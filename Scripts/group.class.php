@@ -127,13 +127,14 @@ class Group {
         $group_query->execute(array(":user_id" => $this->user->user_id, ":new_group_id" => $new_group_id));
 
         $this->database_connection->commit();
-
-        foreach ($receivers as $member) {
-            var_dump($receivers);
-            $group_query = "INSERT INTO `group_invite` (inviter_id, receiver_id, group_id) VALUES (:user_id, :member_id, :new_group_id);";
-            $group_query = $this->database_connection->prepare($group_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-            if (!$group_query->execute(array(":user_id" => $this->user->user_id, ":member_id" => $member['receiver_id'], ":new_group_id" => $new_group_id))) {
-                die("error/" . $this->database_connection->errorInfo());
+        if(is_array($receivers)) {
+            foreach ($receivers as $member) {
+                var_dump($receivers);
+                $group_query = "INSERT INTO `group_invite` (inviter_id, receiver_id, group_id) VALUES (:user_id, :member_id, :new_group_id);";
+                $group_query = $this->database_connection->prepare($group_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+                if (!$group_query->execute(array(":user_id" => $this->user->user_id, ":member_id" => $member['receiver_id'], ":new_group_id" => $new_group_id))) {
+                    die("error/" . $this->database_connection->errorInfo());
+                }
             }
         }
         die("success/" . urlencode(base64_encode($new_group_id)));

@@ -82,7 +82,7 @@ if (isset($_POST['action']) && $_POST['action'] == 'delete') {
                 }
                 else
                 {
-                    console.log("Added to receiver list: " + new_receiver_name);
+                    //console.log("Added to receiver list: " + new_receiver_name);
                     receivers.push(new_receiver);
                     $('#names_input').val('');
                     var html = "<div class='message_added_receiver message_added_receiver_" +

@@ -59,12 +59,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user_id = $database_connection->lastInsertId();
         $database_connection->commit();
 
-//        $create_files_entry = "INSERT INTO files(user_id, filepath, folder_id) VALUES (:user_id, :filepath, :folder_id);";
+//        $create_files_entry = "INSERT INTO files(user_id, path, folder_id) VALUES (:user_id, :path, :folder_id);";
 //        $create_files_entry = $database_connection->prepare($create_files_entry, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-//        $create_files_entry->execute(array(":user_id" => $user['id'], ":filepath" => "Users/Files/" . $user['id'], ":folder_id" => 1));
-
-        $dir = '../User/Profilepictures/' . $user_id;
-        mkdir($dir, 0777);
+//        $create_files_entry->execute(array(":user_id" => $user['id'], ":path" => "Users/Files/" . $user['id'], ":folder_id" => 1));
 
         $dir = '../User/Files/' . $user_id;
         mkdir($dir, 0777);

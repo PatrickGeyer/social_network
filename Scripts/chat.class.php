@@ -24,9 +24,11 @@ class Chat {
     public function submitChat($aimed, $text) {
         
         $text = strip_tags($text);
-        $text = nl2br($text);
+        $text = trim($text);
         $text = $this->system->linkReplace($text, NULL, "[", "]");
-        if ($text == "") {
+        $text = preg_replace('/\n(\s*\n){2,}/', "<br>", $text);
+        //$text = preg_replace('/<br>(\s*\n){2,}/', "<br>", $text);
+        if ($text == "" || $text == "<br>") {
             
         } else if ($aimed == "s" || $aimed == "y") {
             $sql = "INSERT INTO chat(sender_id, `text`, community_id, sender_year, aimed, time) VALUES(:user_id, :text, :user_community, :user_year, :aimed, :time);";

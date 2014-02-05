@@ -53,7 +53,7 @@ div.chatoutput{
         -moz-box-shadow: inset 0 20px 20px -20px lightgrey;
         box-shadow: inset 0 20px 20px -20px lightgrey;*/
     /*border-top: 1px solid lightgrey;*/
-    border-right: 1px dotted lightgrey;
+    border-right: 1px solid lightgrey;
 }
 
 .text_input_container{
@@ -231,6 +231,9 @@ span.chatname:hover{
     -ms-transition: all 0.5s;
     -o-transition: all 0.5s;
     transition: all 0.5s;
+    display: block;
+    margin-top: 5px;
+    border-top: 1px solid #EDEDED;
 }
 #school_tab, #year_tab, .group_tab{
     cursor: pointer;

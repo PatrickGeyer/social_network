@@ -7,11 +7,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $status_text = $system->linkReplace($status_text);
     $post_media_added_files = (isset($_POST['post_media_added_files']) ? $_POST['post_media_added_files']: array());
     $status_text = nl2br($status_text);
+    
+    $type = 'Text';
+    if(count($post_media_added_files) == 1) {
+        $type = "File";
+    }
 
     $database_connection->beginTransaction();
     try {
         $school_query = "INSERT INTO activity (user_id, status_text, type) 
-		VALUES(:user_id, :status_text, 'text');";
+		VALUES(:user_id, :status_text, '$type');";
         $school_query = $database_connection->prepare($school_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $school_query->execute(array(":user_id" => $user->getId(), ":status_text" => $status_text));
     } catch (PDOException $e) {

@@ -107,19 +107,14 @@ include_once('chat.php');
         <table class='info_table_layout'>
             <tr>
                 <td rowspan='2' style='width:220px;'>
-                    <div class='profilepicturediv' style='background-image:url("<?php echo $user->getProfilePicture('thumb', $userid); ?>");' 
-                         onclick='initiateTheater("
-                         <?php
-                         echo $user->getProfilePicture('original', $userid);
-                         ?> ", "no_text", NULL);
-                                 adjustTheater("no_text");'>
+                    <div class='profilepicturediv' style='background-image:url("<?php echo $user->getProfilePicture('thumb', $userid); ?>");'>
                              <?php
                              if ($user->getId() == $userid) {
                                  echo "<div class='profile_picture_upload'>"
-                                 . "<table style='height:100%;'>"
+                                 . "<table style='height:100%;width:100%;'>"
                                  . "<tr style='vertical-align:middle;'>"
-                                 . "<td>"
-                                 . "<span class='profile_picture_upload' onclick='show_photo_upload();'>Upload</span>"
+                                 . "<td style='text-align:center;'>"
+                                 . "<button onclick='show_photo_choose();' class='profile_picture_upload pure-button-primary small'>Upload</button>"
                                  . "</td>"
                                  . "</tr>"
                                  . "</table>"

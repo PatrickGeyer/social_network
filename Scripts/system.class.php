@@ -103,6 +103,8 @@ class System extends Base{
             var AUDIO_PAUSE_THUMB = '" . self::AUDIO_PAUSE_THUMB . "';
             var VIDEO_THUMB = '" . self::VIDEO_THUMB . "';
                 
+            var COMMENT_LIKE_TEXT = '" . self::COMMENT_LIKE_TEXT . "';
+            var COMMENT_UNLIKE_TEXT = '" . self::COMMENT_UNLIKE_TEXT . "';
             var LIKE_TEXT = '" . self::LIKE_TEXT . "';
             var UNLIKE_TEXT = '" . self::UNLIKE_TEXT . "';
             
@@ -205,17 +207,17 @@ class System extends Base{
 //            "c:\program files\ffmpeg\bin\ffmpeg.exe" -i %1 -ss 00:10 -vframes 1 -r 1 -s 640x360 -f image2 %1.jpg
         }
         $return .="<video width='100%' height='100%' id='" . $video_id_prefix . $video_id . "' class='video-js vjs-default-skin " . $classes . "'"
-                . "preload='none' controls poster='" . $thumbnail . "'"
+                . "preload='auto' controls poster='" . $thumbnail . "'"
                 . "style='" . $styles . "' "
-                . ">"; //data-setup ={}
+                . ">"; // data-setup={}
         if ($source == TRUE) {
-            $return .="<source src='" . $webm_path . "' type='video/webm'>"
-                    . "<source src='". $mp4_path ."' type='video/mp4'> ";
-                    //. "<source src='" . $flv_path . "' type='video/x-flv'>"
-                    //. "<source src='" . $original_path . "' type='video/avi'>";
+            $return .= "<source src='". $mp4_path ."' type='video/mp4'></source>"
+                    . "<source src='" . $flv_path . "' type='video/x-flv'></source>"
+                    . "<source src='" . $webm_path . "' type='video/webm'></source>";
+                    //. "<source src='" . $original_path . "' type='video/avi'></source>";
         }
         $return .= "<object data='" . $mp4_path . "' width='320' height='240'>"
-                . "<embed src='" . $mp4_path . "' width='320' height='240'>"
+                . "<embed src='" . $flv_path . "' width='320' height='240'>"
                 . "</object>"
                 . "</video>";
         return $return;

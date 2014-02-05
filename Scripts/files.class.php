@@ -70,7 +70,41 @@ class Files {
         // $return_array = array_merge($return_array, $sql->fetchAll());
         return $return_array;
     }
+    
+    public function getActivity($file_id) {
+        $sql = "SELECT activity_id FROM activity_media WHERE file_id = :file_id AND activity_id IN"
+                . " (SELECT id FROM activity WHERE type = 'File'); ";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":file_id" => $file_id
+        ));
+        return $sql->fetchColumn();
 
+
+
+//      $file = $this->getInfo($file_id);  
+//        echo "<table style='width:100%;'><tr><td><div class='file_image'>";
+//        $video_id = NULL, $path = NULL, $classes = NULL, $styles = NULL, $video_id_prefix = "file_video_", $source = FALSE
+//        echo $this->system->videoPlayer($file['id'], $file['webm_path'], "file_video", NULL, "file_video_", TRUE);
+//        echo "</div></td><td><div class='comments'></div></td></tr>";
+//        echo "<tr><td colspan='2'></td></tr></table>";
+    }
+    
+    public function getInfo($file_id) {
+        $array = array(
+            "id" => $file_id,
+            "type" => $this->getType('', $file_id), 
+            "path" => $this->getPath($file_id, ''),
+            "webm_path" => $this->getPath($file_id, 'webm'),
+            "flv_path" => $this->getPath($file_id, 'flv'),
+            "mp4_path" => $this->getPath($file_id, 'mp4'),
+            "thumb_path" => $this->getPath($file_id, 'thumb'),
+            "icon_path" => $this->getPath($file_id, 'icon'),
+            "thumbnail" => $this->getAttr($file_id, 'thumbnail'),
+            );
+        return $array;
+    }
+    
     public function styleRecentlyShared($file) {
         $post_classes = " class='files_feed_item ";
         $post_styles = " style='";
@@ -80,22 +114,22 @@ class Files {
         if ($file['type'] == "Audio") {
             $post_classes .= "files_shared_audio";
             $post_styles .= " height:auto; ";
-            $post_content .= $this->system->audioPlayer($file['thumb_filepath'], $file['name'], false, false);
+            $post_content .= $this->system->audioPlayer($file['thumb_path'], $file['name'], false, false);
         }
         else if ($file['type'] == "Image") {
-            $post_styles .= "background-image:url(\"" . $file['thumb_filepath'] . "\")' "
-                    . "onclick='initiateTheater(&quot;" . $file['filepath'] . "&quot;, \"no_text\", \"no_text\", " . $file['id'] . ");";
+            $post_styles .= "background-image:url(\"" . $file['thumb_path'] . "\")' "
+                    . "onclick='initiateTheater(\"no_text\", " . $file['id'] . ");";
         }
         else if ($file['type'] == "Video") {
             $post_classes .= "files_shared_video";
             $post_content .= $this->system->videoPlayer(
-                    $file['id'], $file['filepath'], $classes, "height:100%;", "home_feed_video_", TRUE, "display:none;");
+                    $file['id'], $file['path'], $classes, "height:100%;", "home_feed_video_", TRUE, "display:none;");
         }
-        else if($file['type'] == "PDF Document") {
+        else if ($file['type'] == "PDF Document") {
             //$post_styles .= " display:none; ";
-            $post_content .= "<embed src='viewer?id=".$file['id']."' width='100%' height='100%'>";
+            //$post_content .= "<embed src='viewer?id=" . $file['id'] . "' width='100%' height='100%'>";    TOO MANY RESOURCES
         }
-        else if($file['type'] == "Webpage") {
+        else if ($file['type'] == "Webpage") {
             $post_classes .= "post_media_full";
             $post_styles .= "height:auto;";
             $post_content .= "<table style='height:100%;'><tr><td rowspan='3'><div class='post_media_webpage_favicon' style='background-image:url(&quot;" . $file['web_favicon'] . "&quot;);'></div></td>"
@@ -107,7 +141,7 @@ class Files {
     }
 
     public function convert($from, $to, $args = NULL, $before_args = NULL) {
-        $report = ""; //" -report ";
+        $report = "-report"; //" -report ";
         $progress = $to . '.txt';
 
         chdir('C:/inetpub/wwwroot/Global_Tools/ffmpeg/bin/');
@@ -160,67 +194,77 @@ class Files {
         }
     }
 
-    function getType($extn) {
-        $extn = $this->system->findexts($extn);
-        switch ($extn) {
+    function getType($extn, $file_id = NULL) {
+        if ($file_id === NULL) {
+            $extn = $this->system->findexts($extn);
+            switch ($extn) {
 
-            case "png" :
-            case "jpg" :
-            case "jpeg" :
-            case "svg" :
-            case "gif" :
-            case "ico" :
-                $extn = "Image";
-                break;
+                case "png" :
+                case "jpg" :
+                case "jpeg" :
+                case "svg" :
+                case "gif" :
+                case "ico" :
+                    $extn = "Image";
+                    break;
 
-            case "mp4" :
-            case "mov" :
-            case "wmv" :
-            case "avi" :
-            case "mpg" :
-            case "mpeg" :
-            case "m4p" :
-            case "mkv" :
-                $extn = "Video";
-                break;
+                case "mp4" :
+                case "mov" :
+                case "wmv" :
+                case "avi" :
+                case "mpg" :
+                case "mpeg" :
+                case "m4p" :
+                case "mkv" :
+                    $extn = "Video";
+                    break;
 
-            case "mp3" :
-            case "wav" :
-            case "m4a" :
-                $extn = "Audio";
-                break;
+                case "mp3" :
+                case "wav" :
+                case "m4a" :
+                    $extn = "Audio";
+                    break;
 
-            case "txt" :
-                $extn = "Text File";
-                break;
-            case "pdf" :
-                $extn = "PDF Document";
-                break;
-            case "docx" :
-            case "doc" :
-                $extn = "WORD Document";
-                break;
-            case "xls" :
-            case "xlsx" :
-            case "xlsm" :
-            case "xlsb" :
-                $extn = "EXCEL Document";
-            case "zip" :
-                $extn = "ZIP Archive";
-                break;
-            case "bak" :
-                $extn = "Backup File";
-                break;
+                case "txt" :
+                    $extn = "Text File";
+                    break;
+                case "pdf" :
+                    $extn = "PDF Document";
+                    break;
+                case "docx" :
+                case "doc" :
+                    $extn = "WORD Document";
+                    break;
+                case "xls" :
+                case "xlsx" :
+                case "xlsm" :
+                case "xlsb" :
+                    $extn = "EXCEL Document";
+                case "zip" :
+                    $extn = "ZIP Archive";
+                    break;
+                case "bak" :
+                    $extn = "Backup File";
+                    break;
 
-            case "" :
-                $extn = "Folder";
-                break;
+                case "" :
+                    $extn = "Folder";
+                    break;
 
-            default :
-                $extn = strtoupper($extn) . " File";
-                break;
+                default :
+                    $extn = strtoupper($extn) . " File";
+                    break;
+            }
+            return $extn;
         }
-        return $extn;
+        else {
+            $sql = "SELECT type FROM files WHERE id = :file_id;";
+            $sql = $this->database_connection->prepare($sql);
+            $sql->execute(array(
+                ":file_id" => $file_id
+            ));
+            return $sql->fetchColumn();
+        }
     }
 
     function getContents($parent_folder = 1, $user_id = null) {
@@ -236,10 +280,10 @@ class Files {
     function tableSort($file, $actions = true, $directions = false, $viewed_id = null) {
 
         if ($file['type'] != "Folder") {
-            echo "<div id='file_div_" . $file['id'] . "' path='" . $file['name'] . "' class='files'>";
+            echo "<div file_id='" . $file['id'] . "' id='file_div_" . $file['id'] . "' path='" . $file['name'] . "' class='files'>";
         }
         else {
-            echo $this->folderDiv($file['id'], $file['folder_id'], $file['filepath']);
+            echo $this->folderDiv($file['id'], $file['folder_id'], $file['path']);
         }
         echo $this->filePreview($file, 'icon');
         echo $this->filePreview($file, 'thumb');
@@ -258,7 +302,7 @@ class Files {
         echo "<div class='files_actions'><table><tr style='vertical-align:middle;'><td>";
 
         if ($file['type'] != "Folder") {
-            echo "<a href='" . $file['filepath'] . "' download><div class='files_actions_item files_actions_download'></div></a></td><td>";
+            echo "<a href='" . $file['path'] . "' download><div class='files_actions_item files_actions_download'></div></a></td><td>";
             echo "<hr class='files_actions_seperator'></td><td>";
         }
 
@@ -283,7 +327,7 @@ class Files {
         echo "</div>";
     }
 
-    private function getViewCount($file) {
+    public function getViewCount($file) {
         $sql = "SELECT COUNT(id) FROM file_view WHERE file_id = :file_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
@@ -335,9 +379,36 @@ class Files {
         echo "<p class='files ellipsis_overflow'>" . $this->user->getName($viewed_id) . " &#65515; &#10162; <em>" . $this->system->stripexts($file['name']) . "</em></p><br>";
     }
 
+    public function getName($file_id) {
+        $sql = "SELECT name FROM files WHERE id = :file_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":file_id" => $file_id
+        ));
+        return $sql->fetchColumn();
+    }
+
+    public function getDescription($file_id) {
+        $sql = "SELECT description FROM files WHERE id = :file_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":file_id" => $file_id
+        ));
+        return $sql->fetchColumn();
+    }
+
+    public function getParentFolder($file_id) {
+        $sql = "SELECT parent_folder_id FROM files WHERE id = :file_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":file_id" => $file_id
+        ));
+        return $sql->fetchColumn();
+    }
+
     public function filePreview($file, $size = 'icon') {
 //        if ($file['type'] == NULL) {
-//            $file['type'] == $this->getType($info['filepath']);
+//            $file['type'] == $this->getType($info['path']);
 //        }
         if ($size == 'icon') {
             return $this->tinyPreview($file);
@@ -347,12 +418,12 @@ class Files {
         }
     }
 
-    private function tinyPreview($file) {
+    public function tinyPreview($file) {
         if ($file['type'] == "Audio") {
             return $this->tinyPreviewHelper(System::AUDIO_THUMB);
         }
         else if ($file['type'] == "Image") {
-            return $this->tinyPreviewHelper($file['thumb_filepath'], "files_icon_preview_image");
+            return $this->tinyPreviewHelper($file['thumb_path'], "files_icon_preview_image");
         }
         else if ($file['type'] == "Video") {
             return $this->tinyPreviewHelper(System::VIDEO_THUMB);
@@ -369,10 +440,37 @@ class Files {
         else if ($file['type'] == "EXCEL Document") {
             return $this->tinyPreviewHelper(System::EXCEL_THUMB);
         }
+        else if($file['type'] == "ZIP Archive") {
+            return $this->tinyPreviewHelper(System::ZIP_THUMB);
+        }
+        else {
+            return $this->tinyPreviewHelper(System::FILE_THUMB);
+        }
+    }
+
+    public function getPath($file_id, $size = 'thumb') {
+        if ($size != "") {
+            $size .= "_";
+        }
+        $sql = "SELECT " . $size . "path FROM files WHERE id = :file_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":file_id" => $file_id
+        ));
+        return $sql->fetchColumn();
+    }
+
+    public function getAttr($file_id, $attr) {
+        $sql = "SELECT " . $attr . " FROM files WHERE id = :file_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":file_id" => $file_id
+        ));
+        return $sql->fetchColumn();
     }
 
     private function tinyPreviewHelper($path, $div_classes = NULL) {
-        return "<div class='files_icon_preview ".$div_classes."' style='background-image:url(\"" . $path . "\");'></div>";
+        return "<div class='files_icon_preview " . $div_classes . "' style='background-image:url(\"" . $path . "\");'></div>";
     }
 
     private function thumbPreview($file) {
@@ -397,23 +495,23 @@ class Files {
         return "<div class='audio_hidden_container' id='file_div_hidden_container_" . $file['id'] . "'>"
                 . "<div id='buffer_" . $file['id'] . "' style='position:absolute;height:20px;width:20px;"
                 . "background-image:url(\"Images/ajax-loader.gif\");background-size:cover;'></div>"
-                . "<div style='background-image:url(&quot;" . $file['thumb_filepath'] . "&quot;);"
+                . "<div style='background-image:url(&quot;" . $file['thumb_path'] . "&quot;);"
                 . "background-size:contain;background-repeat:no-repeat;background-position:center;width:100%;height:100%;max-height:400px;'>"
                 . "<img class='image_placeholder' f_id='" . $file['id'] . "'"
-                . "style=' visibility:hidden; width:100%;height:100%;max-width:300px;max-height:280px;' src='" . $file['thumb_filepath']
+                . "style=' visibility:hidden; width:100%;height:100%;max-width:300px;max-height:280px;' src='" . $file['thumb_path']
                 . "'onload='$(\"#buffer_" . $file['id'] . "\").fadeOut();resizeDiv($(this));'></img>"
                 . "</div></div>";
     }
 
     private function audioPreview($file) {
         return "<div class='audio_hidden_container' id='file_div_hidden_container_" . $file['id'] . "'>"
-                . $this->system->audioPlayer($file['filepath'], $this->system->stripexts($file['name']), false, $file['id'])
+                . $this->system->audioPlayer($file['path'], $this->system->stripexts($file['name']), false, $file['id'])
                 . "</div>";
     }
 
     private function videoPreview($file) {
         return "<div style='height:200px;' class='audio_hidden_container' id='file_div_hidden_container_" . $file['id'] . "'>"
-                . $this->system->videoPlayer($file['id'], $file['filepath'], "file_video", NULL, "file_video_", TRUE)
+                . $this->system->videoPlayer($file['id'], $file['path'], "file_video", NULL, "file_video_", TRUE)
                 . "</div>";
     }
 
@@ -432,7 +530,7 @@ class Files {
 
     private function pdfPreview($file) {
         $return = "<div style='max-height:300px;' class='audio_hidden_container' id='file_div_hidden_container_" . $file['id'] . "'>";
-        $return .= "<embed src='viewer?id=".$file['id']."' height='100%' width='100%' >";
+        //$return .= "<embed src='viewer?id=" . $file['id'] . "' height='100%' width='100%' >"; TOO MANY RESOURCES
         $return .= "</div>";
 
         return $return;
@@ -475,7 +573,7 @@ class Files {
     }
 
     function delete($id) {
-        $sql = "SELECT filepath, thumb_filepath, icon_filepath,flv_path,mp4_path,webm_path,ogg_path, thumbnail, type FROM `files` WHERE user_id = :user_id AND id = :id";
+        $sql = "SELECT path, thumb_path, icon_path,flv_path,mp4_path,webm_path,ogg_path, thumbnail, type FROM `files` WHERE user_id = :user_id AND id = :id";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $this->user->user_id, ":id" => $id));
         $filepath = $sql->fetch();
@@ -540,9 +638,9 @@ class Files {
             ":file_id" => $file_id,
             ":user_id" => $this->user->user_id
         ));
-        return "200";
+        return "";
     }
-    
+
     function rename($file_id, $name) {
         $sql = "UPDATE files SET name = :name WHERE id = :file_id;";
         $sql = $this->database_connection->prepare($sql);
@@ -552,9 +650,199 @@ class Files {
         ));
         return "200";
     }
+    function getUsedSize() {
+        $sql = "SELECT size FROM files WHERE user_id = :user_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":user_id" => $this->user->user_id
+            ));
+        $used_size = 0;
+        foreach($sql->fetchAll(PDO::FETCH_ASSOC) as $size) {
+            $used_size += $size['size'];
+        }
+        return $used_size;
+    }
+    function upload($post, $file) {
+        require_once ('thumbnail.php');
+
+        $tmpFilePath = $file['file']['tmp_name'];
+        $savename = preg_replace("/[^A-Za-z0-9.]/", '_', $file['file']['name']);
+        $savename = str_replace('/', '_', $savename);
+        $savename = str_replace(' ', '_', $savename);
+        $savepath = 'User/Files/' . $this->user->user_id . "/";
+        $base_path = 'C:/inetpub/wwwroot/social_network/';
+        $dir = $base_path.$savepath;
+        $parent_folder = $post['parent_folder'];
+        if (!file_exists($dir)) {
+            mkdir($dir, 0777, true);
+        }
+
+        if ($file['file']['error'] > 0) {
+            switch ($file['file']['error']) {
+                case 1:
+                    echo "File too large!";
+                    break;
+
+                case 2:
+                    echo "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.";
+                    break;
+
+                case 3:
+                    echo "The uploaded file was only partially uploaded.";
+                    break;
+
+                case 4:
+                    //echo "No file was uploaded.";
+                    break;
+
+                case 6:
+                    echo "Missing a temporary folder. Introduced in PHP 4.3.10 and PHP 5.0.3.";
+                    break;
+
+                case 7:
+                    echo "Failed to write file to disk. Introduced in PHP 5.1.0.";
+                    break;
+
+                case 8:
+                    echo "A PHP extension stopped the file upload. PHP does not provide a way to ascertain which extension caused the file upload to stop; examining the list of loaded extensions with phpinfo() may help. Introduced in PHP 5.2.0.";
+                    break;
+
+                default:
+                    echo "Unknown Image Error." . $file['file']['error'][$count];
+                    break;
+            }
+        }
+        else {
+            if ($file['file']['name'] != "" || ".") {
+                $return_info = array();
+                $lastInsertId;
+                $name = preg_replace("/[^A-Za-z0-9 ]/", '', $file['file']['name']);
+                $pure_name = str_replace(' ', '', $name);
+                $ext = $this->system->findexts($file['file']['name']);
+                $file_name = $pure_name . "." . $ext;
+                $thumbnail = $savepath . $pure_name . ".jpg";
+
+                $flv_path = $mp4_path = $ogg_path = $swf_path = $webm_path = $mp3_path = $thumbsavepath = $iconsavepath = '';
+                
+                if (move_uploaded_file($tmpFilePath, "../" . $savepath . $file_name)) {
+                    $size = filesize("../" . $savepath . $file_name);
+                    $type = $this->getType($file['file']['name']);
+                    if ($type == "Audio") {
+                        $convert_path = $base_path . $savepath . $file_name;
+                        $iconsavepath = $mp3_path = $thumbsavepath = $savepath . $pure_name . ".mp3";
+                        if ($ext != "mp3") {
+                            $convert = $this->convert($convert_path, $base_path . $mp3_path);
+                            if ($convert != $base_path . $mp3_path) {
+                                echo ("Error: " . $convert);
+                            }
+                        }
+                    }
+                    else if ($type == "Video") {
+                        $convert_path = $base_path . $savepath . $file_name;
+                        $mp4_path = $savepath . $pure_name . ".mp4";
+                        $ogg_path = $savepath . $pure_name . ".ogg";
+                        $flv_path = $savepath . $pure_name . ".flv";
+                        $webm_path = $savepath . $pure_name . ".webm";
+                        $flv_path = $savepath . $pure_name . ".flv";
+                        if ($ext != "mp4") {
+//                            array_push($return_info, array(
+//                                "from" => $convert_path,
+//                                "to" => $base_path . $mp4_path,
+//                                "args" => " -vcodec copy -acodec copy ",
+//                                "before_args" => ""));
+                        }
+
+                        $convert = $this->convert($convert_path, $base_path . $webm_path, "-b 1500k -vcodec libvpx -acodec libvorbis -aq 3 -ab 128000 -f webm -g 30 -s 640x360", "");
+                        if ($convert != $base_path . $webm_path) {
+                            echo("Error: " . $convert);
+                        }
+                        $convert = $convert = $this->convert($convert_path, $base_path . $ogg_path, "");
+                        if ($convert != $base_path . $ogg_path) {
+                            echo("Error: " . $convert);
+                        }
+                        $convert = $convert = $this->convert($convert_path, $base_path . $mp4_path, "");
+                        if ($convert != $base_path . $mp4_path) {
+                            echo("Error: " . $convert);
+                        }
+                        $convert = $this->convert($convert_path, $base_path . $flv_path, "");
+                        if ($convert != $base_path . $flv_path) {
+                            echo("Error: " . $convert);
+                        }
+                        $convert = $this->convert($convert_path, $base_path . $thumbnail, "");
+                        if ($convert != $base_path . $thumbnail) {
+                            echo("Error: " . $convert);
+                        }
+                        
+                    }
+                    else {
+                        $thumbsavepath = $savepath . "thumb_" . $file_name;
+                        $iconsavepath = $savepath . "icon_" . $file_name;
+                    }
+
+                    if (strcmp($type, 'Image') === 0) {
+                        $resizeObj = new resize('../' . $savepath . $file_name);
+                        $resizeObj->resizeImage(300, 300, 'crop');
+                        $resizeObj->saveImage("../" . $thumbsavepath);
+                        $resizeObj->resizeImage(50, 50, 'crop');
+                        $resizeObj->saveImage("../" . $iconsavepath);
+                    }
+                    $this->database_connection->beginTransaction();
+                    $sql = "INSERT INTO `files` (user_id, size, path, thumb_path, icon_path, thumbnail, flv_path, mp4_path, ogg_path, webm_path, name, type, parent_folder_id) "
+                            . "VALUES (:user_id, :size, :file_path, :thumbsavepath, :iconsavepath, :thumbnail, :flv_path, :mp4_path, :ogg_path, :webm_path, :name, :type, :parent_folder);";
+                    $sql = $this->database_connection->prepare($sql);
+                    $sql->execute(array(
+                        ":user_id" => $this->user->user_id,
+                        ":size" => $size,
+                        ":file_path" => $savepath . $file_name,
+                        ":thumbsavepath" => $thumbsavepath,
+                        ":iconsavepath" => $iconsavepath,
+                        ":thumbnail" => $thumbnail,
+                        ":name" => $file['file']['name'],
+                        ":type" => $type,
+                        ":parent_folder" => $parent_folder,
+                        ":flv_path" => $flv_path,
+                        ":mp4_path" => $mp4_path,
+                        ":ogg_path" => $ogg_path,
+                        ":webm_path" => $webm_path,
+                    ));
+                    $lastInsertId = $this->database_connection->lastInsertId();
+                    $this->database_connection->commit();
+                    
+                    $this->database_connection->beginTransaction();
+                    $sql = "INSERT INTO `activity` (user_id, type, visible) "
+                            . "VALUES (:user_id, :type, 0);";
+                    $sql = $this->database_connection->prepare($sql);
+                    $sql->execute(array(
+                        ":user_id" => $this->user->user_id,
+                        ":type" => 'File',
+                    ));
+                    $lastActivityInsertId = $this->database_connection->lastInsertId();
+                    $this->database_connection->commit();
+                    
+                    $this->database_connection->beginTransaction();
+                    $sql = "INSERT INTO `activity_media` (activity_id, file_id) "
+                            . "VALUES (:activity_id, :file_id);";
+                    $sql = $this->database_connection->prepare($sql);
+                    $sql->execute(array(
+                        ":activity_id" => $lastActivityInsertId,
+                        ":file_id" => $lastInsertId,
+                    ));
+                    $lastActivityInsertId = $this->database_connection->lastInsertId();
+                    $this->database_connection->commit();
+                    die(json_encode($this->getInfo($lastInsertId)));
+                }
+                else {
+                    echo "Upload Failed!";
+                }
+            }
+        }
+    }
+
 }
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
+    include_once 'home.class.php';
+    $home = Home::getInstance();
     $files = Files::getInstance();
     if (isset($_POST['dir'])) {
         $pdir = $_POST['dir'] . "/";
@@ -573,24 +861,39 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         else if ($_POST['action'] == "createFolder") {
             $files->createFolder($_POST['parent_folder'], $_POST['folder_name']);
         }
-        if ($_POST['action'] == "convert") {
+        else if ($_POST['action'] == "convert") {
             foreach ($_POST['file_info'] as $file) {
                 $files->convert($file['from'], $file['to'], $file['args'], $file['before_args']);
             }
         }
-        if ($_POST['action'] == "get_conversion_progress") {
+        else if ($_POST['action'] == "get_conversion_progress") {
             foreach ($_POST['file_info'] as $file) {
                 $files->getConversionProgress($file['to']);
             }
         }
-        if ($_POST['action'] == "share") {
+        else if ($_POST['action'] == "share") {
             die($files->shareFile($_POST['file_id'], $_POST['receivers']));
         }
-        if ($_POST['action'] == "view") {
+        else if ($_POST['action'] == "view") {
             die($files->fileView($_POST['file_id']));
         }
-        if ($_POST['action'] == "rename") {
+        else if ($_POST['action'] == "rename") {
             die($files->rename($_POST['file_id'], $_POST['new_name']));
+        }
+        else if($_POST['action'] == "upload") {
+            ignore_user_abort(true);
+            $files->upload($_POST, $_FILES);
+        }
+        else if($_POST['action'] == "preview") {
+            $activity_id = NULL;
+            if(isset($_POST['activity_id'])) {
+                $activity_id = $_POST['activity_id'];
+            }
+            $array = array(
+                "file" => $files->getInfo($_POST['file_id']),
+                "post" => $home->homeify($home->getSingleActivity($files->getActivity($_POST['file_id'], "File")), 'preview', $activity_id),
+            );
+            die(json_encode($array));
         }
     }
 }

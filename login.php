@@ -21,6 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 include_once("Scripts/config.php");
+require_once("../Global_Tools/facebook-php-sdk-master/facebook.php");
 //include_once("Scripts/demo.php");
 include_once("Scripts/system.class.php");
 //include_once("Scripts/js.php");
@@ -32,6 +33,15 @@ $system->getGlobalMeta();
 if (isset($_COOKIE['id'])) {
     header("location: home");
 }
+  $config = array(
+      'appId' => '219388501582266',
+      'secret' => 'c1684eed82295d4f1683367dd8c9a849',
+      'fileUpload' => false, // optional
+      'allowSignedRequest' => false, // optional, but should be set to false for non-canvas apps
+  );
+
+  $facebook = new Facebook($config);
+
 ?>
 
 <html>
@@ -57,9 +67,8 @@ if (isset($_COOKIE['id'])) {
             }
             body{
                 background: -webkit-linear-gradient(left, white 30%, #D3D8E8);
-/*                background: url('Images/bg.png');
-                background-size: contain;
-                background-repeat: no-repeat;*/
+                background: -moz-linear-gradient(left, white 30%, #D3D8E8);
+                background: linear-gradient(left, white 30%, #D3D8E8);
             }
             .login_button{
                 height:31px;

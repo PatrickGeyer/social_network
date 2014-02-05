@@ -87,88 +87,93 @@ if (!isset($page_identifier)) {
     <script>
         $(function()
         {
-            $(document).on('click', "#current_page", function(event)
+            $(document).on('click', "img.message", function(event)
             {
-                event.stopPropagation();
-                $(".general").slideDown("fast");
-                $(".personal").slideUp("fast");
-                $("#messagediv").slideUp("fast");
-                $("#notificationdiv").slideUp("fast");
-                $("#networkdiv").slideUp("fast");
-                $("#geardiv").slideUp("fast");
+                $('img.message').removeClass('message_active');
+                $(this).addClass('message_active');
             });
             $(document).on('click', "#home_icon", function(event)
             {
                 event.stopPropagation();
                 window.location.replace("home");
-                $("#notificationdiv").slideUp("fast");
-                $("#networkdiv").slideUp("fast");
-                $("#geardiv").slideUp("fast");
+                $("#notificationdiv").hide();
+                $("#networkdiv").hide();
+                $("#geardiv").hide();
             });
             $(document).on('click', "#personal", function(event)
             {
                 event.stopPropagation();
-                $(".personal").slideDown("fast");
-                $(".general").slideUp("fast");
-                $("#messagediv").slideUp("fast");
-                $("#notificationdiv").slideUp("fast");
-                $("#networkdiv").slideUp("fast");
-                $("#geardiv").slideUp("fast");
+                $(".personal").show();
+                $(".general").hide();
+                $("#messagediv").hide();
+                $("#notificationdiv").hide();
+                $("#networkdiv").hide();
+                $("#geardiv").hide();
             });
             $(document).on('click', "#message_click", function(event)
             {
                 markAllSeen('message');
                 event.stopPropagation();
-                $("#messagediv").slideDown("fast");
-                $(".personal").slideUp("fast");
-                $(".general").slideUp("fast");
-                $("#notificationdiv").slideUp("fast");
-                $("#networkdiv").slideUp("fast");
-                $("#geardiv").slideUp("fast");
+                $("#messagediv").show()
+                $(".personal").hide();
+                $(".general").hide();
+                $("#notificationdiv").hide();
+                $("#networkdiv").hide();
+                $("#geardiv").hide();
                 $('.message_notification').hide();
             });
             $(document).on('click', "#notification_click", function(event)
             {
                 markAllSeen('notification');
                 event.stopPropagation();
-                $("#notificationdiv").slideDown("fast");
-                $(".personal").slideUp("fast");
-                $(".general").slideUp("fast");
-                $("#messagediv").slideUp("fast");
-                $("#networkdiv").slideUp("fast");
-                $("#geardiv").slideUp("fast");
+                $("#notificationdiv").show();
+                $(".personal").hide();
+                $(".general").hide();
+                $("#messagediv").hide();
+                $("#networkdiv").hide();
+                $("#geardiv").hide();
                 $('#notification_counter').hide();
             });
             $(document).on('click', "#network_click", function(event)
             {
                 markAllSeen('network');
                 event.stopPropagation();
-                $("#notificationdiv").slideUp("fast");
-                $(".personal").slideUp("fast");
-                $(".general").slideUp("fast");
-                $("#messagediv").slideUp("fast");
-                $("#networkdiv").slideDown("fast");
-                $("#geardiv").slideUp("fast");
+                $("#notificationdiv").hide();
+                $(".personal").hide();
+                $(".general").hide();
+                $("#messagediv").hide();
+                $("#networkdiv").show();
+                $("#geardiv").hide();
                 $('#network_counter').hide();
             });
             $(document).on('click', "#gear_click", function(event)
             {
                 event.stopPropagation();
-                $("#notificationdiv").slideUp("fast");
-                $(".personal").slideUp("fast");
-                $(".general").slideUp("fast");
-                $("#messagediv").slideUp("fast");
-                $("#geardiv").slideDown("fast");
+                $("#notificationdiv").hide();
+                $(".personal").hide();
+                $(".general").hide();
+                $("#messagediv").hide();
+                $("#geardiv").show();
             });
             $(document).on('click', "html", function()
             {
-                $(".general").slideUp("fast");
-                $(".personal").slideUp("fast");
-                $("#messagediv").slideUp("fast");
-                $("#notificationdiv").slideUp("fast");
-                $("#networkdiv").slideUp("fast");
-                $("#geardiv").slideUp("fast");
+                $(".general").hide();
+                $(".personal").hide();
+                $("#messagediv").hide();
+                $("#notificationdiv").hide();
+                $("#networkdiv").hide();
+                $("#geardiv").hide();
+                $('img.message').removeClass('message_active');
             });
+            
+//            setTimeout(function(){
+//                var height = $('#popup_message').height();
+//                console.log(height);
+//            }, 5000);
+            
+//            $('#popup_message').mCustomScrollbar(SCROLL_OPTIONS);
+//            $('#popup_message').height(height);
+//            $('#popup_message').mCustomScrollbar("update");
         });
         function markAllSeen(type)
         {
@@ -181,34 +186,22 @@ if (!isset($page_identifier)) {
                 window.location.assign(nextPage);
             });
         }
-
-        $(function()
-        {
-            if (document.title != "")
-            {
-                $('#current_page_link').prepend(document.title);
-            }
-            else
-            {
-                $('#current_page_link').prepend("Page");
-            }
-        });
     </script>
 </head>
 <body>
     <div class="headerbar">
         <div id="refresh">
             <div class="container_headerbar">
-                <span style='cursor:pointer;margin-left:-200px;color:white;font-size:1.8em;' onclick='window.location.assign("home");'>Collaborator</span>
+                <span style='cursor:pointer;color:rgb(70, 180, 220);font-weight: light;font-size:1.6em;' onclick='window.location.assign("home");'>Placeholder</span>
                 <div style="position:absolute;right:500px;top:0;">
                     <div class="message" id="message_click">
-                        <img id="message" class ="message" src='<?php echo System::INBOX_IMG; ?>'></img>
+                        <img id="message" class ="message" src='<?php echo System::INBOX_IMG_BLACK; ?>'></img>
                         <div id="messagediv" class="popup_div">
                             <div class="popup_top">
                                 <span class='popup_header'>Messages</span>
                                 <a href="message" class='user_preview_name' style='top:2px;font-size:12px;position:absolute;right:10px;'>- Compose</a>
                             </div>
-                            <div class="popup_content scroll_medium">
+                            <div id='popup_message' class="popup_content">
                                 <ul class="message"> 
                                     <?php
                                     $message_count = $notification->getMessageNum();
@@ -244,12 +237,12 @@ if (!isset($page_identifier)) {
                         <span id='message_num' class="message_notification"></span>
                     </div>
                     <div class="notification" id="notification_click">
-                        <img style='height:18px;' id="notification" class ="message" src='<?php echo System::NOTIFICATION_IMG; ?>'></img><br>
+                        <img style='height:18px;' id="notification" class ="message" src='<?php echo System::NOTIFICATION_IMG_BLACK; ?>'></img><br>
                         <div id="notificationdiv" class="popup_div">
                             <div class="popup_top">
                                 <span class='popup_header'>Notifications</span>
                             </div>
-                            <div class="popup_content scroll_medium">
+                            <div id='popup_notify' class="popup_content">
                                 <ul class="notify"> 
                                     <?php
                                     $notify_count = $notification->getNotificationNum();
@@ -257,7 +250,7 @@ if (!isset($page_identifier)) {
                                     foreach ($notifications as $notify) {
                                         $picture = $user->getProfilePicture("chat", $notify['sender_id']);
                                         $name = $user->getName($notify['sender_id']);
-                                        echo "<li onclick='markNotificationRead(" . $notify['id'] . ", \"post?id=" . $notify['post_id'] . "\");' class='";
+                                        echo "<li onclick='markNotificationRead(" . $notify['id'] . ", \"post?a=" . $notify['post_id'] . "\");' class='";
                                         if ($notify['read'] == 0) {
                                             echo "messageunread";
                                         }
@@ -287,12 +280,12 @@ if (!isset($page_identifier)) {
                         <span id='notification_num' class="message_notification"></span>
                     </div>
                     <div class="network" id="network_click">
-                        <img id="network" class="message network" src='<?php echo System::NETWORK_IMG; ?>'></img><br>
+                        <img id="network" class="message network" src='<?php echo System::NETWORK_IMG_BLACK; ?>'></img><br>
                         <div id="networkdiv" class="popup_div">
                             <div class="popup_top">
                                 <span class='popup_header'>Network</span>
                             </div>
-                            <div class="popup_content scroll_medium">
+                            <div id='popup_notify' class="popup_content">
                                 <ul class="notify"> 
                                     <?php
                                     $network_count = $notification->getNetworkNum();

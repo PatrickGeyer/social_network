@@ -155,16 +155,17 @@
 
         function submitchat(chat_text)
         {
-            $('.chatinputtext').val("Sending...");
-            $('.chatinputtext').attr('readonly','readonly');
-            $('.chatinputtext').css("color", "lightgrey");
-            $.post("Scripts/chat.class.php", {action: "addchat", aimed: current_view, chat_text: chat_text}, function(response)
-            {
-                $(".chatinputtext").css("color", "black");
+            if(chat_text != "") {
                 $('.chatinputtext').val('');
-                $('.chatinputtext').removeAttr('readonly');
-                scroll2Bottom(true);
-            });
+                $('.chatinputtext').attr('placeholder', "Sending...");
+                $('.chatinputtext').attr('readonly','readonly');
+                $.post("Scripts/chat.class.php", {action: "addchat", aimed: current_view, chat_text: chat_text}, function(response)
+                {
+                    $('.chatinputtext').removeAttr('readonly');
+                    $('.chatinputtext').attr('placeholder', "Press Enter to send...");
+                    scroll2Bottom(true);
+                });
+            }
         }
 
         function change_chat_view(change_view)

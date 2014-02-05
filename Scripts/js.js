@@ -1,3 +1,17 @@
+function changePostFeed(view) {
+    if(view == "File") {
+        $(".activity_comment_div").hide();
+        $('.comment_box_original').show();
+    }
+    else if(view == "Post") {
+        $(".activity_comment_div").show();
+        $('.comment_box_original').hide();
+    }
+    else {
+        
+    }
+}
+
 function modal(container, properties) {
     if($('.background_white_overlay').length > 0) {
         removeModal('', function(){modal(container, properties);});
@@ -115,9 +129,57 @@ function alignTooltip(element, tooltip) {
         top: top,
         left: left
     });
-    console.log('tooltip created');
+    //console.log('tooltip created');
 }
 
+function fileList(element, type) {
+    $.post('Scripts/home.class.php', {type:type, action:"file_list"}, function(response) {
+        $(element).html(response);
+    });
+}
+
+function setProfilePicture(file_id) {
+    $.post('Scripts/user.class.php', {action: "profile_picture", file_id: file_id}, function(response) {
+            //console.log("Profile Picture:" + file_id);
+            removeDialog();
+            window.location.reload();
+        });
+}
+
+function show_photo_choose() {
+    var content = $("<div><table><tr><td><div class='upload_here'></div></td><td><div style='max-height:200px;overflow:auto;margin-left:20px;height:100%;' id='file_container'>Loading...</div></td></tr></table></div>");
+    dialog(
+            content={
+                content: content.html(),
+                type: "html"
+            }, 
+            buttons=[{
+                    type: "success",
+                    text: "Choose",
+                    onclick: function() {dialogLoad();setProfilePicture(profile_picture_id);}
+            },{
+                    type: "neutral",
+                    text: "Cancel",
+                    onclick: function() {removeDialog();}
+            }], 
+            properties={
+                title: "Choose a photo"
+            }
+            );
+    fileList('div#file_container', 'Image');
+    $('#file_container').attr('onclick','').unbind('click');
+    $(document).on('click', '.file_search_option', function(event) {
+        event.stopPropagation();
+        var file_id = $(this).attr('file_id');
+        var activity_id = $(this).attr('activity_id');
+        $.post('Scripts/files.class.php', {action: "preview", file_id: file_id, activity_id: activity_id}, function(response) {
+            response = $.parseJSON(response);
+            $('.upload_here').css('background-size', 'cover');
+            $('.upload_here').css('background-image', 'url("' + response.file.path + '")');
+            profile_picture_id = response.file.id;
+        });
+    });
+}
 
 function showUserPreview(element, user_id) {
     if (element == "force") {

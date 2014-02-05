@@ -13,12 +13,12 @@ if(empty($file)) {
     echo "No such File Found";
 }
 else {
-    $file['filepath'] = $_SERVER['DOCUMENT_ROOT']."/".$file['filepath'];
-    $fp = fopen ($file['filepath'], "r");
+    $file['filepath'] = $_SERVER['DOCUMENT_ROOT']."/".$file['path'];
+    $fp = fopen ($file['path'], "r");
     ob_start();
     header('Content-type: application/pdf');
     header('Content-Disposition: inline; filename="'.$file['name'].'"');
-    header("Content-length: ".filesize($file['filepath']));
+    header("Content-length: ".filesize($file['path']));
     ob_end_flush();
     while(!feof($fp)) {
         $file_buffer = fread($fp, 2048);
@@ -27,7 +27,7 @@ else {
  
     fclose($fp);
     die();
-    //@readfile($file['filepath']);
+    //@readfile($file['path']);
 }
 
 

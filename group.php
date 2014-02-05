@@ -136,7 +136,7 @@ else
 			<tr>
 				<td style='width:220px;'>
 					<div class='profilepicturediv' style='background-image:url("<?php echo $group->getProfilePicture('thumb', $group_id); ?>");' 
-						onclick='initiateTheater("<?php echo $group->getProfilePicture('original', $group_id)?> ","no_text");adjustTheater("no_text");'>
+						onclick='initiateTheater("ACTIVITY_ID", "FILE_ID");adjustTheater("no_text");'>
 						<?php
 						//if($user->getId() == $group->getFounder())
 						// {

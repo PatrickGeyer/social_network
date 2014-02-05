@@ -22,9 +22,16 @@ if (isset($_GET['u'])) {
 else {
     $user_id = $user->getId();
 }
+if(isset($_GET['f'])) {
+    $file_id = $_GET['f'];
+}
 include_once('welcome.php');
 include_once('chat.php');
 include_once('Scripts/base.class.php');
+
+$used_width = $files->getUsedSize();
+$used_width = ($used_width / 1073741824) * 100;
+
 ?>
 <html>
     <head>
@@ -56,35 +63,16 @@ include_once('Scripts/base.class.php');
                         title: 'Create Folder',
                     });
                 });
-                // $(document).on('click', '.files_recently_shared_container', function(event) {
-                //     event.preventDefault();
-                // });
-                // $(document).on('click', function(){
-                //     $('.files_feed_active').animate(
-                //         {height: "-=200px", width:"-=200px"}, 200).removeClass('files_feed_active');
-                //     var id = $('.files_feed_active').attr('id');
-                //     $('#' + id).hide();
+                $(document).on('click', '.files', function() {
+                    var id = $(this).attr('file_id');
+                    window.location.assign('files?f=' + id);
+                });
 
-                // });
-                // $(document).on('click', '.files_feed_active', function(event){
-                //     event.preventDefault();
-                // })
                 refreshVideoJs();
                 
-//                $('div.files_actions').hide();
-//                $(document).on('mouseenter', 'div.files', function() {
-//                    var $this = $(this);
-//                    $('div.files_actions').hide();
-//                    $this.children('div.files_actions').fadeIn();
-//                    setTimeout(function() {
-//                        $('div.files_actions').not($this.children('div.files_actions')).hide();
-//                    }, 10);
-//                });
-//                $(document).on('mouseleave', 'div.files', function() {
-//                    $(this).children('div.files_actions').hide();
-//                });
-
                 $(document).on('change', '#file', function() {
+                    var input = $(this).get(0).files;
+                    var index = 0;
                     dialog(
                             content = {
                                 type: "html",
@@ -94,14 +82,36 @@ include_once('Scripts/base.class.php');
                             type: 'success',
                             text: "Upload",
                             onclick: function() {
-                                uploadFile("file", "#file");
+                                $('.upload_preview').each(function() {
+                                            $(this).css('padding-bottom', '16px');
+                                            $(this).css('margin-bottom', '3px');
+                                            $(this).css('position', 'relative');
+                                            progressBar($(this), $(this).attr('id'));
+                                        }); 
+                                for (var i = 0; i < input.length; i ++) {
+                                    (function(sync_i) {
+                                        uploadFile(input[sync_i], 
+                                            function(){
+
+                                            }, function(percent){
+                                                updateProgress(sync_i + "_upload_preview", percent);
+                                                //console.log(i + "_upload_preview - " +  percent);
+                                            }, function() {
+                                                removeProgress(sync_i + "_upload_preview");
+                                                $("#" + sync_i + "_upload_preview").css('background-color', '#98FB98');
+                                                //removeDialog();
+                                                //window.location.reload();
+                                            }, properties={type:"File"}
+                                        );
+                                    })(i);
+                                };
                             }
                         },
                         {
                             type: 'primary',
                             text: "Cancel",
                             onclick: function() {
-                                removeDialog();
+                                
                             }
                         }],
                     properties = {
@@ -176,6 +186,8 @@ include_once('Scripts/base.class.php');
             });
             
             function getInputFiles(element) {
+                var index = 0; 
+
                 var div = $("<div></div>");
                 var files = document.getElementById(element).files;
                 var image = new Array();
@@ -195,12 +207,13 @@ include_once('Scripts/base.class.php');
                         image[i].css('background-image', "url('" + audioThumb + "')");
                     }
                     var size = file.size;
-                    var file_container = $("<div style='margin-bottom:10px;'>");
+                    var file_container = $("<div  class='upload_preview' style='margin-bottom:10px;'>");
+                    file_container.attr('id', index + "_upload_preview");
                     file_container.append(image[i]);
                     file_container.append(name);
                     file_container.append("<br />");
                     div.append(file_container);
-
+                    index++;
                 }
                 return div;
             }
@@ -232,6 +245,9 @@ include_once('Scripts/base.class.php');
     </head>
     <body>
         <div class="container" id="files">
+            <div class='files_space_container'>
+                <div class='files_space_meter' style='width:<?php echo $used_width; ?>%;'></div>
+            </div>
             <div class="files_recently_shared_container">
                 <div class='files_recently_shared'>
                     <table>
@@ -245,53 +261,62 @@ include_once('Scripts/base.class.php');
                     </table>
                 </div>
             </div>
-            <table style='margin-left:16px;padding-top: 20px;'>
-                <tr>
-                    <td>
-                        <button id='create_folder' class='pure-button-secondary small files_upload_option'>
-                            <img style='height: 30px; width:30px' src='Images/Icons/Icon_Pacs/typicons.2.0/png-48px/folder-add-white.png'></img>
-                        </button>
-                    </td>
-                    <td>
-                        <div style='display:none;' id='folder_upload_dialog'>
-                            <table cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td>
-                                        <input type="file" name="file" id="folder" directory="" webkitdirectory="" mozdirectory="" />
-                                    </td>
-                                    <td>
-                                        <button class='pure-button-success small files_upload_option' onclick='uploadFile("folder", "#folder");'>Upload Folder</button>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                        <button style='float:right;' id="folder_upload_option" class="pure-button-success small files_upload_option" onclick="showUpload('folder');">
-                            <img style='height: 30px; width:30px' src='Images/Icons/Icon_Pacs/typicons.2.0/png-48px/folder-add-white.png'></img>
-                        </button>
-                    </td>
-                    <td>
-                        <div style='display:none' id='file_upload_dialog'>
-                            <input type="file" id="file" multiple/>
-                        </div>
-                        <button id="file_upload_option" class='pure-button-error small files_upload_option' onclick="showUpload('file');">
-                            <img style='height: 30px; width:30px' src='Images/Icons/Icon_Pacs/typicons.2.0/png-48px/upload-white.png'></img>
-                        </button>
-                    </td>
-                    <td>
-                        <img id='loading_icon' src='Images/ajax-loader.gif'></img>
-                    </td>
-                </tr>
-            </table>
+            <div class="file_actions">
+                <table style='margin-left:16px;padding-top: 20px;'>
+                    <tr>
+                        <td>
+                            <button id='create_folder' class='pure-button-secondary small files_upload_option'>
+                                <img style='height: 30px; width:30px' src='Images/Icons/Icon_Pacs/typicons.2.0/png-48px/folder-add-white.png'></img>
+                            </button>
+                        </td>
+                        <td>
+                            <div style='display:none;' id='folder_upload_dialog'>
+                                <table cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td>
+                                            <input type="file" name="file" id="folder" directory="" webkitdirectory="" mozdirectory="" />
+                                        </td>
+                                        <td>
+                                            <button class='pure-button-success small files_upload_option' onclick='uploadFile("folder", "#folder");'>Upload Folder</button>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <button style='float:right;' id="folder_upload_option" class="pure-button-success small files_upload_option" onclick="showUpload('folder');">
+                                <img style='height: 30px; width:30px' src='Images/Icons/Icon_Pacs/typicons.2.0/png-48px/folder-add-white.png'></img>
+                            </button>
+                        </td>
+                        <td>
+                            <div style='display:none' id='file_upload_dialog'>
+                                <input type="file" id="file" multiple/>
+                            </div>
+                            <button id="file_upload_option" class='pure-button-error small files_upload_option' onclick="showUpload('file');">
+                                <img style='height: 30px; width:30px' src='Images/Icons/Icon_Pacs/typicons.2.0/png-48px/upload-white.png'></img>
+                            </button>
+                        </td>
+                        <td>
+                            <img id='loading_icon' src='Images/ajax-loader.gif'></img>
+                        </td>
+                    </tr>
+                </table>
+            </div>
             <div id='file_container' style='padding-top: 20px;'>
                 <div id='main_file' class="file" style='border-bottom:1px solid lightblue;'>
                     <?php
-                    $files_list = $files->getContents($parent_folder, $user_id);
-                    $nmr = count($files_list);
-                    foreach ($files_list as $file) {
-                        $files->tableSort($file);
+                    if(isset($file_id)) {
+                        $home->homeify($home->getSingleActivity($files->getActivity($file_id)));
+                        echo "<script>$('.file_actions').hide();</script>";
+                        echo "<script>$('#main_file').css('border', '0px');</script>";
                     }
-                    if (isset($nmr) && $nmr <= 0) {
-                        echo "<div class='files' onclick='if(event.stopPropagation){event.stopPropagation();}event.cancelBubble=true;'>No Files in this Directory</div>";
+                    else {
+                        $files_list = $files->getContents($parent_folder, $user_id);
+                        $nmr = count($files_list);
+                        foreach ($files_list as $file) {
+                            $files->tableSort($file);
+                        }
+                        if (isset($nmr) && $nmr <= 0) {
+                            echo "<div class='files' onclick='if(event.stopPropagation){event.stopPropagation();}event.cancelBubble=true;'>No Files in this Directory</div>";
+                        }
                     }
                     ?>
                 </div>

@@ -113,29 +113,28 @@ class User {
         return $user;
     }
 
-    function getProfilePicture($size = "chat", $id = null) {
+    function getProfilePicture($size = "thumb", $id = null) {
         if ($id == null) {
             $id = $this->user_id;
         }
         if ($size == "original") {
-            $user_query = "SELECT profile_picture FROM users WHERE id = :user_id";
-        } else if ($size == "thumb") {
-            $user_query = "SELECT profile_picture_thumb FROM users WHERE id = :user_id";
+            $user_query = "SELECT path FROM files WHERE id = (SELECT profile_picture FROM users WHERE id = :user_id);";
+        } else if ($size == "thumb" || $size == "chat") {
+            $user_query = "SELECT thumb_path FROM files WHERE id = (SELECT profile_picture FROM users WHERE id = :user_id);";
         } else if ($size == "icon") {
-            $user_query = "SELECT profile_picture_icon FROM users WHERE id = :user_id";
-        } else if ($size == "chat") {
-            $user_query = "SELECT profile_picture_chat_icon FROM users WHERE id = :user_id";
+            $user_query = "SELECT icon_path FROM files WHERE id = (SELECT profile_picture FROM users WHERE id = :user_id);";
         }
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user_profile_picture = $user_query->fetchColumn();
         if (!empty($user_profile_picture) || $user_profile_picture != "") {
+            //die("PROFILE PATH: ".$user_profile_picture);
             return $user_profile_picture;
         } else {
             if ($this->getGender($id) == "Male") {
                 return Base::MALE_DEFAULT_ICON;
             } else {
-                return "Images/profile-picture-default-female-" . $size . ".jpg";
+                return Base::FEMALE_DEFAULT_ICON;
             }
         }
     }
@@ -238,7 +237,7 @@ class User {
      * @param int $read
      * @param int $seen
      */
-    public function notify($type, $receiver_id, $activity_id, $read = 0, $seen = 0) {
+    public function notify($type, $receiver_id, $activity_id, $element = NULL, $read = 0, $seen = 0) {
         $who_liked_query = "INSERT INTO notification (`type`, post_id, receiver_id, sender_id, `read`, seen) "
                 . "VALUES(:type, :activity_id, :receiver_id, :sender_id, :read, :seen);";
         $who_liked_query = $this->database_connection->prepare($who_liked_query);
@@ -275,6 +274,16 @@ class User {
             return true;
         }
     }
+    
+    function setProfilePicture($id) {
+        $sql = "UPDATE users SET profile_picture = :id WHERE id = :user_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":id" => $id,
+            ":user_id" => $this->user_id
+        ));
+        die("UPDATED");
+    }
 
 }
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
@@ -303,6 +312,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         {
             $user->setOnline();
         }   
+        if($_POST['action'] == "profile_picture") {
+            $user->setProfilePicture($_POST['file_id']);
+        }
     }
 }
 ?>

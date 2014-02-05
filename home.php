@@ -54,16 +54,20 @@ include_once('chat.php');
                 getFeedContent(share_group_id, min_activity_id, 'home', function(){});
 
                 $(document).on('click', '.home_like_icon', function() {
-                    if ($(this).css('opacity') == '1') {
-                        $(this).css('opacity', '0.3');
-                    } else {
-                        $(this).css('opacity', '1');
+                    var has_liked = $(this).attr('has_liked');
+                    if(has_liked == "false") {
+                        $(this).text(COMMENT_UNLIKE_TEXT);
+                        $(this).attr('has_liked', 'true')
+                    }
+                    else {
+                        $(this).text(COMMENT_LIKE_TEXT);
+                        $(this).attr('has_liked', 'false')
                     }
                 });
 
                 $("#post_file").change(function(e)
                 {
-                    uploadFile('file', '#post_file', 'addToStatus');
+                    uploadFile($(this), 'addToStatus');
                 });
 
                 $('#status_text').focus(function() {

@@ -1,6 +1,71 @@
 // Requires JQuery to be included before
-
+var profile_picture_id;
 $(function() {
+
+    adjustSwitches();
+
+    var entered = 0;
+    $(document).on('click', '.upload_here', function(event) {
+        var element = $(this);
+        var input = $("<input id='file_picture' type='file' />");
+        input.trigger('click');
+        input.on('change', function() {
+            uploadDragDrop(element, $(this).get(0).files);
+        });
+    });
+    $(document).on('dragover', '.upload_here', function(event) {
+        $(this).addClass('upload_hover');
+        entered++;
+    });
+    $(document).on('dragleave', '.upload_here', function(event) {
+        $(this).removeClass('upload_hover');
+        entered--;
+    });
+    $(document).on('drop', '.upload_here', function(event) {
+        var element = $(this);
+        $(this).removeClass('upload_hover');
+        entered--;
+        var files = event.target.files || (event.dataTransfer && event.dataTransfer.files);
+        if(!files) {
+            files = event.dataTransfer || (event.originalEvent && event.originalEvent.dataTransfer);
+        }
+        uploadDragDrop(element, files.files);
+        // uploadFile(files.files, function(){}, function(pgs){
+        //     updateProgress('random', pgs);
+        // }, function(file){
+        //     removeProgress('random');
+        //     element.css('background', "url('" + file.path + "')");
+        //     element.addClass('upload_done');
+        //     profile_picture_id = file.id;
+        // });
+    });
+
+    function uploadDragDrop(element, files) {
+        var number = Math.floor(Math.random() * 10);
+        element = $(element);
+        progressBar(element, number);
+        uploadFile(files, function(){}, function(pgs){
+            updateProgress(number, pgs);
+        }, function(file){
+            removeProgress(number);
+            element.css('background', "url('" + file.path + "')");
+            element.addClass('upload_done');
+            profile_picture_id = file.id;
+            console.log(file);
+        });
+    }
+
+    $(document).on("dragenter dragstart dragend dragleave dragover drag drop", '.upload_here', function (event) {
+        event.preventDefault();
+    });
+    
+    
+    $(document).on('click', '.switch_option', function() {
+        var container = $(this).parents('.switch_container');
+        container.find('.switch_option').removeClass('switch_selected');
+        $(this).addClass('switch_selected');
+    });
+
     $(document).on('keyup', '.inputtext', function(event) {
         var id = $(this).attr('id');
         var clone = $('#' + id + "_clone")
@@ -12,23 +77,39 @@ $(function() {
         }
         resizeTextarea($(this), clone);
     });
+
+    $(document).on('click', '.comment_delete', function() {
+        var comment_id = $(this).parents('div.single_comment_container').attr('comment_id');
+        $(this).parents('.single_comment_container').next('hr.post_comment_seperator').remove();
+        $(this).parents('.single_comment_container').remove();
+        $.post('Scripts/home.class.php', {action: "deleteComment", comment_id: comment_id}, function(response) {});
+    })
     $(document).on('click', '.post_comment_vote', function(event) {
-        var id = $(this).attr('comment_id');
+        var post_id = $(this).parents('[activity_id]').attr('activity_id');
         var has_liked = $(this).attr('has_liked');
         
         if(has_liked === "false") {
             $(this).attr('has_liked', "true");
-            $(this).text(UNLIKE_TEXT);
+            $(this).text(COMMENT_UNLIKE_TEXT);
         }
         else {
             $(this).attr('has_liked', "false");
-            $(this).text(LIKE_TEXT);
+            $(this).text(COMMENT_LIKE_TEXT);
         }
-        $.post('Scripts/home.class.php', {action: "comment_vote", comment_id: id}, function(response) {
+        $.post('Scripts/home.class.php', {action: "comment_vote", post_id: post_id, comment_id: id}, function(response) {
             $('.post_comment_liked_num[comment_id="' + id + '"]').text("- " + response + " likes");
         });
     });
 });
+
+function adjustSwitches() {
+    $('.switch_container').find('.switch_option').each(function(){ 
+        var siblings = $(this).parents('.switch_container').find('.switch_option').length;
+        var width = $(this).parents('.switch_container').width() / siblings;
+        $(this).width(width);
+    });
+}
+
 function resizeTextarea(element, clone) {
     var text = $(element).val();
     $(clone).text(text);
@@ -81,6 +162,7 @@ function getFeedContent(feed_id, min_activity_id, page, callback)
             removeModal();
 
             callback();
+            refreshVideoJs();
         }
 
         if (isNaN(feed_id))
@@ -159,10 +241,6 @@ $(function() {
             horizontalScroll: true,
         });
     });
-    $('.search_results').each(function(){
-        $(this).mCustomScrollbar(SCROLL_OPTIONS);
-    });
-    $('.default_dropdown_wrapper').mCustomScrollbar(SCROLL_OPTIONS);
     $(document).on('click', '.search_input', function() {
         var box = $(this).next('.search_results');
         if (box.find('.search_result, .match').length == 0) {
@@ -227,7 +305,7 @@ function addReceiver(array, receiver_id, community_id, group_id, callback) {
     };
     array.push(to_push);
     callback();
-    console.log(array);
+    //console.log(array);
     return array;
 }
 
@@ -249,30 +327,24 @@ function search(text, mode, element, callback) {
         $(element).prepend(loader);
         $(element).show();
     }
+    
     $.post("Scripts/searchbar.php", {search: mode, input_text: text}, function(response) {
-        $(element).find('.search_slider').slideUp("fast", function() {
-            $(this).remove();
-        });
-        var slider = $("<div class='search_slider'></div>").hide();
-        slider.append(response);
-        $(element).append(slider);
-        loader.remove();
-        var scrollElement = document.querySelector(element);
-        slider.slideDown('fast',function() {
-            if (scrollElement.offsetHeight < scrollElement.scrollHeight || scrollElement.offsetWidth < scrollElement.scrollWidth) {
-                $(element).mCustomScrollbar();
-                $(element).find('.mCustomScrollBox ').height('');
-                $(element).mCustomScrollbar("update");
-                $(element).find('.mCS_container').css('top', '0px');
-            }
-            callback();
-        });
+        $(element).empty();
+        var slider = $("<div class='search_slider'></div>").html(response);
+        $(element).html(slider);
+        var height = slider.height();
+        $(element).mCustomScrollbar(SCROLL_OPTIONS);
+        $(element).height(height);
+        setTimeout(function() {
+            $(element).mCustomScrollbar("update");
+            $(element).mCustomScrollbar("scrollTo", "top");
+        }, 100);
     });
-    $(element).off('click');
-    $(element).on('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    });
+    //$(element).off('click');
+    //$(element).on('click', function(e) {
+        //e.preventDefault();
+       // e.stopPropagation();
+    //});
 }
 
 function getViewPortWidth()
@@ -309,10 +381,11 @@ function getViewPortWidth()
 //DROPDOWN selectors
 $(document).on('click', ".default_dropdown_selector", function(event)
 {
+    event.stopPropagation();
     $('.default_dropdown_wrapper').hide();
     var wrapper = '#' + $(this).attr('wrapper_id');
     $(wrapper).toggle();
-    event.stopPropagation();
+    $(wrapper).mCustomScrollbar(SCROLL_OPTIONS);
     $(this).toggleClass('default_dropdown_active');
 });
 $(document).on('click', "html", function(event)
