@@ -7,18 +7,118 @@ if (!isset($page_identifier)) {
 ?>
 <!DOCTYPE HTML>
 <head>
-    <script>
+    <script>               
+        function show_group() {
+            dialog(
+                    content = {
+                        type: "html",
+                        content: '<div class="pseudonym">\n\
+             <table class="none" style="width:100%;">\n\
+ <tr>\n\
+ <td>\n\
+ <input style="border-radius:0; width:100%;" id="group_name_input" type="text" autocomplete="off" placeholder="Group Name" />\n\
+ </td>  </tr> <tr> <td>\n\
+<textarea style="border-radius:0; width:100%; height:100px;" id = "group_about" class="thin" placeholder="About..."></textarea>\n\
+</td> </tr> <tr> <td> <div style="border-radius:0;"> \n\
+</div> </td> </tr> </table> \n\
+<table class="none" style="width:100%;"> <tr> <td id ="names_slot"></td> </tr><tr><td>\n\
+<input autocomplete="off" style="border-radius:0; width:100%;" type="text" id="names_input" class="search_input" placeholder="Add Member..." />\n\
+</td> </tr> \n\
+</table> \n\
+<div class="search_results group_search_results" \n\
+style="max-height:100px; position:relative; padding:2px;border: 1px solid lightgrey; background-color:white;" id="names">\n\
+ </div> </div>'
+                    },
+            buttons = [{
+                    type: "success",
+                    text: "Create",
+                    onclick: function() {
+                        createGroup();
+                        dialogLoad();
+                    }
+                }],
+            properties = {
+                modal: false,
+                title: "Create a Group"
+            });
+        }
+
+        var invited_members = [];
+        function addGroupReceiver(new_receiver_name, id)
+        {
+            var html = "<div class='message_added_receiver' id='group_added_receiver_" + id + "'><span>"
+                    + new_receiver_name + "</span> \
+                    <span class='delete_receiver message_delete_receiver' onclick='removeGroupReceiver(" + id + ");'>x \
+                    </span></div>";
+            $('#names_slot').before(html);
+        }
+        function removeGroupReceiver(receiver_id)
+        {
+            for (var key in invited_members) {
+                if (invited_members[key].receiver_id = receiver_id) {
+                    invited_members.splice(key, 1);
+                    //console.log(invited_members);
+                }
+            }
+            $('#group_added_receiver_' + receiver_id).remove();
+        }
+        function createGroup()
+        {
+            var group_name = $('#group_name_input').val();
+            if (group_name != "")
+            {
+                var group_about = $('#group_about').val();
+                var group_type = $("#dialog input[type='radio']:checked").val();
+                $.post("Scripts/group.class.php", {action: "create", group_name: group_name, group_about: group_about, group_type: group_type, invited_members: invited_members}, function(response)
+                {
+                    var status = response.split("/");
+                    if (status[0] == "success")
+                    {
+                        window.location.replace("group?id=" + status[1]);
+                    }
+                });
+            }
+            else
+            {
+
+            }
+        }
         $(document).click(function(e)
         {
             $("#names_universal").hide();
-        });	// ***ADD*** if element is input do nothing!
-        getNotificationNumber();
+        });
+        
+        function getMessageBox() {
+            $.post('Scripts/notifications.class.php', {action: "messageList"}, function(response) {
+                $('ul.message').html(response);
+                $('#popup_message').height($('ul.message').outerHeight(true));
+                $('#popup_message').mCustomScrollbar('update');
+            });
+        }
+
+        function getNotificationBox() {
+            $.post('Scripts/notifications.class.php', {action: "notificationList"}, function(response) {
+                $('ul.notify').html(response);
+                $('#popup_notify').height($('ul.notify').outerHeight(true));
+                $('#popup_notify').mCustomScrollbar('update');
+            });
+        }
+
+        function getNetworkBox() {
+            $.post('Scripts/notifications.class.php', {action: "networkList"}, function(response) {
+                $('ul.network').html(response);
+                $('#popup_network').height($('ul.network').outerHeight(true));
+                $('#popup_network').mCustomScrollbar('update');
+            });
+        }
+
         function getNotificationNumber() {
             $.post('Scripts/notifications.class.php', {action:"alert_num"}, function(response){
                 response = JSON.parse(response);
                 if(response.message != '0') {
                     $('#message_num').text(response.message);
                     $('#message_num').show();
+                    getMessageBox();
                 }
                 else {
                     $('#message_num').hide();
@@ -26,6 +126,7 @@ if (!isset($page_identifier)) {
                 if(response.notification != '0') {
                     $('#notification_num').text(response.notification);
                     $('#notification_num').show();
+                    getNotificationBox();
                 }
                 else {
                     $('#notification_num').hide();
@@ -33,12 +134,29 @@ if (!isset($page_identifier)) {
                 if(response.network != '0') {
                     $('#network_num').text(response.network);
                     $('#network_num').show();
+                    getNetworkBox();
                 }
                 else {
                     $('#network_num').hide();
                 }
+
+                var all = response.message + response.notification + response.network;
+                var title = document.title.lastIndexOf(')');
+                if(all > 0) {
+                    if(title == -1) {
+                        document.title = "(" + all + ") " + document.title;
+                    }
+                    else {
+                        title = document.title.substring(title + 1);
+                        document.title = "(" + all + ") " + title;
+                    }
+                }
+                $('#popup_message').mCustomScrollbar('scrollTo', 'top');
+                $('#popup_network').mCustomScrollbar('scrollTo', 'top');
+                $('#popup_notify').mCustomScrollbar('scrollTo', 'top');
                 setTimeout(getNotificationNumber, 10000);
             });
+            
         }
         var invited_members = [];
         function addreceiver(new_receiver, new_receiver_name)
@@ -82,11 +200,17 @@ if (!isset($page_identifier)) {
                 }
             });
         }
-    </script>
 
-    <script>
         $(function()
         {
+            getNotificationNumber();
+            var table = "<table style='min-height:100px;height:100px;width:100%;'><tr style='vertical-align:middle;'><td style='width:100%;text-align:center;'><img src='" + AJAX_LOADER + "'></img></td></tr></table>";
+            $('ul.message, ul.network, ul.notify').prepend(table);
+            
+            $('#popup_message').mCustomScrollbar(SCROLL_OPTIONS);
+            $('#popup_network').mCustomScrollbar(SCROLL_OPTIONS);
+            $('#popup_notify').mCustomScrollbar(SCROLL_OPTIONS);
+            
             $(document).on('click', "img.message", function(event)
             {
                 $('img.message').removeClass('message_active');
@@ -112,6 +236,7 @@ if (!isset($page_identifier)) {
             });
             $(document).on('click', "#message_click", function(event)
             {
+                getMessageBox();
                 markAllSeen('message');
                 event.stopPropagation();
                 $("#messagediv").show()
@@ -124,6 +249,7 @@ if (!isset($page_identifier)) {
             });
             $(document).on('click', "#notification_click", function(event)
             {
+                getNotificationBox();
                 markAllSeen('notification');
                 event.stopPropagation();
                 $("#notificationdiv").show();
@@ -136,6 +262,7 @@ if (!isset($page_identifier)) {
             });
             $(document).on('click', "#network_click", function(event)
             {
+                getNetworkBox();
                 markAllSeen('network');
                 event.stopPropagation();
                 $("#notificationdiv").hide();
@@ -202,36 +329,7 @@ if (!isset($page_identifier)) {
                                 <a href="message" class='user_preview_name' style='top:2px;font-size:12px;position:absolute;right:10px;'>- Compose</a>
                             </div>
                             <div id='popup_message' class="popup_content">
-                                <ul class="message"> 
-                                    <?php
-                                    $message_count = $notification->getMessageNum();
-                                    $messages = $notification->getMessage();
-                                    foreach ($messages as $message) {
-                                        $participants = $notification->getReceivers($message['thread'], 'list');
-                                        $picture = $user->getProfilePicture('chat', $message['sender_id']);
-                                        //$names = $notification->styleReceiverList($participants, 'list');
-                                        echo "<li class='";
-                                        if ($message['read'] == 0) {
-                                            echo "messageunread";
-                                        }
-                                        else {
-                                            echo "message";
-                                        }
-                                        echo "'><a class='message' href='message?thread=" . $message['thread'] . "&id=" . $message['id'] . "'>"
-                                        . "<div style='display:table-row;'>"
-                                        . "<div class='notification_user_image'>"
-                                        . $notification->getMessagePicture(NULL, $message['thread'])
-                                        . "</div><div style='display:table-cell;vertical-align:top;'>"
-                                        . "<p class='ellipsis_overflow notification_name'>" . $participants . "</p>"
-                                        . "<p class='ellipsis_overflow notification_info'>" . $message['message']
-                                        . "</p></div></div></a></li> ";
-                                    }
-                                    $total_message_count = count($messages);
-                                    if ($total_message_count == 0) {
-                                        echo "<div style='padding:5px;color:grey;'>No Messages</div>";
-                                    }
-                                    ?>
-                                </ul>
+                                <ul class="message"></ul>
                             </div>
                         </div>
                         <span id='message_num' class="message_notification"></span>
@@ -243,38 +341,7 @@ if (!isset($page_identifier)) {
                                 <span class='popup_header'>Notifications</span>
                             </div>
                             <div id='popup_notify' class="popup_content">
-                                <ul class="notify"> 
-                                    <?php
-                                    $notify_count = $notification->getNotificationNum();
-                                    $notifications = $notification->getNotification();
-                                    foreach ($notifications as $notify) {
-                                        $picture = $user->getProfilePicture("chat", $notify['sender_id']);
-                                        $name = $user->getName($notify['sender_id']);
-                                        echo "<li onclick='markNotificationRead(" . $notify['id'] . ", \"post?a=" . $notify['post_id'] . "\");' class='";
-                                        if ($notify['read'] == 0) {
-                                            echo "messageunread";
-                                        }
-                                        else {
-                                            echo "message";
-                                        }
-
-                                        if ($notify['type'] == 'like' || $notify['type'] == 'dislike') {
-                                            echo "'><div style='display:table-row;'>"
-                                            . "<img class='notification_user_image' src='" . $picture . "'></img>"
-                                            . "<p style='vertical-align:top; display:table-cell;'><b>" . $name . "</b> liked on your post</p></div></li> ";
-                                        }
-                                        else if($notify['type'] == 'comment_like') {
-                                            echo "'><div style='display:table-row;'>"
-                                            . "<img class='notification_user_image' src='" . $picture . "'></img>"
-                                            . "<p style='vertical-align:top; display:table-cell;'><b>" . $name . "</b> liked your comment</p></div></li> ";
-                                        }
-                                    }
-                                    $total_notify_count = count($notifications);
-                                    if ($total_notify_count == 0) {
-                                        echo "<div style='padding:5px;color:grey;'>No Notifications</div>";
-                                    }
-                                    ?>
-                                </ul>
+                                <ul class="notify"></ul>
                             </div>
                         </div>
                         <span id='notification_num' class="message_notification"></span>
@@ -285,59 +352,8 @@ if (!isset($page_identifier)) {
                             <div class="popup_top">
                                 <span class='popup_header'>Network</span>
                             </div>
-                            <div id='popup_notify' class="popup_content">
-                                <ul class="notify"> 
-                                    <?php
-                                    $network_count = $notification->getNetworkNum();
-                                    $networks = $notification->getNetwork();
-                                    $total_network_count = count($networks);
-                                    if ($total_network_count == 0) {
-                                        echo "<div style='padding:5px;color:grey;'>No Network Notifications</div>";
-                                    }
-                                    foreach ($networks as $network) {
-                                        $picture = $user->getProfilePicture("chat", $network['inviter_id']);
-                                        $group_name = $group->getGroupName($network['group_id']);
-                                        $group_id = $network['group_id'];
-
-                                        echo "<li class='";
-                                        if ($network['read'] == 0) {
-                                            echo "messageunread";
-                                        }
-                                        else {
-                                            echo "message";
-                                        }
-                                        echo "'><table><tr style='vertical-align:top;'>"
-                                        . "<td style='min-width:40px;'>"
-                                        . "<img class='notification_user_image' src='" . $picture . "'></img>"
-                                        . "</td><td>"
-                                        . "<p style='margin:0;text-align:left;font-size:13px;'>"
-                                        . str_replace('$group', '"' . $group_name . '"', str_replace('$user', $user->getName($network['inviter_id']), $phrase->get('group_invite', 'en')))
-                                        . "</p></td><td><table cellspacing='0' cellpadding='0'><tr><td>";
-                                        if ($network['invite_status'] == 2) {
-                                            echo "<button style='margin:0;' onclick='rejectGroup("
-                                            . $group_id . ", " . $network['id'] . ");' "
-                                            . "class='pure-button-yellow small' id='leave_group_" . $network['id'] . "'>Leave</button>";
-                                        }
-                                        else if ($network['invite_status'] == 0) {
-                                            echo "<button style='margin:0;' onclick='joinGroup("
-                                            . $group_id . ", " . $network['id'] . ");' "
-                                            . "class='pure-button-primary small' id='join_button_" . $network['id'] . "'>Join</button>";
-                                        }
-                                        else {
-                                            echo "<button style='margin:0;' onclick='joinGroup("
-                                            . $group_id . ", " . $network['id'] . ");' "
-                                            . "class='pure-button-success small' "
-                                            . "id='join_button_" . $network['id'] . "' >Join</button>"
-                                            . "</td></tr><tr><td><button onclick='rejectGroup(" . $group_id . ", " . $network['id'] . ");' "
-                                            . "class='pure-button-error small' id='reject_button_" . $network['id'] . "'>Reject</button>";
-                                            echo "<button style='margin:0;display:none;' onclick='rejectGroup("
-                                            . $group_id . ", " . $network['id'] . ");' "
-                                            . "class='pure-button-yellow small' id='leave_button_" . $network['id'] . "'>Leave</button>";
-                                        }
-                                        echo "</td></tr></table></td></tr></table></li>";
-                                    }
-                                    ?>
-                                </ul>
+                            <div id='popup_network' class="popup_content">
+                                <ul class="network"></ul>
                             </div>
                         </div>
                         <span id='network_num' class="message_notification"></span>
@@ -429,8 +445,13 @@ if (!isset($page_identifier)) {
                     echo "current_page";
                 }
                 ?>"><a class="nav_option ellipsis_overflow" href="message">Inbox</a></li>
+                
+                <li style='background-image:url("Images/Icons/icons/application-plus.png");' onclick="show_group();" class="nav_option">
+                    <a class="nav_option ellipsis_overflow">Create Group</a>
+                </li>
             </ul>
         </div>
+<!--        <button style='float:right;margin-top:10px;' class='pure-button-primary smallest' onclick='' title='Create a Group'>+</button>-->
         <?php
         if ($page_identifier != "inbox") {
             include_once ("friends_list.php");

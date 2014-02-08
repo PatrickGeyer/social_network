@@ -96,23 +96,13 @@ class System extends Base{
     }
 
     public function jsVars() {
-        echo "<script>var WORD_THUMB = '" . self::WORD_THUMB . "';
-            var PDF_THUMB = '" . self::PDF_THUMB . "';
-            var AUDIO_THUMB = '" . self::AUDIO_THUMB . "';
-            var AUDIO_PLAY_THUMB = '" . self::AUDIO_PLAY_THUMB . "';
-            var AUDIO_PAUSE_THUMB = '" . self::AUDIO_PAUSE_THUMB . "';
-            var VIDEO_THUMB = '" . self::VIDEO_THUMB . "';
-                
-            var COMMENT_LIKE_TEXT = '" . self::COMMENT_LIKE_TEXT . "';
-            var COMMENT_UNLIKE_TEXT = '" . self::COMMENT_UNLIKE_TEXT . "';
-            var LIKE_TEXT = '" . self::LIKE_TEXT . "';
-            var UNLIKE_TEXT = '" . self::UNLIKE_TEXT . "';
-            
-            var LOADING_ICON = '" . self::LOADING_ICON . "';
-                
-            var RELOAD_STILL_BLACK = '" . self::RELOAD_STILL_BLACK . "';
-            var ERROR_RED = '" . self::ERROR_RED . "';
-            var SCROLL_OPTIONS = {
+        echo "<script id='js_vars'>";
+        $refl = new ReflectionClass('Base');
+        $constant = $refl->getConstants();
+        foreach ($constant as $var_name => $value) {
+            echo "var ".$var_name. "='".$value."';";
+        }
+        echo "var SCROLL_OPTIONS = {
                 scrollButtons:  
                 {
                     enable:false
@@ -122,12 +112,30 @@ class System extends Base{
                      updateOnContentResize: true,
                      updateOnBrowserResize:true,
                 },
-                scrollInertia:100,
+                scrollInertia:0,
                 theme:'dark',
                 autoHideScrollbar: true,
                 mouseWheelPixels: 100 
-            };
-            </script>";
+            };";
+        echo "</script>";
+//        echo "<script>var WORD_THUMB = '" . self::WORD_THUMB . "';
+//            var PDF_THUMB = '" . self::PDF_THUMB . "';
+//            var AUDIO_THUMB = '" . self::AUDIO_THUMB . "';
+//            var AUDIO_PLAY_THUMB = '" . self::AUDIO_PLAY_THUMB . "';
+//            var AUDIO_PAUSE_THUMB = '" . self::AUDIO_PAUSE_THUMB . "';
+//            var VIDEO_THUMB = '" . self::VIDEO_THUMB . "';
+//                
+//            var COMMENT_LIKE_TEXT = '" . self::COMMENT_LIKE_TEXT . "';
+//            var COMMENT_UNLIKE_TEXT = '" . self::COMMENT_UNLIKE_TEXT . "';
+//            var LIKE_TEXT = '" . self::LIKE_TEXT . "';
+//            var UNLIKE_TEXT = '" . self::UNLIKE_TEXT . "';
+//            
+//            var LOADING_ICON = '" . self::LOADING_ICON . "';
+//                
+//            var RELOAD_STILL_BLACK = '" . self::RELOAD_STILL_BLACK . "';
+//            var ERROR_RED = '" . self::ERROR_RED . "';
+//            
+//            </script>";
     }
 
     public function audioPlayer($path = null, $name = null, $close_button = false, $rndm = null) {
@@ -270,7 +278,14 @@ class System extends Base{
             }
         }
     }
-
+    
+    function date($time) {
+        if(date('Ymd') == date('Ymd', $time)) {
+            return date('H:i', $time);
+        }
+        return date('Y/m/d H:i', $time);
+    }
+    
     public function getPagePreview($url) {
         error_reporting(0);
         $this->url = $url;
@@ -283,38 +298,22 @@ class System extends Base{
         $html->load($this->get_web_html($this->url), true, false);
 
         $return_info = array();
-        $return_info['favicon'] = $this->getFavicon($html);
+        $return_info['favicon'] = $this->getFavicon($this->url);
         $return_info['title'] = $this->trimStr($this->getTitle($html), 80);
         $return_info['description'] = $this->trimStr($this->getDescription($html), 100);
         return $return_info;
     }
 
     private function getTitle($html) {
-        $title = 'No title';
+        $title = $this->url;
         foreach ($html->find('title') as $element) {
             $title = $element->innertext;
         }
         return $title;
     }
 
-    private function getFavicon($html) {
-        $icon = 'NA';
-        foreach ($html->find('link') as $element) {
-            if ($element->rel == "shortcut icon" || $element->rel == "icon") {
-                $icon = $element->href;
-            }
-        }
-        if ($icon == "NA") {
-            foreach ($html->find('meta[itemprop="image"]') as $element) {
-                $icon = $element->content;
-            }
-        }
-        $parse_path = parse_url($icon);
-        $parse_url = parse_url($this->url);
-        if (!isset($parse_path['scheme']) && substr($icon, 0, 2) != "//") {
-            $icon = $parse_url['scheme'] . "://" . $parse_url['host'] . $icon;
-        }
-        return $icon;
+    private function getFavicon($url) {        
+        return 'http://www.google.com/s2/favicons?domain='.$url;
     }
 
     private function getDescription($html = NULL) {

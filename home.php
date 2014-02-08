@@ -90,7 +90,7 @@ include_once('chat.php');
                     share_group_id = $(this).attr('share_id');
                     //console.log(share_group_id);
                 });
-                $('#file_share').mCustomScrollbar();
+                $('#file_share').mCustomScrollbar(SCROLL_OPTIONS);
                 $('#file_share').mCustomScrollbar("update");
 
             });

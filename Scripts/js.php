@@ -149,12 +149,10 @@ $system->jsVars();
         });
     });
     function progressBar(element, id) {
-        //console.log('progressBar id:' + id);
         $(element).append("<div id='progress_container_" + id + "' class='progress_container'><div id='progress_bar_"+id+"' class='progress_bar'></div></div>");
     }
     function updateProgress(id, progress) {
         $('#progress_bar_' + id).width(progress + "%");
-        console.log('#progress_bar_' + id);
     }
     function removeProgress(id) {
         $('#progress_container_' + id).remove();
@@ -374,7 +372,7 @@ $system->jsVars();
     setInterval(function() {
         alignNavFriend();
         resizeScrollers();
-    }, 200);
+    }, 500);
     function alignNavFriend()
     {
         var container_left = $('.container_headerbar').offset().left;
@@ -382,16 +380,9 @@ $system->jsVars();
 
         var nav_height = $('.navigation').outerHeight(true);
 
-        //$('#logo').css('left', container_left);
         $('.left_bar_container').css('left', container_left - 1);
-        $('#friends_container').css('padding-top', 22);
-
-        //var top_height = $('.navigation').position().top + $('.navigation').height();
-
-        //$('#friends_container').css('top', top_height + 22);
-
-//        $('.messagecomplete').css('top', top_height + 22);
-//        $('.messagecomplete').css('left', container_left - 2);
+        $('#friends_container').css('top', nav_height + 22);
+        $('.messagecomplete').css('top', nav_height + 22);
     }
 
     function scrollH(element_id, wrapper_id, speed)
@@ -479,7 +470,7 @@ $system->jsVars();
         if (properties.modal == true) {
             $('body').append("<div class='background-overlay'></div>");
         } else {
-            $('body').append("<div onclick='removeDialog()' style='opacity:0.1' class='background-overlay'></div>");
+            $('body').append("<div onclick='removeDialog()' style='opacity:0.25' class='background_white_overlay'></div>");
         }
 
         if (properties.loading == true)
@@ -514,7 +505,7 @@ $system->jsVars();
 
     function removeDialog()
     {
-        $('.background-overlay').remove();
+        $('.background-overlay, .background_white_overlay').remove();
 
         $('.dialog_container').css('min-height', '0px');
         $('.dialog_container').animate({height: 0, opacity: 0}, 'fast', function() {
@@ -786,11 +777,13 @@ $system->jsVars();
 
         } else if (type == "PDF Document") {
             text_to_append += documentStatus(object.path, object.name, object.description, PDF_THUMB);
+        } else if (type == "PPT Document") {
+            text_to_append += documentStatus(object.path, object.name, object.description, POWERPOINT_THUMB);
         } else {
             alert(type);
             text_to_append += "Type undetected";
         }
-        if (type == "WORD Document" || type == "PDF Document") {
+        if (type == "WORD Document" || type == "PDF Document" || type == "PPT Document" || type == "ACCESS Document" || type == "EXCEL Document") {
             post_media_classes += " post_media_double";
             post_media_style += "height:auto;";
             additional_close += " post_media_single_close";
@@ -1133,6 +1126,7 @@ $system->jsVars();
     function deleteFile(element, id)
     {
         $('#loading_icon').show();
+       $('#file_div_' + id).hide();
         $.post('Scripts/files.class.php', {action: "delete", id: id}, function(response)
         {
             $('#file_div_hidden_container_' + id).remove();
@@ -1144,7 +1138,9 @@ $system->jsVars();
         });
     }
     function refreshFileContainer(encrypted_folder) {
-        refreshElement('#file_container', 'files', 'pd=' + encrypted_folder, '#main_file', function() {
+        refreshElement('#file_container', 'files', 'pd=' + encrypted_folder, '#main_file', function(data) {
+            var files = $(data).find('#main_file');
+            $('#main_file').html(files.html());
             refreshVideoJs();
         });
     }

@@ -267,6 +267,7 @@ function alignUserPreview(element)
 function fillUserPreview(response)
 {
     response = $.parseJSON(response);
+    console.log(response);
     var user_string;
     user_string = ("<table style='height:100%;width:100%;' cellspacing='0'><tr><td rowspan='3' style='width:80px;'><div style='width:70px;height:70px;background-image:url(" +
             response[2] + ");background-size:cover;background-repeat:no-repeat;'></div></td>");
@@ -277,14 +278,8 @@ function fillUserPreview(response)
             "'><span class='user_preview_community'>" + response[4] + "</span></a><span class='user_preview_position'> &bull; " + response[5] + "</span></td></tr>";
     user_string += "<tr><td><span class='user_preview_about'>" + response[3] + "</span></td></tr>";
     
-        
-    var user_message_info = new Array();
-    user_message_info['name'] = response[1];
-    user_message_info['id'] = response[0];
-            
-    var info = JSON.stringify(user_message_info);
     user_string += "<tr><td></td><td><div class='user_preview_buttons'>" +
-            "<button onclick='window.location.assign(\"message?c=" + info + "\");' class='pure-button-success smallest'>Message</button></div></td></tr>";
+            "<button onclick='window.location.assign(\"message?c=" + response[0] + "\");' class='pure-button-success smallest'>Message</button></div></td></tr>";
 
     user_string += "</table>";
 

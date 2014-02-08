@@ -2,8 +2,10 @@ input[type="submit"].chatsend {
     display: none;
 }
 div.messagecomplete{
-    margin-top: 10px;
-    z-index: 1200;
+    position: absolute;
+    bottom: 0px;
+    width: 200px;
+    z-index: 12;
 }
 
 #messagetoolbox{

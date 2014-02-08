@@ -235,6 +235,10 @@ class Files {
                 case "doc" :
                     $extn = "WORD Document";
                     break;
+                case "pptx" :
+                case "ppt" :
+                    $extn = "PPT Document";
+                    break;
                 case "xls" :
                 case "xlsx" :
                 case "xlsm" :
@@ -324,6 +328,9 @@ class Files {
         echo "</tr></table></div>";
         $views = $this->getViewCount($file['id']);
         echo "<p class='files ellipsis_overflow' style='float:right;'>" . $views . " views</p>";
+        $home = Home::getInstance();
+        $likes = $home->getLikeNumber($this->getActivity($file['id']));
+        echo "<p class='files ellipsis_overflow' style='float:right;margin-right:5px;'>" . $likes . " likes -</p>";
         echo "</div>";
     }
 
@@ -419,32 +426,11 @@ class Files {
     }
 
     public function tinyPreview($file) {
-        if ($file['type'] == "Audio") {
-            return $this->tinyPreviewHelper(System::AUDIO_THUMB);
-        }
-        else if ($file['type'] == "Image") {
+        if ($file['type'] == "Image") {
             return $this->tinyPreviewHelper($file['thumb_path'], "files_icon_preview_image");
         }
-        else if ($file['type'] == "Video") {
-            return $this->tinyPreviewHelper(System::VIDEO_THUMB);
-        }
-        else if ($file['type'] == "Folder") {
-            return $this->tinyPreviewHelper(System::FOLDER_THUMB);
-        }
-        else if ($file['type'] == "PDF Document") {
-            return $this->tinyPreviewHelper(System::PDF_THUMB);
-        }
-        else if ($file['type'] == "WORD Document") {
-            return $this->tinyPreviewHelper(System::WORD_THUMB);
-        }
-        else if ($file['type'] == "EXCEL Document") {
-            return $this->tinyPreviewHelper(System::EXCEL_THUMB);
-        }
-        else if($file['type'] == "ZIP Archive") {
-            return $this->tinyPreviewHelper(System::ZIP_THUMB);
-        }
         else {
-            return $this->tinyPreviewHelper(System::FILE_THUMB);
+            return $this->tinyPreviewHelper($this->getFileTypeImage($file, 'ICON'), "files_icon_preview_image");
         }
     }
 
@@ -489,8 +475,43 @@ class Files {
         else if ($file['type'] == "PDF Document") {
             echo $this->pdfPreview($file);
         }
+        else {
+            $file['thumb_path'] = $this->getFileTypeImage($file);
+            echo $this->imagePreview($file);
+        }
     }
-
+    function getFileTypeImage($file, $size = "THUMB") {
+        if ($file['type'] == "Audio") {
+            return constant("BASE::AUDIO_THUMB"); //CHANGE TO SIZE
+        }
+        else if ($file['type'] == "Image") {
+            return constant("BASE::IMAGE_".$size);
+        }
+        else if ($file['type'] == "Video") {
+            return constant("BASE::VIDEO_".$size);
+        }
+        else if ($file['type'] == "Folder") {
+            return constant("BASE::FOLDER_".$size);
+        }
+        else if ($file['type'] == "PDF Document") {
+            return constant("BASE::PDF_".$size);
+        }
+        else if ($file['type'] == "WORD Document") {
+            return constant("BASE::WORD_".$size);
+        }
+        else if ($file['type'] == "EXCEL Document") {
+            return constant("BASE::EXCEL_".$size);
+        }
+        else if ($file['type'] == "ZIP Archive") {
+            return constant("BASE::ZIP_".$size);
+        }
+        else if($file['type'] == "PPT Document") {
+            return constant("BASE::POWERPOINT_".$size);
+        }
+        else {
+            return constant("BASE::FILE_".$size);
+        }
+    }
     private function imagePreview($file) {
         return "<div class='audio_hidden_container' id='file_div_hidden_container_" . $file['id'] . "'>"
                 . "<div id='buffer_" . $file['id'] . "' style='position:absolute;height:20px;width:20px;"
@@ -648,8 +669,17 @@ class Files {
             ":name" => $name,
             ":file_id" => $file_id
         ));
-        return "200";
     }
+    
+    function removeFromPost($file_id, $post_id) {
+        $sql = "UPDATE activity_media SET visible = 0 WHERE file_id = :file_id AND activity_id = :post_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":post_id" => $post_id,
+            ":file_id" => $file_id
+        ));
+    }
+    
     function getUsedSize() {
         $sql = "SELECT size FROM files WHERE user_id = :user_id;";
         $sql = $this->database_connection->prepare($sql);
@@ -894,6 +924,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 "post" => $home->homeify($home->getSingleActivity($files->getActivity($_POST['file_id'], "File")), 'preview', $activity_id),
             );
             die(json_encode($array));
+        }
+        else if($_POST['action'] == "removePostFile") {
+            $files->removeFromPost($_POST['file_id'], $_POST['activity_id']);
         }
     }
 }

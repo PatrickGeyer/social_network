@@ -364,21 +364,13 @@ class Home {
     public function getAssocFiles($activity_id = NULL) {
         $sql = "SELECT * FROM files AS files "
                 . "LEFT JOIN (SELECT file_id, URL, web_title, web_description, web_favicon FROM activity_media WHERE activity_id = :activity_id) AS act ON files.id = act.file_id "
-                . "WHERE files.id IN (SELECT file_id FROM activity_media WHERE activity_id = :activity_id); ";
+                . "WHERE files.id IN (SELECT file_id FROM activity_media WHERE activity_id = :activity_id AND visible=1); ";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(
                 array(
                     ":activity_id" => $activity_id,
         ));
         $file_array = $sql->fetchAll(PDO::FETCH_ASSOC);
-//        $sql = "SELECT * FROM activity_media WHERE activity_id = :activity_id AND `URL` IS NOT NULL;";
-//        $sql = $this->database_connection->prepare($sql);
-//        $sql->execute(
-//                array(
-//                    ":activity_id" => $activity_id,
-//        ));
-//        $web_array = $sql->fetchAll(PDO::FETCH_ASSOC);
-//        $result_array = array_merge($file_array, $web_array);
         return $file_array;
     }
 
@@ -424,7 +416,11 @@ class Home {
             $post_classes .= "post_media_video";
             $post_content .= $this->system->videoPlayer($file['id'], $file['path'], $classes, "height:100%;", "home_feed_video_", TRUE);
         }
-        else if ($file['type'] == "WORD Document" || $file['type'] == "PDF Document" || $file['type'] == "EXCEL Document") {
+        else if ($file['type'] == "WORD Document" 
+                || $file['type'] == "PDF Document" 
+                || $file['type'] == "EXCEL Document"
+                || $file['type'] == "PPT Document") {
+            //echo $file['type'];
             $post_styles .= "height:auto;";
             $post_classes .= "post_media_double";
             $post_content .= $this->showDocFile($file);
@@ -437,30 +433,30 @@ class Home {
         else {
             $post_classes .= "post_media_full";
             $post_styles .= "height:auto;";
-            $post_content .= "<table style='height:100%;'><tr><td rowspan='3'>" .
+            $post_content .= "<table style='height:100%;margin:10px;'><tr><td rowspan='3'>" .
                     "<div class='post_media_webpage_favicon' style='background-image:url(&quot;" . $file['web_favicon'] . "&quot;);'></div></td>" .
                     "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>" .
                     "<a class='user_preview_name' target='_blank' href='" . $file['URL'] . "'><span style='font-size:13px;'>" . $file['web_title'] . "</span></a></div></td></tr>" .
                     "<tr><td><span style='font-size:12px;' class='user_preview_community'>" . $file['web_description'] . "</span></td></tr></table>";
         }
-        echo "<div " . $post_classes . "' " . $post_styles . "'>" . $post_content . "</div>";
+        echo "<div file_id='".$file['id']."' " . $post_classes . "' " . $post_styles . "'>" . $post_content;
+        if($this->user->user_id == $activity['user_id']) {
+            echo "<div style='background-image: url(\"".Base::DELETE."\");' class='delete_cross delete_cross_top remove_file_post'></div>";
+        }
+        echo "</div>";
     }
 
     private function showDocFile($file) {
         $return = $link = $path = NULL;
-        if($file['type'] == "WORD Document") {
-            $path = System::WORD_THUMB;
-        } else if($file['type'] == "PDF Document") {
-            $path = System::PDF_THUMB;
-            $link = "viewer?id=" . $file['id'];
-        } else if($file['type'] == "EXCEL Document") {
-            $path = System::EXCEL_THUMB;
-        } else if($file['type'] == "Folder") {
+        $path = $this->files->getFileTypeImage($file, 'THUMB');
+        if($file['type'] == "Folder") {
             $path = System::FOLDER_THUMB;
             $link = "files?pd=".urlencode($this->system->encrypt($file['folder_id']));
+        } else {
+            $link = "files?f=".$file['id'];
         }
         
-        $return = "<table style='height:100%;'><tr><td rowspan='3'>"
+        $return = "<table style='height:100%;margin:10px;'><tr><td rowspan='3'>"
                 . "<div class='post_media_webpage_favicon' style='background-image:url(&quot;"
                 . $path . "&quot;);'></div></td>"
                 . "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>"
@@ -551,12 +547,12 @@ class Home {
 //        ));
     }
 
-    private function getLikeNumber($post_id) {
+    public function getLikeNumber($post_id) {
         $who_liked_query = "SELECT id FROM `votes` WHERE vote_value = 1 AND post_id = :activity_id;";
         $who_liked_query = $this->database_connection->prepare($who_liked_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $who_liked_query->execute(array(":activity_id" => $post_id));
         $like_count = $who_liked_query->rowCount();
-        echo $like_count;
+        return $like_count;
     }
     
     function comment_like_count($comment_id) {

@@ -2,6 +2,12 @@
 var profile_picture_id;
 $(function() {
 
+    //QUICK AUDIO PLAYER FIX
+    $(document).on('click', '.audio_hidden_container', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+    });
+
     adjustSwitches();
 
     var entered = 0;
@@ -30,14 +36,6 @@ $(function() {
             files = event.dataTransfer || (event.originalEvent && event.originalEvent.dataTransfer);
         }
         uploadDragDrop(element, files.files);
-        // uploadFile(files.files, function(){}, function(pgs){
-        //     updateProgress('random', pgs);
-        // }, function(file){
-        //     removeProgress('random');
-        //     element.css('background', "url('" + file.path + "')");
-        //     element.addClass('upload_done');
-        //     profile_picture_id = file.id;
-        // });
     });
 
     function uploadDragDrop(element, files) {
@@ -77,7 +75,14 @@ $(function() {
         }
         resizeTextarea($(this), clone);
     });
-
+    
+    $(document).on('click', '.remove_file_post', function() { //DELETE FILES FROM POST
+        var file_id = $(this).parents('.post_feed_item').attr('file_id');
+        var activity_id = $(this).parents('.singlepostdiv').attr('activity_id');
+        $(this).parents('.post_feed_item').remove();
+        $.post('Scripts/files.class.php', {action: "removePostFile", file_id: file_id, activity_id: activity_id}, function() {});
+    });
+    
     $(document).on('click', '.comment_delete', function() {
         var comment_id = $(this).parents('div.single_comment_container').attr('comment_id');
         $(this).parents('.single_comment_container').next('hr.post_comment_seperator').remove();
@@ -323,7 +328,8 @@ function search(text, mode, element, callback) {
     if (text == "") {
         $(element).hide();
     } else {
-        var loader = $("<img src='Images/ajax-loader.gif'></img>");
+        var loader = $("<img class='loader' src='Images/ajax-loader.gif'></img>");
+        $(element).children('img.loader').remove();
         $(element).prepend(loader);
         $(element).show();
     }

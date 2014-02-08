@@ -129,7 +129,7 @@ class Group {
         $this->database_connection->commit();
         if(is_array($receivers)) {
             foreach ($receivers as $member) {
-                var_dump($receivers);
+                //var_dump($receivers);
                 $group_query = "INSERT INTO `group_invite` (inviter_id, receiver_id, group_id) VALUES (:user_id, :member_id, :new_group_id);";
                 $group_query = $this->database_connection->prepare($group_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
                 if (!$group_query->execute(array(":user_id" => $this->user->user_id, ":member_id" => $member['receiver_id'], ":new_group_id" => $new_group_id))) {

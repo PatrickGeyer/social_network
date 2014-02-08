@@ -6,6 +6,9 @@ if (!isset($_GET['i'])) {
 
 if (isset($_GET['pd'])) {
     $parent_folder = urldecode($system->decrypt($_GET['pd']));
+    if(empty($parent_folder)) {
+        $parent_folder = 0;
+    }
 }
 else {
     $parent_folder = 0;
@@ -38,10 +41,6 @@ $used_width = ($used_width / 1073741824) * 100;
         <script src="Scripts/external/jquery.form.js"></script>
         <title>My Files</title>
         <script>
-            var audioThumb = '<?php echo Base::AUDIO_THUMB; ?>';
-            var videoThumb = '<?php echo Base::VIDEO_THUMB; ?>';
-            var imageThumb = '<?php echo Base::IMAGE_THUMB; ?>';
-
             var parent_folder = <?php echo $parent_folder; ?>;
             var encrypted_folder = '<?php echo urlencode($system->encrypt($parent_folder)); ?>';
             $(function() {
@@ -82,12 +81,14 @@ $used_width = ($used_width / 1073741824) * 100;
                             type: 'success',
                             text: "Upload",
                             onclick: function() {
+                                var uploadCount = 0;
                                 $('.upload_preview').each(function() {
-                                            $(this).css('padding-bottom', '16px');
-                                            $(this).css('margin-bottom', '3px');
-                                            $(this).css('position', 'relative');
-                                            progressBar($(this), $(this).attr('id'));
-                                        }); 
+                                    uploadCount++;
+                                    $(this).css('padding-bottom', '25px');
+                                    $(this).css('margin-bottom', '3px');
+                                    $(this).css('position', 'relative');
+                                     progressBar($(this), $(this).attr('id'));
+                                }); 
                                 for (var i = 0; i < input.length; i ++) {
                                     (function(sync_i) {
                                         uploadFile(input[sync_i], 
@@ -99,9 +100,14 @@ $used_width = ($used_width / 1073741824) * 100;
                                             }, function() {
                                                 removeProgress(sync_i + "_upload_preview");
                                                 $("#" + sync_i + "_upload_preview").css('background-color', '#98FB98');
-                                                //removeDialog();
-                                                //window.location.reload();
-                                            }, properties={type:"File"}
+                                                uploadCount--;
+                                                if(uploadCount == 0) {
+                                                    removeDialog();
+                                                    refreshFileContainer(encrypted_folder);
+                                                }
+                                            }, properties={
+                                                type:"File",
+                                            }
                                         );
                                     })(i);
                                 };
@@ -116,7 +122,7 @@ $used_width = ($used_width / 1073741824) * 100;
                         }],
                     properties = {
                         title: "Upload Files",
-                        modal: true,
+                        modal: false,
                     }
                     );
                 });
@@ -200,11 +206,11 @@ $used_width = ($used_width / 1073741824) * 100;
                     name.append(file.name);
                     var type = getType(extension)
                     if (type == "Video") {
-                        image[i].css('background-image', "url('" + videoThumb + "')");
+                        image[i].css('background-image', "url('" + VIDEO_THUMB + "')");
                     } else if (type == "Image") {
                         readURL(file, image[i]);
                     } else if (type == "Audio") {
-                        image[i].css('background-image', "url('" + audioThumb + "')");
+                        image[i].css('background-image', "url('" + AUDIO_THUMB + "')");
                     }
                     var size = file.size;
                     var file_container = $("<div  class='upload_preview' style='margin-bottom:10px;'>");

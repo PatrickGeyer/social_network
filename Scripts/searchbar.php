@@ -46,7 +46,7 @@ if (isset($_POST['search']) && $_POST['search'] == "universal") {
                 NULL, 
                 NULL, 
                 $class, 
-                "window.location.replace(\"user?id=" . base64_encode($row['id'])."\');", 
+                "window.location.replace(\"user?id=" . base64_encode($row['id'])."\");", 
                 "<img class='profile_picture' src='".$user->getProfilePicture('chat', $row['id'])."'></img>", 
                 $user->getName($row['id']), 
                 $user->getAbout($row['id']));
@@ -71,7 +71,7 @@ if (isset($_POST['search']) && $_POST['search'] == "universal") {
                 NULL, 
                 NULL, 
                 $class, 
-                "alert(\'hi\');", 
+                "window.location.replace(\"files?f=" . $row['id'] . "\");", 
                 $files->tinyPreview($file),
                 $file['name'],
                 $file['description']

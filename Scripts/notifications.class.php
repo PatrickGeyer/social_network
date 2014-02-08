@@ -61,6 +61,36 @@ class Notification {
         return $user;
     }
 
+    function getMessageList() {
+
+        $message_count = $this->getMessageNum();
+        $messages = $this->getMessage();
+        foreach ($messages as $message) {
+            $participants = $this->getReceivers($message['thread'], 'list');
+            $picture = $this->user->getProfilePicture('chat', $message['sender_id']);
+            //$names = $notification->styleReceiverList($participants, 'list');
+            echo "<li class='";
+            if ($message['read'] == 0) {
+                echo "messageunread";
+            }
+            else {
+                echo "message";
+            }
+            echo "'><a class='message' href='message?thread=" . $message['thread'] . "&id=" . $message['id'] . "'>"
+            . "<div style='display:table-row;'>"
+            . "<div class='notification_user_image'>"
+            . $this->getMessagePicture(NULL, $message['thread'])
+            . "</div><div style='display:table-cell;vertical-align:top;'>"
+            . "<p class='ellipsis_overflow notification_name'>" . $participants . "</p>"
+            . "<p class='ellipsis_overflow notification_info'>" . $message['message']
+            . "</p></div></div></a></li> ";
+        }
+        $total_message_count = count($messages);
+        if ($total_message_count == 0) {
+            echo "<div style='padding:5px;color:grey;'>No Messages</div>";
+        }
+    }
+
     function markMessageRead($type = 'thread', $id) {
         if ($type == "thread") {
             $thread = $id;
@@ -265,6 +295,37 @@ class Notification {
         return $user;
     }
 
+    function getNotificationList() {
+        $notify_count = $this->getNotificationNum();
+        $notifications = $this->getNotification();
+        foreach ($notifications as $notify) {
+            $picture = $this->user->getProfilePicture("chat", $notify['sender_id']);
+            $name = $this->user->getName($notify['sender_id']);
+            echo "<li onclick='markNotificationRead(" . $notify['id'] . ", \"post?a=" . $notify['post_id'] . "\");' class='";
+            if ($notify['read'] == 0) {
+                echo "messageunread";
+            }
+            else {
+                echo "message";
+            }
+
+            if ($notify['type'] == 'like' || $notify['type'] == 'dislike') {
+                echo "'><div style='display:table-row;'>"
+                . "<img class='notification_user_image' src='" . $picture . "'></img>"
+                . "<p style='vertical-align:top; display:table-cell;'><b>" . $name . "</b> liked on your post</p></div></li> ";
+            }
+            else if ($notify['type'] == 'comment_like') {
+                echo "'><div style='display:table-row;'>"
+                . "<img class='notification_user_image' src='" . $picture . "'></img>"
+                . "<p style='vertical-align:top; display:table-cell;'><b>" . $name . "</b> liked your comment</p></div></li> ";
+            }
+        }
+        $total_notify_count = count($notifications);
+        if ($total_notify_count == 0) {
+            echo "<div style='padding:5px;color:grey;'>No Notifications</div>";
+        }
+    }
+
     function markAllNotificationsSeen() {
         $this->database_connection->query("UPDATE notification SET seen = 1 WHERE receiver_id = " . base64_decode($_COOKIE['id']) . "");
     }
@@ -295,6 +356,57 @@ class Notification {
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
         $user = $user_query->rowCount();
         return $user;
+    }
+
+    function getNetworkList() {
+        $network_count = $this->getNetworkNum();
+        $networks = $this->getNetwork();
+        $total_network_count = count($networks);
+        if ($total_network_count == 0) {
+            echo "<div style='padding:5px;color:grey;'>No Network Notifications</div>";
+        }
+        foreach ($networks as $network) {
+            $picture = $this->user->getProfilePicture("chat", $network['inviter_id']);
+            $group_name = $group->getGroupName($network['group_id']);
+            $group_id = $network['group_id'];
+
+            echo "<li class='";
+            if ($network['read'] == 0) {
+                echo "messageunread";
+            }
+            else {
+                echo "message";
+            }
+            echo "'><table><tr style='vertical-align:top;'>"
+            . "<td style='min-width:40px;'>"
+            . "<img class='notification_user_image' src='" . $picture . "'></img>"
+            . "</td><td>"
+            . "<p style='margin:0;text-align:left;font-size:13px;'>"
+            . str_replace('$group', '"' . $group_name . '"', str_replace('$user', $user->getName($network['inviter_id']), $phrase->get('group_invite', 'en')))
+            . "</p></td><td><table cellspacing='0' cellpadding='0'><tr><td>";
+            if ($network['invite_status'] == 2) {
+                echo "<button style='margin:0;' onclick='rejectGroup("
+                . $group_id . ", " . $network['id'] . ");' "
+                . "class='pure-button-yellow small' id='leave_group_" . $network['id'] . "'>Leave</button>";
+            }
+            else if ($network['invite_status'] == 0) {
+                echo "<button style='margin:0;' onclick='joinGroup("
+                . $group_id . ", " . $network['id'] . ");' "
+                . "class='pure-button-primary small' id='join_button_" . $network['id'] . "'>Join</button>";
+            }
+            else {
+                echo "<button style='margin:0;' onclick='joinGroup("
+                . $group_id . ", " . $network['id'] . ");' "
+                . "class='pure-button-success small' "
+                . "id='join_button_" . $network['id'] . "' >Join</button>"
+                . "</td></tr><tr><td><button onclick='rejectGroup(" . $group_id . ", " . $network['id'] . ");' "
+                . "class='pure-button-error small' id='reject_button_" . $network['id'] . "'>Reject</button>";
+                echo "<button style='margin:0;display:none;' onclick='rejectGroup("
+                . $group_id . ", " . $network['id'] . ");' "
+                . "class='pure-button-yellow small' id='leave_button_" . $network['id'] . "'>Leave</button>";
+            }
+            echo "</td></tr></table></td></tr></table></li>";
+        }
     }
 
     function markAllNetworkSeen() {
@@ -337,6 +449,15 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             $return['notification'] = $notify->getNotificationNum();
             $return = json_encode($return);
             die($return);
+        }
+        else if($_POST['action'] === "messageList") {
+            die($notify->getMessageList());
+        }
+        else if($_POST['action'] === "notificationList") {
+            die($notify->getNotificationList());
+        }
+        else if($_POST['action'] === "networkList") {
+            die($notify->getNetworkList());
         }
     }
 }

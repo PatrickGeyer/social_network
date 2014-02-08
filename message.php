@@ -36,6 +36,11 @@ if (isset($_POST['action']) && $_POST['action'] == 'delete') {
         <link rel="stylesheet" type="text/css" href="CSS/message.css">
         <title>Inbox</title>
         <script>
+            $(document).on('click', '#message_reply_button', function() {
+                $(this).attr("disabled", "disabled");
+                $(this).addClass("pure-button-disabled");
+                sendMessage(true);
+            });
             $(function() {
                 var box_shadow = $('.message_convo_header').css('box-shadow');
                 $('.message_convo_wrapper').mCustomScrollbar(SCROLL_OPTIONS);
@@ -122,12 +127,20 @@ if (isset($_POST['action']) && $_POST['action'] == 'delete') {
                 else {
                     message = $('.message_compose_box').last().val();
                 }
+                message = message.replace(/^\s+|\s+$/g,"");
+                if (message == "")
+                {
+                    $('.message_reply_button').removeAttr('disabled');
+                    $('.message_reply_button').removeClass('pure-button-disabled');
+                   return;
+                }
                 $.post("Scripts/notifications.class.php", {action: "sendMessage", reply: reply, message: message, receivers: receivers, thread_id: thread}, function(response)
                 {
                     if (response == "")
                     {
-                       // window.location.replace("message?thread=" + status[1]);
-                       window.location.reload();
+                        window.location.reload();
+                        $('.message_reply_button').removeAttr('disabled');
+                        $('.message_reply_button').removeClass('pure-button-disabled');
                     }
                     else
                     {
@@ -138,21 +151,20 @@ if (isset($_POST['action']) && $_POST['action'] == 'delete') {
             <?php
             if(isset($_GET['r'])) {
                 $receivers = unserialize($_GET['r']);
+                echo "composeMessage();";
                 foreach ($receivers as $receiver) {
-                    echo "add";
+                    echo "addreceivermessage(".$receiver.", '".$user->getName($receiver)."');";
                 }
             }
             ?>
-            <?php
-            if(isset($_GET['c'])) {
-                $receiver = json_decode($_GET['c']);
-                echo "<script>composeMessage();</script>";
-                echo "<script>addreceivermessage(".$receiver['id'].", '".$receiver['name']."');</script>";
-            }
-            ?>
-        </script>
-        <script>
+
             $(function() {
+                <?php
+                if(isset($_GET['c'])) {
+                    $receiver = base64_decode($_GET['c']);
+                    echo "composeMessage();addreceivermessage(".$receiver.", '".$user->getName($receiver)."');";
+                }
+                ?>
                 $(".delete").hide();
                 $("#deletebutton").click(function() {
                     $(".delete").toggle("slide");
@@ -182,6 +194,9 @@ if (isset($_POST['action']) && $_POST['action'] == 'delete') {
                         {type: "html", content: html},
                 [{text: "Send", type: "success", onclick: function() {
                             sendMessage(false);
+                            dialogLoad();
+                            $(this).attr('disabled', 'disabled');
+                            $(this).addClass('pure-button-disabled');
                         }}],
                 {modal: false, width: "50%", title: "Compose"}
                 );
@@ -196,9 +211,8 @@ if (isset($_POST['action']) && $_POST['action'] == 'delete') {
         </div>
         <div class="messagecomplete">
             <div id="message" class="messagehi">
-                <div id= "messagetoolbox" class="messagetoolbox">
+                <div id= "messagetoolbox" class="messagetoolbox" style="border-left: 1px solid lightgrey;">
                     <button onclick='composeMessage();' title="Compose a message" class="pure-button-primary smallest" id='message_compose'>Compose</button>
-                    <!--<button id='deletebutton' class="pure-button-error smallest">Delete</button>-->
                 </div>
                 <div style='border:0;max-height:65%;overflow-x:hidden;' class="scroll_thin">
                     <ul class="message_list_container">
@@ -242,7 +256,7 @@ if (isset($_POST['action']) && $_POST['action'] == 'delete') {
 //                            
         }
         else {
-            echo "<div class='container' style='bottom:10px;' id='compose'>";
+            echo "<div class='container' style='height:80%;' id='compose'>";
             $messages = $notification->getMessage('thread', $current_thread);
             $messagecount = count($messages);
             if ($messagecount != 0) {
@@ -261,7 +275,7 @@ if (isset($_POST['action']) && $_POST['action'] == 'delete') {
                     . "'>"
                     . $user->getName($message['sender_id'])
                     . "<a/></td><td style='text-align:right;'><span class='message_convo_time'>"
-                    . $system->humantiming($message['time'])
+                    . $system->date($message['time'])
                     . "</span></td></tr>"
                     . "<tr><td><span class='message_convo_text'>"
                     . $message['message']
@@ -271,7 +285,7 @@ if (isset($_POST['action']) && $_POST['action'] == 'delete') {
                 echo "</table></div><div class='message_reply_container'>"
                 . "<textarea placeholder='Write a Reply...' class='message_reply_box' id='reply_value'></textarea>"
                 . "<div class='message_reply_options'>"
-                . "<button style='float:right;' class='pure-button-primary small' onclick='sendMessage(true);'>Reply</button>"
+                . "<button style='float:right;' class='pure-button-primary small' id='message_reply_button'>Reply</button>"
                 . "</div></div>";
             }
             else {
