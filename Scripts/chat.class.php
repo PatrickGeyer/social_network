@@ -135,8 +135,8 @@ class Chat {
         echo "'>";
         echo "<table cellspacing='0' cellpadding='0' style='width:100%;'><tr>";
         echo "<td style='width:50px;padding-right:5px;'>";
-        echo "<div class='chat_user_profile' style='border-left:2px solid "
-        .($this->user->getOnline($record['user_id']) == true ? "rgb(28, 184, 65)" : "red")."; float:left;width:40px;height:40px;background-image:url(" . 
+        echo "<div class='profile_picture_medium profile_picture_".$record['user_id']."' style='border-left:2px solid "
+        .($this->user->getOnline($record['user_id']) == true || $record['user_id'] == $this->user->user_id ? "turquoise" : "grey")."; float:left;width:40px;height:40px;background-image:url(" . 
                 $this->user->getProfilePicture('chat', $record['user_id']) . ");background-size:cover;'></div>";
         echo "</td><td>";
         echo "<div class='chatname'><span class='user_preview user_preview_name chatname' style='margin-right:5px;font-size:13px;' user_id='"

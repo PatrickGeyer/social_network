@@ -155,7 +155,7 @@ include_once('chat.php');
                         if ($userid == $user->getId()) {
                             echo "<button onclick='window.location.assign(&quot;settings&quot;);' "
                             . "style='position:absolute; right:10px; top:15px;' "
-                            . "class='pure-button-success small'>Manage</button>";
+                            . "class='pure-button-primary'>Manage</button>";
                         }
 
                         if ($userid != $user->getId()) {
@@ -197,7 +197,7 @@ include_once('chat.php');
                     </td>
                 </tr>
             </table>
-            <div id='feed_wrapper_scroller' style='padding-left:20px;border-top:1px solid lightgrey;border-bottom:1px solid lightgrey;'>
+            <div class='feed_wrapper_scroller'>
                 <table cellspacing='0'>
                     <tr>
                         <td style='margin-right:5px;'>
@@ -221,11 +221,10 @@ include_once('chat.php');
                 <div class='feed_container' id="feed_refresh">
                     <?php
                     if ($feed_id == "p") {
-                        $array = $user->getActivity($userid);
-                        print_r($array);
+                        $array = $entity->getActivityQuery($userid)->fetchAll(PDO::FETCH_ASSOC);
                         $count = count($array);
                         foreach ($array as $activity) {
-                            $home->homeify($activity, $database_connection, $user);
+                            $home->homeify($activity, 'home', NULL);
                         }
                     }
                     else {
@@ -240,6 +239,6 @@ include_once('chat.php');
             </div>
             <div id='invite_text' style='display:none;'></div>
         </div>
-         <?php include_once 'right_bar.php'; ?>
+        <?php include_once 'right_bar.php'; ?>
     </div>
 </body>

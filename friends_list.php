@@ -60,7 +60,7 @@
                     }
                     while ($friends = $query->fetch(PDO::FETCH_ASSOC)) {
                         $valid = "";
-                        echo "<li class='" . ($user->getOnline($friends['id']) == true ? 'friend_list_on' : 'friend_list_off') . " user_preview' user_id='" . $friends['id'] . "'>"
+                        echo "<li class='" . ($user->getOnline($friends['id']) == true ? 'friend_list_on' : 'friend_list_off') . " profile_picture_".$friends['id']." user_preview' user_id='" . $friends['id'] . "'>"
                         . "<a class='friend_list ellipsis_overflow' style='background-image:url(" . $user->getProfilePicture('chat', $friends['id']) . ");' 
                         href ='user?id=" . urlencode(base64_encode($friends['id'])) . "'>"
                         . $friends['name'] . "</a></li>";

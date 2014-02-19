@@ -36,7 +36,7 @@ if (!isset($_COOKIE['chat_feed'])) {
         $(function()
         {
             iniScrollChat();
-            sendChatRequest('true', current_view);
+            sendChatRequest('false', current_view);
 
             var cookie = getCookie("chat_feed");
             if (cookie == 0)
@@ -253,7 +253,9 @@ if (!isset($_COOKIE['chat_feed'])) {
     </div>
     <div class="chatoutput">
         <img id='chat_loading_icon' src='Images/ajax-loader.gif'></img>
-        <ul style='max-width:225px;' class='chatbox' id="chatreceive"></ul>
+        <ul style='max-width:225px;' class='chatbox' id="chatreceive">
+            <?php $chat->getContent($chat_feed, 'true'); ?>
+        </ul>
     </div>
     <div class='text_input_container'>
         <textarea id="text" class="thin chatinputtext"  placeholder="Press Enter to send..." style='font-size: 12px;border:0px;width:100%;resize:none;overflow:hidden;'></textarea>

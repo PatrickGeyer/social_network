@@ -321,6 +321,32 @@ function removeUserPreview(mode, event)
         }
     }
 }
+$(function() {
+    getOnlineMass();
+});
+function getOnlineMass() {
+    var users = new Array();
+    $('[user_id]').each( function() {
+        if($.inArray($(this).attr('user_id'), users) === -1) {
+            users.push($(this).attr('user_id'));
+        }
+    });
+    $.post('Scripts/user.class.php', {action: "getOnlineMass", users: users}, function(response) {
+        response = $.parseJSON(response);
+//        for(var key in response) {
+            for (var prop in response) {
+                if(response.hasOwnProperty(prop)) {
+                    if(response[prop] == true) {
+                        $('.profile_picture_' + prop).css('border-left', '2px solid turquoise');
+                    } else {
+                        $('.profile_picture_' + prop).css('border-left', '2px solid grey');
+                    }
+                  //alert(prop + " = " + response[prop]);
+                }
+            }
+       // }
+    });
+}
 
 function calculateDistance(elem, mouseX, mouseY)
 {

@@ -194,7 +194,7 @@ class Home {
         if ($view == 'home') {
             echo "<div class='post_height_restrictor' id='post_height_restrictor_" . $activity['id'] . "'>";
             echo '<div activity_id="'.$activity['id'].'" id="single_post_' . $activity['id'] . '" class="singlepostdiv">';
-            echo "<div id='" . $activity['id'] . "'>";
+            echo "<div id='" . $activity['id'] . "'>";     //3
             echo "<table onmouseenter='refreshContent(" . $activity['id'] . ");' class='singleupdate'><tr>"
             . "<td class='updatepic' style='width:65px;'>";
             echo "<a class='user_name_post' href='user?id=" . urlencode(base64_encode($activity['user_id'])) . "'>";
@@ -221,8 +221,8 @@ class Home {
             echo $this->commentInput($activity);
             
 
+            echo "</td></tr></table></div>";
             echo "</td></tr></table></div></div>";
-            echo "</div></td></tr></table></div></div></div>";
         }
         else if($view == "preview") {
             $return = '';

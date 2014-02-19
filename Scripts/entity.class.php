@@ -10,7 +10,6 @@ class Entity {
     private $database_connection;
 
     public function __construct() {
-        $this->user = User::getInstance();
         $this->database_connection = Database::getConnection();
     }
 
@@ -33,7 +32,8 @@ class Entity {
       /* 4. $min_activity_id (default = 0)
      */
     function getActivityQuery($filter = NULL, $group_id = NULL, $user_id = NULL, $min_activity_id = 0) {
-        $min_activity_id_query = "AND id >" . ($min_activity_id == 0 ? "=".$min_activity_id: $min_activity_id);
+        $this->user = User::getInstance();
+        $min_activity_id_query = "AND id >" . ($min_activity_id == 0 ? "=" . $min_activity_id : $min_activity_id);
 
         if (isset($group_id)) {
             $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN "
@@ -79,10 +79,10 @@ class Entity {
                     . " AND visible = 1 " . $min_activity_id_query . " ORDER BY time DESC";
             $activity_query = $this->database_connection->prepare($activity_query);
             $activity_query->execute(array(
-                ":user_id" => $this->user->user_id, 
-                ":community_id" => $this->user->getCommunityId(), 
+                ":user_id" => $this->user->user_id,
+                ":community_id" => $this->user->getCommunityId(),
                 ":user_year" => $this->user->getPosition()
-                ));
+            ));
         }
         return $activity_query;
     }

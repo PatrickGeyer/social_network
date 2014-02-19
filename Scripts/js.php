@@ -922,9 +922,9 @@ $system->jsVars();
 
 // END HOME
     function resizeToMax(element, offset_width, offset_height) {
-        console.log($(element).parent().height());
-        console.log("Width: " + $(element).width() + " Height: " + $(element).height());
-        console.log("Width Ratio: " + $(element).width() / getViewPortWidth() + " Height Ratio: " + $(element).height() / getViewPortHeight());
+//        console.log($(element).parent().height());
+//        console.log("Width: " + $(element).width() + " Height: " + $(element).height());
+//        console.log("Width Ratio: " + $(element).width() / getViewPortWidth() + " Height Ratio: " + $(element).height() / getViewPortHeight());
         if ($(element).width() / getViewPortWidth() > $(element).height() / getViewPortHeight()) {
             $(element).css('height', "auto");
             $(element).css('width', getViewPortWidth() - offset_width + "px");

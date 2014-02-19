@@ -1,10 +1,7 @@
 <?php
 include_once('database.class.php');
-include_once('entity.class.php');
 
 class User {
-    private $entity = NULL;
-
     public $user_id;
     private $password = NULL;
     private $email = NULL;
@@ -24,7 +21,6 @@ class User {
         if(isset($_COOKIE['id'])) {
             $this->user_id = base64_decode($_COOKIE['id']);
             $this->database_connection = Database::getConnection();
-            $this->entity = new Entity();
         }
     }
     public static function getInstance ( ) {
@@ -63,19 +59,6 @@ class User {
             $this->name[$name] = $user;
         }
         return $user;
-    }
-
-    function getActivity($sender_id) {
-        $sql = "SELECT * FROM activity WHERE user_id = :sender_id AND id IN "
-                . "(SELECT activity_id FROM activity_share WHERE user_id = :user_id OR ((community_id = :community_id AND position='s') OR community_id = :community_id AND position = :position AND position ='y'));";
-        $sql = $this->database_connection->prepare($sql);
-        $sql->execute(array(
-            ":sender_id" => $sender_id,
-            ":user_id" => $this->user_id,
-            ":community_id" => $this->getCommunityId(),
-            ":position" => $this->getPosition()
-        ));
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
     function getPosition($id = null) {
@@ -387,15 +370,18 @@ class User {
         if ($id == null) {
             $id = $this->user_id;
         }
-        $sql = "SELECT id FROM user WHERE id = " . $id . " AND last_activity > DATE_SUB(NOW(), INTERVAL 30 SECOND);";
-        $sql = $this->database_connection->prepare($sql);
-        $sql->execute();
-        $num = $sql->rowCount();
+        $id = (int)$id;
+        if(is_int($id)) {
+            $sql = "SELECT id FROM user WHERE id = " . $id . " AND last_activity > DATE_SUB(NOW(), INTERVAL 1 MINUTE);";
+            $sql = $this->database_connection->prepare($sql);
+            $sql->execute();
+            $num = $sql->rowCount();
 
-        if ($num == 0) {
-            return false;
-        } else {
-            return true;
+            if ($num == 0) {
+                return false;
+            } else {
+                return true;
+            }
         }
     }
     
@@ -421,6 +407,14 @@ class User {
                                         </td></tr></table>";
         return $return;
                                             
+    }
+    
+    function getOnlineMass($users) {
+        $array = array();
+        foreach ($users as $user_id) {
+            $array[$user_id] = $this->getOnline($user_id);
+        }
+        return $array;
     }
 
 }
@@ -449,6 +443,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
         if ($_POST['action'] == 'setOnline') {
             $user->setOnline();
+        }
+        if($_POST['action'] == "getOnlineMass") {
+            die(json_encode($user->getOnlineMass($_POST['users'])));
         }
         if ($_POST['action'] == "profile_picture") {
             $user->setProfilePicture($_POST['file_id']);
