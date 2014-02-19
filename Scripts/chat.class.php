@@ -31,7 +31,7 @@ class Chat {
         if ($text == "" || $text == "<br>") {
             
         } else if ($aimed == "s" || $aimed == "y") {
-            $sql = "INSERT INTO chat(sender_id, `text`, community_id, sender_year, aimed, time) VALUES(:user_id, :text, :user_community, :user_year, :aimed, :time);";
+            $sql = "INSERT INTO chat(user_id, `text`, community_id, sender_year, aimed, time) VALUES(:user_id, :text, :user_community, :user_year, :aimed, :time);";
             $variables = array(
                 ":user_id" => $this->user->getId(),
                 ":user_community" => $this->user->getCommunityId(),
@@ -41,7 +41,7 @@ class Chat {
                 ":aimed" => $aimed,
             );
         } else {
-            $sql = "INSERT INTO chat(sender_id, `text`, group_id, time) VALUES(:user_id, :text, :aimed, :time);";
+            $sql = "INSERT INTO chat(user_id, `text`, group_id, time) VALUES(:user_id, :text, :aimed, :time);";
             $variables = array(
                 ":user_id" => $this->user->getId(),
                 ":text" => $text,
@@ -56,11 +56,11 @@ class Chat {
     function getContent($chat_identifier, $all = 'false') {
         $time = time();
         if ($chat_identifier == "y") {
-            $chat_query = "SELECT sender_id, `text`, time, id FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND sender_year = " . $this->user->getPosition() . " AND aimed = 'y' ";
+            $chat_query = "SELECT user_id, `text`, time, id FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND sender_year = " . $this->user->getPosition() . " AND aimed = 'y' ";
         } else if ($chat_identifier == "s") {
-            $chat_query = "SELECT sender_id, `text`, time, id FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND aimed='s'";
+            $chat_query = "SELECT user_id, `text`, time, id FROM chat WHERE community_id = " . $this->user->getCommunityId() . " AND aimed='s'";
         } else {
-            $chat_query = "SELECT sender_id, `text`, time, id FROM chat WHERE group_id = " . $chat_identifier;
+            $chat_query = "SELECT user_id, `text`, time, id FROM chat WHERE group_id = " . $chat_identifier;
         }
         if ($all == 'false') {
             $chat_query .= "AND time >= " . $time;
@@ -90,7 +90,6 @@ class Chat {
                         if ($num === 0) {
                             $this->chatify($record);
                             $this->markChatRead($record['id']);
-//                            die(var_dump($num1));
                         }
                     }
                     break;
@@ -125,7 +124,7 @@ class Chat {
     }
 
     private function chatify($record) {
-        $online = $this->user->getOnline($record['sender_id']);
+        $online = $this->user->getOnline($record['user_id']);
         echo "<li class='single_chat '>";
         echo "<div class='";
         if ($record['sender_id'] != $this->user->getId()) {
@@ -134,21 +133,37 @@ class Chat {
             echo "chat_my_wrapper";
         }
         echo "'>";
-        echo "<table cellspacing='0' cellpadding='0' style='width:100%;'><tr>";//<td style='width:50px;padding-right:5px;'>";
-        //echo "<div class='chat_user_profile' style='border-left:2px solid ".($this->user->getOnline($record['sender_id']) == true ? "rgb(28, 184, 65)" : "red")."; float:left;width:40px;height:40px;background-image:url(" . 
-                //$this->user->getProfilePicture('chat', $record['sender_id']) . ");background-size:cover;'></div>";
-        echo "<td>"; //</td>
+        echo "<table cellspacing='0' cellpadding='0' style='width:100%;'><tr>";
+        echo "<td style='width:50px;padding-right:5px;'>";
+        echo "<div class='chat_user_profile' style='border-left:2px solid "
+        .($this->user->getOnline($record['user_id']) == true ? "rgb(28, 184, 65)" : "red")."; float:left;width:40px;height:40px;background-image:url(" . 
+                $this->user->getProfilePicture('chat', $record['user_id']) . ");background-size:cover;'></div>";
+        echo "</td><td>";
         echo "<div class='chatname'><span class='user_preview user_preview_name chatname' style='margin-right:5px;font-size:13px;' user_id='"
-            . $record['sender_id']."'>" . $this->user->getName($record['sender_id']) . "</span>"
+            . $record['user_id']."'>" . $this->user->getName($record['user_id']) . "</span>"
             . "</div>";
         echo "<div class='chattext'>";
         echo $record['text'];
         echo "</div>";
         
-        echo "</td></tr><tr><td style='text-align:right;'>"
+        echo "</td></tr><tr><td colspan='2' style='text-align:right;'>"
             . "<span class='chat_time post_comment_time'>".$this->system->humanTiming($record['time'])."</span>"
             . "</td></tr></table></div>";
         echo "</li>";
+    }
+
+    function getUnreadNum($aimed_id = '', $aimed, $position) {
+        $sql = 'SELECT id FROM chat WHERE '.$aimed.'_id = :aimed_id AND ';
+        if(isset($position)) {
+           // $sql .= "aimed = :position AND ";
+        }
+        $sql .= 'id NOT IN (SELECT chat_id FROM chat_read WHERE user_id = :user_id);';
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":aimed_id" => $aimed_id,
+            ":user_id" => $this->user->user_id
+            ));
+        return $sql->rowCount();
     }
 
 }

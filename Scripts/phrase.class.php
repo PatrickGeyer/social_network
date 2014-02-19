@@ -17,7 +17,7 @@ class Phrase {
     }
     
     function get($identify, $lan) {
-        $sql = "SELECT * FROM phrases WHERE phrase_identifier = :id AND language = :lan;";
+        $sql = "SELECT * FROM language WHERE phrase_identifier = :id AND language = :lan;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":id" => $identify,

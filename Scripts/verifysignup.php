@@ -1,6 +1,6 @@
 <?php
 
-include_once('config.php');
+include_once('declare.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
     $position = $_POST['position'];
 
-    $user_query = "SELECT id, name, community_id, position FROM users WHERE email = :email";
+    $user_query = "SELECT id, name, community_id, position FROM user WHERE email = :email";
     $user_query = $database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
     $user_query->execute(array(":email" => $email));
     $count = $user_query->rowCount();
@@ -42,7 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 //        else { //if there's already a school then..
 //        }
         $database_connection->beginTransaction();
-        $user_query = "INSERT INTO users (name, password, community_id, position, email,  gender, first_name, last_name) "
+        $user_query = "INSERT INTO user (name, password, community_id, position, email,  gender, first_name, last_name) "
                 . "VALUES (:name, :password, :community_id, :position, :email, :gender, :first_name, :last_name);";
         $user_query = $database_connection->prepare($user_query);
         $user_query->execute(
@@ -64,12 +64,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 //        $create_files_entry->execute(array(":user_id" => $user['id'], ":path" => "Users/Files/" . $user['id'], ":folder_id" => 1));
 
         $dir = '../User/Files/' . $user_id;
-        mkdir($dir, 0777);
+        if(!is_dir($dir))
+            mkdir($dir, 0777);
+        
+        $system->create_zip($dir."/root.zip", array(), TRUE);
 
         setcookie("id", base64_encode($user_id), time() + 3600000, '/');
         setcookie("chat_feed", 's', time() + 3600000, '/');
         setcookie("home_feed", 'a', time() + 3600000, '/');
-        echo "200";
     }
 }
 ?>

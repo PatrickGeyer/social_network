@@ -1,11 +1,107 @@
 // Requires JQuery to be included before
 var profile_picture_id;
 $(function() {
+    
+    $(document).on('click', '.delete_receiver', function() {
+       var type = $(this).parents('[entity_type]').attr('entity_type');
+       var id = $(this).parents('[entity_id]').attr('entity_id');
+       var receivers_type = $(this).parents('[search_type]').attr('search_type');
+       if(receivers_type == "event") {
+           event_receivers = removereceiver(type, id, event_receivers);
+       } else if(receivers_type == "group") {
+           group_receivers = removereceiver(type, id, group_receivers);
+       } else if(receivers_type == "message") {
+           message_receivers = removereceiver(type, id, message_receivers);
+       }
+       
+       $(this).parents('[entity_type]').remove();
+       //console.log(event_receivers);
+    });
+    
+    $(document).on('keyup', '.search', function() {
+        console.log();
+        search($(this).val(), $(this).attr('mode'), $(this).parents('div, table').children('.search_results'), function(){});
+    });
+    
+    $(document).on('click', '.delete_activity', function() {
+        var activity_id = $(this).parents('[activity_id]').attr('activity_id');
+        dialog(
+                content = {
+                    type: "html",
+                    content: "Are you sure you want to delete this Post?"
+                },
+        buttons = [{
+                type: "success",
+                text: "Delete",
+                onclick: function() {
+                    delete_post(activity_id);
+                    removeDialog();
+                }
+            }],
+        properties = {
+            modal: false,
+            title: "Delete Post"
+        });
+    });
+    $(document).on('click', '.edit_activity', function() {
+        var activity_id = $(this).parents('[activity_id]').attr('activity_id');
 
-    //QUICK AUDIO PLAYER FIX
-    $(document).on('click', '.audio_hidden_container', function(event) {
-        event.preventDefault();
+        var text = $('#single_post_' + activity_id).find('.post_text').text();
+        var edit_element = $("<div class='post_text_editor'></div>");
+        var post_text_editor = $('<textarea class="autoresize"></textarea>');
+            post_text_editor.val(text);
+            edit_element.append(post_text_editor);
+        var options = $("<div class='post_more_options' style='display:block;'></div>");
+            options.append($("<button class='pure-button-success small edit_activity_save'>Save</button>"));
+            edit_element.append(options);
+        $('#single_post_' + activity_id).find('.post_text').hide().after(edit_element);
+        post_text_editor.after($("<div class='textarea_clone'></div>"));
+        autoresize(post_text_editor);
+    });
+    $(document).on('click', '.edit_activity_save', function() {
+        var activity_id = $(this).parents('[activity_id]').attr('activity_id');
+        var text = $('#single_post_' + activity_id).find('textarea.autoresize').val();
+        $('#single_post_' + activity_id).find('.edit_activity_save').attr('disabled', 'disabled').addClass('pure-buton-disabled');
+
+        $.post('Scripts/home.class.php', {activity_id : activity_id, action: "updatePost", text: text}, function() {
+            $('#single_post_' + activity_id).find('.post_text').show().html(text);
+            $('#single_post_' + activity_id).find('.post_text_editor').remove();
+        });
+    });
+    //FILES
+    
+    $(document).on('click', '#file_share div.file_item', function() {
+        var file = $(this).data('file');
+        addToStatus(file.type, file.object);
+    });
+    
+    $(document).on('click', '.audio_hidden_container, .files_actions, p.files, div.files input', function(event) {
         event.stopPropagation();
+    });
+
+    $(document).on('click', '.audio_button', function(event) {
+        var id = $(this).attr('audio_id');
+        audioPlay(id, function(){}, function(progress){ });
+        event.stopPropagation();
+    });
+    
+    $(document).on('click', 'p.files', function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        $(this).hide();
+        var input = $('<input class="files" type="text"></input>');
+        input.val($(this).text());
+        $(this).after(input);
+        input.focus();
+    });
+    
+    $(document).on('focusout', 'div.files input', function() {
+        var file_id = $(this).parents("[file_id]").attr('file_id');
+        $.post('Scripts/files.class.php', {action:"rename", file_id: file_id, text: $(this).val()}, function() {
+            
+        });
+        $(this).prev('p.files').text($(this).val()).show();
+        $(this).hide();
     });
 
     adjustSwitches();
@@ -78,9 +174,16 @@ $(function() {
     
     $(document).on('click', '.remove_file_post', function() { //DELETE FILES FROM POST
         var file_id = $(this).parents('.post_feed_item').attr('file_id');
-        var activity_id = $(this).parents('.singlepostdiv').attr('activity_id');
+        var activity_id = $(this).parents('[activity_id]').attr('activity_id');
         $(this).parents('.post_feed_item').remove();
         $.post('Scripts/files.class.php', {action: "removePostFile", file_id: file_id, activity_id: activity_id}, function() {});
+    });
+    
+    $(document).on('click', '.remove_event_post', function() {
+        var file_id = $(this).parents('.post_feed_item').attr('file_id');
+        var activity_id = $(this).parents('[activity_id]').attr('activity_id');
+        $(this).parents('.post_feed_item').remove();
+        $.post('Scripts/calendar.class.php', {action: "removeEventFile", file_id: file_id, event_id: activity_id}, function() {});
     });
     
     $(document).on('click', '.comment_delete', function() {
@@ -105,8 +208,22 @@ $(function() {
             $('.post_comment_liked_num[comment_id="' + id + '"]').text("- " + response + " likes");
         });
     });
-});
 
+    $(window).on('resize', function() {
+        resizeContainer();
+    });
+    resizeContainer();
+});
+function resizeContainer() {
+   var width = getViewPortWidth();
+        if(width < 1400) {
+            //$('.right_bar_container').addClass('right_bar_shift');
+            $('.container').addClass('container_small');
+        } else {
+            $('.right_bar_container').removeClass('right_bar_shift');
+            $('.container').removeClass('container_small');
+        } 
+}
 function adjustSwitches() {
     $('.switch_container').find('.switch_option').each(function(){ 
         var siblings = $(this).parents('.switch_container').find('.switch_option').length;
@@ -246,6 +363,49 @@ $(function() {
             horizontalScroll: true,
         });
     });
+    
+    $(document).on('click', '#share_event_results .name_selector, #share_event_results .match', function(event) {
+            var id = $(this).attr('entity_id');
+            var name = $(this).attr('entity_name');
+            var type = $(this).attr('entity_type');
+            event_receivers = addreceiver(type, id, name, event_receivers, "event");            
+            event.stopPropagation();
+    });
+    
+    $(document).on('click', '.message_search_results .name_selector, .message_search_results .match', function(event) {
+            var id = $(this).attr('entity_id');
+            var name = $(this).attr('entity_name');
+            var type = $(this).attr('entity_type');
+            message_receivers = addreceiver(type, id, name, message_receivers, "message");            
+            event.stopPropagation();
+            console.log(message_receivers);
+    });
+
+    $(document).on('click', '.group_search_results .name_selector,  .group_search_results .match', function(event) {
+            var id = $(this).attr('entity_id');
+            var name = $(this).attr('entity_name');
+            var type = $(this).attr('entity_type');
+            group_receivers = addreceiver(type, id, name, group_receivers, "group");            
+            event.stopPropagation();
+            console.log(group_receivers);
+    });
+    
+    $(document).on('click', '#share_event_results .name_selector, #share_event_results .match', function(event) {
+            var id = $(this).attr('entity_id');
+            var name = $(this).attr('entity_name');
+            var type = $(this).attr('entity_type');
+            event_receivers = addreceiver(type, id, name, event_receivers, "event");            
+            event.stopPropagation();
+    });
+
+    $(document).on('click', '#share_event_results .name_selector, #share_event_results .match', function(event) {
+            var id = $(this).attr('entity_id');
+            var name = $(this).attr('entity_name');
+            var type = $(this).attr('entity_type');
+            event_receivers = addreceiver(type, id, name, event_receivers, "event");            
+            event.stopPropagation();
+    });
+
     $(document).on('click', '.search_input', function() {
         var box = $(this).next('.search_results');
         if (box.find('.search_result, .match').length == 0) {
@@ -300,28 +460,6 @@ function getViewPortHeight()
     }
 
     return viewportheight;
-}
-
-function addReceiver(array, receiver_id, community_id, group_id, callback) {
-    var to_push = {
-        receiver_id: receiver_id,
-        community_id: community_id,
-        group_id: group_id
-    };
-    array.push(to_push);
-    callback();
-    //console.log(array);
-    return array;
-}
-
-function removeReceiver(array, value, callback) {
-    var index = receivers.indexOf(receiver_id);
-    if (index > -1)
-    {
-        receivers.splice(index, 1);
-    }
-    $('.message_added_receiver_' + receiver_id).remove();
-    alignDialog();
 }
 
 function search(text, mode, element, callback) {
@@ -400,7 +538,7 @@ $(document).on('click', "html", function(event)
     $('.default_dropdown_wrapper').hide();
 });
 
-$(document).on('click', ".default_dropdown_item", function(event)
+$(document).on('click', ".default_dropdown_selector .default_dropdown_item", function(event)
 {
     event.stopPropagation();
     var selection_value = $(this).attr('value');
@@ -422,5 +560,22 @@ $(function() {
         }
     });
 });
+//small
+$(document).on('click', ".default_dropdown_actions", function(event)
+{
+    event.stopPropagation();
+    $('.default_dropdown_wrapper').hide();
+    var wrapper = '#' + $(this).attr('wrapper_id');
+    $(wrapper).toggle();
+    $(wrapper).mCustomScrollbar(SCROLL_OPTIONS);
+});
 
 //END DROPDOWN
+
+
+//SETTINGS
+$(document).on('click', '.edit_hidden', function() {
+    $(this).hide();
+    $(this).next('.hidden_section').show();
+});
+//END SETTINGS

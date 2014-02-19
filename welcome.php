@@ -1,13 +1,26 @@
 <?php
 include_once('Scripts/lock.php');
 include_once('Scripts/js.php');
-if (!isset($page_identifier)) {
-    $page_identifier = "none_set";
-}
 ?>
 <!DOCTYPE HTML>
 <head>
-    <script>               
+    <script>
+        var event_files = new Array();
+        var event_receivers = new Object();
+        event_receivers.user = new Array();
+        event_receivers.group = new Array();
+        event_receivers.community = new Array();
+
+        var group_receivers = new Object();
+        group_receivers.user = new Array();
+        group_receivers.group = new Array();
+        group_receivers.community = new Array();
+
+        var message_receivers = new Object();
+        message_receivers.user = new Array();
+        message_receivers.group = new Array();
+        message_receivers.community = new Array();
+
         function show_group() {
             dialog(
                     content = {
@@ -21,10 +34,8 @@ if (!isset($page_identifier)) {
 <textarea style="border-radius:0; width:100%; height:100px;" id = "group_about" class="thin" placeholder="About..."></textarea>\n\
 </td> </tr> <tr> <td> <div style="border-radius:0;"> \n\
 </div> </td> </tr> </table> \n\
-<table class="none" style="width:100%;"> <tr> <td id ="names_slot"></td> </tr><tr><td>\n\
+<table style="width:100%;"><tr><td class="group_names_slot"></td></tr></table> \n\
 <input autocomplete="off" style="border-radius:0; width:100%;" type="text" id="names_input" class="search_input" placeholder="Add Member..." />\n\
-</td> </tr> \n\
-</table> \n\
 <div class="search_results group_search_results" \n\
 style="max-height:100px; position:relative; padding:2px;border: 1px solid lightgrey; background-color:white;" id="names">\n\
  </div> </div>'
@@ -43,51 +54,12 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
             });
         }
 
-        var invited_members = [];
-        function addGroupReceiver(new_receiver_name, id)
-        {
-            var html = "<div class='message_added_receiver' id='group_added_receiver_" + id + "'><span>"
-                    + new_receiver_name + "</span> \
-                    <span class='delete_receiver message_delete_receiver' onclick='removeGroupReceiver(" + id + ");'>x \
-                    </span></div>";
-            $('#names_slot').before(html);
-        }
-        function removeGroupReceiver(receiver_id)
-        {
-            for (var key in invited_members) {
-                if (invited_members[key].receiver_id = receiver_id) {
-                    invited_members.splice(key, 1);
-                    //console.log(invited_members);
-                }
-            }
-            $('#group_added_receiver_' + receiver_id).remove();
-        }
-        function createGroup()
-        {
-            var group_name = $('#group_name_input').val();
-            if (group_name != "")
-            {
-                var group_about = $('#group_about').val();
-                var group_type = $("#dialog input[type='radio']:checked").val();
-                $.post("Scripts/group.class.php", {action: "create", group_name: group_name, group_about: group_about, group_type: group_type, invited_members: invited_members}, function(response)
-                {
-                    var status = response.split("/");
-                    if (status[0] == "success")
-                    {
-                        window.location.replace("group?id=" + status[1]);
-                    }
-                });
-            }
-            else
-            {
 
-            }
-        }
         $(document).click(function(e)
         {
             $("#names_universal").hide();
         });
-        
+
         function getMessageBox() {
             $.post('Scripts/notifications.class.php', {action: "messageList"}, function(response) {
                 $('ul.message').html(response);
@@ -113,9 +85,9 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
         }
 
         function getNotificationNumber() {
-            $.post('Scripts/notifications.class.php', {action:"alert_num"}, function(response){
+            $.post('Scripts/notifications.class.php', {action: "alert_num"}, function(response) {
                 response = JSON.parse(response);
-                if(response.message != '0') {
+                if (response.message != '0') {
                     $('#message_num').text(response.message);
                     $('#message_num').show();
                     getMessageBox();
@@ -123,7 +95,7 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                 else {
                     $('#message_num').hide();
                 }
-                if(response.notification != '0') {
+                if (response.notification != '0') {
                     $('#notification_num').text(response.notification);
                     $('#notification_num').show();
                     getNotificationBox();
@@ -131,7 +103,7 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                 else {
                     $('#notification_num').hide();
                 }
-                if(response.network != '0') {
+                if (response.network != '0') {
                     $('#network_num').text(response.network);
                     $('#network_num').show();
                     getNetworkBox();
@@ -142,8 +114,8 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
 
                 var all = response.message + response.notification + response.network;
                 var title = document.title.lastIndexOf(')');
-                if(all > 0) {
-                    if(title == -1) {
+                if (all > 0) {
+                    if (title == -1) {
                         document.title = "(" + all + ") " + document.title;
                     }
                     else {
@@ -151,47 +123,79 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                         document.title = "(" + all + ") " + title;
                     }
                 }
-                $('#popup_message').mCustomScrollbar('scrollTo', 'top');
-                $('#popup_network').mCustomScrollbar('scrollTo', 'top');
-                $('#popup_notify').mCustomScrollbar('scrollTo', 'top');
+                // $('#popup_message').mCustomScrollbar('scrollTo', 'top');
+                // $('#popup_network').mCustomScrollbar('scrollTo', 'top');
+                // $('#popup_notify').mCustomScrollbar('scrollTo', 'top');
                 setTimeout(getNotificationNumber, 10000);
             });
-            
-        }
-        var invited_members = [];
-        function addreceiver(new_receiver, new_receiver_name)
-        {
-            var found = $.inArray(new_receiver, invited_members);
-            if (found != -1)
-            {
 
+        }
+        function addreceiver(type, new_receiver, new_receiver_name, receivers, receivers_type)
+        {
+            var found;
+            new_receiver = parseInt(new_receiver);
+            if (type == 'user') {
+                found = $.inArray(new_receiver, receivers.user);
+            }
+            if (type == 'group') {
+                found = $.inArray(new_receiver, receivers.group);
+            }
+            if (type == 'community') {
+                found = $.inArray(new_receiver, receivers.community);
+            }
+            if (found != -1) {
             }
             else
             {
-                invited_members.push(new_receiver);
+                if (type == 'user') {
+                    receivers.user.push(new_receiver);
+                } else if (type == 'group') {
+                    receivers.group.push(new_receiver);
+                } else if (type == 'community') {
+                    receivers.community.push(new_receiver);
+                }
+                if (receivers_type == "event") {
+                    updateEventReceiverCount();
+                }
                 $('#names_input').val("");
-                var html = "<td style='min-width:100px;' id = '" + new_receiver + "'> \
-                    <div class='tag-triangle'></div><div class='added_name'><span style='font-family:century gothic;'>" + new_receiver_name + "</span> \
-                    <span class='delete_receiver' onclick='removereceiver(" + new_receiver + ");'>x \
-                    </span></div></td>";
-                $('#names_slot').before(html);
+                var html = "<div class='message_added_receiver message_added_receiver_" + new_receiver + "' search_type='"
+                        + receivers_type + "' entity_type='"
+                        + type + "' entity_id='" + new_receiver + "' ><div class='added_name'><span style='font-family:century gothic;'>" + new_receiver_name + "</span> \
+                    <span class='delete_receiver'>x \
+                    </span></div>";
+                $('.' + receivers_type + '_names_slot').after(html);
+                //.alert($('#' + receivers_type + '_names_slot').length);
             }
+            alignDialog();
+            return receivers;
         }
-        function removereceiver(receiver_id)
+
+        function removereceiver(type, new_receiver, receivers)
         {
-            var index = invited_members.indexOf(receiver_id);
-            if (index > -1)
-            {
-                invited_members.splice(index, 1);
+            var index;
+
+            if (type == 'user') {
+                index = receivers.user.indexOf(new_receiver);
+                receivers.user.splice(index, 1);
             }
-            $('#' + receiver_id).remove();
+            if (type == 'group') {
+                index = receivers.group.indexOf(new_receiver);
+                receivers.group.splice(index, 1);
+            }
+            if (type == 'community') {
+                index = receivers.community.indexOf(new_receiver);
+                receivers.community.splice(index, 1);
+            }
+            //updateEventReceiverCount();
+            return receivers;
         }
+
         function createGroup()
         {
-            var group_name = $('#group_name').val();
+            var group_name = $('#group_name_input').val();
             var group_about = $('#group_about').val();
             var group_type = $('#group_type').val();
-            $.post("creategroup.php", {group_name: group_name, group_about: group_about, group_type: group_type, invited_members: invited_members}, function(response)
+            $.post("Scripts/group.class.php", {action: "create", group_name: group_name, group_about: group_about, group_type: group_type, invited_members: group_receivers}, function(response)
             {
                 var status = response.split("/");
                 if (status[0] == "success")
@@ -204,13 +208,13 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
         $(function()
         {
             getNotificationNumber();
-            var table = "<table style='min-height:100px;height:100px;width:100%;'><tr style='vertical-align:middle;'><td style='width:100%;text-align:center;'><img src='" + AJAX_LOADER + "'></img></td></tr></table>";
+            var table = "<table style='min-height:100px;height:100px;width:100%;'><tr style='vertical-align:middle;'><td style='width:100%;text-align:center;'><img src='" + LOADING_ICON + "'></img></td></tr></table>";
             $('ul.message, ul.network, ul.notify').prepend(table);
-            
+
             $('#popup_message').mCustomScrollbar(SCROLL_OPTIONS);
             $('#popup_network').mCustomScrollbar(SCROLL_OPTIONS);
             $('#popup_notify').mCustomScrollbar(SCROLL_OPTIONS);
-            
+
             $(document).on('click', "img.message", function(event)
             {
                 $('img.message').removeClass('message_active');
@@ -292,19 +296,20 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                 $("#geardiv").hide();
                 $('img.message').removeClass('message_active');
             });
-            
+
 //            setTimeout(function(){
 //                var height = $('#popup_message').height();
 //                console.log(height);
 //            }, 5000);
-            
+
 //            $('#popup_message').mCustomScrollbar(SCROLL_OPTIONS);
 //            $('#popup_message').height(height);
 //            $('#popup_message').mCustomScrollbar("update");
         });
         function markAllSeen(type)
         {
-            $.post("Scripts/notifications.class.php", {action: "mark", type: type}, function(response){});
+            $.post("Scripts/notifications.class.php", {action: "mark", type: type}, function(response) {
+            });
         }
         function markNotificationRead(id, nextPage)
         {
@@ -317,7 +322,7 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
 </head>
 <body>
     <div class="headerbar">
-        <div id="refresh">
+        <div class="global_header">
             <div class="container_headerbar">
                 <span style='cursor:pointer;color:rgb(70, 180, 220);font-weight: light;font-size:1.6em;' onclick='window.location.assign("home");'>Placeholder</span>
                 <div style="position:absolute;right:500px;top:0;">
@@ -362,12 +367,12 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                 <div style="z-index:11;" class="search">
                     <input class="search_box search_input" autocomplete='off'
                            onkeyup='
-                                   search(this.value, "universal", "#names_universal", function() {
-                                   });
-                                   if (event.keyCode == 13)
-                                   {
-                                       $("#match").click();
-                                   }' type='text' id='names_input' placeholder='Search...' name='receiver'>
+                               search(this.value, "universal", "#names_universal", function() {
+                               });
+                               if (event.keyCode == 13)
+                               {
+                                   $("#match").click();
+                               }' type='text' id='names_input' placeholder='Search...' name='receiver'>
                     <div class="search_results" id='names_universal'></div>
                 </div>
                 <div class="gear">
@@ -376,87 +381,13 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                     </a>
                     <div style="display:none;" id="geardiv" class="geardiv">
                         <ul> 
-                            <li class="nav_option"><a title"Logout" href="Scripts/logout.php">Logout</a></li> 
-                            <li class="nav_option"><a href="">Privacy</a></li> 
+                            <li class=""><a title"Logout" href="Scripts/logout.php">Logout</a></li> 
+                            <li class=""><a href="">Privacy</a></li> 
                         </ul> 
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class='left_bar_container'>
-                <!-- <img id='logo' style='position:absolute;left:40px;top:4px;max-height:25px;opacity:0.2;cursor:pointer;' onclick='window.location.assign("home");' src='Images/reallogo.png'></img> -->
-        <div class="navigation">
-            <a href='user?id=<?php echo urlencode(base64_encode($user->getId())); ?>'>
-                <div class="user_info 
-                <?php
-                if ($page_identifier == "user") {
-                    echo "current_page_user";
-                }
-                ?>
-                     " style='cursor:pointer; margin-bottom:10px;'>
-                    <table cellspacing='0' cellpadding='0'>
-                        <tr style='vertical-align:top;'>
-                            <td>
-                                <div class='welcome_user_profile_picture' style='background-image:url("<?php echo $user->getProfilePicture("chat"); ?>");'></div>
-                            </td>
-                            <td>
-                                <div class='welcome_user_info'>
-                                    <span class="current_user_name_edit">
-                                        <?php
-                                        echo $system->trimStr($user->getName(), 20);
-                                        ?>
-                                    </span>
-                                    <br />
-                                    <span class='edit_user_text'>
-                                        <?php
-                                        echo $system->trimStr($user->getCommunityName(), 15);
-                                        ?>
-                                    </span>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </a>
-            <hr style='z-index:-1;width:200px;border:0px;border-bottom: 0px solid lightgrey;'>
-            <ul class="navigation_list"> 
-                <li style='background-image:url("Images/Icons/icons/home.png");' class="nav_option ellipsis_overflow 
-                <?php
-                if ($page_identifier == "home") {
-                    echo "current_page";
-                }
-                ?>
-                    "><a class="nav_option ellipsis_overflow" href="home">Home</a></li> 
-                <li style='background-image:url("Images/Icons/icons/paper-plane.png");' class="nav_option 
-                <?php
-                if ($page_identifier == "school") {
-                    echo "current_page";
-                }
-                ?>
-                    "><a class="nav_option ellipsis_overflow" href="community?id=<?php echo urlencode(base64_encode($user->getCommunityId())); ?>"><?php echo $user->getCommunityName(); ?></a></li> 
-                <li style='background-image:url("Images/Icons/icons/paper-clip.png");' class="nav_option <?php
-                if ($page_identifier == "files") {
-                    echo "current_page";
-                }
-                ?>"><a class="nav_option ellipsis_overflow" href="files">My Files</a></li> 
-                <li style='background-image:url("Images/Icons/icons/mail.png");' class="nav_option <?php
-                if ($page_identifier == "inbox") {
-                    echo "current_page";
-                }
-                ?>"><a class="nav_option ellipsis_overflow" href="message">Inbox</a></li>
-                
-                <li style='background-image:url("Images/Icons/icons/application-plus.png");' onclick="show_group();" class="nav_option">
-                    <a class="nav_option ellipsis_overflow">Create Group</a>
-                </li>
-            </ul>
-        </div>
-<!--        <button style='float:right;margin-top:10px;' class='pure-button-primary smallest' onclick='' title='Create a Group'>+</button>-->
-        <?php
-        if ($page_identifier != "inbox") {
-            include_once ("friends_list.php");
-        }
-        ?>
     </div>
 </body>
 </html>

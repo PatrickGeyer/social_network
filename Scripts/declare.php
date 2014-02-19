@@ -1,6 +1,5 @@
 <?php
 
-include_once('config.php');
 include_once('system.class.php');
 include_once('phrase.class.php');
 include_once('user.class.php');
@@ -19,7 +18,7 @@ $group = Group::getInstance();
 $community = Community::getInstance();
 $system = System::getInstance();
 $notification = Notification::getInstance();
-$collaborator = new Collaborator;
+//$collaborator = new Collaborator;
 $home = Home::getInstance();
 $database_connection = Database::getConnection();
 $phrase = Phrase::getInstance();

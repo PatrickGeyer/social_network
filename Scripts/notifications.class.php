@@ -2,16 +2,22 @@
 
 include_once('database.class.php');
 include_once('user.class.php');
+include_once('group.class.php');
+include_once('phrase.class.php');
 
 class Notification {
 
     private static $notifiction = NULL;
     private $user;
+    private $group;
+    private $phrase;
     protected $database_connection;
 
     public function __construct() {
         $this->user = User::getInstance();
         $this->database_connection = Database::getConnection();
+        $this->group = new Group();
+        $this->phrase = new Phrase();
     }
 
     public static function getInstance() {
@@ -25,36 +31,46 @@ class Notification {
 
     function getMessage($type = null, $id = null) {
         if (!isset($type)) {
-            $user_query = "SELECT sender_id, message, thread, time, u_id, id FROM messages WHERE thread IN "
-                    . "(SELECT thread_id FROM message_share WHERE receiver_id = :user_id) "
-                    . "AND id IN (SELECT max(id) FROM messages GROUP BY thread) "
+            $user_query = "SELECT user_id, message, thread, time, u_id, id FROM message WHERE thread IN "
+                    . "(SELECT `thread` FROM message_share WHERE user_id = :user_id AND visible=1) "
+                    . "AND id IN (SELECT max(id) FROM message GROUP BY thread) "
                     . "ORDER BY id DESC;";
         }
         else if ($type == 'thread') {
-            $user_query = "SELECT sender_id, message, thread, time, u_id, id FROM messages WHERE thread IN (SELECT thread_id FROM message_share WHERE receiver_id = :user_id AND thread_id = " . $id . ") 
+            $user_query = "SELECT user_id, message, thread, time, u_id, id FROM message WHERE thread IN (SELECT `thread` FROM message_share WHERE user_id = :user_id AND `thread` = " . $id . ") 
              ORDER BY id ASC;";
         }
         else {
-            $user_query = "SELECT sender_id, message, thread, time, u_id, id FROM messages WHERE id = " . $id . " ORDER BY id DESC;";
+            $user_query = "SELECT user_id, message, thread, time, u_id, id FROM message WHERE id = " . $id . " ORDER BY id DESC;";
         }
         $user_query = $this->database_connection->prepare($user_query);
         $user_query->execute(array(":user_id" => $this->user->user_id));
         $user1 = $user_query->fetchAll(PDO::FETCH_ASSOC);
         
         foreach ($user1 as &$message) {
-            $message_read_query = "SELECT `read`, seen, receiver_id FROM message_share WHERE thread_id = " . $message['thread'] . " AND receiver_id = " . base64_decode($_COOKIE['id']) . ";";
+            $message_read_query = "SELECT `read`, seen, user_id FROM message_share WHERE `thread` = " . $message['thread'] . " AND user_id = " . base64_decode($_COOKIE['id']) . ";";
             $message_read_query = $this->database_connection->prepare($message_read_query);
             $message_read_query->execute();
             $read = $message_read_query->fetch(PDO::FETCH_ASSOC);
             $message['read'] = $read['read'];
             $message['seen'] = $read['seen'];
-            $message['receiver_id'] = $read['receiver_id'];
+            $message['user_id'] = $read['user_id'];
         }
         return $user1;
     }
+    
+    function getMessageNew($thread) {
+        $sql = "SELECT * FROM message WHERE thread = :thread and time >= :time;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":thread" => $thread,
+            ":time" => $time
+        ));
+        
+    }
 
     function getMessageNum() {
-        $user_query = "SELECT id FROM message_share WHERE receiver_id = :user_id AND `seen` = 0;";
+        $user_query = "SELECT id FROM message_share WHERE user_id = :user_id AND `seen` = 0;";
         $user_query = $this->database_connection->prepare($user_query);
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
         $user = $user_query->rowCount();
@@ -67,8 +83,8 @@ class Notification {
         $messages = $this->getMessage();
         foreach ($messages as $message) {
             $participants = $this->getReceivers($message['thread'], 'list');
-            $picture = $this->user->getProfilePicture('chat', $message['sender_id']);
-            //$names = $notification->styleReceiverList($participants, 'list');
+            $picture = $this->user->getProfilePicture('chat', $message['user_id']);
+            $names = '';//$this->styleReceiverList($participants, 'list');
             echo "<li class='";
             if ($message['read'] == 0) {
                 echo "messageunread";
@@ -80,7 +96,7 @@ class Notification {
             . "<div style='display:table-row;'>"
             . "<div class='notification_user_image'>"
             . $this->getMessagePicture(NULL, $message['thread'])
-            . "</div><div style='display:table-cell;vertical-align:top;'>"
+            . "</div><div style='width:100%;display:table-cell;vertical-align:top;'>"
             . "<p class='ellipsis_overflow notification_name'>" . $participants . "</p>"
             . "<p class='ellipsis_overflow notification_info'>" . $message['message']
             . "</p></div></div></a></li> ";
@@ -91,46 +107,64 @@ class Notification {
         }
     }
 
+    function deleteMessage($thread) {
+        $sql = "UPDATE message_share SET visible=0 WHERE `thread` = :thread AND user_id = :user_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":user_id" => $this->user->user_id,
+            ":thread" => $thread
+            ));
+    }
+
     function markMessageRead($type = 'thread', $id) {
         if ($type == "thread") {
             $thread = $id;
         }
-        $sql = "UPDATE message_share SET seen=1, `read`=1 WHERE thread_id = " . $id . " AND receiver_id=" . base64_decode($_COOKIE['id']) . ";";
+        $sql = "UPDATE message_share SET seen=1, `read`=1 WHERE `thread` = " . $id . " AND user_id=" . base64_decode($_COOKIE['id']) . ";";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute();
     }
 
     function markAllMessageSeen() {
-        $sql = "UPDATE message_share SET seen=1 WHERE receiver_id=" . base64_decode($_COOKIE['id']) . ";";
+        $sql = "UPDATE message_share SET seen=1 WHERE user_id=" . base64_decode($_COOKIE['id']) . ";";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute();
     }
 
-    public function getReceivers($thread_id, $style = false) {
-        $sql = "SELECT id FROM users WHERE id IN(SELECT DISTINCT receiver_id FROM message_share WHERE thread_id = :thread_id);";
+    public function getReceivers($thread, $style = false) {
+        $receivers = array();
+        
+        $sql = "SELECT id FROM user WHERE id IN(SELECT user_id FROM message_share WHERE `thread` = :thread);";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(
                 array(
-                    ":thread_id" => $thread_id,
+                    ":thread" => $thread,
         ));
+        $receivers['user'] = $sql->fetchAll(PDO::FETCH_COLUMN);
+        $receivers['user'] = array_values($receivers['user']);
+        $receivers['group'] = array();
+        $receivers['community'] = array();
+        //echo $thread;
+        //var_dump($receivers);
         if ($style !== false) {
-            return $this->styleReceiverList($sql->fetchALL(PDO::FETCH_COLUMN), $style);
+            return $this->styleReceiverList($receivers, $style);
         }
-        else {
-            return $sql->fetchAll(PDO::FETCH_COLUMN);
-        }
+        return $receivers;
     }   
     
     public function getMessagePicture($size, $thread) {
         $all_receivers = $this->getReceivers($thread, false);
-        foreach ($all_receivers as $key => $receiver) {
-            if($receiver == $this->user->user_id) {
-                unset($all_receivers[$key]);
+        foreach ($all_receivers as $key => $receivers) {
+            foreach ($receivers as $user_key => $single_id) {
+                if($key == "user") {
+                    if($single_id == $this->user->user_id) {
+                        unset($receivers[$user_key]);
+                    }
+                }
             }
         }
-        $receivers = array_values($all_receivers);
         $return = '';
-        $count = count($receivers);
+        $count = count($all_receivers['user'] + $all_receivers['group'] + $all_receivers['community']);
         
         $width = array();
         $height = array();
@@ -163,7 +197,7 @@ class Notification {
             $width[3] = "50%";
             $height[3] = "50%";
         }
-        foreach ($receivers as $key => $receiver) {
+        foreach ($all_receivers['user'] as $key => $receiver) {
             if($key < 4) {
                 $return .= $this->img($this->user->getProfilePicture('chat', $receiver), $width[$key], $height[$key]);
             }
@@ -174,93 +208,136 @@ class Notification {
         return "<div style='display:inline-block;background-size:cover;background-image: url(\"".$src."\");height:" . $height . "; width:" . $width . "'></div>";
     }
 
-    private function styleReceiverList($list, $type) {
+    private function styleReceiverList($receivers, $type) {
+        
+        if(!array_key_exists('group', $receivers)) {
+            $receivers['group'] = array();
+        }
+        if(!array_key_exists('community', $receivers)) {
+            $receivers['community'] = array();
+        }
         $return = NULL;
-        $num = count($list);
-        foreach ($list as $key => $name) {
-            if($this->user->user_id != $name) {
-                if($type == "header") {
-                    $return .= "<a href='user?id=" . urlencode(base64_encode($name)) 
-                            . "'><span style='margin-right:5px;' "
-                            . " class='message_convo_receiver user_preview' user_id='" . $name . "'>";
-                    $return .= $this->user->getName($name, 1);
-                    if ($num - 1 != $key) {
-                        $return .= ",";
+        $num = count($receivers['user'] + $receivers['group'] + $receivers['community']);
+        $current_num = 0;
+
+        foreach ($receivers as $key => $receiver) {
+            foreach ($receiver as $single_id) {
+                if($key == 'user') {
+                    if ($this->user->user_id != $single_id) {
+                        if ($type == "header") {
+                            $return .= "<a href='user?id=" . urlencode(base64_encode($single_id))
+                                    . "'><span style='margin-right:5px;' "
+                                    . " class='message_convo_receiver user_preview' user_id='" . $single_id . "'>";
+                            $return .= $this->user->getName($single_id, 1);
+                            if ($num - 1 != $current_num) {
+                                $return .= ",";
+                            }
+                            $return .= "</span></a>";
+                        }
+                        else if ($type == "list") {
+                            $name = $this->user->getName($single_id, 1);
+                            if ($num - 1 != $current_num) {
+                                $name .= ",";
+                            }
+                            $return .= "" . $name . "";
+                        }
                     }
-                    $return .= "</span></a>";
                 }
-                else if($type == "list") {
-                    $name = $this->user->getName($name, 1);
-                    if ($num - 1 != $key) {
-                        $name .= ",";
-                    }
-                    $return .= "" . $name . "";
-                }
+                $current_num++;
             }
         }
         return $return;
     }
+    
+    private function format_receivers($receivers) {
+        if (!array_key_exists('group', $receivers)) {
+            $receivers['group'] = array();
+        }
+        if (!array_key_exists('community', $receivers)) {
+            $receivers['community'] = array();
+        }
+        foreach ($receivers as $key => $receiver) {
+            if ($key == 'user' && !in_array($this->user->user_id, $receivers[$key])) {
+                array_push($receivers[$key], $this->user->user_id);
+            }
+            $receivers[$key] = array_unique($receivers[$key]);
+            $receivers[$key] = array_values($receivers[$key]);
+            asort($receivers[$key]);
+        }
+        return $receivers;
+    }
+    private function format_message($receivers, $thread) {
+        $receivers_final = NULL;
+        $uid = NULL;
+        $thread_final = NULL;
+        
+        if (!isset($thread)) { // IF COMPOSING NEW MESSAGE
+            $thread_final = $this->getThreadNum(json_encode($this->format_receivers($receivers))); //CREATE NEW THREAD FROM THE FORMATTED RECEIVERS
+            $receivers_final = $this->format_receivers($receivers); // ONLY FORMAT RECEIVERS, DON'T FETCH FROM DB
+        } else { // IF REPLYING TO MESSAGE
+            $receivers_final = $this->format_receivers($this->getReceivers($thread)); // FETCH RECEIVERS FROM DB AND FORMAT
+            $thread_final = $thread;
+        }
+        $uid = json_encode($receivers_final);
+        
+        return array("receivers" => $receivers_final, "uid" => $uid, "thread" => $thread_final);
+    }
 
-    public function sendMessage($message, $receivers = null, $thread) {
-        if ($receivers == NULL) {
-            $receivers = $this->getReceivers($thread, false);
-        }
-        if(!in_array($this->user->user_id, $receivers)) {
-            array_push($receivers, $this->user->user_id);
-        }
-        array_unique($receivers);
-        asort($receivers);
+    public function sendMessage($message, $receivers = null, $thread = null) { 
+        $info = $this->format_message($receivers, $thread);
+        //var_dump($info);
+       
         $this->database_connection->beginTransaction();
-        $thread = $this->getThreadNum($receivers);
-
-        foreach ($receivers as $receiver) {
-            $this->insertMessageShare($receiver, $message, $thread);
+        
+        foreach ($info['receivers'] as $key => $receiver) {
+             foreach ($receiver as $single_id) {
+                $this->insertMessageShare($single_id, $key, $info['thread']);
+            }
         }
-        $this->insertMessage($message, $thread, $receivers);
+        
+        $this->insertMessage($message, $info['thread'], $info['uid']);
         $this->database_connection->commit();
     }
 
-    private function insertMessage($message, $thread, $receivers) {
-        $message_query = "INSERT INTO messages (sender_id, message, thread, time, u_id) VALUES (:user_id, :message, :thread_id, :time, :u_id);";
+    private function insertMessage($message, $thread, $uid) {
+        $message_query = "INSERT INTO message (user_id, message, thread, time, u_id) VALUES (:user_id, :message, :thread_id, :time, :u_id);";
         $message_query = $this->database_connection->prepare($message_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $message_query->execute(
                 array(
                     ":user_id" => base64_decode($_COOKIE['id']),
                     ":message" => $message, ":thread_id" => $thread,
                     ":time" => time(),
-                    ":u_id" => implode(',', $receivers),
+                    ":u_id" => $uid,
         ));
     }
 
-    private function insertMessageShare($receiver, $message, $thread) {
-        $message_query = "INSERT INTO  message_share(receiver_id, sender_id, thread_id, `seen`, `read`) VALUES (:receiver_id, :sender_id, :thread_id, :seen, :read)";
+    private function insertMessageShare($receiver, $key, $thread) {
+        $message_query = "INSERT INTO  message_share(".$key."_id, `thread`, `seen`, `read`) VALUES (:receiver_id, :thread_id, :seen, :read)";
         $message_query = $this->database_connection->prepare($message_query);
         $message_query->execute(
                 array(
                     ":receiver_id" => $receiver,
-                    ":sender_id" => $this->user->getId(),
                     ":thread_id" => $thread,
-                    ":seen" => ($receiver == $this->user->getId() ? 1 : 0),
-                    ":read" => ($receiver == $this->user->getId() ? 1 : 0),
+                    ":seen" => ($receiver == $this->user->getId() && $key == 'user' ? 1 : 0),
+                    ":read" => ($receiver == $this->user->getId() && $key == 'user' ? 1 : 0),
         ));
     }
 
-    private function getThreadNum($receivers) {
-        $getthreadvalue = "SELECT MAX(thread) FROM messages;";
-
+    private function getThreadNum($uid) {
+        $getthreadvalue = "SELECT MAX(thread) FROM message;";
         $getthreadvalue = $this->database_connection->prepare($getthreadvalue);
         $getthreadvalue->execute();
         $thread = $getthreadvalue->fetchColumn() + 1;
 
-        $sql = "SELECT thread FROM messages WHERE u_id = :u_id;";
+        $sql = "SELECT thread FROM message WHERE u_id = :u_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(
                 array(
-                    ":u_id" => implode(',', $receivers),
+                    ":u_id" => $uid,
         ));
         $num = $sql->rowCount();
-
         if ($num > 0) {
+            //echo("Found thread number ".$sql->fetchColumn()." with the UID: ".$uid);
             $thread = $sql->fetchColumn();
         }
         return $thread;
@@ -268,8 +345,8 @@ class Notification {
 
     public function getRecentThread($user_id = NULL) {
         if($user_id === NULL) {
-            $sql = "SELECT thread FROM messages WHERE thread IN "
-                    . "(SELECT thread_id FROM message_share WHERE receiver_id = :user_id)"
+            $sql = "SELECT thread FROM message WHERE thread IN "
+                    . "(SELECT `thread` FROM message_share WHERE visible=1 AND user_id = :user_id)"
                     . " ORDER BY time DESC LIMIT 1;";
             $sql = $this->database_connection->prepare($sql);
             $sql->execute(
@@ -299,8 +376,8 @@ class Notification {
         $notify_count = $this->getNotificationNum();
         $notifications = $this->getNotification();
         foreach ($notifications as $notify) {
-            $picture = $this->user->getProfilePicture("chat", $notify['sender_id']);
-            $name = $this->user->getName($notify['sender_id']);
+            $picture = $this->user->getProfilePicture("chat", $notify['user_id']);
+            $name = $this->user->getName($notify['user_id']);
             echo "<li onclick='markNotificationRead(" . $notify['id'] . ", \"post?a=" . $notify['post_id'] . "\");' class='";
             if ($notify['read'] == 0) {
                 echo "messageunread";
@@ -343,7 +420,7 @@ class Notification {
     }
 
     function getNetwork() {
-        $user_query = "SELECT * FROM group_invite WHERE receiver_id = :user_id ORDER BY time DESC;";
+        $user_query = "SELECT * FROM group_invite WHERE user_id = :user_id ORDER BY time DESC;";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
         $user = $user_query->fetchAll();
@@ -351,7 +428,7 @@ class Notification {
     }
 
     function getNetworkNum() {
-        $user_query = "SELECT id FROM group_invite WHERE receiver_id = :user_id AND `seen` = 0 AND invite_status = 1;";
+        $user_query = "SELECT id FROM group_invite WHERE user_id = :user_id AND `seen` = 0 AND invite_status = 1;";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
         $user = $user_query->rowCount();
@@ -366,8 +443,8 @@ class Notification {
             echo "<div style='padding:5px;color:grey;'>No Network Notifications</div>";
         }
         foreach ($networks as $network) {
-            $picture = $this->user->getProfilePicture("chat", $network['inviter_id']);
-            $group_name = $group->getGroupName($network['group_id']);
+            $picture = $this->user->getProfilePicture("chat", $network['sender_id']);
+            $group_name = $this->group->getGroupName($network['group_id']);
             $group_id = $network['group_id'];
 
             echo "<li class='";
@@ -382,7 +459,7 @@ class Notification {
             . "<img class='notification_user_image' src='" . $picture . "'></img>"
             . "</td><td>"
             . "<p style='margin:0;text-align:left;font-size:13px;'>"
-            . str_replace('$group', '"' . $group_name . '"', str_replace('$user', $user->getName($network['inviter_id']), $phrase->get('group_invite', 'en')))
+            . str_replace('$group', $group_name, str_replace('$user', $this->user->getName($network['sender_id']), $this->phrase->get('group_invite', 'en')))
             . "</p></td><td><table cellspacing='0' cellpadding='0'><tr><td>";
             if ($network['invite_status'] == 2) {
                 echo "<button style='margin:0;' onclick='rejectGroup("
@@ -458,6 +535,12 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
         else if($_POST['action'] === "networkList") {
             die($notify->getNetworkList());
+        }
+        else if($_POST['action'] == "deleteMessage") {
+            die($notify->deleteMessage($_POST['thread']));
+        }
+        else if($_POST['action'] == "updateMesssage") {
+            die($notify->getMessageNew($thread));
         }
     }
 }

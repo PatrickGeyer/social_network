@@ -15,10 +15,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $database_connection->beginTransaction();
     try {
-        $school_query = "INSERT INTO activity (user_id, status_text, type) 
-		VALUES(:user_id, :status_text, '$type');";
+        $school_query = "INSERT INTO activity (user_id, status_text, type, time) 
+		VALUES(:user_id, :status_text, '$type', :time);";
         $school_query = $database_connection->prepare($school_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $school_query->execute(array(":user_id" => $user->getId(), ":status_text" => $status_text));
+        $school_query->execute(array(
+            ":user_id" => $user->getId(), 
+            ":status_text" => $status_text,
+            ":time" => time(),
+            ));
     } catch (PDOException $e) {
         die("Error:" . $e->getMessage());
     }

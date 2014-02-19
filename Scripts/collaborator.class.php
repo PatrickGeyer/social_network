@@ -20,13 +20,13 @@ class Collaborator
 
 	public function __construct()
 	{
-        $this->user    = 'root';
-        $this->password    = 'Filmaker1';
-        $this->dsn  = 'mysql:dbname=social_network;host=localhost';
+  //       $this->user    = 'root';
+  //       $this->password    = 'Filmaker1';
+  //       $this->dsn  = 'mysql:dbname=social_network;host=localhost';
 
-        $this->link = new PDO($this->dsn, $this->user, $this->password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING))
-            OR die("There was a problem connecting to the database.");
-		return "ha";
+  //       $this->link = new PDO($this->dsn, $this->user, $this->password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING))
+  //           OR die("There was a problem connecting to the database.");
+		// return "ha";
        // return true;
 	}
 	function getSrc($id)

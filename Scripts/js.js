@@ -135,6 +135,7 @@ function alignTooltip(element, tooltip) {
 function fileList(element, type) {
     $.post('Scripts/home.class.php', {type:type, action:"file_list"}, function(response) {
         $(element).html(response);
+        $(element).mCustomScrollbar(SCROLL_OPTIONS);
     });
 }
 
@@ -147,7 +148,7 @@ function setProfilePicture(file_id) {
 }
 
 function show_photo_choose() {
-    var content = $("<div><table><tr><td><div class='upload_here'></div></td><td><div style='max-height:200px;overflow:auto;margin-left:20px;height:100%;' id='file_container'>Loading...</div></td></tr></table></div>");
+    var content = $("<div><table><tr><td><div class='upload_here'></div></td><td><div class='profile_picture_chooser' style='max-height:200px;overflow:auto;margin-left:20px;height:100%;' id='file_container'>Loading...</div></td></tr></table></div>");
     dialog(
             content={
                 content: content.html(),
@@ -167,12 +168,12 @@ function show_photo_choose() {
             }
             );
     fileList('div#file_container', 'Image');
-    $('#file_container').attr('onclick','').unbind('click');
-    $(document).on('click', '.file_search_option', function(event) {
+    //$('#file_container').attr('onclick','').unbind('click');
+    $(document).on('click', '.profile_picture_chooser .file_item', function(event) {
         event.stopPropagation();
-        var file_id = $(this).attr('file_id');
+        var file = $(this).data('file');
         var activity_id = $(this).attr('activity_id');
-        $.post('Scripts/files.class.php', {action: "preview", file_id: file_id, activity_id: activity_id}, function(response) {
+        $.post('Scripts/files.class.php', {action: "preview", file_id: file.object.file_id, activity_id: activity_id}, function(response) {
             response = $.parseJSON(response);
             $('.upload_here').css('background-size', 'cover');
             $('.upload_here').css('background-image', 'url("' + response.file.path + '")');
@@ -181,20 +182,28 @@ function show_photo_choose() {
     });
 }
 
+function renameFile(id, text) {
+    $.post('Scripts/files.class.php', {action:"rename", file_id: id, name: text}, function() {
+
+    });
+}
+var entity_preview = null;
 function showUserPreview(element, user_id) {
     if (element == "force") {
         $('.user_preview_info').show();
     }
     else
     {
-        $('.user_preview_info').not(element.children('.user_preview_info').first()).remove();
-        if (element.children('.user_preview_info').length == 0)
-        {
-            createUserPreview(element, user_id);
-        }
-        else
-        {
-            //console.log("Preview is already in place.");
+        if($('#user_preview_' + user_id).length <= 0) {
+            $('.user_preview_info').remove();
+            if (element.children('.user_preview_info').length == 0)
+            {
+                createUserPreview(element, user_id);
+            }
+            else
+            {
+                console.log("Preview is already in place.");
+            }
         }
     }
 }
@@ -202,7 +211,7 @@ function showUserPreview(element, user_id) {
 function createUserPreview(element, user_id)
 {
     var bg = "<div id='user_preview_initial_loader' style='width:100%;height:100px;background-image:url(Images/ajax-loader.gif);background-position:center;background-repeat:no-repeat;'></div>";
-    var cont = $('<div style="display:none;" class="user_preview_info">' + bg + '</div>');
+    var cont = $('<div id="user_preview_' + user_id + '" style="display:none;" class="user_preview_info">' + bg + '</div>');
     element.append(cont);
     var createTimeout = setTimeout(function() {
         if ($('*[user_id="' + user_id + '"]:hover').length > 0)
@@ -210,7 +219,7 @@ function createUserPreview(element, user_id)
             $.post('Scripts/user.class.php', {action: "get_preview_info", id: user_id}, function(response) {
                 fillUserPreview(response);
             });
-            cont.fadeIn();
+            cont.fadeIn(200);
             alignUserPreview(element);
 
             //console.log("User preview was successfully created!");
@@ -229,27 +238,20 @@ function alignUserPreview(element)
         alignUserPreview(element);
     });
     //console.log('align');
-    var left = element.offset().left;
-    var width = element.width();
-    var left_total = left + width + 20;
-    if (left_total > getViewPortWidth() / 2) {
-        left_total = left - 40 - $('.user_preview_info').width();
-        alignment = "left";
-    } else {
-        alignment = "right";
-    }
     var arrow;
-    if (alignment == "left")
-    {
-        arrow = 'user_preview_arrow-right';
-    } else if (alignment == "top") {
-
-    } else if (alignment == "bottom") {
+    
+    if(element.parents('.chatcomplete').length > 0) {
+        alignment = "right";
+    } else  {
+        alignment = "left";
     }
-    else
-    {
-        arrow = 'user_preview_arrow-left';
+    
+    if(element.parents('.container').length > 0) {
+        alignment = "vertical";
     }
+    arrow = 'user_preview_arrow-' + alignment;
+    
+    //alert(alignment);
 
     $('.user_preview_info').append('<div class="' + arrow + '-border"></div>');
     $('.user_preview_info').append('<div class="' + arrow + '"></div>');
@@ -260,6 +262,20 @@ function alignUserPreview(element)
     var top_total = top - scrolled_height - element_height / 2;
     var arrow_height = $('.' + arrow + "-border").outerHeight(true) / 2 - 2;
     //top_total = top_total + arrow_height;
+    var left = element.offset().left;
+    var width = element.width();
+    var left_total = left + width + 20;
+    
+    if(alignment == "vertical") {
+        left_total = element.offset().left;
+        top_total += element.height() + 25;
+    } else if(alignment == "right") {
+        left_total = element.offset().left - $('.user_preview_info').outerWidth(true) - 25;
+        top_total += element.height() - 5;
+    } else if(alignment == "left") {
+        left_total = element.offset().left + element.outerWidth(true) + 25;
+        top_total += element.height();
+    }
 
     $('.user_preview_info').css('left', left_total + "px");
     $('.user_preview_info').css('top', top_total + "px");
@@ -267,7 +283,7 @@ function alignUserPreview(element)
 function fillUserPreview(response)
 {
     response = $.parseJSON(response);
-    console.log(response);
+    //console.log(response);
     var user_string;
     user_string = ("<table style='height:100%;width:100%;' cellspacing='0'><tr><td rowspan='3' style='width:80px;'><div style='width:70px;height:70px;background-image:url(" +
             response[2] + ");background-size:cover;background-repeat:no-repeat;'></div></td>");
@@ -283,7 +299,7 @@ function fillUserPreview(response)
 
     user_string += "</table>";
 
-    $('.user_preview_info').find('*').not('.user_preview_arrow-right, .user_preview_arrow-right-border, .user_preview_arrow-left, .user_preview_arrow-left-border').remove();
+    $('.user_preview_info').find('#user_preview_initial_loader').remove();
     $('.user_preview_info').append(user_string);
 }
 
@@ -295,9 +311,7 @@ function removeUserPreview(mode, event)
         {
             if (calculateDistance($('.user_preview_info'), event.pageX, event.pageY) > 300)
             {
-                $('.user_preview_info').fadeOut('fast', function() {
-                    $(this).remove();
-                });
+                $('.user_preview_info').remove();
                 //console.log('Removed Preview in Mode: ' + mode + ", successfully");
             }
         }
@@ -313,6 +327,19 @@ function calculateDistance(elem, mouseX, mouseY)
     return Math.floor(Math.sqrt(Math.pow(mouseX - (elem.offset().left + (elem.width() / 2)), 2) + Math.pow(mouseY - (elem.offset().top + (elem.height() / 2)), 2)));
 }
 
-function bodyNotification() {
-    
+$(document).on('click', '.delete_message', function(event){
+    event.stopPropagation();
+    event.preventDefault();
+    deleteMessage($(this).parents('[thread_id]').attr('thread_id'));
+});
+
+$(document).on('click', '.message_inbox_item', function() {
+    window.location.assign('message?thread=' + $(this).attr('thread_id') + '');
+});
+
+function deleteMessage(thread) {
+    $.post('Scripts/notifications.class.php', {action:"deleteMessage", thread: thread}, function(response) {
+        console.log('response:' + response);
+    });
+    $('#inbox_message_' + thread).remove();
 }

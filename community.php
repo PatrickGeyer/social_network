@@ -15,6 +15,8 @@ $profilepicexists = false;
 
 include_once('welcome.php');
 include_once('chat.php');
+include_once('Scripts/calendar.class.php');
+$calendar = new Calendar;
 
 if (isset($_GET['f'])) {
     if ($_GET['f'] == 'p') {
@@ -38,99 +40,119 @@ if (isset($_GET['f'])) {
     }
 }
 else {
-    $feed_id = 'p';
+    $feed_id = 'c';
 }
 ?>
 
-<html>
     <head>
         <title><?php echo $community->getName($community_id); ?></title>
     </head>
-    <body>		
-        <div class="container">
-            <table class="info_table_layout">
-                <tr>
-                    <td style='width:220px;'>
-                        <div class='profilepicturediv' style='background-image:url("<?php echo $community->getProfilePicture('chat', $community_id); ?>");'>
-                        </div>
-                    </td>
-                    <td>
-                        <p class='name_title'><?php echo $community->getName($community_id); ?></p>
-                    </td>
-                </tr>
-            </table>
-            <div id='feed_wrapper_scroller' style='padding-left:20px;border-top:1px solid lightgrey;border-bottom:1px solid lightgrey;'>
-                <table cellspacing='0'>
+    <body>	
+        <div class='global_container'>
+            <?php include_once('left_bar.php'); ?>
+            <div class="container container_full">
+                <table class="info_table_layout">
                     <tr>
-                        <td style='margin-right:5px;'>
-                            <div id='p' filter_id = 'p' class="feed_selector 
-                            <?php
-                            if ($feed_id == 'p') {
-                                echo 'active_feed';
-                            }
-                            ?>">Posts</div>
+                        <td style='width:220px;'>
+                            <div class='profilepicturediv' style='background-image:url("<?php echo $community->getProfilePicture('chat', $community_id); ?>");'>
+                            </div>
                         </td>
                         <td>
-                            <div id='f' filter_id = 'f' class="feed_selector 
-                            <?php
-                            if ($feed_id == 'f') {
-                                echo 'active_feed';
-                            }
-                            ?>">Files</div>
-                        </td>
-                        <td>
-                            <div id='m' filter_id = 'm' class="feed_selector 
-                            <?php
-                            if ($feed_id == 'm') {
-                                echo 'active_feed';
-                            }
-                            ?>">Members</div>
+                            <p class='name_title'><?php echo $community->getName($community_id); ?></p>
                         </td>
                     </tr>
+                    <tr>
+                        <td></td>
+                    </tr>
                 </table>
-            </div>
-            <div id='school_refresh'>
-                <?php
-                if ($feed_id == 'm') {
-                    echo "
+                <div class='feed_wrapper_scroller'>
+                    <table cellspacing='0'>
+                        <tr>
+                            <td filter_id = 'c'>
+                                <div id='c' filter_id = 'c' class="feed_selector 
+                                <?php
+                                if ($feed_id == 'c') {
+                                    echo 'active_feed';
+                                }
+                                ?>">Calendar</div>
+                            </td>
+                            <td style='margin-right:5px;'>
+                                <div id='p' filter_id = 'p' class="feed_selector 
+                                <?php
+                                if ($feed_id == 'p') {
+                                    echo 'active_feed';
+                                }
+                                ?>">Posts</div>
+                            </td>
+                            <td>
+                                <div id='f' filter_id = 'f' class="feed_selector 
+                                <?php
+                                if ($feed_id == 'f') {
+                                    echo 'active_feed';
+                                }
+                                ?>">Files</div>
+                            </td>
+                            <td>
+                                <div id='m' filter_id = 'm' class="feed_selector 
+                                <?php
+                                if ($feed_id == 'm') {
+                                    echo 'active_feed';
+                                }
+                                ?>">Members</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div id='school_refresh'>
+                    <?php
+                    if ($feed_id == 'm') {
+                        echo "
 				<table>
 				<tbody>";
-    $members = $community->getMembers($community_id);
-    foreach ($members as $member) {
-        echo "<tr>";
-        echo "<td>";
-        echo "<a class='user_name' href='user?" . $member['id'] . "'>" . $member['name'] . "</a>";
-        echo "</td>";
-        echo "<td>";
-        echo $member['year'];
-        echo "</td>";
-        echo "<td>";
-        echo $system->humanTiming(strtotime($member['joined']));
-        echo "</td>";
-        if ($user->isAdmin() == true || $community->getLeaderId($community_id) == $user->getId()) {
-            echo "<td>";
-            echo "a";
-            echo "</td>";
-        }
-        echo "</tr>";
-    }
+                        $members = $community->getMembers($community_id);
+                        foreach ($members as $member) {
+                            echo "<tr>";
+                            echo "<td>";
+                            echo "<a class='user_name' href='user?" . $member['id'] . "'>" . $member['name'] . "</a>";
+                            echo "</td>";
+                            echo "<td>";
+                            echo $member['year'];
+                            echo "</td>";
+                            echo "<td>";
+                            echo $system->humanTiming(strtotime($member['joined']));
+                            echo "</td>";
+                            if ($user->isAdmin() == true || $community->getLeaderId($community_id) == $user->getId()) {
+                                echo "<td>";
+                                echo "a";
+                                echo "</td>";
+                            }
+                            echo "</tr>";
+                        }
 
-    echo "</tbody></table>";
-}
-else if ($feed_id == 'p') {
-    echo "<div class='home_feed_container'>";
-    $array = $activity_query->fetchAll(PDO::FETCH_ASSOC);
-    $count = count($array);
-    foreach ($array as $activity) {
-        $home->homeify($activity, $database_connection, $user);
-    }
-    echo "</div>";
-}
-?>
+                        echo "</tbody></table>";
+                    }
+                    if ($feed_id == "c") {
+                        echo "<div>" . $calendar->draw_calendar(date('m'), date("Y")) . "</div>";
+                    }
+                    else if ($feed_id == 'p') {
+                        echo "<div class='home_feed_container'>";
+                        $array = $activity_query->fetchAll(PDO::FETCH_ASSOC);
+                        $count = count($array);
+                        foreach ($array as $activity) {
+                            $home->homeify($activity, $database_connection, $user);
+                        }
+                        echo "</div>";
+                    }
+                    ?>
+                </div>
             </div>
-        </div>	
+            <?php //include_once 'right_bar.php';?>
+        </div>
     </body>
     <script>
+        $('#create_event').click(function() {
+            window.location.assign('event');
+        });
         $('.feed_selector').click(function(event)
         {
             $('.feed_selector').removeClass('active_feed');
@@ -166,4 +188,3 @@ else if ($feed_id == 'p') {
             });
         }
     </script>
-</html>

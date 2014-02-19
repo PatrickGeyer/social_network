@@ -6,10 +6,16 @@ class Base {
     const MALE_DEFAULT_THUMB = "Images/male-default-icon.jpg";
     const FEMALE_DEFAULT_ICON = "Images/female-default-chat.jpg";
     const FEMALE_DEFAULT_CHAT = "Images/female-default-chat.jpg";
+    const UNKNOWN_DEFAULT_ICON = "Images/unknown-default-chat.jpg";
+    const UNKNOWN_DEFAULT_CHAT = "Images/unknown-default-chat.jpg";
 
     const SHORTCUT_ICON = "http://icons.iconarchive.com/icons/dakirby309/windows-8-metro/256/Other-Shortcuts-Metro-icon.png";
     const LOADING_ICON = "Images/ajax-loader.gif";
     const LIKE_ICON = "Images/Icons/Icon_Pacs/Batch-master/Batch-master/PNG/16x16/arrow-up.png";
+    const DOWNLOAD_ARROW = "Images/Icons/Icon_Pacs/typicons.2.0/png-48px/arrow-down.png";
+    const DOWN_ARROW_DARK = "Images/down.png";
+    const DOWN_ARROW_LIGHT = "Images/down1.png";
+    const DOWN_ARROW = "Images/down_arrow_select.png";
     
     const INBOX_IMG = "Images/Icons/Icon_Pacs/ecqlipse2/system_white/MAIL_32x32-32.png";
     const NOTIFICATION_IMG = "Images/Icons/Icon_Pacs/ecqlipse2/system_white/WIFI_32x32-32.png";
@@ -27,14 +33,13 @@ class Base {
     
     
     const RELOAD_STILL_BLACK = "Images/Icons/Icon_Pacs/Batch-master/Batch-master/PNG/64x64/refresh.png";
-    const AJAX_LOADER = "Images/ajax-loader.gif";
     const ERROR_RED = "Images/Icons/bonus/icons-shadowless-32/cross.png";
     
     const IMAGE_QUALITY = 60;
     
     const VIDEO_THUMB = "Images/Icons/file_type/play-red.png";
     const IMAGE_THUMB = "Images/Icons/Icon_Pacs/typicons.2.0/png-24px/image.png";
-    const FOLDER_THUMB = "Images/Icons/Icon_Pacs/ecqlipse2/system_black/FOLDER - OPEN_48x48-32.png";
+    const FOLDER_THUMB = "Images/Icons/bonus/icons-32/blue-folder.png";
     const PDF_THUMB = "Images/Icons/file_type/pdficon_large.png";
     const WORD_THUMB = "Images/Icons/file_type/Microsoft_Word_2013_logo_thumb.png";
     const POWERPOINT_THUMB = "Images/Icons/file_type/Microsoft_PowerPoint_2013_logo_thumb.png";
@@ -44,7 +49,7 @@ class Base {
     
     const VIDEO_ICON = "Images/Icons/file_type/play-red.png";
     const IMAGE_ICON = "Images/Icons/Icon_Pacs/typicons.2.0/png-24px/image.png";
-    const FOLDER_ICON = "Images/Icons/Icon_Pacs/ecqlipse2/system_black/FOLDER - OPEN_48x48-32.png";
+    const FOLDER_ICON = "Images/Icons/bonus/icons-32/blue-folder.png";
     const PDF_ICON = "Images/Icons/file_type/pdficon_icon.png";
     const WORD_ICON = "Images/Icons/file_type/Microsoft_Word_2013_logo_icon.png";
     const POWERPOINT_ICON = "Images/Icons/file_type/Microsoft_PowerPoint_2013_logo_icon.png";
@@ -56,5 +61,27 @@ class Base {
     const AUDIO_PLAY_THUMB = "Images/Icons/file_type/music-play-blue.png";
     const AUDIO_PAUSE_THUMB = "Images/Icons/file_type/music-pause-blue.png";
     
+    const JQUERY_UI = "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js";
+    const JQUERY_UI_CSS = "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css";
+    const DATETIMEPICKER = "Scripts/external/datetimepicker/jquery.datetimepicker.js";
+    const DATETIMEPICKER_CSS = "Scripts/external/datetimepicker/jquery.datetimepicker.css";
+    
+    const COPYRIGHT_ZIP = ' * Copyright 2014 Patrick Geyer.
+ *
+ * Licensed under the Apache License, Version 2.0;
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+';
+
 }
+
 ?>

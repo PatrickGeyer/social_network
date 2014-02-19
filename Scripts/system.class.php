@@ -4,7 +4,8 @@ include_once('php_includes/simple_html_dom.php');
 include_once('database.class.php');
 include_once('base.class.php');
 
-class System extends Base{
+class System extends Base {
+
     private static $system = NULL;
     private $url;
     private $meta_tag = array(
@@ -17,8 +18,10 @@ class System extends Base{
     );
 
     public function __construct() {
+        
     }
-    public static function getInstance ( ) {
+
+    public static function getInstance() {
         if (self :: $system) {
             return self :: $system;
         }
@@ -26,6 +29,7 @@ class System extends Base{
         self :: $system = new System();
         return self :: $system;
     }
+
     function getSchoolNames() {
         $query = "SELECT name FROM community;";
     }
@@ -39,7 +43,7 @@ class System extends Base{
     const KEY = 'somesecretphrase';
 
     public function encrypt($plaintext) {
-        if(!empty($plaintext)) {
+        if (!empty($plaintext)) {
             $td = mcrypt_module_open(self::CYPHER, '', self::MODE, '');
             $iv = mcrypt_create_iv(mcrypt_enc_get_iv_size($td), MCRYPT_RAND);
             mcrypt_generic_init($td, self::KEY, $iv);
@@ -50,7 +54,7 @@ class System extends Base{
     }
 
     public function decrypt($crypttext) {
-        if(!empty($crypttext)) {
+        if (!empty($crypttext)) {
             $crypttext = base64_decode($crypttext);
             $plaintext = '';
             $td = mcrypt_module_open(self::CYPHER, '', self::MODE, '');
@@ -75,17 +79,18 @@ class System extends Base{
 
         return $string;
     }
+
     function linkReplace($string, $classes = 'post_feed_link', $before = '', $after = '') {
-        if($classes == NULL) {
+        if ($classes == NULL) {
             $classes = 'post_feed_link';
         }
-        $string = preg_replace("/(?<!a href=\")(?<!src=\")((http|ftp)+(s)?:\/\/[^<>\s]+)/i", 
-            "<a href=\"\\0\" target=\"blank\" class=\"".$classes."\">".$before."\\0".$after."</a>", $string);
+        $string = preg_replace("/(?<!a href=\")(?<!src=\")((http|ftp)+(s)?:\/\/[^<>\s]+)/i", "<a href=\"\\0\" target=\"blank\" class=\"" . $classes . "\">" . $before . "\\0" . $after . "</a>", $string);
 //        $string = str_replace($string, ':::BEFORE:::', $before);
 //        $string = str_replace($string, ':::AFTER:::', $after);
 //        $string = str_replace($string, ':::CLASSES:::', $classes);
         return $string;
     }
+
     public function getGlobalMeta() {
         foreach ($this->meta_tag as $meta => $value) {
             echo "<meta name='" . $meta . "' content='" . $value . "' />";
@@ -100,7 +105,9 @@ class System extends Base{
         $refl = new ReflectionClass('Base');
         $constant = $refl->getConstants();
         foreach ($constant as $var_name => $value) {
-            echo "var ".$var_name. "='".$value."';";
+            if($var_name != "COPYRIGHT_ZIP") {
+                echo "var " . $var_name . "='" . $value . "';";
+            }
         }
         echo "var SCROLL_OPTIONS = {
                 scrollButtons:  
@@ -118,24 +125,6 @@ class System extends Base{
                 mouseWheelPixels: 100 
             };";
         echo "</script>";
-//        echo "<script>var WORD_THUMB = '" . self::WORD_THUMB . "';
-//            var PDF_THUMB = '" . self::PDF_THUMB . "';
-//            var AUDIO_THUMB = '" . self::AUDIO_THUMB . "';
-//            var AUDIO_PLAY_THUMB = '" . self::AUDIO_PLAY_THUMB . "';
-//            var AUDIO_PAUSE_THUMB = '" . self::AUDIO_PAUSE_THUMB . "';
-//            var VIDEO_THUMB = '" . self::VIDEO_THUMB . "';
-//                
-//            var COMMENT_LIKE_TEXT = '" . self::COMMENT_LIKE_TEXT . "';
-//            var COMMENT_UNLIKE_TEXT = '" . self::COMMENT_UNLIKE_TEXT . "';
-//            var LIKE_TEXT = '" . self::LIKE_TEXT . "';
-//            var UNLIKE_TEXT = '" . self::UNLIKE_TEXT . "';
-//            
-//            var LOADING_ICON = '" . self::LOADING_ICON . "';
-//                
-//            var RELOAD_STILL_BLACK = '" . self::RELOAD_STILL_BLACK . "';
-//            var ERROR_RED = '" . self::ERROR_RED . "';
-//            
-//            </script>";
     }
 
     public function audioPlayer($path = null, $name = null, $close_button = false, $rndm = null) {
@@ -152,16 +141,35 @@ class System extends Base{
         }
 
         $string = '<div class="audio_container" id="audio_container_' . $rndm
-                . '">' . ($close_button == true ? "<div onclick=\"removeAudio(" . $rndm . ");\" class=\'audio_remove\'>x</div>" : "") . '<audio id="audio_' . $rndm .
-                '" style="display:none;" controls="controls" class="player" preload="none"> <source src="' . $path . '" />Your browser doesnt support the audio element, please download to listen instead...</audio>';
+                . '">' 
+                . ($close_button == true ? "<div onclick=\"removeAudio(" . $rndm . ");\" class=\'audio_remove\'>x</div>" : "");
 
-        $string .= '<div id="image_' . $rndm . '" onclick="audioPlay(&quot;' . $rndm
-                . '&quot;);" class="audio_button" style="background-image:url('.System::AUDIO_PLAY_THUMB.')"></div>';
+        $string .= $this->audioButton($rndm, $path);
+        $string .= $this->audioInfo($rndm, $name, $path);
 
-        $string .= '<div id="audio_info_' . $rndm . '" class="audio_info"><div class="ellipsis_overflow audio_title">' . $name . '</div><div id="audio_progress_container_' . $rndm
-                . '"class="audio_progress_container"><div id="audio_progress_' . $rndm . '" class="audio_progress"></div><div class="audio_buffered" id="audio_buffered_' . $rndm .
-                '"></div></div><div class="audio_time" id="audio_time_' . $rndm . '">0:00</div></div></div>';
+        $string .= '</div>';
         return $string;
+    }
+
+    function audioButton($id, $path) {
+        return '<div id="image_' . $id . '" class="audio_button" audio_id="'
+            .$id.'" style="background-image:url(' 
+                . Base::AUDIO_PLAY_THUMB . ')"></div><audio id="audio_' . $id .
+                '" style="display:none;" controls="controls" class="player" preload="none"> <source src="' 
+                . $path 
+                . '" />Your browser doesnt support this audio element, please download to listen...</audio>';
+    }
+
+    function audioInfo($id, $name, $path) {
+        return '<div id="audio_info_' . $id . '" class="audio_info"><div class="ellipsis_overflow audio_title">' 
+        . $name . '</div>'.$this->audioTimeline($id).'<div class="audio_time" id="audio_time_' . $id . '">0:00</div></div>';
+    }
+
+    function audioTimeline($id) {
+        return '<div id="audio_progress_container_' . $id
+                . '"class="audio_progress_container"><div id="audio_progress_' 
+                . $id . '" class="audio_progress"></div><div class="audio_buffered" id="audio_buffered_' . $id .
+                '"></div></div>';
     }
 
     /**
@@ -195,14 +203,15 @@ class System extends Base{
             $original_path = ":::ori_path:::";
             $path = ":::path:::";
             $thumbnail = ":::thumb:::";
-        } else {
+        }
+        else {
             $path = $this->stripexts($path);
             $flv_path = $path . ".flv";
             $mp4_path = $path . ".mp4";
             $ogg_path = $path . ".ogg";
             $swf_path = $path . ".swf";
             $webm_path = $path . ".webm";
-            $original_path = $path.".avi";
+            $original_path = $path . ".avi";
             $thumbnail = $path . ".jpg";
 
 //            REM mp4  (H.264 / ACC)
@@ -219,10 +228,10 @@ class System extends Base{
                 . "style='" . $styles . "' "
                 . ">"; // data-setup={}
         if ($source == TRUE) {
-            $return .= "<source src='". $mp4_path ."' type='video/mp4'></source>"
+            $return .= "<source src='" . $mp4_path . "' type='video/mp4'></source>"
                     . "<source src='" . $flv_path . "' type='video/x-flv'></source>"
                     . "<source src='" . $webm_path . "' type='video/webm'></source>";
-                    //. "<source src='" . $original_path . "' type='video/avi'></source>";
+            //. "<source src='" . $original_path . "' type='video/avi'></source>";
         }
         $return .= "<object data='" . $mp4_path . "' width='320' height='240'>"
                 . "<embed src='" . $flv_path . "' width='320' height='240'>"
@@ -235,7 +244,7 @@ class System extends Base{
         $string = (strlen($string) > $length) ? substr($string, 0, $length) . '...' : $string;
         return $string;
     }
-    
+
     public function findexts($filename) {
         $filename = strtolower($filename);
         return pathinfo($filename, PATHINFO_EXTENSION);
@@ -278,14 +287,14 @@ class System extends Base{
             }
         }
     }
-    
+
     function date($time) {
-        if(date('Ymd') == date('Ymd', $time)) {
+        if (date('Ymd') == date('Ymd', $time)) {
             return date('H:i', $time);
         }
         return date('Y/m/d H:i', $time);
     }
-    
+
     public function getPagePreview($url) {
         error_reporting(0);
         $this->url = $url;
@@ -312,13 +321,13 @@ class System extends Base{
         return $title;
     }
 
-    private function getFavicon($url) {        
-        return 'http://www.google.com/s2/favicons?domain='.$url;
+    private function getFavicon($url) {
+        return 'http://www.google.com/s2/favicons?domain=' . $url;
     }
 
     private function getDescription($html = NULL) {
         $description = 'No Description available';
-        
+
         $tag = $html->find("meta[name='description']", 0)->content;
         if ($tag == "") {
             $tag = $html->find("meta[name='og:description']", 0)->content;
@@ -328,13 +337,13 @@ class System extends Base{
                     $tag = $html->find("meta[property='og:description']", 0)->content;
                     if ($tag == "") {
                         $tag = $html->find("h1", 0)->plaintext;
-                        if($tag == "") {
+                        if ($tag == "") {
                             $tag = $html->find("h2", 0)->plaintext;
-                            if($tag == "") {
+                            if ($tag == "") {
                                 $tag = $html->find("h3", 0)->plaintext;
-                                if($tag == "") {
+                                if ($tag == "") {
                                     $tag = $html->find("p", 0)->plaintext;
-                                    if($tag == "") {
+                                    if ($tag == "") {
                                         $tag = $html->find("div", 0)->plaintext;
                                     }
                                 }
@@ -385,6 +394,48 @@ class System extends Base{
         }
         else {
             return $header ['content'];
+        }
+    }
+
+    function create_zip($destination = '', $files = array(), $overwrite = false) {
+        $destination = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $destination);
+        if (file_exists($destination) && !$overwrite) {
+            return false;
+        }
+        $valid_files = array();
+        if (is_array($files)) {
+            foreach ($files as $file) {
+                if (file_exists($file)) {
+                    $valid_files[] = $file;
+                }
+            }
+        }
+        $zip = new ZipArchive();
+        if ($zip->open($destination, $overwrite ? ZIPARCHIVE::OVERWRITE : ZIPARCHIVE::CREATE) !== true) {
+            //echo "Zip NO";
+            return false;
+        }
+        $zip->addFromString('Copyright.txt', Base::COPYRIGHT_ZIP);
+        foreach ($valid_files as $file) {
+            $zip->addFile($file, $file);
+        }
+
+        $zip->close();
+
+        return file_exists($destination);
+    }
+
+    function add_to_zip($destination = '', $files = array()) {
+        $zip = new ZipArchive;
+        if ($zip->open($destination) === TRUE) {
+            foreach($files as $file) {
+                $zip->addFile($file['path'], $file['name']);
+                $zip->close();
+            }
+            return true;
+        }
+        else {
+            return false;
         }
     }
 

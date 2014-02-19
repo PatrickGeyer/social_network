@@ -6,7 +6,7 @@ include_once('lock.php');
 $searchTxt = $_POST['input_text'];
 $return_data;
 
-$sql = "SELECT id FROM users WHERE INSTR(`name`, '{$searchTxt}') > 0;";
+$sql = "SELECT id FROM user WHERE INSTR(`name`, '{$searchTxt}') > 0;";
 $sql = $database_connection->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
 $sql->execute();
 $sql = $sql->fetchAll(PDO::FETCH_ASSOC);
@@ -23,8 +23,8 @@ $files_sql = $database_connection->prepare($files_sql);
 $files_sql->execute();
 $files_sql = $files_sql->fetchAll(PDO::FETCH_ASSOC);
 
-function searchDiv($user_id, $community_id, $group_id, $div_class, $div_onclick, $img_src, $name, $info) {
-    $return = "<div class='".$div_class."' onclick='".$div_onclick."'>"
+function searchDiv($type, $entity_id, $div_class, $div_onclick, $img_src, $name, $info) {
+    $return = "<div entity_name='".$name."' entity_type='".$type."' entity_id='".$entity_id."' class='".$div_class."' onclick=''>"
             . "<table style='width:100%;'><tr><td rowspan='2' style='width:35px;'>"
             . $img_src
             . "</td><td>"
@@ -42,12 +42,11 @@ if (isset($_POST['search']) && $_POST['search'] == "universal") {
             $class = 'match';
         } 
         echo searchDiv(
+                "user",
                 $row['id'], 
-                NULL, 
-                NULL, 
                 $class, 
                 "window.location.replace(\"user?id=" . base64_encode($row['id'])."\");", 
-                "<img class='profile_picture' src='".$user->getProfilePicture('chat', $row['id'])."'></img>", 
+                "<img class='profile_picture_medium' src='".$user->getProfilePicture('chat', $row['id'])."'></img>", 
                 $user->getName($row['id']), 
                 $user->getAbout($row['id']));
     }
@@ -67,9 +66,8 @@ if (isset($_POST['search']) && $_POST['search'] == "universal") {
             $class = 'match';
         } 
         echo searchDiv(
+                "file",
                 $row['id'], 
-                NULL, 
-                NULL, 
                 $class, 
                 "window.location.replace(\"files?f=" . $row['id'] . "\");", 
                 $files->tinyPreview($file),
@@ -84,12 +82,11 @@ if (isset($_POST['search']) && $_POST['search'] == "universal") {
             $class = 'match';
         } 
         echo searchDiv(
+                "group",
                 $row['id'], 
-                NULL, 
-                NULL, 
                 $class, 
                 "window.location.replace(\"user?id=" . base64_encode($row['id'])."\');", 
-                "<img class='profile_picture' src='".$group->getProfilePicture('chat', $row['id'])."'></img>", 
+                "<img class='profile_picture_medium' src='".$group->getProfilePicture('chat', $row['id'])."'></img>", 
                 $group->getGroupName($row['id']), 
                 $group->getAbout($row['id']));
     }
@@ -102,12 +99,11 @@ if (isset($_POST['search']) && $_POST['search'] == "universal") {
             $class = 'match';
         } 
         echo searchDiv(
+                "user",
                 $row['id'], 
-                NULL, 
-                NULL, 
                 $class, 
                 "addreceivermessage(" . $row['id'] . ", &quot;" . $user->getName($row['id']) . "&quot;);", 
-                "<img class='profile_picture' src='".$user->getProfilePicture('chat', $row['id'])."'></img>",
+                "<img class='profile_picture_medium' src='".$user->getProfilePicture('chat', $row['id'])."'></img>",
                 $user->getName($row['id']), 
                 $user->getAbout($row['id']));
     }
@@ -119,12 +115,12 @@ if (isset($_POST['search']) && $_POST['search'] == "universal") {
             $class = 'match';
         } 
         echo searchDiv(
+                "group",
                 $row['id'], 
-                NULL, 
                 NULL, 
                 $class, 
                 "", 
-                "<img class='profile_picture' src='".$group->getProfilePicture('chat', $row['id'])."'></img>", 
+                "<img class='profile_picture_medium' src='".$group->getProfilePicture('chat', $row['id'])."'></img>", 
                 $group->getGroupName($row['id']), 
                 $group->getAbout($row['id']));
     }
@@ -135,12 +131,11 @@ if (isset($_POST['search']) && $_POST['search'] == "universal") {
             $class = 'match';
         } 
         echo searchDiv(
+                "user",
                 $row['id'], 
-                NULL, 
-                NULL, 
                 $class, 
                 "", 
-                "<img class='profile_picture' src='".$user->getProfilePicture('chat', $row['id'])."'></img>", 
+                "<img class='profile_picture_medium' src='".$user->getProfilePicture('chat', $row['id'])."'></img>", 
                 $user->getName($row['id']), 
                 $user->getAbout($row['id']));
     }
@@ -152,12 +147,11 @@ if (isset($_POST['search']) && $_POST['search'] == "universal") {
             $class = 'match';
         } 
         echo searchDiv(
+                "user",
                 $row['id'], 
-                NULL, 
-                NULL, 
                 $class, 
                 "addReceiver(invited_members, " . $row['id'] . ", false, false, function(){addGroupReceiver(&quot;".$user->getName($row['id'])."&quot, ".$row['id'].")});", 
-                "<img class='profile_picture' src='".$user->getProfilePicture('chat', $row['id'])."'></img>", 
+                "<img class='profile_picture_medium' src='".$user->getProfilePicture('chat', $row['id'])."'></img>", 
                 $user->getName($row['id']), 
                 $user->getAbout($row['id']));
     }

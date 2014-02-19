@@ -25,7 +25,7 @@ class Extend {
 
     function submitComment($comment, $post_id) {
         if ($comment != '') {
-            $sql = "INSERT INTO comments (commenter_id, post_id, comment_text) VALUES (" . $this->user_id . ", :post_id, :comment);";
+            $sql = "INSERT INTO comment (user_id, activity_id, comment, time) VALUES (" . $this->user_id . ", :post_id, :comment, ".time().");";
             $sql = $this->database_connection->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $sql->execute(array(":post_id" => $post_id, ":comment" => $comment));
         }

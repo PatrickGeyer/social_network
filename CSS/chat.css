@@ -84,7 +84,7 @@ div.chatheader{
     z-index: 123;
 }
 .chat_feed_selector{
-    border-left: 2px solid #cc181e;
+    border-left: 2px solid rgb(70, 180, 220);
     border-bottom: 0px;
     min-width: 0px;
     width: 30px;

@@ -2,7 +2,7 @@
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     include_once 'Scripts/database.class.php';
     $database_connection = Database::getConnection();
-    $user_query = "SELECT id FROM users WHERE email = :email AND password = :password";
+    $user_query = "SELECT id FROM user WHERE email = :email AND password = :password";
     $user_query = $database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
     $user_query->execute(array(":email" => $_POST['email'], ":password" => $_POST['password']));
     $user_data = $user_query->fetchColumn();
@@ -143,7 +143,7 @@ if (isset($_COOKIE['id'])) {
                         position: position,
                         gender: gender
                     }, function(response) {
-                        if (response === "200") {
+                        if (response =="") {
                             window.location.replace('home');
                         }
                     });

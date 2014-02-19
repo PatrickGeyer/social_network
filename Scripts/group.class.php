@@ -12,8 +12,10 @@ class Group {
 
     public function __construct() {
         $this->database_connection = Database::getConnection();
-        $this->user_id = base64_decode($_COOKIE['id']);
-        $this->user = User::getInstance();
+        if(isset($_COOKIE['id'])) {
+            $this->user_id = base64_decode($_COOKIE['id']);
+            $this->user = User::getInstance();
+        }
         return true;
     }
 
@@ -31,7 +33,7 @@ class Group {
     }
 
     function getGroupName($id) {
-        $user_query = "SELECT group_name FROM `group` WHERE id = :id;";
+        $user_query = "SELECT name FROM `group` WHERE id = :id;";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":id" => $id));
         $user = $user_query->fetchColumn();
@@ -39,7 +41,7 @@ class Group {
     }
 
     function getAbout($id) {
-        $user_query = "SELECT group_about FROM `group` WHERE id = :id;";
+        $user_query = "SELECT about FROM `group` WHERE id = :id;";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":id" => $id));
         $user = $user_query->fetchColumn();
@@ -47,7 +49,7 @@ class Group {
     }
 
     public function isMember($user_id, $group_id) {
-        $sql = "SELECT id FROM group_member WHERE member_id = :user_id AND group_id = :group_id";
+        $sql = "SELECT id FROM group_member WHERE user_id = :user_id AND group_id = :group_id";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $user_id, ":group_id" => $group_id));
         if ($sql->rowCount() == 0) {
@@ -59,18 +61,7 @@ class Group {
     }
 
     function getProfilePicture($size = "chat", $id) {
-        if ($size == "original") {
-            $user_query = "SELECT group_profile_picture FROM `group` WHERE id = :id";
-        }
-        else if ($size == "thumb") {
-            $user_query = "SELECT group_profile_picture_thumb FROM `group` WHERE id = :id";
-        }
-        else if ($size == "icon") {
-            $user_query = "SELECT group_profile_picture_icon FROM `group` WHERE id = :id";
-        }
-        else if ($size == "chat") {
-            $user_query = "SELECT group_profile_picture_chat FROM `group` WHERE id = :id";
-        }
+        $user_query = "SELECT profile_picture FROM `group` WHERE id = :id";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":id" => $this->user_id));
         $user = $user_query->fetchColumn();
@@ -83,7 +74,7 @@ class Group {
     }
 
     public function getFounderId($group_id) {
-        $sql = "SELECT group_founder_id FROM `group` WHERE id = :group_id;";
+        $sql = "SELECT user_id FROM `group` WHERE id = :group_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":group_id" => $group_id));
         return $sql->fetchColumn();
@@ -93,7 +84,7 @@ class Group {
         if (!isset($user_id) || $user_id == "") {
             $user_id = $this->user_id;
         }
-        $user_query = "SELECT group_id FROM group_member WHERE member_id = :user_id;";
+        $user_query = "SELECT group_id FROM group_member WHERE user_id = :user_id;";
         $user_query = $this->database_connection->prepare($user_query);
         $user_query->execute(array(":user_id" => $user_id));
         $usergroups = $user_query->fetchAll(PDO::FETCH_COLUMN);
@@ -117,23 +108,25 @@ class Group {
 	}
         
 	$this->database_connection->beginTransaction();
-        $group_query = "INSERT INTO `group` (group_founder_id, group_name, group_about, group_type) VALUES (:user_id, :group_name, :group_about, :group_type);";
+        $group_query = "INSERT INTO `group` (user_id, name, about, type) VALUES (:user_id, :group_name, :group_about, :group_type);";
         $group_query = $this->database_connection->prepare($group_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $group_query->execute(array(":user_id" => $this->user->user_id, ":group_name" => $name, ":group_about" => $about, ":group_type" => $type));
 
         $new_group_id = $this->database_connection->lastInsertId();
-        $group_query = "INSERT INTO `group_member` (member_id, group_id) VALUES (:user_id, :new_group_id);";
+        $group_query = "INSERT INTO `group_member` (user_id, group_id) VALUES (:user_id, :new_group_id);";
         $group_query = $this->database_connection->prepare($group_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $group_query->execute(array(":user_id" => $this->user->user_id, ":new_group_id" => $new_group_id));
 
         $this->database_connection->commit();
         if(is_array($receivers)) {
-            foreach ($receivers as $member) {
-                //var_dump($receivers);
-                $group_query = "INSERT INTO `group_invite` (inviter_id, receiver_id, group_id) VALUES (:user_id, :member_id, :new_group_id);";
-                $group_query = $this->database_connection->prepare($group_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-                if (!$group_query->execute(array(":user_id" => $this->user->user_id, ":member_id" => $member['receiver_id'], ":new_group_id" => $new_group_id))) {
-                    die("error/" . $this->database_connection->errorInfo());
+            foreach ($receivers as $type => $receiver) {
+                foreach ($receiver as $single_receiver) {
+                    $group_query = "INSERT INTO `group_invite` (sender_id, ".$type."_id, group_id) VALUES (:user_id, :member_id, :new_group_id);";
+                    $group_query = $this->database_connection->prepare($group_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+                    if (!$group_query->execute(array(":user_id" => $this->user->user_id, ":member_id" => $single_receiver, ":new_group_id" => $new_group_id))) {
+                        //die(print_r($this->database_connection->errorInfo()));
+                        echo "Fail";
+                    }
                 }
             }
         }
@@ -182,12 +175,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
         if ($_POST['action'] == "join") {
-            $sql = "SELECT id FROM group_member WHERE id = " . $user->getId() . " AND group_id = " . $_POST['group_id'] . "";
+            $sql = "SELECT id FROM group_member WHERE user_id = " . $user->getId() . " AND group_id = " . $_POST['group_id'] . "";
             $sql = $database_connection->prepare($sql);
             $sql->execute();
             $number = $sql->rowCount();
             if ($number == 0) {
-                $database_connection->query("INSERT INTO `group_member` (member_id, group_id) VALUES (" . $user->getId() . ", " . $_POST['group_id'] . ");");
+                $database_connection->query("INSERT INTO `group_member` (user_id, group_id) VALUES (" . $user->getId() . ", " . $_POST['group_id'] . ");");
             }
             $sql = "UPDATE `group_invite` SET invite_status = 2,`read`=1,seen=1 WHERE id = " . $_POST['invite_id'] . ";";
             $sql = $this->database_connection->prepare($sql);

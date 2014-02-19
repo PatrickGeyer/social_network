@@ -28,14 +28,6 @@ class Community {
         return $user;
     }
 
-    public function getLeader($id) {
-        $user_query = "SELECT leader FROM community WHERE id = :id";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $user_query->execute(array(":id" => $id));
-        $user = $user_query->fetchColumn();
-        return $user;
-    }
-
     public function getLeaderId($id) {
         $user_query = "SELECT leader_id FROM community WHERE id = :id";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
@@ -45,7 +37,7 @@ class Community {
     }
 
     public function getMembers($id) {
-        $user_query = "SELECT id, year, name, joined FROM users WHERE community_id = :id";
+        $user_query = "SELECT id, year, name, registered FROM user WHERE community_id = :id";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":id" => $id));
         $user = $user_query->fetchAll();
@@ -68,7 +60,7 @@ class Community {
         if (!empty($user) || $user != "") {
             return $user;
         } else {
-            return "Images/profile-picture-default-unknown-" . $size . ".jpg";
+            return constant("BASE::UNKNOWN_DEFAULT_".strtoupper($size));
         }
     }
     

@@ -2,10 +2,11 @@ input[type="submit"].chatsend {
     display: none;
 }
 div.messagecomplete{
-    position: absolute;
-    bottom: 0px;
+    float: right;
+    margin-top: 20px;
     width: 200px;
     z-index: 12;
+    height: 200px;
 }
 
 #messagetoolbox{
@@ -50,11 +51,18 @@ h1.composeheader{
     border-top: 1px solid lightgrey;
 }
 .message_wrapper{
+    position: relative;
     background-color: transparent;
     padding: 5px;
     border-bottom: 1px solid lightgrey;
     cursor: pointer;
 }
+
+.message_wrapper:hover .delete_cross {
+    opacity: 0.5;
+    display: block;
+}
+
 .message_inactive_thread:hover{
     background-color: #f4f6f9;
 }
@@ -104,7 +112,8 @@ div.message_convo_wrapper{
 }
 .message_convo_header{
     height: 35px;
-    padding-left: 20px;
+    margin-left: -20px;
+    margin-right: -20px;
     padding-top: 15px;
     background-color: white;
     border-bottom: 1px solid lightgrey;
@@ -172,10 +181,8 @@ div.reply{
     border-bottom:1px solid lightgrey;
 }
 table.message{
-    margin-left: 80px;
-    padding-right: -10px;
-    width: 80%;
-    margin-right: 50px;
+    /*width: 80%;*/
+    margin: auto;
 }
 textarea, input[type='text']{
     width: 100%;

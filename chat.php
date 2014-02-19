@@ -1,7 +1,14 @@
 <?php
-//if (!isset($_COOKIE['chat_feed'])) {
-//    setcookie('chat_feed', 'y');
-//}
+$chat_feed = 'y';
+include_once('Scripts/chat.class.php');
+$chat = new Chat();
+if (!isset($_COOKIE['chat_feed'])) {
+    //setcookie('chat_feed', 'y');
+
+} else {
+    $chat_feed = $_COOKIE['chat_feed'];
+}
+
 ?>
 <head>
     <link rel="stylesheet" type="text/css" href="CSS/chat.css">
@@ -10,7 +17,7 @@
         var current_view = getCookie("chat_feed");
         if (current_view == "undefined") {
             current_view = "s";
-            //setCookie("chat_feed", 's');
+            // setCookie("chat_feed", 's');
         }
 
         var timer;
@@ -130,10 +137,6 @@
                     scroll2Bottom();
                 }
                 $('#chat_loading_icon').hide();
-                $('img').error(function() {
-                    $(this).attr('src', 'Images/profile-picture-default-unknown-chat.jpg');
-                    $(this).addClass('chat_broken_image');
-                });
             });
         }
 
@@ -194,7 +197,7 @@
     </script>
 </head>
 <div class="chatoff" id="chat_toggle"><?php
-    if ($_COOKIE['chat_feed'] == '0') {
+    if ($chat_feed == '0') {
         echo 'OFF';
     }
     else {
@@ -208,11 +211,13 @@
                 <td>
                     <div id='school_tab' feed_id='chat' style='padding:0px;' chat_feed='s' class='feed_selector chat_feed_selector 
                     <?php
-                    if ($_COOKIE['chat_feed'] == 's') {
+                    if ($chat_feed == 's') {
                         echo "active_feed";
                     }
                     ?>'><h3 class='chat_header_text ellipsis-overflow'>
                                  <?php
+                                 $chat_count = $chat->getUnreadNum(1, 'community', NULL);
+                                 echo "(".$chat_count.") ";
                                  echo $user->getCommunityName();
                                  ?>
                         </h3>
@@ -223,7 +228,7 @@
                 <td>
                     <div id='year_tab' style='padding:0px;' feed_id='chat' chat_feed='y' class='feed_selector chat_feed_selector 
                          <?php
-                         if ($_COOKIE['chat_feed'] == 'y') {
+                         if ($chat_feed == 'y') {
                         echo "active_feed";
                     }
                     ?>
@@ -236,9 +241,10 @@
             foreach ($groups as $single_group) {
                 echo "<tr><td><div style='padding:0px;' chat_feed='"
                 . $single_group . "' feed_id='chat' class='feed_selector chat_feed_selector "
-                . ($_COOKIE['chat_feed'] == $single_group ? "active_feed" : "")
+                . ($chat_feed == $single_group ? "active_feed" : "")
                 . "' id='" . $single_group . "' title='"
                 . $group->getGroupName($single_group) . "'><h3 class='chat_header_text ellipsis-overflow'>"
+                . $chat->getUnreadNum($single_group, 'group', NULL)
                 . $group->getGroupName($single_group) . "</h3></div></td></tr>";
             }
             ?>
@@ -255,6 +261,7 @@
     font-size: 12px;  
     padding: 0px;  
     word-wrap: break-word;  '></div>
+    <?php //echo $chat_count; ?>
     </div>
 </div>
 <audio id='chat_new_message_sound'>

@@ -1,15 +1,30 @@
 <?php
 include_once('database.class.php');
+include_once('entity.class.php');
 
 class User {
+    private $entity = NULL;
 
     public $user_id;
+    private $password = NULL;
+    private $email = NULL;
+    private $name = array(1 => NULL, 2 => NULL, 3 => NULL);
+    private $community_id = NULL;
+    private $community_name = NULL;
+    private $position = NULL;
+    private $location = NULL;
+    private $gender = NULL;
+    private $about = NULL;
+    private $language = NULL;
+    private $profile_picture = array("original" => NULL, "chat"=> NULL, "thumb" => NULL, "icon" => NULL);
+    
     private $database_connection;
-    private static $user = null ;
+    private static $user = null;
     public function __construct() {
         if(isset($_COOKIE['id'])) {
             $this->user_id = base64_decode($_COOKIE['id']);
             $this->database_connection = Database::getConnection();
+            $this->entity = new Entity();
         }
     }
     public static function getInstance ( ) {
@@ -25,44 +40,79 @@ class User {
     }
 
     function getName($id = null, $name = 3) {
-        if (!isset($id) || $id == "") {
+        $set = false;
+        if (!isset($id)) {
+            $set = true;
+            if(!is_null($this->name[$name]))
+                return $this->name[$name];
             $id = $this->user_id;
         }
         if($name === 3) {
-            $user_query = "SELECT name FROM users WHERE id = :user_id";
+            $user_query = "SELECT name FROM user WHERE id = :user_id";
         }
         else if($name === 1) {
-            $user_query = "SELECT first_name FROM users WHERE id = :user_id";
+            $user_query = "SELECT first_name FROM user WHERE id = :user_id";
         }
         else if($name === 2) {
-            $user_query = "SELECT last_name FROM users WHERE id = :user_id";
+            $user_query = "SELECT last_name FROM user WHERE id = :user_id";
         }
-        //print_r($this);
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
+        if($set) {
+            $this->name[$name] = $user;
+        }
         return $user;
     }
 
+    function getActivity($sender_id) {
+        $sql = "SELECT * FROM activity WHERE user_id = :sender_id AND id IN "
+                . "(SELECT activity_id FROM activity_share WHERE user_id = :user_id OR ((community_id = :community_id AND position='s') OR community_id = :community_id AND position = :position AND position ='y'));";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":sender_id" => $sender_id,
+            ":user_id" => $this->user_id,
+            ":community_id" => $this->getCommunityId(),
+            ":position" => $this->getPosition()
+        ));
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     function getPosition($id = null) {
-        if (!isset($id) || $id == "") {
+        $set = false;
+        if (!isset($id)) {
+            $set = true;
             $id = $this->user_id;
+            if(!is_null($this->position)) {
+                return $this->position;
+            }
         }
-        $user_query = "SELECT position FROM users WHERE id = :user_id";
+        $user_query = "SELECT position FROM user WHERE id = :user_id";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
+        if($set) {
+            $this->position = $user;
+        }
         return $user;
     }
     
     function getLocation($id = NULL) {
+        $set = false;
         if(!isset($id)) {
             $id = $this->user_id;
+            $set = true;
+            if(!is_null($this->location)) {
+                return $this->location;
+            }
         }
         $location_query = "SELECT id, country, region, city, lat, lng, type, name, time FROM marker WHERE user_id = :user_id ORDER BY time LIMIT 1;";
         $location_query = $this->database_connection->prepare($location_query);
         $location_query->execute(array(":user_id" => $id));
         $location = $location_query->fetch(PDO::FETCH_ASSOC);
+        if($set) {
+            $this->community_name = $user;
+        }
         return $location;
     }
     function setLocation($id = NULL) {
@@ -92,105 +142,179 @@ class User {
     }
 
     function getCommunityId($id = null) {
-        if (!isset($id) || $id == "") {
+        $set = false;
+        if (!isset($id)) {
             $id = $this->user_id;
+            $set = true;
+            if(!is_null($this->community_id)) {
+                return $this->community_id;
+            }
         }
-        $user_query = "SELECT community_id FROM users WHERE id = :user_id";
+        $user_query = "SELECT community_id FROM user WHERE id = :user_id";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
+        if($set) {
+            $this->community_id = $user;
+        }
         return $user;
     }
 
     function getCommunityName($id = null) {
-        if (!isset($id) || $id == "") {
+        $set = false;
+        if (!isset($id)) {
             $id = $this->user_id;
+            $set = true;
+            if(!is_null($this->community_name)) {
+                return $this->community_name;
+            }
         }
-        $user_query = "SELECT name FROM community WHERE id = (SELECT community_id FROM users WHERE id = :user_id);";
+        $user_query = "SELECT name FROM community WHERE id = (SELECT community_id FROM user WHERE id = :user_id);";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
+        if($set) {
+            $this->community_name = $user;
+        }
         return $user;
     }
 
     function getProfilePicture($size = "thumb", $id = null) {
+        $set = false;
         if ($id == null) {
+            $set = true;
+            if(!is_null($this->profile_picture["$size"])) {
+                return $this->profile_picture["$size"];
+            }
             $id = $this->user_id;
         }
         if ($size == "original") {
-            $user_query = "SELECT path FROM files WHERE id = (SELECT profile_picture FROM users WHERE id = :user_id);";
+            $user_query = "SELECT path FROM file WHERE id = (SELECT profile_picture FROM user WHERE id = :user_id);";
         } else if ($size == "thumb" || $size == "chat") {
-            $user_query = "SELECT thumb_path FROM files WHERE id = (SELECT profile_picture FROM users WHERE id = :user_id);";
+            $user_query = "SELECT thumb_path FROM file WHERE id = (SELECT profile_picture FROM user WHERE id = :user_id);";
         } else if ($size == "icon") {
-            $user_query = "SELECT icon_path FROM files WHERE id = (SELECT profile_picture FROM users WHERE id = :user_id);";
+            $user_query = "SELECT icon_path FROM file WHERE id = (SELECT profile_picture FROM user WHERE id = :user_id);";
         }
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user_profile_picture = $user_query->fetchColumn();
+        $user = NULL;
         if (!empty($user_profile_picture) || $user_profile_picture != "") {
-            //die("PROFILE PATH: ".$user_profile_picture);
-            return $user_profile_picture;
+            $user =  $user_profile_picture;
         } else {
             if ($this->getGender($id) == "Male") {
-                return Base::MALE_DEFAULT_ICON;
+                $user = Base::MALE_DEFAULT_ICON;
             } else {
-                return Base::FEMALE_DEFAULT_ICON;
+                $user = Base::FEMALE_DEFAULT_ICON;
             }
         }
+        if($set) {
+            $this->profile_picture["$size"] = $user;
+        }
+        return $user;
     }
 
     function getGender($id = null) {
+        $set = false;
         if (!isset($id) || $id == "") {
             $id = $this->user_id;
+            $set = true;
+            if(!is_null($this->gender)) {
+                return $this->gender;
+            }
         }
-        $user_query = "SELECT gender FROM users WHERE id = :user_id";
+        $user_query = "SELECT gender FROM user WHERE id = :user_id";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
+        if($set) {
+            $this->gender = $user;
+        }
         return $user;
     }
 
     function getAbout($id = null) {
+        $set = false;
         if (!isset($id) || $id == "") {
             $id = $this->user_id;
+            $set = true;
+            if(!is_null($this->about)) {
+                return $this->about;
+            }
         }
-        $user_query = "SELECT about FROM users WHERE id = :user_id";
+        $user_query = "SELECT about FROM user WHERE id = :user_id";
         $user_query = $this->database_connection->prepare($user_query);
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
         if(strtolower($user) == "null" || $user == "") {
-            $user = "";
+            $user = NULL;
+        }
+        if($set) {
+            $this->about = $user;
         }
         return $user;
     }
 
     function getLanguage($id = null) {
+        $set = false;
         if (!isset($id) || $id == "") {
             $id = $this->user_id;
+            $set = true;
+            if(!is_null($this->language)) {
+                return $this->language;
+            }
         }
-        $user_query = "SELECT default_language FROM users WHERE id = :user_id";
+        $user_query = "SELECT default_language FROM user WHERE id = :user_id";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
+        if($set) {
+            $this->language = $user;
+        }
         return $user;
     }
 
     function getEmail($id = null) {
-        if (!isset($id) || $id == "") {
+        $set = false;
+        if (!isset($id)) {
             $id = $this->user_id;
+            $set = true;
+            if(!is_null($this->email)) {
+                return $this->email;
+            }
         }
-        $user_query = "SELECT email FROM users WHERE id = :user_id";
+        $user_query = "SELECT email FROM user WHERE id = :user_id";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
+        if($set) {
+            $this->email = $user;
+        }
         return $user;
     }
-
+    function getPassword($id = NULL) {
+        $set = false;
+        if (!isset($id) || $id == "") {
+            $id = $this->user_id;
+            $set = true;
+            if(is_null($this->password)) {
+                return $this->password;
+            }
+        }
+        $user_query = "SELECT password FROM user WHERE id = :user_id";
+        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query->execute(array(":user_id" => $id));
+        $user = $user_query->fetchColumn();
+        if($set) {
+            return $set;
+        }
+        return $user;
+    }
     function isAdmin($id = null) {
         if (!isset($id) || $id == "") {
             $id = $this->user_id;
         }
-        $user_query = "SELECT admin FROM users WHERE id = :user_id";
+        $user_query = "SELECT admin FROM user WHERE id = :user_id";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
@@ -198,7 +322,7 @@ class User {
     }
 
     function updateSettings($about = null, $community = null, $year = null, $email = null, $language = null) {
-        $sql = "UPDATE users SET ";
+        $sql = "UPDATE user SET ";
         if (isset($about)) {
             $sql .= 'about="' . $about . '"';
         }
@@ -255,15 +379,15 @@ class User {
         if ($id == null) {
             $id = $this->user_id;
         }
-        $this->database_connection->prepare("UPDATE users SET online = 1 WHERE id = " . $id . ";")->execute();
-        $this->database_connection->prepare("UPDATE users SET lastactivity = NOW() WHERE id = " . $id . ";")->execute();
+        //$this->database_connection->prepare("UPDATE user SET online = 1 WHERE id = " . $id . ";")->execute();
+        $this->database_connection->prepare("UPDATE user SET last_activity = NOW() WHERE id = " . $id . ";")->execute();
     }
 
     function getOnline($id) {
         if ($id == null) {
             $id = $this->user_id;
         }
-        $sql = "SELECT id FROM users WHERE id = " . $id . " AND lastactivity > DATE_SUB(NOW(), INTERVAL 30 SECOND);";
+        $sql = "SELECT id FROM user WHERE id = " . $id . " AND last_activity > DATE_SUB(NOW(), INTERVAL 30 SECOND);";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute();
         $num = $sql->rowCount();
@@ -276,29 +400,44 @@ class User {
     }
     
     function setProfilePicture($id) {
-        $sql = "UPDATE users SET profile_picture = :id WHERE id = :user_id;";
+        $sql = "UPDATE user SET profile_picture = :id WHERE id = :user_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":id" => $id,
             ":user_id" => $this->user_id
         ));
-        die("UPDATED");
+    }
+
+    function printTag($id) {
+        $return = "<table cellspacing='0'>"
+                . "<tr><td><a href='user?id=".base64_encode($id)."'><div class='profile_picture_medium' style='background-image: url(\"".$this->getProfilePicture("thumb", $id). "\");'></div></a>
+                                        </td>
+                                        <td>
+                                            <p style='padding-left: 0px;' class='settings'>
+                                                <a href='user?id=".base64_encode($id)."'>
+                                                    <span class='user_preview_name'>". $this->getName($id) ."</span>
+                                                </a>
+                                            </p>
+                                        </td></tr></table>";
+        return $return;
+                                            
     }
 
 }
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $user = new User();
-    if(isset($_POST['about'])) {
+    if (isset($_POST['about'])) {
         if (!isset($_POST['email'])) {
             $email = $user->getEmail();
-        } else {
+        }
+        else {
             $email = $_POST['email'];
         }
         $user->updateSettings($_POST['about'], $email, $_POST['year']);
     }
-    
-    if(isset($_POST['action'])) {
-        if($_POST['action'] == 'get_preview_info') {
+
+    if (isset($_POST['action'])) {
+        if ($_POST['action'] == 'get_preview_info') {
             $array[] = urlencode(base64_encode($_POST['id']));
             $array[] = $user->getName($_POST['id']);
             $array[] = $user->getProfilePicture('chat', $_POST['id']);
@@ -307,12 +446,11 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             $array[] = $user->getPosition($_POST['id']);
             $array[] = urlencode(base64_encode($user->getCommunityId($_POST['id'])));
             echo json_encode($array);
-        }     
-        if($_POST['action'] == 'setOnline')
-        {
+        }
+        if ($_POST['action'] == 'setOnline') {
             $user->setOnline();
-        }   
-        if($_POST['action'] == "profile_picture") {
+        }
+        if ($_POST['action'] == "profile_picture") {
             $user->setProfilePicture($_POST['file_id']);
         }
     }

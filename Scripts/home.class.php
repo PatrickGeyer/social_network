@@ -30,9 +30,9 @@ class Home {
     
     function printFileList($type = NULL) {
         $files = $this->files->getList_r();
-        echo "<table>";
+        echo "<table style='width:100%;'>";
         foreach ($files as $file) {
-            if($type == $file['type'] || $type === NULL) {
+            if($type == $file['type'] || $type === NULL || !isset($type) || $type == "") {
                 $this->fileList($file);
             }
         }
@@ -41,20 +41,16 @@ class Home {
     
     function fileList($file) {
         echo "<tr><td>";
-        echo "<div id='home_file_list_item_" . $file['id'] . "' file_id='" . $file['id'] . "' style='padding:0px;border:0px;margin:0px;top:0;background:transparent;min-height:40px;' class='file_search_option search_option ";
+        echo "<div class='file_item' id='home_file_list_item_" . $file['id'] . "' file_id='" . $file['id'] 
+                . "' style='padding:0px;border:0px;margin:0px;top:0;min-height:40px;' class='file_search_option search_option ";
         if ($file['type'] == "Folder") {
             echo "file' ";
-            echo "onclick='addToStatus(&apos;" . $file['type'] . "&apos;, object={path:&apos;" . urlencode($this->system->encrypt($file['folder_id'])) . "&apos;, name:&apos;" . $file['folder_id'] . "&apos;, file_id:".$file['id']."});'";
-        }
-        else if ($file['type'] == "Audio") {
-            echo "file' onclick='addToStatus(&apos;" . $file['type'] . "&apos;, object={path:&apos;"
-            . $file['thumb_path'] . "&apos;, name:&apos;" . $file['name']
-            . "&apos;, file_id:" . $file['id'] . "});'";
+            echo "data-file='{\"type\": &apos;" . $file['type'] . "&apos;, object={path:&apos;" . urlencode($this->system->encrypt($file['folder_id'])) . "&apos;, name:&apos;" . $file['name'] . "&apos;, description: &apos;".$file['description']."&apos;, file_id:".$file['id']."}}";
         }
         else if ($file['type'] == "Folder") {
-            echo "file' onclick='addToStatus(&apos;Folder&apos;, object={path:&apos;"
+            echo "file' data-file='{\"type\": &apos;Folder&apos;, object={path:&apos;"
             . $file['thumb_path'] . "&apos;, name:&apos;" . $file['name']
-            . "&apos;, file_id:" . $file['id'] . "});'";
+            . "&apos;, file_id:" . $file['id'] . "}}";
         }
         else if ($file['type'] == "Video") {
             $info = array(
@@ -71,7 +67,7 @@ class Home {
                 "file_id" => $file['id'],
             );
 
-            echo "file' onclick='var object = (" . json_encode($object) . ");addToStatus(&apos;" . $file['type'] . "&apos;, object);'";
+            echo "file' data-file='{\"type\": &apos;".$file['type']."&apos;, object = (" . json_encode($object) . ");'";
         }
         else {
             $info = array(
@@ -88,7 +84,7 @@ class Home {
                 "description" => $file['description'],
                 "file_id" => $file['id'],
             );
-            echo "file' onclick='var object = (" . json_encode($object) . ");addToStatus(&apos;" . $file['type'] . "&apos;, object);'";
+            echo "file' data-file='{\"type\": \"" . $file['type'] . "\", \"object\":" . json_encode($object) . "}'";
         }
         echo ">";
         echo $this->files->filePreview($file, 'icon');
@@ -122,7 +118,7 @@ class Home {
     
     function getLikes($activity) {
         $return = '';
-        $who_liked_query = "SELECT user_id FROM `votes` WHERE post_id = :activity_id AND vote_value = 1;";
+        $who_liked_query = "SELECT user_id FROM `activity_vote` WHERE post_id = :activity_id AND vote_value = 1;";
         $who_liked_query = $this->database_connection->prepare($who_liked_query);
         $who_liked_query->execute(array(":activity_id" => $activity['id']));
         $who_liked_all = $who_liked_query->fetchAll(PDO::FETCH_ASSOC);
@@ -168,30 +164,32 @@ class Home {
             $style .= "float:right;";
         }
         $return .= "<div class='' style='" . $style . "'>";
-        if ($activity['user_id'] == $this->user->getId()) { //DELETE OPTION FOR POSTER
-            $return .=  "<span class='post_comment_time delete' id='delete1_post_" . $activity['id'] . "' "
-            . "onclick='show_Confirm(" . $activity['id'] . ");' "
-            . "style='cursor:pointer;'>delete -</span>";
-            $return .=  "<span class='post_comment_time delete' id='delete_post_" . $activity['id'] . "' "
-            . "onclick='delete_post(" . $activity['id'] . ");' "
-            . "style='display:none; "
-            . "cursor:pointer; color:red;'>confirm -</span>";
-        }                                                          ////////////////
         $return .=  "<span class='post_comment_time' id='post_time_" . $activity['id'] . "'> "
         . $this->system->humanTiming($activity['time']) . " -</span>";
         if($activity['type'] == "File" && isset($_GET['f'])) {
-            $return .=  "<span class='post_comment_time'>" . $this->files->getViewCount($_GET['f']) . " views -</span>";
+            //$return .=  "<span class='post_comment_time'>" . $this->files->getViewCount($_GET['f']) . " views -</span>";
         }
         
         $return .= $this->getLikes($activity);
-        
+                if ($activity['user_id'] == $this->user->getId()) { //DELETE OPTION FOR POSTER
+            $return .= "<div class='default_dropdown_actions' style='display:inline-block;' wrapper_id='activity_options_" . $activity['id'] . "'>"
+                    . "<span class='default_dropdown_preview'>|</span>"
+                    . "<div class='default_dropdown_wrapper' id='activity_options_" . $activity['id'] . "'>"
+                    . "<ul class='default_dropdown_menu'>"
+                    . "<li class='default_dropdown_item delete_activity' controller_id='activity_options_" 
+                    . $activity['id'] . "'>Delete"
+                    . "</li>"
+                    . "<li class='default_dropdown_item edit_activity'>Edit</li>"
+                    . "</ul>"
+                    . "</div>"
+                    . "</div>";
+        }
         $return .=  "</div>";
         return $return;
     }
 
     function homeify($activity, $view = 'home', $activity_id = NULL) {
         $post_number = 0;
-        $activity['time'] = strtotime($activity['time']);
         
         if ($view == 'home') {
             echo "<div class='post_height_restrictor' id='post_height_restrictor_" . $activity['id'] . "'>";
@@ -218,7 +216,7 @@ class Home {
             
             echo "</tr><tr><td></td><td>";
             
-            echo '<div id= comment_div_' . $activity['id'] . ' class="comment_box" style="width:75%;" >';
+            echo '<div id= comment_div_' . $activity['id'] . ' class="comment_box">';
             echo $this->getComments($activity['id']);
             echo $this->commentInput($activity);
             
@@ -270,9 +268,6 @@ class Home {
         if ($assocFiles_num > 0) {
             echo "<div class='post_feed_media_wrapper'>";
             foreach ($assocFiles as $file) {
-                if (!isset($file['path'])) {
-                    
-                }
                 echo $this->printFileItem($file, $activity, $assocFiles_num);
             }
             echo "</div>";
@@ -299,8 +294,8 @@ class Home {
     }
 
     function getComments($activity_id, $get_all = null) {
-        $db_query_comments = "SELECT id,time,commenter_id, comment_text FROM comments"
-                . " WHERE post_id = :activity_id AND visible=1 ORDER BY time DESC";
+        $db_query_comments = "SELECT id, time, user_id, `comment` FROM comment"
+                . " WHERE activity_id = :activity_id AND visible=1 ORDER BY time DESC";
         $db_query_comments = $this->database_connection->prepare($db_query_comments);
         $db_query_comments->execute(array(":activity_id" => $activity_id));
         $numRows = $db_query_comments->rowCount();
@@ -309,9 +304,9 @@ class Home {
                 
             }
             else {
-                $db_query_comments = "SELECT id,time,commenter_id, comment_text FROM comments"
-                        . " WHERE post_id = :activity_id AND commenter_id IN "
-                        . "(SELECT id FROM users WHERE position = " . $this->user->getPosition() 
+                $db_query_comments = "SELECT id,time,user_id, `text` FROM comment"
+                        . " WHERE post_id = :activity_id AND user_id IN "
+                        . "(SELECT id FROM user WHERE position = " . $this->user->getPosition() 
                         . " AND community_id = " . $this->user->getCommunityId() . ")ORDER BY time ASC";
                 $db_query_comments = $this->database_connection->prepare($db_query_comments);
                 $db_query_comments->execute(array(":activity_id" => $activity_id));
@@ -320,9 +315,9 @@ class Home {
                     
                 }
                 else {
-                    $db_query_comments = "SELECT id,time,commenter_id, comment_text FROM comments "
-                            . "WHERE post_id = :activity_id AND commenter_id IN "
-                            . "(SELECT id FROM users WHERE position = " . $this->user->getPosition() . " "
+                    $db_query_comments = "SELECT id, time, user_id, `text` FROM comment "
+                            . "WHERE post_id = :activity_id AND user_id IN "
+                            . "(SELECT id FROM user WHERE position = " . $this->user->getPosition() . " "
                             . "AND community_id = " . $this->user->getCommunityId() . ") "
                             . "ORDER BY time DESC LIMIT 5 ";
                     $db_query_comments = $this->database_connection->prepare($db_query_comments);
@@ -334,17 +329,15 @@ class Home {
         $recordcomments = array_reverse($recordcomments);
         $return = '';
         foreach ($recordcomments as $comment) {
-            $rawtime = $comment['time'];
-            $time = strtotime($rawtime);
             $return .= "<div class='single_comment_container' comment_id='".$comment['id']."'>";
             $return .= "<table id='post_comment_" . $activity_id . "' style='font-size: 0.9em;'><tr><td style='vertical-align:top;' rowspan='2'>";
-            $return .= "<div class='post_comment_profile_picture post_comment_profile_picture_user' style='background-image:url(\"" . $this->user->getProfilePicture('chat', $comment['commenter_id']) . "\");'></div></td><td style='vertical-align:top;'>";
-            $return .= "<a class='userdatabase_connection' href='user?id=" . urlencode(base64_encode($comment['commenter_id'])) . "'>";
-            $return .= "<span class='user_preview user_preview_name post_comment_user_name' user_id='" . $comment['commenter_id'] . "'>" . $this->user->getName($comment['commenter_id']) . " </span></a>";
+            $return .= "<div class='post_comment_profile_picture post_comment_profile_picture_user' style='background-image:url(\"" . $this->user->getProfilePicture('chat', $comment['user_id']) . "\");'></div></td><td style='vertical-align:top;'>";
+            $return .= "<a class='userdatabase_connection' href='user?id=" . urlencode(base64_encode($comment['user_id'])) . "'>";
+            $return .= "<span class='user_preview user_preview_name post_comment_user_name' user_id='" . $comment['user_id'] . "'>" . $this->user->getName($comment['user_id']) . " </span></a>";
             $return .= "";
-            $return .= "<span class='post_comment_text'>" . $comment['comment_text'] . "</span>"
+            $return .= "<span class='post_comment_text'>" . $comment['comment'] . "</span>"
             . "</td></tr><tr><td colspan=2 style='vertical-align:bottom;' >"
-            . "<span class='post_comment_time'>" . $this->system->humanTiming($time) . "</span>"
+            . "<span class='post_comment_time'>" . $this->system->humanTiming($comment['time']) . "</span>"
             . "<span comment_id='" . $comment['id'] . "' class='post_comment_time post_comment_liked_num'>- "
             . $this->comment_like_count($comment['id']) . " likes</span>"
             . "<span has_liked='" . ($this->has_liked_comment($comment['id']) == TRUE ? "true" : "false") . "' "
@@ -352,7 +345,7 @@ class Home {
             . "class='user_preview_name post_comment_time post_comment_vote'>"
             . ($this->has_liked_comment($comment['id']) == FALSE ? System::COMMENT_LIKE_TEXT : System::COMMENT_UNLIKE_TEXT) . "</span>";
             $return .= "</tr></table>";
-            if($comment['commenter_id'] == $this->user->user_id) {
+            if($comment['user_id'] == $this->user->user_id) {
                 $return .= "<img height='15px'src='../Images/Icons/Icon_Pacs/typicons.2.0/png-48px/delete-outline.png' class='comment_delete'></img>";
             }
 
@@ -362,9 +355,9 @@ class Home {
     }
 
     public function getAssocFiles($activity_id = NULL) {
-        $sql = "SELECT * FROM files AS files "
-                . "LEFT JOIN (SELECT file_id, URL, web_title, web_description, web_favicon FROM activity_media WHERE activity_id = :activity_id) AS act ON files.id = act.file_id "
-                . "WHERE files.id IN (SELECT file_id FROM activity_media WHERE activity_id = :activity_id AND visible=1); ";
+        $sql = "SELECT * FROM file AS file "
+                . "LEFT JOIN (SELECT file_id, URL, web_title, web_description, web_favicon FROM activity_media WHERE activity_id = :activity_id) AS act ON file.id = act.file_id "
+                . "WHERE file.id IN (SELECT file_id FROM activity_media WHERE activity_id = :activity_id AND visible=1); ";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(
                 array(
@@ -401,16 +394,15 @@ class Home {
         $classes = "";
 
         if ($file['type'] == "Audio") {
-            $post_classes .= "post_media_audio";
-            $post_styles .= " height:auto; ";
-            $post_content .= $this->system->audioPlayer($file['thumb_path'], $file['name'], false, false);
+            $post_classes .= "post_media_double";
+//            $post_styles .= " height:auto; ";
+            $post_content .= $this->showDocFile($file);
         }
         else if ($file['type'] == "Image") {
-            $post_classes .= $width_class;
-            $post_styles .= "border:0px;";
-            $post_styles .= $image_styles;
-            $post_content .= "<img style='opacity:0;".$image_styles."' src='".$file['thumb_path']."'></img>";
-            $post_styles .= "background-image:url(\"" . $file['thumb_path'] . "\")' onclick='initiateTheater(" . $activity['id'] . ", " . $file['id'] . ");";
+            $post_styles .= "height:150px;";
+            $post_classes .= "post_media_double post_media_photo";
+            $post_content .= $this->showDocFile($file);
+            $post_styles .= "' onclick='initiateTheater(" . $activity['id'] . ", " . $file['id'] . ");";
         }
         else if ($file['type'] == "Video") {
             $post_classes .= "post_media_video";
@@ -419,8 +411,8 @@ class Home {
         else if ($file['type'] == "WORD Document" 
                 || $file['type'] == "PDF Document" 
                 || $file['type'] == "EXCEL Document"
-                || $file['type'] == "PPT Document") {
-            //echo $file['type'];
+                || $file['type'] == "PPT Document"
+                || $file['type'] == "Folder") {
             $post_styles .= "height:auto;";
             $post_classes .= "post_media_double";
             $post_content .= $this->showDocFile($file);
@@ -430,40 +422,75 @@ class Home {
             $post_classes .= "post_media_double";
             $post_content .= $this->showDocFile($file);
         }
-        else {
+        else if($file['type'] == "Webpage") {
             $post_classes .= "post_media_full";
             $post_styles .= "height:auto;";
-            $post_content .= "<table style='height:100%;margin:10px;'><tr><td rowspan='3'>" .
-                    "<div class='post_media_webpage_favicon' style='background-image:url(&quot;" . $file['web_favicon'] . "&quot;);'></div></td>" .
+            $post_content .= "<table style='height:100%;'><tr><td rowspan='3'>" .
+                    "<div class='post_media_webpage_favicon' style='background-image:url(&quot;" 
+                        . $file['web_favicon'] . "&quot;);'></div></td>" .
                     "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>" .
-                    "<a class='user_preview_name' target='_blank' href='" . $file['URL'] . "'><span style='font-size:13px;'>" . $file['web_title'] . "</span></a></div></td></tr>" .
-                    "<tr><td><span style='font-size:12px;' class='user_preview_community'>" . $file['web_description'] . "</span></td></tr></table>";
+                    "<a class='user_preview_name' target='_blank' href='" 
+                    . $file['URL'] . "'><span style='font-size:13px;'>" 
+                    . $file['web_title'] . "</span></a></div></td></tr>" .
+                    "<tr><td><span style='font-size:12px;' class='user_preview_community'>" 
+                    . $file['web_description'] . "</span></td></tr></table>";
+        } else {
+            $post_classes .= "post_media_full";
+            $post_content .= $this->showDocFile($file);
         }
-        echo "<div file_id='".$file['id']."' " . $post_classes . "' " . $post_styles . "'>" . $post_content;
-        if($this->user->user_id == $activity['user_id']) {
-            echo "<div style='background-image: url(\"".Base::DELETE."\");' class='delete_cross delete_cross_top remove_file_post'></div>";
+        if ($file['type'] != "Webpage") {
+            $post_content .= "<a href='" . $file['path'] . "' download>"
+                    . "<div style='right:15px;background-image: url(\"" . Base::DOWNLOAD_ARROW . "\");' class='delete_cross delete_cross_top'>"
+                    . "</div></a>";
+        }
+        echo "<div file_id='" . $file['id'] . "' " . $post_classes . "' " . $post_styles . "'>" . $post_content;
+        if ($this->user->user_id == $activity['user_id']) {
+            echo "<div style='background-image: url(\"" . Base::DELETE . "\");' class='delete_cross delete_cross_top remove_event_post'></div>";
         }
         echo "</div>";
     }
 
     private function showDocFile($file) {
+        $preview_classes = $preview_styles = $preview_content = '';
+
+        $post_content = $post_content_under_title = '<tr><td>';
+        
         $return = $link = $path = NULL;
+        $link = "files?f=".$file['id'];
         $path = $this->files->getFileTypeImage($file, 'THUMB');
+        
         if($file['type'] == "Folder") {
             $path = System::FOLDER_THUMB;
             $link = "files?pd=".urlencode($this->system->encrypt($file['folder_id']));
+        } else if($file['type'] == "Image") {
+            $path = $file['thumb_path'];
+            $preview_classes .= "post_media_photo";
+            $preview_styles .= "width:auto;height:100%;background-image: url(\"".$path."\")";
+            $preview_content .= "<div class='fade_right_shadow'></div><img style='opacity:0;max-width:150px;max-height:150px;' src='".$path."'></img>"; //Shadow
+            
+        } else if($file['type'] == "Audio") {
+            $preview_styles = 'background-image: none;';
+            $preview_content .= $this->system->audioButton($file['id'], $file['thumb_path']);
+            $post_content_under_title .= $this->system->audioTimeline($file['id']);
         } else {
-            $link = "files?f=".$file['id'];
+            $preview_classes .= "";
+            $preview_styles .= "background-image: url(\"".$path."\")";
+            $preview_content .= "<div class='fade_right_shadow'></div><img style='opacity:0;max-width:150px;max-height:150px;' src='".$path."'></img>";
         }
-        
-        $return = "<table style='height:100%;margin:10px;'><tr><td rowspan='3'>"
-                . "<div class='post_media_webpage_favicon' style='background-image:url(&quot;"
-                . $path . "&quot;);'></div></td>"
-                . "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>"
-                . "<a class='user_preview_name' target='_blank' href='".$link."'><span style='font-size:13px;'>"
-                . $file['name'] . "</span></a></div></td></tr>"
-                . "<tr><td><span style='font-size:12px;' class='user_preview_community'>"
-                . $file['description'] . "</span></td></tr></table>";
+
+        $return = "<table style='table-layout:auto;width:100%;'><tr><td style='width:10px;' rowspan='4'>"
+                . "<div class='post_media_preview " . $preview_classes . "' style='background-image:url(&quot;"
+                . $path . "&quot;); " . $preview_styles . "'>" . $preview_content . "</div></td>"
+                . "<td style='height:10px;'><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>"
+                . "<a class='user_preview_name' target='_blank' href='".$link."'>"
+                . "<p class='ellipsis_overflow' style='max-width:90%;margin:0px;font-size:13px;'>"
+                . $file['name'] . "</p></a></div></td></tr>"
+                . $post_content_under_title
+                . "</td></tr><tr><td style='height:20px;'><span style='font-size:12px;' class='post_comment_time'>"
+                . $file['description'] . "</span></td></tr><tr><td><span class='post_comment_time'>Created: "
+                . $this->system->date($file['time']). "</span></td></tr>"
+                . $post_content. "</td></tr></table>";
+//        <td rowspan='5'><hr class='post_media_separator' /></td>
         return $return;
     }
 
@@ -475,7 +502,7 @@ class Home {
     }
 
     private function hasLikedPost($post_id) {
-        $query = "SELECT id FROM votes WHERE user_id = :user_id AND post_id = :post_id AND vote_value = 1;";
+        $query = "SELECT id FROM activity_vote WHERE user_id = :user_id AND activity_id = :post_id AND vote_value = 1;";
         $query = $this->database_connection->prepare($query);
         $query->execute(array(":user_id" => $this->user->getId(), ":post_id" => $post_id));
         $num = $query->rowCount();
@@ -489,7 +516,7 @@ class Home {
     }
 
     private function hasVotedPost($post_id) {
-        $query = "SELECT id FROM votes WHERE user_id = :user_id AND post_id = :post_id;";
+        $query = "SELECT id FROM activity_vote WHERE user_id = :user_id AND activity_id = :post_id;";
         $query = $this->database_connection->prepare($query);
         $query->execute(array(":user_id" => $this->user->getId(), ":post_id" => $post_id));
         $num = $query->rowCount();
@@ -506,7 +533,7 @@ class Home {
         $has_liked = $this->hasLikedPost($activity_id);
         $has_voted = $this->hasVotedPost($activity_id);
         if ($has_voted === false) {
-            $insert_query = "INSERT INTO `votes` (post_id, user_id, vote_value) VALUES( :activity_id, :user_id, 1);";
+            $insert_query = "INSERT INTO `activity_vote` (activity_id, user_id, vote_value) VALUES( :activity_id, :user_id, 1);";
             $insert_query = $this->database_connection->prepare($insert_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $insert_query->execute(
                     array(":activity_id" => $activity_id,
@@ -516,7 +543,7 @@ class Home {
         }
         else {
             if ($has_liked === false) {
-                $insert_query = "UPDATE votes SET vote_value = 1 WHERE post_id = :post_id AND user_id = :user_id;";
+                $insert_query = "UPDATE activity_vote SET vote_value = 1 WHERE activity_id = :post_id AND user_id = :user_id;";
                 $insert_query = $this->database_connection->prepare($insert_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
                 $insert_query->execute(
                         array(":post_id" => $activity_id,
@@ -524,7 +551,7 @@ class Home {
                 ));
             }
             else {
-                $query = "UPDATE votes SET vote_value = 0 WHERE post_id = :post_id AND user_id = :user_id;";
+                $query = "UPDATE activity_vote SET vote_value = 0 WHERE activity_id = :post_id AND user_id = :user_id;";
                 $query = $this->database_connection->prepare($query);
                 $query->execute(
                         array(":post_id" => $activity_id,
@@ -537,18 +564,19 @@ class Home {
     
     private function notifyUserLike($activity_id, $receiver_id) {
         $this->user->notify("like", $receiver_id, $activity_id, NULL);
-//        $who_liked_query = "INSERT INTO notification (post_id, receiver_id, sender_id, type) VALUES(:activity_id, :receiver_id, :sender_id, :type);";
-//        $who_liked_query = $this->database_connection->prepare($who_liked_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-//        $who_liked_query->execute(
-//                array(":activity_id" => $activity_id,
-//                    ":receiver_id" => $receiver_id,
-//                    ":sender_id" => $this->user->getId(),
-//                    ":type" => "like",
-//        ));
+    }
+    
+    function updatePost($activity_id, $text, $files) {
+        $sql = "UPDATE activity SET status_text = :text WHERE id = :id";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":text" => $text,
+            ":id" => $activity_id
+        ));
     }
 
     public function getLikeNumber($post_id) {
-        $who_liked_query = "SELECT id FROM `votes` WHERE vote_value = 1 AND post_id = :activity_id;";
+        $who_liked_query = "SELECT id FROM `activity_vote` WHERE vote_value = 1 AND activity_id = :activity_id;";
         $who_liked_query = $this->database_connection->prepare($who_liked_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $who_liked_query->execute(array(":activity_id" => $post_id));
         $like_count = $who_liked_query->rowCount();
@@ -556,7 +584,7 @@ class Home {
     }
     
     function comment_like_count($comment_id) {
-        $sql = "SELECT id FROM comment_like WHERE comment_id = :comment_id AND visible=1;";
+        $sql = "SELECT id FROM comment_vote WHERE comment_id = :comment_id AND visible=1;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":comment_id" => $comment_id
@@ -566,7 +594,7 @@ class Home {
     }
     
     function has_liked_comment($comment_id) {
-        $sql = "SELECT id FROM comment_like WHERE user_id = :user_id AND comment_id = :comment_id AND visible=1;";
+        $sql = "SELECT id FROM comment_vote WHERE user_id = :user_id AND comment_id = :comment_id AND visible=1;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":user_id" => $this->user->user_id,
@@ -582,7 +610,7 @@ class Home {
     }
     
     function has_voted_comment($comment_id) {
-        $sql = "SELECT id FROM comment_like WHERE user_id = :user_id AND comment_id = :comment_id";
+        $sql = "SELECT id FROM comment_vote WHERE user_id = :user_id AND comment_id = :comment_id";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":user_id" => $this->user->user_id,
@@ -601,7 +629,7 @@ class Home {
         if ($this->has_voted_comment($comment_id) == TRUE) {
             $sql = "UPDATE notification SET visible=0 WHERE type='comment_like' AND post_id=:post_id, element_id = :element_id "
                     . "AND sender_id=:user_id;"
-                    . "UPDATE comment_like SET visible = 1 WHERE user_id= :user_id AND comment_id = :element_id;";
+                    . "UPDATE comment_vote SET visible = 1 WHERE user_id= :user_id AND comment_id = :element_id;";
             $sql = $this->database_connection->prepare($sql);
             $sql->execute(array(
                 ":user_id" => $this->user->user_id,
@@ -610,14 +638,14 @@ class Home {
             ));
         }
         else {
-            $sql = "INSERT INTO comment_like (user_id, comment_id) VALUES (:user_id, :comment_id)";
-            $user_sql = "SELECT commenter_id FROM comments WHERE id = :comment_id;";
+            $sql = "INSERT INTO comment_vote (user_id, comment_id) VALUES (:user_id, :comment_id)";
+            $user_sql = "SELECT user_id FROM comment WHERE id = :comment_id;";
             $user_sql = $this->database_connection->prepare($user_sql);
             $user_sql->execute(array(
                 ":comment_id" => $comment_id
             ));
             $user_id = $user_sql->fetchColumn();
-            $this->user->notify('comment_like', $user_id, $post_id, $comment_id, 0, 0);
+            $this->user->notify('comment_vote', $user_id, $post_id, $comment_id, 0, 0);
                     $sql = $this->database_connection->prepare($sql);
             $sql->execute(array(
                 ":user_id" => $this->user->user_id,
@@ -626,7 +654,7 @@ class Home {
         }
     }
     function remove_comment_like($comment_id) {
-        $sql = "UPDATE comment_like SET visible=0 WHERE user_id = :user_id AND comment_id = :comment_id;";
+        $sql = "UPDATE comment_vote SET visible=0 WHERE user_id = :user_id AND comment_id = :comment_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":user_id" => $this->user->user_id,
@@ -642,7 +670,7 @@ class Home {
     }
 
     function delete_comment($comment_id) {
-        $sql = "UPDATE comments SET visible = 0 WHERE id = :comment_id;";
+        $sql = "UPDATE comment SET visible = 0 WHERE id = :comment_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":comment_id" => $comment_id
@@ -660,7 +688,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             $home->deletePost($_POST['post_id']);
         }
         if ($_POST['action'] == 'like') {
-            $home->like($_POST['id'], $_POST['receiver_id']);
+            echo $home->like($_POST['id'], $_POST['receiver_id']);
         }
         if ($_POST['action'] == 'comment_vote') {
             if ($home->has_liked_comment($_POST['comment_id']) === true) {
@@ -684,6 +712,13 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
         else if($_POST['action'] == "deleteComment") {
             $home->delete_comment($_POST['comment_id']);
+        }
+        else if($_POST['action'] == "updatePost") {
+            $files = array();
+            if(isset($_POST['files'])) {
+                $files = $_POST['files'];
+            }
+            $home->updatePost($_POST['activity_id'], $_POST['text'], $files);
         }
     }
 }

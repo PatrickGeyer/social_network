@@ -32,7 +32,7 @@ class Files {
     }
 
     function getList_r($id = null, $dir = null) {
-        $sql = "SELECT * FROM files WHERE user_id = :user_id AND type != 'Webpage' ORDER BY name;";
+        $sql = "SELECT * FROM file WHERE user_id = :user_id AND type != 'Webpage' AND visible=1 ORDER BY name;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $this->user->user_id));
         $return_array = $sql->fetchAll(PDO::FETCH_ASSOC);
@@ -43,7 +43,7 @@ class Files {
         if ($id == null) {
             $id = $this->user->user_id;
         }
-        $sql = "SELECT * FROM files WHERE type != 'Webpage' AND id IN (SELECT file_id FROM file_share WHERE user_id = :viewed_id "
+        $sql = "SELECT * FROM file WHERE type != 'Webpage' AND id IN (SELECT file_id FROM file_share WHERE user_id = :viewed_id "
                 . "AND (receiver_id = :user_id OR (position = :user_position AND community_id = :user_school)"
                 . "OR group_id IN(SELECT group_id FROM group_member WHERE member_id = :user_id)));";
         $sql = $this->database_connection->prepare($sql);
@@ -54,20 +54,6 @@ class Files {
             ":viewed_id" => $viewed_id,
         ));
         $return_array = $sql->fetchAll();
-
-        // $sql = "SELECT * FROM files WHERE type != 'Webpage' AND id IN "
-        //         . "(SELECT file_id FROM activity_media WHERE activity_id IN "
-        //         . "(SELECT activity_id FROM activity_share WHERE "
-        //         . "receiver_id = :user_id OR (year = :user_position AND community_id = :user_community)"
-        //         . "OR group_id IN(SELECT group_id FROM group_member WHERE member_id = :user_id)));";
-        // $sql = $this->->prepare($sql);
-        // $sql->execute(arrdatabase_connectionay(
-        //     ":user_id" => $this->user->user_id,
-        //     ":user_position" => $this->user->getPosition(),
-        //     ":user_community" => $this->user->getCommunityId(),
-        //     ":viewed_id" => $viewed_id,
-        // ));
-        // $return_array = array_merge($return_array, $sql->fetchAll());
         return $return_array;
     }
     
@@ -79,15 +65,16 @@ class Files {
             ":file_id" => $file_id
         ));
         return $sql->fetchColumn();
-
-
-
-//      $file = $this->getInfo($file_id);  
-//        echo "<table style='width:100%;'><tr><td><div class='file_image'>";
-//        $video_id = NULL, $path = NULL, $classes = NULL, $styles = NULL, $video_id_prefix = "file_video_", $source = FALSE
-//        echo $this->system->videoPlayer($file['id'], $file['webm_path'], "file_video", NULL, "file_video_", TRUE);
-//        echo "</div></td><td><div class='comments'></div></td></tr>";
-//        echo "<tr><td colspan='2'></td></tr></table>";
+    }
+    
+    public function get_folder_file_id($folder_id) {
+        $sql = "SELECT id FROM file WHERE user_id = :user_id AND folder_id = :folder_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":folder_id" => $folder_id,
+            ":user_id" => $this->user->user_id
+        ));
+        return $sql->fetchColumn();
     }
     
     public function getInfo($file_id) {
@@ -262,7 +249,7 @@ class Files {
             return $extn;
         }
         else {
-            $sql = "SELECT type FROM files WHERE id = :file_id;";
+            $sql = "SELECT type FROM file WHERE id = :file_id;";
             $sql = $this->database_connection->prepare($sql);
             $sql->execute(array(
                 ":file_id" => $file_id
@@ -271,11 +258,12 @@ class Files {
         }
     }
 
-    function getContents($parent_folder = 1, $user_id = null) {
+    function getContents($parent_folder = 0, $user_id = null) {
         if ($user_id == null) {
             $user_id = $this->user->user_id;
         }
-        $sql = "SELECT * FROM files WHERE type != 'Webpage' AND user_id = :user_id AND parent_folder_id = :parent_folder ORDER BY name;";
+        $sql = "SELECT * FROM file WHERE type != 'Webpage' AND user_id = :user_id "
+                . "AND parent_folder_id = :parent_folder AND visible=1 ORDER BY name;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $user_id, ":parent_folder" => $parent_folder));
         return $sql->fetchAll(PDO::FETCH_ASSOC);
@@ -305,10 +293,8 @@ class Files {
         }
         echo "<div class='files_actions'><table><tr style='vertical-align:middle;'><td>";
 
-        if ($file['type'] != "Folder") {
-            echo "<a href='" . $file['path'] . "' download><div class='files_actions_item files_actions_download'></div></a></td><td>";
-            echo "<hr class='files_actions_seperator'></td><td>";
-        }
+        echo "<a href='" . $file['path'] . "' download><div class='files_actions_item files_actions_download'></div></a></td><td>";
+        echo "<hr class='files_actions_seperator'></td><td>";
 
         if ($actions != false) {
             echo "<div class='files_actions_item files_actions_delete' "
@@ -387,7 +373,7 @@ class Files {
     }
 
     public function getName($file_id) {
-        $sql = "SELECT name FROM files WHERE id = :file_id;";
+        $sql = "SELECT name FROM file WHERE id = :file_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id
@@ -396,7 +382,7 @@ class Files {
     }
 
     public function getDescription($file_id) {
-        $sql = "SELECT description FROM files WHERE id = :file_id;";
+        $sql = "SELECT description FROM file WHERE id = :file_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id
@@ -405,7 +391,7 @@ class Files {
     }
 
     public function getParentFolder($file_id) {
-        $sql = "SELECT parent_folder_id FROM files WHERE id = :file_id;";
+        $sql = "SELECT parent_folder_id FROM file WHERE id = :file_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id
@@ -438,7 +424,7 @@ class Files {
         if ($size != "") {
             $size .= "_";
         }
-        $sql = "SELECT " . $size . "path FROM files WHERE id = :file_id;";
+        $sql = "SELECT " . $size . "path FROM file WHERE id = :file_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id
@@ -447,7 +433,7 @@ class Files {
     }
 
     public function getAttr($file_id, $attr) {
-        $sql = "SELECT " . $attr . " FROM files WHERE id = :file_id;";
+        $sql = "SELECT " . $attr . " FROM file WHERE id = :file_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id
@@ -517,7 +503,7 @@ class Files {
                 . "<div id='buffer_" . $file['id'] . "' style='position:absolute;height:20px;width:20px;"
                 . "background-image:url(\"Images/ajax-loader.gif\");background-size:cover;'></div>"
                 . "<div style='background-image:url(&quot;" . $file['thumb_path'] . "&quot;);"
-                . "background-size:contain;background-repeat:no-repeat;background-position:center;width:100%;height:100%;max-height:400px;'>"
+                . "background-size:cover;background-repeat:no-repeat;background-position:center;width:100%;height:100%;max-height:400px;'>"
                 . "<img class='image_placeholder' f_id='" . $file['id'] . "'"
                 . "style=' visibility:hidden; width:100%;height:100%;max-width:300px;max-height:280px;' src='" . $file['thumb_path']
                 . "'onload='$(\"#buffer_" . $file['id'] . "\").fadeOut();resizeDiv($(this));'></img>"
@@ -564,7 +550,7 @@ class Files {
     }
 
     function createFolder($parent_folder = 1, $name) {
-        $sql = "SELECT MAX(folder_id) FROM files WHERE user_id = :user_id;";
+        $sql = "SELECT MAX(folder_id) FROM file WHERE user_id = :user_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $this->user->user_id));
         $new_folder_id = $sql->fetchColumn();
@@ -575,41 +561,69 @@ class Files {
             $new_folder_id++;
         }
 
-        $sql = "INSERT INTO files(user_id, name, type, folder_id,parent_folder_id) VALUES (:user_id, :name, :type, :folder_id, :parent_folder_id);";
+        $sql = "INSERT INTO file(user_id, name, path, type, folder_id, parent_folder_id, time, last_mod) "
+                . "VALUES (:user_id, :name, :path, :type, :folder_id, :parent_folder_id, :time, :time);";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":user_id" => $this->user->user_id,
             ":name" => $name,
+            ":path" =>"User/Files/".$this->user->user_id."/".$name.".zip",
             ":type" => "Folder",
             ":folder_id" => $new_folder_id,
-            ":parent_folder_id" => $parent_folder));
+            ":parent_folder_id" => $parent_folder,
+            ":time" => time(),
+        ));
+
+        $this->system->create_zip($_SERVER['DOCUMENT_ROOT']."/User/Files/".$this->user->user_id."/".$name.".zip", array(), true);
+        
         return true;
     }
 
     function getParentId($folder_id) {
-        $sql = "SELECT parent_folder_id FROM files WHERE user_id = :user_id AND folder_id = :folder_id;";
+        $sql = "SELECT parent_folder_id FROM file WHERE user_id = :user_id AND folder_id = :folder_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $this->user->user_id, ":folder_id" => $folder_id));
         return $sql->fetchColumn();
     }
 
     function delete($id) {
-        $sql = "SELECT path, thumb_path, icon_path,flv_path,mp4_path,webm_path,ogg_path, thumbnail, type FROM `files` WHERE user_id = :user_id AND id = :id";
+        $sql = "SELECT path, "
+                . "thumb_path, icon_path,"
+                . " flv_path, mp4_path, "
+                . "webm_path, ogg_path, "
+                . "thumbnail, type, folder_id "
+                . "FROM `file` WHERE user_id = :user_id AND id = :id";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $this->user->user_id, ":id" => $id));
-        $filepath = $sql->fetch();
-        //if($type != "Folder") {
-        $sql = "DELETE FROM files WHERE user_id = :user_id AND id = :id;";
-        foreach ($filepath as $key => $value) {
-            unlink("../" . $value);
+        $file = $sql->fetch(PDO::FETCH_ASSOC);
+        echo $file['type']. "/";
+        if ($file['type'] != "Folder") {
+            foreach ($file as $key => $value) {
+                if ($key != "type" || $key != "folder_id") {
+                    //unlink("../" . $value);
+                }
+            }
         }
-        //} else {
-        //$sql = "DELETE FROM files WHERE user_id = :user_id AND parent_folder_id = :id";
-        //}
-
+        else {
+            $sql = "SELECT id "
+                    . "FROM `file` WHERE user_id = :user_id AND parent_folder_id = :parent_folder;";
+            $sql = $this->database_connection->prepare($sql);
+            $sql->execute(array(
+                ":user_id" => $this->user->user_id,
+                ":parent_folder" => $file['folder_id']
+            ));
+            $sub_file = $sql->fetchAll();
+            //echo "Fetching sub files...";
+            foreach ($sub_file as $new_file) {
+                //echo " - Sub File: ".$id['id'];
+                $this->delete($new_file['id']);
+            }
+        }
+        $sql = "UPDATE file SET visible=0 WHERE user_id = :user_id AND id = :id;";
         $sql = $this->database_connection->prepare($sql);
-        $sql->execute(array(":user_id" => $this->user->user_id, ":id" => $id));
-        return "200";
+        $sql->execute(array(
+            ":user_id" => $this->user->user_id, 
+            ":id" => $id));
     }
 
     private function removeDir_r($dir) {
@@ -663,7 +677,7 @@ class Files {
     }
 
     function rename($file_id, $name) {
-        $sql = "UPDATE files SET name = :name WHERE id = :file_id;";
+        $sql = "UPDATE file SET name = :name WHERE id = :file_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":name" => $name,
@@ -681,7 +695,7 @@ class Files {
     }
     
     function getUsedSize() {
-        $sql = "SELECT size FROM files WHERE user_id = :user_id;";
+        $sql = "SELECT size FROM file WHERE user_id = :user_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":user_id" => $this->user->user_id
@@ -700,7 +714,7 @@ class Files {
         $savename = str_replace('/', '_', $savename);
         $savename = str_replace(' ', '_', $savename);
         $savepath = 'User/Files/' . $this->user->user_id . "/";
-        $base_path = 'C:/inetpub/wwwroot/social_network/';
+        $base_path = $_SERVER['DOCUMENT_ROOT']."/";
         $dir = $base_path.$savepath;
         $parent_folder = $post['parent_folder'];
         if (!file_exists($dir)) {
@@ -746,7 +760,7 @@ class Files {
             if ($file['file']['name'] != "" || ".") {
                 $return_info = array();
                 $lastInsertId;
-                $name = preg_replace("/[^A-Za-z0-9 ]/", '', $file['file']['name']);
+                $name = preg_replace("/[^A-Za-z0-9 ]/", '', $this->system->stripexts($file['file']['name']));
                 $pure_name = str_replace(' ', '', $name);
                 $ext = $this->system->findexts($file['file']['name']);
                 $file_name = $pure_name . "." . $ext;
@@ -817,8 +831,14 @@ class Files {
                         $resizeObj->saveImage("../" . $iconsavepath);
                     }
                     $this->database_connection->beginTransaction();
-                    $sql = "INSERT INTO `files` (user_id, size, path, thumb_path, icon_path, thumbnail, flv_path, mp4_path, ogg_path, webm_path, name, type, parent_folder_id) "
-                            . "VALUES (:user_id, :size, :file_path, :thumbsavepath, :iconsavepath, :thumbnail, :flv_path, :mp4_path, :ogg_path, :webm_path, :name, :type, :parent_folder);";
+                    $sql = "INSERT INTO `file` (user_id, "
+                            . "size, path, thumb_path, icon_path, "
+                            . "thumbnail, flv_path, mp4_path, ogg_path, webm_path, "
+                            . "name, type, parent_folder_id, time, last_mod) "
+                            . "VALUES (:user_id, :size, :file_path, "
+                            . ":thumbsavepath, :iconsavepath, :thumbnail, "
+                            . ":flv_path, :mp4_path, :ogg_path, :webm_path, "
+                            . ":name, :type, :parent_folder, :time, :time);";
                     $sql = $this->database_connection->prepare($sql);
                     $sql->execute(array(
                         ":user_id" => $this->user->user_id,
@@ -834,17 +854,19 @@ class Files {
                         ":mp4_path" => $mp4_path,
                         ":ogg_path" => $ogg_path,
                         ":webm_path" => $webm_path,
+                        ":time" => time(),
                     ));
                     $lastInsertId = $this->database_connection->lastInsertId();
                     $this->database_connection->commit();
                     
                     $this->database_connection->beginTransaction();
-                    $sql = "INSERT INTO `activity` (user_id, type, visible) "
-                            . "VALUES (:user_id, :type, 0);";
+                    $sql = "INSERT INTO `activity` (user_id, type, visible, time) "
+                            . "VALUES (:user_id, :type, 0, :time);";
                     $sql = $this->database_connection->prepare($sql);
                     $sql->execute(array(
                         ":user_id" => $this->user->user_id,
                         ":type" => 'File',
+                        ":time" => time(),
                     ));
                     $lastActivityInsertId = $this->database_connection->lastInsertId();
                     $this->database_connection->commit();
@@ -859,6 +881,13 @@ class Files {
                     ));
                     $lastActivityInsertId = $this->database_connection->lastInsertId();
                     $this->database_connection->commit();
+                    if($parent_folder == 0) {
+                        $path = "User/Files/".$this->user->user_id."/root.zip";
+                    }
+                    else {
+                        $path = $this->getAttr($this->get_folder_file_id($parent_folder), 'path');
+                    }
+                    $this->system->add_to_zip($path, array($savepath . $file_name), TRUE);
                     die(json_encode($this->getInfo($lastInsertId)));
                 }
                 else {
@@ -908,7 +937,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             die($files->fileView($_POST['file_id']));
         }
         else if ($_POST['action'] == "rename") {
-            die($files->rename($_POST['file_id'], $_POST['new_name']));
+            die($files->rename($_POST['file_id'], $_POST['text']));
         }
         else if($_POST['action'] == "upload") {
             ignore_user_abort(true);
