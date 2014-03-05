@@ -88,8 +88,16 @@ class Files {
             "thumb_path" => $this->getPath($file_id, 'thumb'),
             "icon_path" => $this->getPath($file_id, 'icon'),
             "thumbnail" => $this->getAttr($file_id, 'thumbnail'),
+            "type_preview" => $this->getFileTypeImage($file_id, 'THUMB')
             );
         return $array;
+    }
+    
+    public function format_file($file) {
+        $file['type_preview'] = $this->getFileTypeImage($file, 'THUMB');
+    	$file['uid'] = str_replace('.', '', uniqid('', true));
+        $file['time'] = $this->system->humanTiming($file['time']);
+        return $file;
     }
     
     public function styleRecentlyShared($file) {
@@ -494,6 +502,9 @@ class Files {
         else if($file['type'] == "PPT Document") {
             return constant("BASE::POWERPOINT_".$size);
         }
+        else if($file['type'] == "Text File") {
+        	return constant("BASE::TEXT_".$size);
+        }
         else {
             return constant("BASE::FILE_".$size);
         }
@@ -773,12 +784,10 @@ class Files {
                     $type = $this->getType($file['file']['name']);
                     if ($type == "Audio") {
                         $convert_path = $base_path . $savepath . $file_name;
-                        $iconsavepath = $mp3_path = $thumbsavepath = $savepath . $pure_name . ".mp3";
-                        if ($ext != "mp3") {
-                            $convert = $this->convert($convert_path, $base_path . $mp3_path);
-                            if ($convert != $base_path . $mp3_path) {
-                                echo ("Error: " . $convert);
-                            }
+                        $iconsavepath = $mp3_path = $thumbsavepath = $savepath . $pure_name . "_thumb.mp3";
+                        $convert = $this->convert($convert_path, $base_path . $mp3_path, '-ab 64');
+                        if ($convert != $base_path . $mp3_path) {
+                            echo ("Error: " . $convert);
                         }
                     }
                     else if ($type == "Video") {
@@ -948,11 +957,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             if(isset($_POST['activity_id'])) {
                 $activity_id = $_POST['activity_id'];
             }
-            $array = array(
-                "file" => $files->getInfo($_POST['file_id']),
-                "post" => $home->homeify($home->getSingleActivity($files->getActivity($_POST['file_id'], "File")), 'preview', $activity_id),
-            );
-            die(json_encode($array));
+            die(json_encode($home->homeify($home->getSingleActivity($files->getActivity($_POST['file_id'], "File")), 'preview', $activity_id), JSON_HEX_APOS));
         }
         else if($_POST['action'] == "removePostFile") {
             $files->removeFromPost($_POST['file_id'], $_POST['activity_id']);

@@ -57,9 +57,20 @@ include_once('chat.php');
         }
         $(function()
         {
-            getFeedContent('u_<?php echo $userid; ?>', min_activity_id, 'user', function() {
-            });
-
+        	<?php
+        	if ($feed_id == "p") :?>
+               getFeed(<?php echo $userid; ?>, 'user', min_activity_id, null, function(response){
+                    			var string = '';
+                    			for (var i in response) {
+                        			string += homify(response[i]);
+                    			}
+                    			if(response.length == 0) {
+                    				$('.feed_container').prepend(empty_feed({text:"This user has not made any posts!"}));
+                    			} else {
+                    				$('.feed_container').prepend(string);
+                    			}
+                			});
+            <?php endif; ?>
             $('#about_edit_show').mouseenter(function() {
                 $('#profile_about_edit').show();
             }).mouseleave(
@@ -127,7 +138,7 @@ include_once('chat.php');
                         </div>
                     </td>
                     <td>
-                        <div class="pseudonym">
+                        <div class="pseudonym" entity_type='user' entity_id='<?php echo $userid; ?>'>
                             <p class='name_title'><?php echo $user->getName($userid); ?></p>
                             <div style="padding-bottom:5px;">
                                 <a href="community?id=<?php echo urlencode(base64_encode($user->getCommunityId($userid))); ?>">
@@ -159,26 +170,24 @@ include_once('chat.php');
                         }
 
                         if ($userid != $user->getId()) {
-                            echo "<div style='' wrapper_id='invite_selector' class='default_dropdown_selector' onclick='$(&#39;#group_invites&#39;).slideToggle(&#39;fast&#39;);'>
-						Invite to Group";
+                            echo "<button style='float:right;' class='pure-button-primary connect_button'>Connect</button>";
+                            echo "<div wrapper_id='invite_selector' class='default_dropdown_selector'>
+						<button class='pure-button-primary connect_button'>Invite</button>";
                             echo "<div id='invite_selector' class='default_dropdown_wrapper' style='display:none;float:right;'>";
                             echo "<ul class='default_dropdown_menu'>";
                             foreach ($group->getUserGroups() as $users_group) {
-                                $query1 = "SELECT group_id FROM group_member WHERE member_id = :user_id AND group_id = :group_id;";
+                                $query1 = "SELECT group_id FROM group_member WHERE user_id = :user_id AND group_id = :group_id;";
                                 $query1 = $database_connection->prepare($query1, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
                                 $query1->execute(array(":user_id" => $userid, "group_id" => $users_group));
                                 $query1 = $query1->fetchColumn();
 
                                 if ($query1 == "") {
+                                    $name = $group->getGroupName($users_group);
                                     echo "<script name='text_append'>$('#invite_text_holder').show();</script>";
-                                    $query_group1 = "SELECT group_name, id FROM `group` WHERE id = :group_id AND allow_member_invite = 1;";
-                                    $query_group = $database_connection->prepare($query_group1, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-                                    $query_group->execute(array(":group_id" => $users_group));
-                                    $group_info = $query_group->fetch(PDO::FETCH_ASSOC);
                                     echo "<li class='default_dropdown_item' "
-                                    . "onclick='showInvite(\"" . $group_info['group_name']
-                                    . "\", " . $userid . ", " . $group_info['id'] . ");'>"
-                                    . $group_info['group_name'] . "</li>";
+                                    . "onclick='showInvite(\"" . $name
+                                    . "\", " . $userid . ", " . $users_group . ");'>"
+                                    . $name . "</li>";
                                 }
                             }
                             echo "</ul>";
@@ -221,11 +230,7 @@ include_once('chat.php');
                 <div class='feed_container' id="feed_refresh">
                     <?php
                     if ($feed_id == "p") {
-                        $array = $entity->getActivityQuery($userid)->fetchAll(PDO::FETCH_ASSOC);
-                        $count = count($array);
-                        foreach ($array as $activity) {
-                            $home->homeify($activity, 'home', NULL);
-                        }
+                    	
                     }
                     else {
                         echo "<div id='main_file' class='file post_height_restrictor' style='border-bottom:1px solid lightblue;'>";

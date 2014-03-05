@@ -208,7 +208,7 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
         $(function()
         {
             getNotificationNumber();
-            var table = "<table style='min-height:100px;height:100px;width:100%;'><tr style='vertical-align:middle;'><td style='width:100%;text-align:center;'><img src='" + LOADING_ICON + "'></img></td></tr></table>";
+            var table = "<table style='min-height:100px;height:100px;width:100%;'><tr style='vertical-align:middle;'><td style='width:100%;text-align:center;'><div class='loader_outside_small'></div><div class='loader_inside_small'></div></td></tr></table>";
             $('ul.message, ul.network, ul.notify').prepend(table);
 
             $('#popup_message').mCustomScrollbar(SCROLL_OPTIONS);
@@ -324,10 +324,10 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
     <div class="headerbar">
         <div class="global_header">
             <div class="container_headerbar">
-                <span style='cursor:pointer;color:rgb(70, 180, 220);font-weight: light;font-size:1.6em;' onclick='window.location.assign("home");'>Placeholder</span>
+                <span style='cursor:pointer;color:white;font-weight: light;font-size:1.6em;' onclick='window.location.assign("home");'>Placeholder</span>
                 <div style="position:absolute;right:500px;top:0;">
                     <div class="message" id="message_click">
-                        <img id="message" class ="message" src='<?php echo System::INBOX_IMG_BLACK; ?>'></img>
+                        <img id="message" class ="message" src='<?php echo System::INBOX_IMG; ?>'></img>
                         <div id="messagediv" class="popup_div">
                             <div class="popup_top">
                                 <span class='popup_header'>Messages</span>
@@ -340,7 +340,7 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                         <span id='message_num' class="message_notification"></span>
                     </div>
                     <div class="notification" id="notification_click">
-                        <img style='height:18px;' id="notification" class ="message" src='<?php echo System::NOTIFICATION_IMG_BLACK; ?>'></img><br>
+                        <img style='height:18px;' id="notification" class ="message" src='<?php echo System::NOTIFICATION_IMG; ?>'></img><br>
                         <div id="notificationdiv" class="popup_div">
                             <div class="popup_top">
                                 <span class='popup_header'>Notifications</span>
@@ -352,7 +352,7 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                         <span id='notification_num' class="message_notification"></span>
                     </div>
                     <div class="network" id="network_click">
-                        <img id="network" class="message network" src='<?php echo System::NETWORK_IMG_BLACK; ?>'></img><br>
+                        <img id="network" class="message network" src='<?php echo System::NETWORK_IMG; ?>'></img><br>
                         <div id="networkdiv" class="popup_div">
                             <div class="popup_top">
                                 <span class='popup_header'>Network</span>

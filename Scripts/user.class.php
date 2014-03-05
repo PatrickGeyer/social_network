@@ -123,7 +123,7 @@ class User {
                     ":time" => time(),
                 ));
     }
-
+    
     function getCommunityId($id = null) {
         $set = false;
         if (!isset($id)) {
@@ -368,7 +368,10 @@ class User {
 
     function getOnline($id) {
         if ($id == null) {
-            $id = $this->user_id;
+            return true;
+        }
+        if($id === $this->user_id) {
+            return true;
         }
         $id = (int)$id;
         if(is_int($id)) {
@@ -392,6 +395,15 @@ class User {
             ":id" => $id,
             ":user_id" => $this->user_id
         ));
+    }
+    
+    function get_user_preview($user_id) {
+        $array = array();
+        $array['encrypted_id'] = urlencode(base64_encode($user_id));
+        $array['id'] = $user_id;
+        $array['name'] = $this->getName($user_id);
+        $array['pic'] = $this->getProfilePicture('thumb', $user_id);
+        return $array;
     }
 
     function printTag($id) {
@@ -417,6 +429,32 @@ class User {
         return $array;
     }
 
+    function connect($user_id) {
+        $sql = "INSERT INTO connection_invite(user_id, receiver_id) VALUES (:user_id, :receiver_id);";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":user_id" => $this->user_id,
+            ":receiver_id" => $user_id
+            ));
+        //echo $user_id;
+    }
+
+    function connectAccept($invite_id) {
+        $sql = "SELECT * FROM connection_invite WHERE id = :invite_id; UPDATE connection_invite SET status=1 WHERE id = :invite_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":invite_id" => $invite_id
+            ));
+        $info = $sql->fetch(PDO::FETCH_ASSOC);
+
+        $sql = "INSERT INTO connection(user_id, receiver_id) VALUES (:user_id, :receiver_id);";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":user_id" => $info['user_id'],
+            ":receiver_id" => $info['receiver_id']
+            ));
+    }
+
 }
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $user = new User();
@@ -440,15 +478,16 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             $array[] = $user->getPosition($_POST['id']);
             $array[] = urlencode(base64_encode($user->getCommunityId($_POST['id'])));
             echo json_encode($array);
-        }
-        if ($_POST['action'] == 'setOnline') {
+        } else if ($_POST['action'] == 'setOnline') {
             $user->setOnline();
-        }
-        if($_POST['action'] == "getOnlineMass") {
-            die(json_encode($user->getOnlineMass($_POST['users'])));
-        }
-        if ($_POST['action'] == "profile_picture") {
+        } else if($_POST['action'] == "getOnlineMass") {
+            die(json_encode($user->getOnlineMass((array)$_POST['users'])));
+        } else if ($_POST['action'] == "profile_picture") {
             $user->setProfilePicture($_POST['file_id']);
+        } else if($_POST['action'] == "connect") {
+            $user->connect($_POST['user_id']);
+        } else if($_POST['action'] == "acceptInvite") {
+            $user->connectAccept($_POST['invite_id']);
         }
     }
 }

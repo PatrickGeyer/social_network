@@ -65,9 +65,9 @@ include_once('chat.php');
         $('.file_box').on('click', 'div.file_item', function() {
             var file = $(this).data('file');
             if ($(this).hasClass('file_highlighted_green')) {
-                event_files = removeFromArray(event_files, file.object.file_id);
+                event_files = removeFromArray(event_files, file.id);
             } else {
-                event_files.push(file.object.file_id);
+                event_files.push(file.id);
             }
             $(this).toggleClass('file_highlighted_green');
         });

@@ -25,6 +25,9 @@ $system->jsVars();
 <script src="Scripts/eventhandlers.js"></script>
 <script src="Scripts/js.js"></script>
 
+<script src="Scripts/external/wavesurfer.js"></script>
+
+
 <script>
     _V_.options.flash.swf = "Scripts/external/video-js/video-js.swf";
 
@@ -148,63 +151,73 @@ $system->jsVars();
             //	{ buttons: [ { text: "Create Folder", click: function() { $( this ).dialog( "close" ); createFolder(parent_folder);} } ] });
         });
     });
+
+    var upload_session = 0;
     function progressBar(element, id) {
         $(element).append("<div id='progress_container_" + id + "' class='progress_container'><div id='progress_bar_"+id+"' class='progress_bar'></div></div>");
     }
     function updateProgress(id, progress) {
+        //console.log(id);
         $('#progress_bar_' + id).width(progress + "%");
     }
     function removeProgress(id) {
         $('#progress_container_' + id).remove();
     }
     var q = 0;
-    function uploadFile(input, onStart, onProgress, onComplete, properties)
+    function uploadFile(files, onStart, onProgress, onComplete, properties)
     {
-        onStart();
-        var files;
-        var length = 1;
-
-        properties = typeof properties !== 'undefined' ? properties : {type: 'Input'};
-        properties.type = typeof properties.type !== 'undefined' ? properties.type : 'Input';
-
-        if(properties.type == "File") {
-            files = new Array();
-            files[0] = input;
-        } else {
-            if(input instanceof $) {
-                files = input.get(0).files;
-                // alert('jquery');
-                // return;
-            }
-            else {
-               files = input;
-            }
-            length = files.length;
-        }
-
-        if(!length) {
-            length = 1; //Incase single file is chosen
-        }
+        upload_session++;
         //console.log(files);
-        for (var count = 0; count < length; count++)
+        if($('.upload_file_container').length == 0) {
+        	var file_container = $('<div class="event upload_file_container"></div>');
+        	file_container.append("<a>Upload</a>");
+       	 	var file_upload_container = $('<div class="calendar-event-info-files"></div>');
+        	file_container.append(file_upload_container);
+        	$('.calendar-container').append(file_container);
+        } else {
+        	var file_upload_container = $('.upload_file_container .calendar-event-info-files');
+        	//alert('using old container');
+        }
+        //var file_container = $('<div class="event upload_file_container"></div>');
+
+        onStart();
+        var length = files.length;
+        var files_left = length;
+
+        properties = typeof properties !== 'undefined' ? properties : {type: 'File'};
+        properties.type = typeof properties.type !== 'undefined' ? properties.type : 'File';
+
+
+        for (var i = 0; i < length; i++)
         {
-            q++;
-            var file = files[count];
-            var formdata = new FormData();
-            formdata.append("file", file);
-            formdata.append("action", 'upload');
-            formdata.append("parent_folder", parent_folder);
-            var xhr = new XMLHttpRequest();
-            xhr.upload.onprogress = function(event) {
-                progressHandler(event, count, onProgress);
-            };
-            xhr.onload = function() {
-                completeHandler(this, count - 1, onComplete, name);
-            };
-            xhr.addEventListener("error", errorHandler, false);
-            xhr.addEventListener("abort", abortHandler, false);
-            xhr.open("post", "Scripts/files.class.php");
-            xhr.send(formdata);
+        	q++;
+            (function(count, upload_session) {
+                var file = files[count].file;
+                var formdata = new FormData();
+                formdata.append("file", file);
+                formdata.append("action", 'upload');
+                formdata.append("parent_folder", parent_folder);
+                var xhr = new XMLHttpRequest();
+                xhr.upload.onprogress = function(event) {
+                    progressHandler(event, "" + upload_session + count, onProgress);
+                };
+                xhr.onload = function() {
+                    completeHandler(this, "" + upload_session + count, onComplete, name);
+                };
+                xhr.addEventListener("error", errorHandler, false);
+                xhr.addEventListener("abort", abortHandler, false);
+                xhr.open("post", "Scripts/files.class.php");
+                xhr.send(formdata);
+                var file_container = $("<div class='upload_preview'>");
+                file_container.attr('id', "" + upload_session + count + "_upload_preview");
+                //file_container.append("<img src='" + file.pic + "'></img");
+                file_container.append(file.name);
+                file_container.append("<br />");
+                file_upload_container.append(file_container);
+                //alert('appended to filecontainer');
+                //console.log("INITIATING PROGRSS: " + upload_session + count);
+                progressBar(file_container, file_container.attr('id'));
+            })(i, upload_session);            
         }
     }
     function progressHandler(event, id, callback)
@@ -212,38 +225,30 @@ $system->jsVars();
         $('#loading_icon').show();
         var percent = (event.loaded / event.total) * 100;
         percent = Math.round(percent);
-        $("#progressBar").width(percent + '%');
-        if (q > 1)
-        {
-            $("#status").text(q + " items uploading...");
-        }
-        else
-        {
-            $("#status").text(q + " item uploading... " + percent + "%");
-        }
+        updateProgress(id + "_upload_preview", percent);
+        //console.log(id + "_upload_preview" + percent);
         callback(percent);
     }
-    function completeHandler(event, id, onComplete, name)
+    function completeHandler(event, id, onComplete)
     {
+    	$('#' + id + '_upload_preview').slideUp();
+        removeProgress(id + "_upload_preview");
         if (q > 1)
         {
             q--;
         }
         else
         {
-            $("#status").text("Upload Successful!");
-            $("#progressContainer").hide();
-            $("#status").fadeOut(5000);
             $('#loading_icon').fadeOut();
+            $('.upload_file_container').slideUp(function() {
+            	$(this).remove();
+            });
+            
         }
         if (onComplete == "addToStatus")
         {
             response = $.parseJSON(event.responseText);
-            var object = new Object();
-            object.path = response.path;
-            object.name = response.filename;
-            object.file_id = response.file_id;
-            addToStatus("Image", object);
+            addToStatus(response);
         }
         else
         {
@@ -253,7 +258,6 @@ $system->jsVars();
             }
         }
         onComplete($.parseJSON(event.responseText));
-        $("#progressContainer").hide();
     }
     function errorHandler(event)
     {
@@ -261,7 +265,8 @@ $system->jsVars();
         {
             q--;
         }
-        _("status").innerHTML = "Upload Failed!";
+        // _("status").innerHTML = "Upload Failed!";
+        alert('upload failed');
         $('#loading_icon').fadeOut();
     }
     function abortHandler(event)
@@ -270,8 +275,8 @@ $system->jsVars();
         {
             q--;
         }
-        _("status").innerHTML = "Upload Aborted!";
-        $('#loading_icon').fadeOut();
+        // _("status").innerHTML = "Upload Aborted!";
+        // $('#loading_icon').fadeOut();
     }
     function resizeDiv(element)
     {
@@ -403,8 +408,13 @@ $system->jsVars();
                 if (data == "")
                 {
                     removeModal('', function() {
-                        getFeedContent(share_group_id, min_activity_id, 'home', function() {
-                        });
+                        getFeed(share_group_id, min_activity_id, activity_id, function(response){
+                    		var string = '';
+                    		for (var i in response) {
+                        		string += homify(response[i]);
+                    		}
+                    		$('.feed_container').html(string);
+                		});
                     });
                     clearPostArea();
                 }
@@ -515,9 +525,6 @@ $system->jsVars();
 // #POPUP
 // #HOME
     $(function() {
-        $(document).on('click', '.post_media_single_close_file', function() {
-            removeFromStatus(object = {type: "File", value: $(this).attr('post_file_id')});
-        });
         $(document).on('click', '.post_media_single_close_webpage', function() {
             removeFromStatus(object = {type: "Webpage", value: $(this).attr('post_file_id')});
         });
@@ -555,59 +562,6 @@ $system->jsVars();
         {
             refreshContent(post_id);
             callback();
-        });
-    }
-
-    function refreshContent(id)
-    {
-        // console.log('refeshing post');
-       //var number_of_updates = 2;
-       //var updates_done = 0;
-       refreshPure(id); //Refresh immediately after comment
-       var refresh_interval = setTimeout(function() {
-           refreshPure(id)
-       }, 10000);
-       //if (++updates_done >= number_of_updates)
-       //{
-           //window.clearInterval(refresh_interval);
-       //}
-    }
-
-    function refreshPure(id)
-    {
-        if (1 == 2)//$("*:focus").is("textarea, input") || $('.inputtext').is(":focus"))
-        {
-            //console.log('Comment submit cancelled: Textarea in focus.');
-        }
-        else
-        {
-            $.post('Scripts/home.class.php', {activity_id: id, action: "getComments"}, function(response)
-            {
-                var activity_id = $("#theater-info-container").attr("activity_id");
-                if (typeof activity_id !== "undefined")
-                {
-                    $('.theater-info-container').children('.comments').find('.comment_box').children('div.single_comment_container, hr.post_comment_seperator').remove();
-                    $('.theater-info-container').children('.comments').find('.comment_box').prepend(response);
-                }
-                $('#comment_div_' + id).children('div.single_comment_container').remove();
-                $('#comment_div_' + id).children('hr.post_comment_seperator').remove();
-                $('#comment_div_' + id).prepend(response);
-            });
-        }
-    }
-
-    function submitlike(id, receiver_id, type)
-    {
-        $.post("Scripts/home.class.php", {id: id, type: type, receiver_id: receiver_id, action: "like"}, function(data)
-        {
-            if (type == 1)
-            {
-                $('#' + id + 'likes').text(data + " " + LIKE_TEXT + " -");
-            }
-            else
-            {
-                $('#' + id + 'dislikes').text(data + " " + LIKE_TEXT + " -");
-            }
         });
     }
 
@@ -689,11 +643,11 @@ $system->jsVars();
                 post_media_load();
                 $.post('Scripts/system.class.php', {action: "get_page_preview", url: link}, function(response) {
                     response = $.parseJSON(response);
-                    var object = new Object();
-                    object.path = link;
-                    object.info = response;
-                    object.file_id = formatToID(link);
-                    addToStatus("Webpage", object);
+                    response.path = link;
+                    response.info = response;
+                    response.id = formatToID(link);
+                    response.type = "Webpage";
+                    addToStatus(object);
                     post_media_load("stop");
                 });
             }
@@ -718,38 +672,32 @@ $system->jsVars();
         }
     }
 
-    function addToStatus(type, object)
+    function addToStatus(object)
     {
+    	//console.log(object);
         $('.post_media_wrapper_background').hide();
         var post_media_classes = '';
         var post_media_style = " style=' ";
         var text_to_append = '';
         var additional_close = '';
         var extra_params = " post_file_id='" + object.file_id + "' ";
-        if (type == "Image")
+        //text_to_append += ">";
+        text_to_append += print_file(object, 0, USER_ID);
+        if (object.type == "Image")
         {
             post_media_classes += "post_media_photo post_media_full";
 //            post_media_style += "";
             additional_close += " post_media_single_close_file";
-            text_to_append += documentStatus(object.path, object.name, object.description, object.path, type);
+            //text_to_append += documentStatus(object.path, object.name, object.description, object.path, type);
             //text_to_append += ("><div style='height:100%;width:150px;background-size:cover;background-image:url(&quot;" + object.path + "&quot;);'></div>");
-        } else if (type == "Audio")
+        } else if (object.type == "Audio")
         {
-            post_media_classes += " post_media_item post_media_full";
-            additional_close += " post_media_single_close_file";
-            text_to_append += ">"
-            var rndm = new Date().getTime();
-            var title = object.name;
-            var text = '<?php echo $system->audioPlayer(null, null, false, "blank"); ?>';
-            text = text.replace(/:::path:::/g, object.path);
-            text = text.replace(/:::name:::/g, title);
-            text = text.replace(/:::uid:::/g, rndm);
-            text_to_append += (text);
+             post_media_classes += " post_media_item post_media_full";
+             additional_close += " post_media_single_close_file";
 
-        } else if (type == "Video") {
+        } else if (object.type == "Video") {
             post_media_classes += " post_media_video";
             additional_close += " post_media_single_close_file";
-            text_to_append += ">";
             var text = "<?php echo $system->videoPlayer(NULL, NULL, "post_media_video_element", "width:100%", "home_video_", TRUE); ?>";
             text = text.replace(/:::webm_path:::/g, object.info.webm_path);
             text = text.replace(/:::mp4_path:::/g, object.info.mp4_path);
@@ -760,7 +708,7 @@ $system->jsVars();
             text = text.replace(/:::thumb:::/g, object.info.thumbnail);
             text_to_append += (text);
 
-        } else if (type == "Webpage") {
+        } else if (object.type == "Webpage") {
             post_media_classes += " post_media_double";
             post_media_style += "height:auto;";
             additional_close += " post_media_single_close_webpage";
@@ -770,26 +718,25 @@ $system->jsVars();
                     "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>" +
                     "<a class='user_preview_name' target='_blank' href='" + object.path + "'><span style='font-size:13px;'>" + object.info.title + "</span></a></div></td></tr>" +
                     "<tr><td><span style='font-size:12px;' class='user_preview_community'>" + object.info.description + "</span></td></tr></table>";
-        } else if (type == "Folder") {
+        } else if (object.type == "Folder") {
 //            console.log(object);
             text_to_append += documentStatus(object.path, object.name, object.description, FOLDER_THUMB);
-        } else if (type == "WORD Document") {
-            text_to_append += documentStatus(object.path, object.name, object.description, WORD_THUMB);
+        } else if (object.type == "WORD Document") {
+            //text_to_append += documentStatus(object.path, object.name, object.description, WORD_THUMB);
 
-        } else if (type == "PDF Document") {
-            text_to_append += documentStatus(object.path, object.name, object.description, PDF_THUMB);
-        } else if (type == "PPT Document") {
-            text_to_append += documentStatus(object.path, object.name, object.description, POWERPOINT_THUMB);
+        } else if (object.type == "PDF Document") {
+            //text_to_append += documentStatus(object.path, object.name, object.description, PDF_THUMB);
+        } else if (object.type == "PPT Document") {
+            //text_to_append += documentStatus(object.path, object.name, object.description, POWERPOINT_THUMB);
         } else {
-            alert(type);
-            text_to_append += "Type undetected";
+            
         }
-        if (type == "WORD Document" 
-                || type == "PDF Document" 
-                || type == "PPT Document" 
-                || type == "ACCESS Document" 
-                || type == "EXCEL Document"
-                || type == "Folder") {
+        if (object.type == "WORD Document" 
+                || object.type == "PDF Document" 
+                || object.type == "PPT Document" 
+                || object.type == "ACCESS Document" 
+                || object.type == "EXCEL Document"
+                || object.type == "Folder") {
             post_media_classes += " post_media_double";
             post_media_style += "height:auto;";
             additional_close += " post_media_single_close_file";
@@ -798,7 +745,7 @@ $system->jsVars();
         var index;
         for (var i = 0; i < post_media_added_files.length; i++)
         {
-            if (post_media_added_files[i].file_id == object.file_id || post_media_added_files[i] == object.file_id)
+            if (post_media_added_files[i].id == object.id || post_media_added_files[i] == object.id)
             {
                 index = "found";
                 dialog(
@@ -819,22 +766,19 @@ $system->jsVars();
                 });
             }
         }
-        var post_media = '<div class="post_media_single post_feed_item ' +
-                post_media_classes + '" ' + post_media_style + "' " + ' id="post_media_single_' + object.file_id + '"';
         if (index != "found")
         {
-            if (type == "Webpage") {
+            if (object.type == "Webpage") {
                 post_media_added_files.push(object);
             } else {
-                post_media_added_files.push(object.file_id);
+                post_media_added_files.push(object.id);
             }
 
-            $('.post_media_wrapper').append(post_media + text_to_append + "<div " + extra_params + " class='post_media_single_close" +
-                    additional_close + "'></div><div class='post_media_single_close_background'></div></div>");
+            $('.post_media_wrapper').append(text_to_append);
         }
-        if (type == "Video") {
+        if (object.type == "Video") {
 
-            videojs('home_video_' + object.file_id, {}, function() {
+            videojs('home_video_' + object.id, {}, function() {
             });
         }
         if (post_media_added_files.length > 1) {
@@ -878,8 +822,9 @@ $system->jsVars();
                     //console.log('No Website detected in Post Attachements: Submitted value of '+object.value + " to " + post_media_added_files[i].path);
                 }
             }
-        } else if (object.type == "File") {
-            id = '#post_media_single_' + object.value;
+        } else {
+            var element = $('.post_media_wrapper [file_id="' + object.value + '"]');
+            element.remove();
             for (var i = 0; i < post_media_added_files.length; i++) {
                 if (object.value == post_media_added_files[i]) {
                     //console.log('File detected in Post Attachements: '+object.value + " to " + post_media_added_files[i] + " now REMOVED!");
@@ -935,6 +880,7 @@ $system->jsVars();
     }
     function initiateTheater(activity_id, file_id, properties)
     {
+    	//console.log(file_id + " - " + activity_id + " - " +properties);
         fileView(file_id);
         
         $('.theater-picture').remove();
@@ -943,7 +889,7 @@ $system->jsVars();
         var background = $("<div hidden onclick='hideTheater();' class='background-overlay'></div>").show();
         var close_theater = $("<div onclick='hideTheater();' class='close-theater'></div>");
         var theater_picture_container = $("<div id='theater-picture-container' class='theater-picture-container'></div>");
-        var theater_info_container = $("<div id='theater-info-container' class='theater-info-container'></div>");
+        var theater_info_container = $("<div id='theater-info-container' class='theater-info-container'></div>").css('display', 'none');
         var theater_info_padding = $("<div class='theater-info-padding'></div>");
             theater_info_container.append(theater_info_padding);
         var theater_picture = $("<div id='theater-picture' class='theater-picture'></div>");
@@ -952,51 +898,53 @@ $system->jsVars();
         $('body').append(theater_picture);
         $("body").css("overflow", "hidden");
         
-        var string = "<table style='border-spacing: 0px;' cellspacing='0' cellpadding='0'><tr><td id='theater_image'></td><td style='width:360px;' id='theater_info'></td></tr></table>";
+        var string = "<table style='border-spacing: 0px;' cellspacing='0' cellpadding='0'><tr><td id='theater_image'></td><td id='theater_info'></td></tr></table>";
         theater_picture.append(string);
 
         $('#theater_info').append(theater_info_container);
         
-       theater_picture_container.append("<table id='load_popup' style='height:100%;width:100%;padding:200px;'><tr style='vertical-align:middle;'><td style='text-align:center;'><img src='Images/ajax-loader.gif'></img></td></tr></table>");
+       theater_picture_container.append("<table id='load_popup' style='height:100%;width:100%;padding:200px;'><tr style='vertical-align:middle;'><td style='text-align:center;'><div class='loader_outside'></div><div class='loader_inside'></div></td></tr></table>");
        $('#theater_image').append(theater_picture_container);
        
        adjustTheater();
             
         $.post('Scripts/files.class.php', {action: "preview", file_id: file_id, activity_id: activity_id}, function(response) {
-            //console.log(response);
             response = $.parseJSON(response);
             theater_info_padding.append(response.post);
 //            if(activity_id == null) {
 //                theater_info_padding.remove('.switch_container');
 //            }
-            
-            if(response.file.type == "Image") {
-                $('<img/>').attr('src', response.file.path).load(function() {
+            var image = $('<img class="image" />');
+            if(response.media[0].type == "Image") {
+                $('<img/>').attr('src', response.media[0].path).load(function() {
                     $(this).remove();
                     $('#load_popup').remove();
+                    // theater_info_container.css('display', "block");
+                    theater_picture_container.css('display', "block");
+                    //setTimeout(adjustTheater, 1000);
+                    theater_picture_container.css('background-image', "url('" + response.media[0].path + "')");
+                    image.attr('src', response.media[0].path);
+                    image.css('visibility', "hidden");
                     adjustTheater();
-                    setTimeout(adjustTheater, 1000);
                 });
-                
-                theater_picture_container.css('background-image', "url('" + response.file.path + "')");
-                
-                var image = $('<img class="image" />').attr('src', response.file.path);
-                image.css('visibility', "hidden");
+                theater_info_container.fadeIn(function() {
+                    theater_info_container.mCustomScrollbar("update");
+                });            
             }
             else {
-                var image = "<?php echo $system->videoPlayer('preview_video_player', NULL, "file_video_element", "height:500px;width:700px", "home_video_", TRUE); ?>";
-                image = image.replace(/:::webm_path:::/g, response.file.webm_path);
-                image = image.replace(/:::mp4_path:::/g, response.file.mp4_path);
-                image = image.replace(/:::flv_path:::/g, response.file.flv_path);
-                image = image.replace(/:::ogg_path:::/g, response.file.ogg_path);
-                image = image.replace(/:::name:::/g, response.file);
-                image = image.replace(/:::vid:::/g, response.file.id);
-                image = image.replace(/:::thumb:::/g, response.file.thumbnail);
+                image = "<?php echo $system->videoPlayer('preview_video_player', NULL, "file_video_element", "height:500px;width:700px", "home_video_", TRUE); ?>";
+                image = image.replace(/:::webm_path:::/g, response.media[0].webm_path);
+                image = image.replace(/:::mp4_path:::/g, response.media[0].mp4_path);
+                image = image.replace(/:::flv_path:::/g, response.media[0].flv_path);
+                image = image.replace(/:::ogg_path:::/g, response.media[0].ogg_path);
+                image = image.replace(/:::name:::/g, response.media[0].name);
+                image = image.replace(/:::vid:::/g, response.media[0].id);
+                image = image.replace(/:::thumb:::/g, response.media[0].thumbnail);
                 image = $(image);
             }
             theater_picture_container.append(image);
 
-            if(response.file.type == "Video") {
+            if(response.media[0].type == "Video") {
                 //videojs('home_video_preview_video_player', {}, function() {
                     // this.on('play', function() {
                     //     videoPlay(video_id);
@@ -1016,20 +964,22 @@ $system->jsVars();
                 });
                 //setTimeout(function(){document.getElementById('home_video_preview_video_player').play();}, 1500);
             }
+            adjustTheater();
             theater_info_container.mCustomScrollbar(SCROLL_OPTIONS);
             
 //            if(properties.type == "Post") {
 //                theater_info_container.find('.switch_container').find('.switch_option');
 //            }
-            adjustSwitches();
         });
     }
 
     function adjustTheater()
     {
+        adjustSwitches();
+        // $('.theater-picture-container').css('opacity', '1');
         $('.theater-picture').css('background-color', 'transparent');
         var theater = $('.theater-picture');
-        resizeToMax($('.theater-picture-container').children(':first').not('div'), 560, 175);
+        resizeToMax($('.theater-picture-container').children(':first').not('div'), 660, 225);
         theater.height($('.theater-picture-container').height());
         theater.css('top', getViewPortHeight() / 2 - $(theater).height() / 2);
 
@@ -1041,10 +991,6 @@ $system->jsVars();
         $('#theater-info-container').mCustomScrollbar("update");
     }
 
-    function refreshInfo()
-    {
-        alert('refrsh');
-    }
 
     function hideTheater()
     {
@@ -1100,23 +1046,6 @@ $system->jsVars();
             $(textarea).height(clone.height());
         });
     }
-
-    function autoresizecomment(textarea)
-    {
-        textarea.style.height = '0px';
-        textarea.style.height = (textarea.scrollHeight + 5) + 'px';
-    }
-
-    function playSound(element)
-    {
-        var name = $(element).prev().get(0).play();
-    }
-
-    function pauseSound(element)
-    {
-        var name = $(element).prev().get(0).pause();
-    }
-
 
     function get_folder_contents(element, action, parent_folder, actions)
     {
@@ -1227,123 +1156,7 @@ $system->jsVars();
             refreshFileContainer(encrypted_folder);
         });
     }
-    function audioPlay(id, start, progress, end)
-    {
-        fileView(id);
-        var src = $('#image_' + id).css('background-image');
-        if (src.indexOf(AUDIO_PLAY_THUMB) >= 0)
-        {
-            startAudioInfo(id, start, progress, end);
-            $("#audio_info_" + id).slideDown();
-            $('#audio_' + id).get(0).play();
-            $('#image_' + id).css('background-image', "url('" + AUDIO_PAUSE_THUMB + "')");
-            $('#audio_play_icon_' + id).slideDown();
-            $('#audio_play_icon_seperator_' + id).slideDown();
-        }
-        else
-        {
-            $('#audio_' + id).get(0).pause();
-            $('#image_' + id).css('background-image', "url('" + AUDIO_PLAY_THUMB + "')");
-            $('#audio_play_icon_' + id).hide();
-            $('#audio_play_icon_seperator_' + id).hide();
-        }
-        //console.log($('#audio_play_icon_' + id).length + "/File ID = " + id);
-    }
-    function startAudioInfo(id, start, progress, end)
-    {
-        start = typeof start !== 'undefined' ? start : function(){};
-        progress = typeof progress !== 'undefined' ? progress : function(){};
-        end = typeof end !== 'undefined' ? end : function(){};
 
-        start();
-        $("#audio_" + id).bind('progress', function() {
-            var track_length = $("#audio_" + id).get(0).duration;
-            var secs = $("#audio_" + id).get(0).buffered.end(0);
-            var progress = (secs / track_length) * 100;
-            $("#audio_buffered_" + id).css('width', progress + "%");
-        });
-        $("#audio_" + id).bind('timeupdate', function() {
-            var track_length = $("#audio_" + id).get(0).duration;
-            var secs = $("#audio_" + id).get(0).currentTime;
-            var completed = (secs / track_length) * 100;
-            $("#audio_progress_" + id).css('width', completed + "%");
-            var track_length = $("#audio_" + id).get(0).duration;
-            var secs = $("#audio_" + id).get(0).buffered.end(0);
-            var completed = (secs / track_length) * 100;
-            $("#audio_buffered_" + id).css('width', completed + "%");
-
-            var minutes = Math.floor(track_length / 60);
-            var seconds = Math.floor(track_length - minutes * 60);
-
-            var done_secs = $("#audio_" + id).get(0).currentTime;
-            var done_minutes = Math.floor(done_secs / 60);
-            var done_remaining_secons = Math.floor(done_secs - done_minutes * 60);
-            $("#audio_time_" + id).html(done_minutes + ":" + pad(done_remaining_secons) + " - " + minutes + ":" + seconds);
-
-            progress(completed);
-        });
-
-        $("#audio_" + id).bind('canplaythrough', function() {
-            $('#audio_buffered_' + id).css('background-color', 'grey');
-        });
-        $('#audio_' + id).bind('ended', function() {
-            $("#audio_" + id).get(0).currentTime = 0;
-            $('#image_' + id).css('background-image', "url('"+AUDIO_PLAY_THUMB+"')");
-        });
-        $("#audio_progress_container_" + id).click(function(e)
-        {
-            var x = $(this).offset().left;
-            var width_click = e.pageX - x;
-            var width = $(this).width();
-            var percent_width = (width_click / width) * 100;
-            $("#audio_progress_" + id).css('width', percent_width + "%");
-
-            var secs = $("#audio_" + id).get(0).duration;
-            var new_secs = secs * (percent_width / 100);
-
-            $("#audio_" + id).get(0).currentTime = new_secs;
-        });
-    }
-
-    function removeAudio(id)
-    {
-        $('#audio_container_' + id).remove();
-    }
-</script>
-<script>
-
-    function videoPlay(id) {
-        var file_id = id.replace(/[A-Za-z_$-]/g, "");
-        fileView(file_id);
-        if ($("#" + id).parents('#file_container').length !== 0) {
-            id = file_id;
-            $('#audio_play_icon_' + id).css('visibility', 'visible');
-            $('#audio_play_icon_' + id).animate({opacity: "1"}, 200);
-        } else if ($("#" + id).parents('.files_recently_shared').length !== 0) {
-            $('.files_recently_shared').find(".files_feed_active").not(":has(#" + id + ")").removeClass("files_feed_active").find('video').each(function() {
-                if (videojs("#" + $(this).attr('id')).paused() === false) {
-                    videojs("#" + $(this).attr('id')).player().pause();
-                }
-            });
-            $('.files_recently_shared_container').mCustomScrollbar("scrollTo", "#" + id, {
-                scrollInertia: 600,
-                scrollOffset: "200px"
-            });
-
-            $("#" + id).parents('.files_feed_item').not(".files_feed_active").addClass("files_feed_active");
-
-        }
-        else {
-            initiateTheater(null, file_id);
-            videojs("#" + id).player().pause();
-            videojs("#" + id).player().currentTime(0); // 2 minutes into the video            
-            videojs("#" + id).player().posterImage.el.style.display = 'block';
-            videojs("#" + id).player().bigPlayButton.show();
-        }
-
-    }
-</script>
-<script>
     function getContentWidth(element) {
         var width = 0;
         $(element).children().each(function() {

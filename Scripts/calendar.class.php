@@ -12,12 +12,16 @@ class Calendar {
     protected $user;
     protected $database_connection;
     private $files;
+    public $event_types = array();
 
     public function __construct() {
         $this->user = User::getInstance();
         $this->system = System::getInstance();
         $this->database_connection = Database::getConnection();
         $this->files = Files::getInstance();
+        $this->event_types['Homework'] = array('color' => 'lightgreen');
+    	$this->event_types['Event']['color'] = 'rgb(0, 40, 180)';
+    	$this->event_types['Meeting']['color'] = 'orange';
     }
 
     public static function getInstance() {
@@ -56,6 +60,8 @@ class Calendar {
         /* keep going with days.... */
         for ($list_day = 1; $list_day <= $days_in_month; $list_day++):
             $event_day = $year . '-' . $month . '-' . $list_day;
+            $date = new DateTime($event_day);
+            $event_day = $date->format('Y-m-d');
             $calendar.= '<td class="calendar-day'.($event_day == date_format(new DateTime(), 'Y-m-d') ? "-current" : ""). ' "><div>';
             /* add in the day number */
             $calendar.= '<div class="day-number">' . $list_day . '</div>';
@@ -109,9 +115,9 @@ class Calendar {
                     . $file['name'] . "</p></a><br /></td></tr>";
         }
         $file_string .= "</table>";
-        $calendar .= '<div class="event '.$classes.'"><a href="event?e=' . $event['id'] . '"><b> '
-                . $event['title'] . ' </b></a><div class="calendar-event-info"><span>'
-                . $event['description']
+        $calendar .= '<div class="event '.$classes.'" style="background:' . $this->event_types[$event['type']]['color'] . '"><a href="event?e=' . $event['id'] . '"><b> '
+                . $this->system->trimStr($event['title'], 50) . ' </b></a><div class="calendar-event-info"><span>'
+                . $this->system->trimStr($event['description'], 100)
                 . "</span>";
         if (count($event['files']) > 0) {
             $calendar.="<div class='calendar-event-info-files'>" . $file_string . "</div>";

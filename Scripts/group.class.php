@@ -60,6 +60,13 @@ class Group {
         }
     }
 
+    function getMembers($group_id) {
+        $friend_query = "SELECT user_id FROM group_member WHERE group_id = :group_id AND user_id != :user_id";
+        $friend_query = $this->database_connection->prepare($friend_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $friend_query->execute(array(":user_id" => $this->user->user_id, ":group_id" => $group_id));
+        return $friend_query->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     function getProfilePicture($size = "chat", $id) {
         $user_query = "SELECT profile_picture FROM `group` WHERE id = :id";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));

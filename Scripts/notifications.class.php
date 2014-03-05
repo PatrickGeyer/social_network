@@ -4,6 +4,7 @@ include_once('database.class.php');
 include_once('user.class.php');
 include_once('group.class.php');
 include_once('phrase.class.php');
+include_once('system.class.php');
 
 class Notification {
 
@@ -11,6 +12,7 @@ class Notification {
     private $user;
     private $group;
     private $phrase;
+    private $system;
     protected $database_connection;
 
     public function __construct() {
@@ -18,6 +20,7 @@ class Notification {
         $this->database_connection = Database::getConnection();
         $this->group = new Group();
         $this->phrase = new Phrase();
+        $this->system = System::getInstance();
     }
 
     public static function getInstance() {
@@ -29,22 +32,29 @@ class Notification {
         return self :: $notifiction;
     }
 
-    function getMessage($type = null, $id = null) {
+    function getMessage($type = null, $id = null, $oldest = 0, $newest = 999999999) {
+        if(is_null($oldest)) $oldest = 0;
+        if(is_null($newest)) $newest = 9999999999999;
         if (!isset($type)) {
             $user_query = "SELECT user_id, message, thread, time, u_id, id FROM message WHERE thread IN "
                     . "(SELECT `thread` FROM message_share WHERE user_id = :user_id AND visible=1) "
                     . "AND id IN (SELECT max(id) FROM message GROUP BY thread) "
-                    . "ORDER BY id DESC;";
+                    . " AND id BETWEEN :oldest AND :newest ORDER BY id DESC;";
         }
         else if ($type == 'thread') {
-            $user_query = "SELECT user_id, message, thread, time, u_id, id FROM message WHERE thread IN (SELECT `thread` FROM message_share WHERE user_id = :user_id AND `thread` = " . $id . ") 
-             ORDER BY id ASC;";
+            $user_query = "SELECT user_id, message, thread, time, u_id, id FROM message WHERE thread IN "
+            . "(SELECT `thread` FROM message_share WHERE user_id = :user_id AND `thread` = " . $id . ") "
+            . " AND id BETWEEN :oldest AND :newest ORDER BY id ASC;";
         }
         else {
-            $user_query = "SELECT user_id, message, thread, time, u_id, id FROM message WHERE id = " . $id . " ORDER BY id DESC;";
+            //$user_query = "SELECT user_id, message, thread, time, u_id, id FROM message WHERE id = " . $id . ";";
         }
         $user_query = $this->database_connection->prepare($user_query);
-        $user_query->execute(array(":user_id" => $this->user->user_id));
+        $user_query->execute(array(
+            ":user_id" => $this->user->user_id,
+            ":oldest" => $oldest,
+            ":newest" => $newest
+            ));
         $user1 = $user_query->fetchAll(PDO::FETCH_ASSOC);
         
         foreach ($user1 as &$message) {
@@ -54,7 +64,9 @@ class Notification {
             $read = $message_read_query->fetch(PDO::FETCH_ASSOC);
             $message['read'] = $read['read'];
             $message['seen'] = $read['seen'];
-            $message['user_id'] = $read['user_id'];
+            $message['user'] = $this->user->get_user_preview($message['user_id']);
+            $message['time'] = $this->system->humanTiming($message['time']);
+            //$message['user_id'] = $read['user_id'];
         }
         return $user1;
     }
@@ -408,11 +420,12 @@ class Notification {
     }
 
     function getNotificationNum() {
-        $user_query = "SELECT receiver_id FROM notification WHERE receiver_id = :user_id AND sender_id != :user_id AND `seen` = 0";
+        $user_query = "SELECT user_id, time FROM connection_invite WHERE receiver_id = :user_id "
+        . "UNION SELECT event_id, time FROM event_share WHERE user_id = :user_id ORDER BY time;";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
         $user = $user_query->rowCount();
-        return $user;
+        return 0;//$user;
     }
 
     function markNotificationRead($id) {
@@ -427,6 +440,20 @@ class Notification {
         return $user;
     }
 
+    function getConnection() {
+        $user_query = "SELECT * FROM connection_invite WHERE receiver_id = :user_id ORDER BY time DESC;";
+        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
+        $user_1 = $user_query->fetchAll();
+        return $user_1;
+    }
+    function getConnectionNum() {
+        $user_query = "SELECT id FROM connection_invite WHERE user_id = :user_id AND `seen` = 0 AND invite_status = 1;";
+        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
+        $user = $user_query->rowCount();
+        return $user;
+    }
     function getNetworkNum() {
         $user_query = "SELECT id FROM group_invite WHERE user_id = :user_id AND `seen` = 0 AND invite_status = 1;";
         $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
@@ -484,6 +511,35 @@ class Notification {
             }
             echo "</td></tr></table></td></tr></table></li>";
         }
+
+        $network_count = $this->getConnectionNum();
+        $networks = $this->getConnection();
+        $total_network_count = count($networks);
+        if ($total_network_count == 0) {
+            echo "<div style='padding:5px;color:grey;'>No Network Notifications</div>";
+        }
+        foreach ($networks as $network) {
+            $picture = $this->user->getProfilePicture("chat", $network['user_id']);
+
+            echo "<li class='";
+            if ($network['read'] == 0) {
+                echo "messageunread";
+            }
+            else {
+                echo "message";
+            }
+            echo "'><table><tr style='vertical-align:top;'>"
+            . "<td style='min-width:40px;'>"
+            . "<img class='notification_user_image' src='" . $picture . "'></img>"
+            . "</td><td>"
+            . "<p style='margin:0;text-align:left;font-size:13px;'>"
+            . str_replace('$user', $this->user->getName($network['user_id']), $this->phrase->get('connection_invite', 'en'))
+            . "</p></td><td><table cellspacing='0' cellpadding='0'><tr><td>";
+            if ($network['status'] == 2) {
+                echo "<button style='margin:0;' data-invite_id='".$network['id']."' class='pure-button-primary connect_accept'>Connect</button>";
+            }
+            echo "</td></tr></table></td></tr></table></li>";
+        }
     }
 
     function markAllNetworkSeen() {
@@ -522,7 +578,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         else if($_POST['action'] === "alert_num") {
             $return = array();
             $return['message'] = $notify->getMessageNum();
-            $return['network'] = $notify->getNetworkNum();
+            $return['network'] = $notify->getNetworkNum() + $notify->getConnectionNum();
             $return['notification'] = $notify->getNotificationNum();
             $return = json_encode($return);
             die($return);
@@ -541,6 +597,16 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
         else if($_POST['action'] == "updateMesssage") {
             die($notify->getMessageNew($thread));
+        }
+        else if($_POST['action'] == "get_thread") {
+            $oldest = $newest = NULL;
+            if(isset($_POST['min']) && !empty($_POST['min']) && $_POST['min'] != "") {
+                $oldest = $_POST['min'];
+            }
+            if(isset($_POST['max']) && !empty($_POST['max']) && $_POST['max'] != "") {
+                $newest = $_POST['max'];
+            }
+            die(json_encode($notify->getMessage('thread', $_POST['thread'], $oldest, $newest), JSON_HEX_APOS));
         }
     }
 }

@@ -13,6 +13,7 @@ div.chatcomplete{
     right:0;
     font-size: 0.85em;
     background-color: white;
+    display: none;
 }
 div.chatoff{
     position:fixed;
@@ -40,10 +41,9 @@ div.chatoutput{
     top:-1px;
     right: 35px;
     left:0px;
-    bottom:0px;
+    bottom:65px;
     background-color: white;
     padding-left: 10px;
-    padding-top:10px;
     -webkit-transition: all 0.1s;
     -moz-transition: all 0.1s;
     -ms-transition: all 0.1s;
@@ -54,6 +54,7 @@ div.chatoutput{
         box-shadow: inset 0 20px 20px -20px lightgrey;*/
     /*border-top: 1px solid lightgrey;*/
     border-right: 1px solid lightgrey;
+    overflow-y: auto;
 }
 
 .text_input_container{
@@ -63,7 +64,6 @@ div.chatoutput{
     right:2px;
     border-top: 1px solid lightgrey;
     background-color: white;
-    z-index: 100;
     min-height: 35px;
     padding: 0px;
 }
@@ -84,7 +84,7 @@ div.chatheader{
     z-index: 123;
 }
 .chat_feed_selector{
-    border-left: 2px solid rgb(70, 180, 220);
+    border-left: 2px solid rgb(0, 140, 250);
     border-bottom: 0px;
     min-width: 0px;
     width: 30px;
@@ -124,16 +124,19 @@ table.chatbox {
 
 .chat_wrapper, .chat_my_wrapper{
     padding-bottom:0px;
+    padding-top: 5px;
     border-radius: 0px;
-    margin-bottom: 5px;
+    margin-bottom: 0px;
+    margin-top: 0px;
     /*box-shadow: inset 0px 0px 5px 3px white;*/
-    border-bottom: 1px solid #EDEDED;
+    border-top: 1px solid #EDEDED;
     position: relative;
 }
 
 li.single_chat{
     border: 0px;
     padding-right: 10px;
+    /*padding-top: 10px;*/
 }
 
 .chat_my_wrapper{
@@ -191,7 +194,7 @@ li.single_chat{
     text-align: left;
     font-size:14px;
     width: 100%;
-    color: rgb(66, 184, 221);
+    color: rgb(0, 140, 250);
 }
 span.chatname:hover{
     text-decoration: none;
@@ -200,7 +203,7 @@ span.chatname:hover{
 .mychatname{
     margin-top:5px;
     vertical-align: top;
-    color: rgb(66, 184, 221);
+    color: rgb(0, 140, 250);
     font-size:12px;
 }
 .chattext{
@@ -233,7 +236,6 @@ span.chatname:hover{
     transition: all 0.5s;
     display: block;
     margin-top: 5px;
-    border-top: 1px solid #EDEDED;
 }
 #school_tab, #year_tab, .group_tab{
     cursor: pointer;

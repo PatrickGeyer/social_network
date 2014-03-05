@@ -119,15 +119,24 @@ class System extends Base {
                      updateOnContentResize: true,
                      updateOnBrowserResize:true,
                 },
-                scrollInertia:0,
+                scrollInertia:200,
                 theme:'dark',
                 autoHideScrollbar: true,
                 mouseWheelPixels: 100 
             };";
-        echo "</script>";
+        echo "USER_ID=".base64_decode($_COOKIE['id']).";</script>";
     }
+    /**
+     * AudioPlayer function
+     * Prints an HTML5 audio Tag and controls.
+     * 1. Path
+     * 2. Name
+     * 3. ID
+     * 4. Control Part (default:"all")
+     */
+    public function audioPlayer($path = null, $name = null, $rndm = null, $part = 'all', $uniqid = NULL) {
+        $string = '';
 
-    public function audioPlayer($path = null, $name = null, $close_button = false, $rndm = null) {
         if ($rndm == "blank") {
             $rndm = ":::uid:::";
         }
@@ -140,36 +149,40 @@ class System extends Base {
             $name = ":::name:::";
         }
 
-        $string = '<div class="audio_container" id="audio_container_' . $rndm
-                . '">' 
-                . ($close_button == true ? "<div onclick=\"removeAudio(" . $rndm . ");\" class=\'audio_remove\'>x</div>" : "");
+        $string .= '<div data-path="'.$path.'" uid="'.$uniqid.'">';
 
-        $string .= $this->audioButton($rndm, $path);
-        $string .= $this->audioInfo($rndm, $name, $path);
+        if($part == 'all') {
+            $string .= '<div class="audio_container" id="audio_container_' . $rndm . '">';
 
-        $string .= '</div>';
+            $string .= $this->audioButton($rndm, $path);
+            $string .= $this->audioInfo($rndm, $name, $path);
+
+            $string .= '</div>';
+        } else if( $part == "button" ) {
+            $string .= $this->audioButton($rndm, $path);
+        } else if( $part == "info" ) {
+            $string .= $this->audioInfo($rndm, $path);
+        } else if( $part == 'timeline' ) {
+            $string .= $this->audioTimeline($rndm);
+        }
+        $string .= "</div>";
         return $string;
     }
 
-    function audioButton($id, $path) {
+    private function audioButton($id, $path) {
         return '<div id="image_' . $id . '" class="audio_button" audio_id="'
             .$id.'" style="background-image:url(' 
-                . Base::AUDIO_PLAY_THUMB . ')"></div><audio id="audio_' . $id .
-                '" style="display:none;" controls="controls" class="player" preload="none"> <source src="' 
-                . $path 
-                . '" />Your browser doesnt support this audio element, please download to listen...</audio>';
+                . Base::AUDIO_PLAY_THUMB . ')"><div class="audio_loader"><div class="loader_outside"></div><div class="loader_inside"></div><span class="audio_loader_text loader_text"></span></div></div>';
     }
 
-    function audioInfo($id, $name, $path) {
+    private function audioInfo($id, $name, $path) {
         return '<div id="audio_info_' . $id . '" class="audio_info"><div class="ellipsis_overflow audio_title">' 
         . $name . '</div>'.$this->audioTimeline($id).'<div class="audio_time" id="audio_time_' . $id . '">0:00</div></div>';
     }
 
-    function audioTimeline($id) {
+    private function audioTimeline($id) {
         return '<div id="audio_progress_container_' . $id
-                . '"class="audio_progress_container"><div id="audio_progress_' 
-                . $id . '" class="audio_progress"></div><div class="audio_buffered" id="audio_buffered_' . $id .
-                '"></div></div>';
+                . '"class="audio_progress_container"></div>';
     }
 
     /**

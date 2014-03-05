@@ -1,4 +1,3 @@
-// Requires JQuery to be included before
 var profile_picture_id;
 $(function() {
     
@@ -24,7 +23,7 @@ $(function() {
     });
     
     $(document).on('click', '.delete_activity', function() {
-        var activity_id = $(this).parents('[activity_id]').attr('activity_id');
+        var activity_id = $(this).parents('[data-activity_id]').data('activity_id');
         dialog(
                 content = {
                     type: "html",
@@ -68,11 +67,18 @@ $(function() {
             $('#single_post_' + activity_id).find('.post_text_editor').remove();
         });
     });
+    
+    $(document).on('mouseover', '.search_option', function(event) {
+        $(this).siblings().removeClass('match');
+        //alert($(this).siblings().length);
+        $(this).addClass('match');
+    })
     //FILES
     
     $(document).on('click', '#file_share div.file_item', function() {
         var file = $(this).data('file');
-        addToStatus(file.type, file.object);
+        //console.log(file);
+        addToStatus(file);
     });
     
     $(document).on('click', '.audio_hidden_container, .files_actions, p.files, div.files input', function(event) {
@@ -80,8 +86,9 @@ $(function() {
     });
 
     $(document).on('click', '.audio_button', function(event) {
-        var id = $(this).attr('audio_id');
-        audioPlay(id, function(){}, function(progress){ });
+        var id = $(this).parents('[data-file_id]').data('file_id');
+        var uid = $(this).parents('[uid]').attr('uid');
+        audioPlay(id, function(){}, function(progress){ }, function() {}, uid);
         event.stopPropagation();
     });
     
@@ -171,20 +178,23 @@ $(function() {
         }
         resizeTextarea($(this), clone);
     });
-    
-    $(document).on('click', '.remove_file_post', function() { //DELETE FILES FROM POST
-        var file_id = $(this).parents('.post_feed_item').attr('file_id');
-        var activity_id = $(this).parents('[activity_id]').attr('activity_id');
+    $(document).on('click', '.post_media_wrapper .delete_cross', function(event) {
+    	event.stopPropagation();
+    	removeFromStatus(object = {type: "File", value: $(this).parents('[file_id]').attr('file_id')});
+    });
+    $(document).on('click', '.remove_event_post', function() { //DELETE FILES FROM POST
+        var file_id = $(this).parents('[file_id]').attr('file_id');
+        
+        var activity_id = $(this).parents('[data-activity_id]').data('activity_id');
         $(this).parents('.post_feed_item').remove();
         $.post('Scripts/files.class.php', {action: "removePostFile", file_id: file_id, activity_id: activity_id}, function() {});
     });
     
-    $(document).on('click', '.remove_event_post', function() {
-        var file_id = $(this).parents('.post_feed_item').attr('file_id');
-        var activity_id = $(this).parents('[activity_id]').attr('activity_id');
-        $(this).parents('.post_feed_item').remove();
-        $.post('Scripts/calendar.class.php', {action: "removeEventFile", file_id: file_id, event_id: activity_id}, function() {});
-    });
+     $(document).on('click', '.post_media_photo.post_media_preview', function() {
+         var file_id = $(this).parents('[file_id]').attr('file_id');
+         var activity_id = $(this).parents('[data-activity_id]').data('activity_id');
+         initiateTheater(activity_id, file_id, {});
+     });
     
     $(document).on('click', '.comment_delete', function() {
         var comment_id = $(this).parents('div.single_comment_container').attr('comment_id');
@@ -192,6 +202,28 @@ $(function() {
         $(this).parents('.single_comment_container').remove();
         $.post('Scripts/home.class.php', {action: "deleteComment", comment_id: comment_id}, function(response) {});
     })
+    $(document).on('click', '.post_like_activity', function(event) {
+    	var post_id = $(this).parents('[data-activity_id]').data('activity_id');
+        var has_liked = $(this).attr('has_liked');
+    	var like_count = parseInt($('[data-activity_id="' + post_id + '"] .post_like_count').text());
+            
+        if(has_liked === "false") {
+            $(this).attr('has_liked', "true");
+            $(this).text(COMMENT_UNLIKE_TEXT);
+            like_count++;
+        }
+        else {
+            $(this).attr('has_liked', "false");
+            $(this).text(COMMENT_LIKE_TEXT);
+            like_count--;
+        }
+        $('[data-activity_id="' + post_id + '"] .post_like_count').text(like_count);
+        
+         $.post("Scripts/home.class.php", {type: 1, activity_id: post_id, action: "like"}, function(data)
+         {
+              $('[data-activity_id="' + post_id + '"] .post_like_count').text(data);
+         });
+    });
     $(document).on('click', '.post_comment_vote', function(event) {
         var post_id = $(this).parents('[activity_id]').attr('activity_id');
         var has_liked = $(this).attr('has_liked');
@@ -204,9 +236,16 @@ $(function() {
             $(this).attr('has_liked', "false");
             $(this).text(COMMENT_LIKE_TEXT);
         }
+        var like_count = parseInt($('[activity_id="' + post_id + '"] .post_like_count').val()); //NOT COMMENT LIKES!
+        like_count++;
+        $('[activity_id="' + post_id + '"] .post_like_count').val(like_count);
         $.post('Scripts/home.class.php', {action: "comment_vote", post_id: post_id, comment_id: id}, function(response) {
-            $('.post_comment_liked_num[comment_id="' + id + '"]').text("- " + response + " likes");
+            //$('.post_comment_liked_num[comment_id="' + id + '"]').text("- " + response + " likes");
         });
+    });
+    
+    $(document).on('mouseenter', '.post_height_restrictor', function() {
+        refreshContent($(this).data('activity_id'));
     });
 
     $(window).on('resize', function() {
@@ -263,7 +302,7 @@ function getFeedContent(feed_id, min_activity_id, page, callback)
         var none = $("<div class='post_height_restrictor'>"
                 + "<center><p style='color:grey;'>"
                 + "There are no notifications in this Live Feed! <br /> "
-                + "You can post files and shizzle up the in the box.</p></center></div>");
+                + "You can post up the in the box.</p></center></div>");
 
         var prev_feed_id = getCookie(page + '_feed');
         if (feed_id != prev_feed_id) {
@@ -285,6 +324,7 @@ function getFeedContent(feed_id, min_activity_id, page, callback)
 
             callback();
             refreshVideoJs();
+            //initializeWaveForm();
         }
 
         if (isNaN(feed_id))
@@ -579,3 +619,12 @@ $(document).on('click', '.edit_hidden', function() {
     $(this).next('.hidden_section').show();
 });
 //END SETTINGS
+
+//USER
+$(document).on('click', '.connect_button', function() {
+    connect($(this), $(this).parents('[entity_id]').attr('entity_id'));
+});
+$(document).on('click', '.connect_accept', function() {
+    connectAccept($(this).data('invite_id'));
+});
+//END USER

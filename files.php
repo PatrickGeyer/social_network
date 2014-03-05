@@ -20,13 +20,14 @@ else {
     $actions = true;
 }
 if (isset($_GET['u'])) {
-    $user_id = urldecode($system->decrypt($_GET['u']));
+    $files_user_id = urldecode($system->decrypt($_GET['u']));
 }
 else {
-    $user_id = $user->getId();
+    $files_user_id = $user->user_id;
 }
 if (isset($_GET['f'])) {
     $file_id = $_GET['f'];
+    $files->fileView($file_id);
 }
 include_once('welcome.php');
 include_once('chat.php');
@@ -71,60 +72,33 @@ $used_width = ($used_width / 1073741824) * 100;
                 $(document).on('change', '#file', function() {
                     var input = $(this).get(0).files;
                     var index = 0;
-                    dialog(
-                            content = {
-                                type: "html",
-                                content: getInputFiles('file')
-                            },
-                    buttons = [{
-                            type: 'success',
-                            text: "Upload",
-                            onclick: function() {
-                                var uploadCount = 0;
-                                $('.upload_preview').each(function() {
-                                    uploadCount++;
-                                    $(this).css('padding-bottom', '25px');
-                                    $(this).css('margin-bottom', '3px');
-                                    $(this).css('position', 'relative');
-                                    progressBar($(this), $(this).attr('id'));
-                                });
-                                for (var i = 0; i < input.length; i++) {
-                                    (function(sync_i) {
-                                        uploadFile(input[sync_i],
-                                                function() {
-
-                                                }, function(percent) {
-                                            updateProgress(sync_i + "_upload_preview", percent);
+                    var files = getInputFiles('file');
+                    var uploadCount = 0;
+                    // $('.upload_preview').each(function() {
+                    //     uploadCount++;
+                    //     $(this).css('padding-bottom', '25px');
+                    //     $(this).css('margin-bottom', '3px');
+                    //     $(this).css('position', 'relative');
+                                    // progressBar($(this), $(this).attr('id'));
+                                // });
+                                // for (var i = 0; i < input.length; i++) {
+                    //(function(sync_i) {
+                        uploadFile(files,
+                        function() {},
+                        function(percent) {
+                            // updateProgress(sync_i + "_upload_preview", percent);
                                             //console.log(i + "_upload_preview - " +  percent);
-                                        }, function() {
-                                            removeProgress(sync_i + "_upload_preview");
-                                            $("#" + sync_i + "_upload_preview").css('background-color', '#98FB98');
-                                            uploadCount--;
-                                            if (uploadCount == 0) {
-                                                removeDialog();
-                                                refreshFileContainer(encrypted_folder);
-                                            }
-                                        }, properties = {
-                                            type: "File",
-                                        }
-                                        );
-                                    })(i);
-                                }
-                                ;
-                            }
-                        },
-                        {
-                            type: 'primary',
-                            text: "Cancel",
-                            onclick: function() {
-
-                            }
-                        }],
-                    properties = {
-                        title: "Upload Files",
-                        modal: false,
-                    }
-                    );
+                        }, function() {
+                                            //removeProgress(sync_i + "_upload_preview");
+                                            //$("#" + sync_i + "_upload_preview").css('background-color', '#98FB98');
+                                            //uploadCount--;
+                                            //if (uploadCount == 0) {
+                                              //  removeDialog();
+                            refreshFileContainer(encrypted_folder);
+                        }, 
+                        properties = {
+                            type: "File",
+                        });
                 });
                 $('#loading_icon').fadeOut();
 
@@ -191,37 +165,23 @@ $used_width = ($used_width / 1073741824) * 100;
                 setRecentFileScroller();
             });
 
+            function get_preview_image(ext) {
+                return VIDEO_THUMB;
+            }
+
             function getInputFiles(element) {
-                var index = 0;
-
-                var div = $("<div></div>");
-                var files = document.getElementById(element).files;
-                var image = new Array();
-
-                for (var i = 0, len = files.length; i < len; i++) {
-                    var file = files[i];
-                    var extension = file.name.split('.').pop();
-                    var name = $("<span style='vertical-align:top;'></span>");
-                    image[i] = $("<div class='files_upload_image_preview'></div>");
-                    name.append(file.name);
-                    var type = getType(extension)
-                    if (type == "Video") {
-                        image[i].css('background-image', "url('" + VIDEO_THUMB + "')");
-                    } else if (type == "Image") {
-                        readURL(file, image[i]);
-                    } else if (type == "Audio") {
-                        image[i].css('background-image', "url('" + AUDIO_THUMB + "')");
-                    }
-                    var size = file.size;
-                    var file_container = $("<div  class='upload_preview' style='margin-bottom:10px;'>");
-                    file_container.attr('id', index + "_upload_preview");
-                    file_container.append(image[i]);
-                    file_container.append(name);
-                    file_container.append("<br />");
-                    div.append(file_container);
-                    index++;
+                var files1 = document.getElementById(element).files;
+                var files = new Array();
+                for (var i = 0, len = files1.length; i < len; i++) {
+                    files[i] = new Object();
+                    files[i].file = files1[i];
+                    files[i].extension = files1[i].name.split('.').pop();
+                    files[i].name = files1[i].name;
+                    files[i].type = getType(files[i].extension);
+                    files[i].pic = get_preview_image(files[i].type);
+                    files[i].size = files1[i].size;
                 }
-                return div;
+                return files;
             }
             function setRecentFileScroller() {
                 $('.files_recently_shared_container').mCustomScrollbar({
@@ -309,15 +269,15 @@ $used_width = ($used_width / 1073741824) * 100;
                     </table>
                 </div>
                 <div id='file_container' style='padding-top: 20px;'>
-                    <div id='main_file' class="file" style='border-bottom:1px solid lightblue;'>
+                    <div id='main_file' class="file feed_container" style='border-bottom:1px solid lightblue;'>
                         <?php
                         if (isset($file_id)) {
-                            $home->homeify($home->getSingleActivity($files->getActivity($file_id)));
+                            echo "<script>$('.feed_container').prepend(homify(".json_encode($home->homeify($home->getSingleActivity($files->getActivity($file_id))))."));</script>";
                             echo "<script>$('.file_actions').hide();</script>";
                             echo "<script>$('#main_file').css('border', '0px');</script>";
                         }
                         else {
-                            $files_list = $files->getContents($parent_folder, $user_id);
+                            $files_list = $files->getContents($parent_folder, $files_user_id);
                             $nmr = count($files_list);
                             foreach ($files_list as $file) {
                                 $files->tableSort($file);

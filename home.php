@@ -28,9 +28,9 @@ else {
 
 $activity_query = $entity->getActivityQuery($filter, $group_id, $user_id, $min_activity_id);
 
-if (isset($_GET['min_activity_id'])) {
-    die("<script>min_activity_id = " . $home->getActivity($activity_query, $min_activity_id) . ";</script>");
-}
+// if (isset($_GET['min_activity_id'])) {
+//     die("<script>min_activity_id = " . $home->getActivity($activity_query, $min_activity_id) . ";</script>");
+// }
 $page_identifier = "home";
 
 include_once('welcome.php');
@@ -48,10 +48,17 @@ include_once('chat.php');
             }
 
             var share_group_id = <?php echo (is_int($feed_id) ? $feed_id : "'$feed_id'"); ?>;
-            
+            var activity_id = null;
             $(function($)
             {
-                getFeedContent(share_group_id, min_activity_id, 'home', function(){});
+                //getFeedContent(share_group_id, min_activity_id, 'home', function(){});
+                getFeed(share_group_id, 'home', min_activity_id, activity_id, function(response){
+                    var string = '';
+                    for (var i in response) {
+                        string += homify(response[i]);
+                    }
+                    $('.feed_container').prepend(string);
+                });
 
                 $(document).on('click', '.home_like_icon', function() {
                     var has_liked = $(this).attr('has_liked');
@@ -72,11 +79,15 @@ include_once('chat.php');
 
                 $('#status_text').focus(function() {
                     $(this).css('min-height', '100px');
+                    $('#file_share').parent('td').css('width', '200px');
                     $('#file_share').show();
                     $('#post_more_options').show();
                     $('.post_wrapper').css('padding-bottom', $('.post_more_options').height());
                     $('.post_media_wrapper').show();
                     $('#file_share').mCustomScrollbar("update");
+                    $('.home_feed_post_container_arrow_border').css('border-right-color', 'rgb(70, 180,220)');
+                }).focusout(function() {
+                    $('.home_feed_post_container_arrow_border').css('border-right-color', 'lightgrey');
                 });
 
                 $('#status_text').on('input', function() {
@@ -118,6 +129,9 @@ include_once('chat.php');
             <?php include_once 'left_bar.php';?>
             <div class="container">
                 <div class='home_feed_post_container'>
+                    <div class='home_feed_post_container_arrow_border'>
+                        <div class='home_feed_post_container_arrow'></div>
+                    </div>
                     <div class='post_wrapper'>
                         <table style='width:100%;' cellspacing='0' cellpadding='0'>
                             <tr>
@@ -131,14 +145,14 @@ include_once('chat.php');
                                         <tr>
                                             <td class='post_content_wrapper'>
                                                 <div class="post_media_wrapper">
-                                                    <div class='post_media_wrapper_background user_preview_name'>Attach Files to Dropbox &#10138;</div>
+                                                    <div class='post_media_wrapper_background post_comment_time'>Dropbox</div>
                                                     <img class='post_media_loader' src='Images/ajax-loader.gif'></img>
                                                 </div>
                                             </td>
                                         </tr>
                                     </table>
                                 </td>
-                                <td style='width:200px;height:100%;position: relative;'>
+                                <td style='width:00px;height:100%;position: relative;'>
                                     <div id='file_share'>
                                         <table id='file_dialog' style='width:100%;' cellspacing="0" cellpadding="0">
                                             <?php
@@ -152,7 +166,7 @@ include_once('chat.php');
                             </tr>
                         </table>
                         <div id='post_more_options' class='post_more_options'>
-                            <button onclick="submitPost();" class="pure-button-success small">POST</button>
+                            <button onclick="submitPost();" class="pure-button-success small">Post</button>
                             <button id='attach_file_button' class='pure-button-neutral smallest' style="cursor:pointer;" onclick="$('#post_file').trigger('click');">+</button>
                             <input type="file" name="file" id="post_file" multiple style='display:none;' />
                             <div class='default_dropdown_selector' style='display:inline-block;' wrapper_id='audience_selector'>
@@ -182,7 +196,8 @@ include_once('chat.php');
                         </div>
                     </div>	
                     <div style="width:100%" id="progress_bar_holder"></div>
-                    <div class='feed_wrapper_scroller scroll_thin_horizontal' style='margin-top:20px;margin-bottom: 20px;'>
+                </div>
+                <div class='feed_wrapper_scroller scroll_thin_horizontal' style='margin-top:0px;margin-bottom: 20px;'>
                         <table>
                             <tr>
                                 <td>
@@ -224,7 +239,6 @@ include_once('chat.php');
                             </tr>
                         </table>
                     </div>
-                </div>
                 <div id='feed_refresh'> 
                     <div class='feed_container'>
                         <!--  Activity Here -->

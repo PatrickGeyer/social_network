@@ -16,6 +16,8 @@ class Base {
     const DOWN_ARROW_DARK = "Images/down.png";
     const DOWN_ARROW_LIGHT = "Images/down1.png";
     const DOWN_ARROW = "Images/down_arrow_select.png";
+    const CONNECTION_ICON = "Images/Icons/icons/user-silhouette.png";
+    const HEART_ICON = "Images/Icons/Icon_Pacs/Batch-master/Batch-master/PNG/16x16/heart-full.png";
     
     const INBOX_IMG = "Images/Icons/Icon_Pacs/ecqlipse2/system_white/MAIL_32x32-32.png";
     const NOTIFICATION_IMG = "Images/Icons/Icon_Pacs/ecqlipse2/system_white/WIFI_32x32-32.png";
@@ -46,6 +48,7 @@ class Base {
     const EXCEL_THUMB = "Images/Icons/file_type/Microsoft_Excel_2013_logo_thumb.png";
     const ZIP_THUMB = "Images/Icons/Icon_Pacs/ecqlipse2/system_black/FILE - ZIP_48x48-32.png";
     const FILE_THUMB = "Images/Icons/Icon_Pacs/ecqlipse2/ecqlipse 2 - system black/FILE.png";
+    const TEXT_THUMB = "Images/Icons/Icon_Pacs/ecqlipse2/ecqlipse%202%20-%20system%20black/FILE%20-%20TEXT.png";
     
     const VIDEO_ICON = "Images/Icons/file_type/play-red.png";
     const IMAGE_ICON = "Images/Icons/Icon_Pacs/typicons.2.0/png-24px/image.png";
@@ -56,6 +59,7 @@ class Base {
     const EXCEL_ICON = "Images/Icons/file_type/Microsoft_Excel_2013_logo_icon.png";
     const ZIP_ICON = "Images/Icons/Icon_Pacs/ecqlipse2/system_black/FILE - ZIP_48x48-32.png";
     const FILE_ICON = "Images/Icons/Icon_Pacs/ecqlipse2/ecqlipse 2 - system black/FILE.png";
+    const TEXT_ICON = "Images/Icons/Icon_Pacs/typicons.2.0/png-24px/document-text.png";
     
     const AUDIO_THUMB = "Images/Icons/file_type/music-blue.png";
     const AUDIO_PLAY_THUMB = "Images/Icons/file_type/music-play-blue.png";
