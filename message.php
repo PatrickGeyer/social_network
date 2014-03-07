@@ -1,5 +1,4 @@
 <?php
-include_once('Scripts/lock.php');
 $page_identifier = "inbox";
 $current_thread;
 include_once('welcome.php');

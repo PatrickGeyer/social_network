@@ -48,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user_query->execute(
                 array(
                     ":name" => $name,
-                    ":password" => $password,
+                    ":password" => $system->encrypt($password),
                     ":community_id" => $community,
                     ":position" => $position,
                     ":email" => $email,

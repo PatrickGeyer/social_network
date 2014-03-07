@@ -1,6 +1,32 @@
 var profile_picture_id;
 $(function() {
     
+    //STICKIES
+    
+    var typingTimer;
+    var doneTypingInterval = 3000;
+
+    $(document).on('keyup','.paste_pad', function(){
+        clearTimeout(typingTimer);
+        var text = $(this).html();
+        typingTimer = setTimeout(function(){doneTyping(text);}, doneTypingInterval);
+    });
+
+    //on keydown, clear the countdown 
+    $(document).on('keydown', '.paste_pad', function(){
+        clearTimeout(typingTimer);
+    });
+
+    //user is "finished typing," do something
+    function doneTyping (text) {
+        //do something
+        $.post('Scripts/user.class.php', {action:"update", id:1, html:text}, function(response) {
+            
+        });
+    }
+    
+    //END STICKIES
+    
     $(document).on('click', '.delete_receiver', function() {
        var type = $(this).parents('[entity_type]').attr('entity_type');
        var id = $(this).parents('[entity_id]').attr('entity_id');

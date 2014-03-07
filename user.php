@@ -6,6 +6,8 @@ if (isset($_GET['id'])) {
     if ($userid == $user->getId()) {
         $page_identifier = 'user';
     }
+} else {
+    $userid = $user->user_id;
 }
 
 
@@ -121,7 +123,7 @@ include_once('chat.php');
             <table class='info_table_layout'>
                 <tr>
                     <td rowspan='2' style='width:220px;'>
-                        <div class='profilepicturediv' style='background-image:url("<?php echo $user->getProfilePicture('thumb', $userid); ?>");'>
+                        <div class='profilepicturediv' style='background-image:url("<?php echo $user->getProfilePicture('THUMB', $userid); ?>");'>
                             <?php
                             if ($user->getId() == $userid) {
                                 echo "<div class='profile_picture_upload'>"
@@ -165,14 +167,17 @@ include_once('chat.php');
                         <?php
                         if ($userid == $user->getId()) {
                             echo "<button onclick='window.location.assign(&quot;settings&quot;);' "
-                            . "style='position:absolute; right:10px; top:15px;' "
-                            . "class='pure-button-primary'>Manage</button>";
+                            . "style='float:right;' "
+                            . "class='pure-button-primary'>Manage</button><br />";
+                            echo "<button onclick='window.location.assign(&quot;stats&quot;);' "
+                            . "style='float:right;' "
+                            . "class='pure-button-primary'>Stats</button>";
                         }
 
                         if ($userid != $user->getId()) {
-                            echo "<button style='float:right;' class='pure-button-primary connect_button'>Connect</button>";
-                            echo "<div wrapper_id='invite_selector' class='default_dropdown_selector'>
-						<button class='pure-button-primary connect_button'>Invite</button>";
+                            echo "<button style='float:right;' class='pure-button-primary connect_button'>Connect</button><br />";
+                            echo "<div style='background-image:none;padding-right:0px;float:right;' wrapper_id='invite_selector' class='default_dropdown_actions'>
+				<button class='pure-button-primary connect_button'>Invite</button>";
                             echo "<div id='invite_selector' class='default_dropdown_wrapper' style='display:none;float:right;'>";
                             echo "<ul class='default_dropdown_menu'>";
                             foreach ($group->getUserGroups() as $users_group) {

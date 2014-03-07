@@ -1,11 +1,11 @@
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    include_once 'Scripts/database.class.php';
-    $database_connection = Database::getConnection();
-    $user_query = "SELECT id FROM user WHERE email = :email AND password = :password";
-    $user_query = $database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-    $user_query->execute(array(":email" => $_POST['email'], ":password" => $_POST['password']));
+    include_once 'Scripts/declare.php';
+    $user_query = "SELECT id FROM user WHERE email = :email AND password = :password;";
+    $user_query = $database_connection->prepare($user_query);
+    $user_query->execute(array(":email" => $_POST['email'], ":password" => $system->encrypt($_POST['password'])));
     $user_data = $user_query->fetchColumn();
+    //die("ID:".$user_data. "EMAIL:".$_POST['email'] ."ENCRYOT:".$system->encrypt($_POST['password']));
 
     if (!empty($user_data)) {
         setcookie("id", base64_encode($user_data), time() + 3600000);
@@ -16,7 +16,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         die("200");
     }
     else {
-        die('<p style="background-color:red;">Your Email or Password is invalid</p>');
+    $user_query = "SELECT password FROM user WHERE email = :email;";
+    $user_query = $database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+    $user_query->execute(array(":email" => $_POST['email']));
+    $user_data = $user_query->fetchColumn();
+        die('<p style="background-color:red;">'.$system->encrypt($_POST['password']).' <=> Your Email or Password is invalid</p>');
     }
 }
 
@@ -48,6 +52,13 @@ if (isset($_COOKIE['id'])) {
     <head>
         <?php
         $system->jsVars();
+        // $sql = "SELECT * FROM user;";
+//         $sql = $database_connection->prepare($sql);
+//         $sql->execute();
+//         $users = $sql->fetchAll(PDO::FETCH_ASSOC);
+//         foreach($users as $user) {
+//         	echo $user['name']." => ".$system->encrypt($user['password']);
+//         }
         ?>
         <script src='Scripts/external/jquery-1.10.2.min.js'></script>
         <script src='Scripts/js.js'></script>
@@ -330,7 +341,7 @@ if (isset($_COOKIE['id'])) {
                     <img src="http://stackoverflow.com/users/flair/2506225.png?theme=clean" width="208" height="58" alt="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers" title="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers">
                 </a>
             </div>
-            <span>This site is in development. You are welcome to sign-up, register schools and store your files here. However, I cannot guarantee the safety/availability of any of your data yet. Release date: 2014, March 8th. You can watch the site develop everyday.</span>
+            <span>Warning: This site is in development. I will not be held liable for any damages you may incur on this site. By signing up, you agree to these terms. Although you are welcome to sign-up, register schools and store your files here for testing purposes, I cannot guarantee the safety/availability of any of your data yet. Release date: 2014, June 21. You can watch the site develop everyday.</span>
         </div>
         <div class="links" style='display:none;'>
             <a id="schoollink" href="login" style="text-decoration:none; font-size:0.8em;">Register a User</a>/

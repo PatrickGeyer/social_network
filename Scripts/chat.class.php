@@ -137,7 +137,7 @@ class Chat {
         	$chat_min->execute(array(":min" => $min, ":max" => $max));
         	$chat_min = $chat_min->rowCount();
         	if($chat_min == 0) {
-          	  	$chat_array[] = array("type" => 'event', 'code' => 0);
+          	  	//$chat_array[] = array("type" => 'event', 'code' => 0);
         	}
         }
         return json_encode(array_reverse($chat_array));

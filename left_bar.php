@@ -5,41 +5,35 @@ if (!isset($page_identifier)) {
 ?>
 <div class='left_bar_container'>
     <div class="navigation">
-        <a href='user?id=<?php echo urlencode(base64_encode($user->getId())); ?>'>
-            <div class="user_info 
-            <?php
-            if ($page_identifier == "user") {
-                echo "current_page_user";
-            }
-            ?>
-                 " style='cursor:pointer; margin-bottom:10px;'>
-                <table cellspacing='0' cellpadding='0'>
-                    <tr style='vertical-align:top;'>
-                        <td>
-                            <div class='welcome_user_profile_picture' style='background-image:url("<?php echo $user->getProfilePicture("chat"); ?>");'></div>
-                        </td>
-                        <td>
-                            <div class='welcome_user_info'>
-                                <span class="current_user_name_edit">
-                                    <?php
-                                    echo $system->trimStr($user->getName(), 20);
-                                    ?>
-                                </span>
-                                <br />
-                                <span class='edit_user_text'>
-                                    <?php
-                                    echo $system->trimStr($user->getCommunityName(), 15);
-                                    ?>
-                                </span>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-        </a>
-        <hr style='z-index:-1;width:200px;border:0px;border-bottom: 0px solid lightgrey;'>
-        <ul class="navigation_list"> 
-            <li style='background-image:url("Images/Icons/icons/home.png");' class="nav_option ellipsis_overflow 
+        <ul class="navigation_list">
+            <li style='margin-bottom: 10px;' class="nav_option ellipsis_overflow  <?php echo ($page_identifier == "user" ? "current_page current_page_user" : ""); ?>">
+                <div class="user_info">
+                    <table cellspacing='0' cellpadding='0'>
+                        <tr style='vertical-align:top;'>
+                            <td>
+                                <div class='welcome_user_profile_picture' style='background-image:url("<?php echo $user->getProfilePicture("chat"); ?>");'></div>
+                            </td>
+                            <td>
+                                <div class='welcome_user_info'>
+                                    <a href="user">
+                                        <span style='font-size:13px;' class="user_preview_name">
+                                            <?php
+                                            echo $system->trimStr($user->getName(), 20);
+                                            ?>
+                                        </span>
+                                    </a>
+                                    <span class='edit_user_text'>
+                                        <?php
+                                        echo $system->trimStr($user->getCommunityName(), 15);
+                                        ?>
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </li> 
+           <li style='background-image:url("Images/Icons/icons/home.png");' class="nav_option ellipsis_overflow 
             <?php
             if ($page_identifier == "home") {
                 echo "current_page";

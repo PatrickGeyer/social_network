@@ -208,7 +208,7 @@ span.chatname:hover{
 }
 .chattext{
     text-align: left;
-    color: black;
+    color: #333;
     word-break: break-word;
     font-weight: lighter;
     font-size:12px;
@@ -221,7 +221,7 @@ span.chatname:hover{
 .mychattext{
     max-width: 150px;
     text-align:left;
-    color: black;
+    color: #333;
     word-break:break-word;
     font-size:12px;
     padding-left: 20px;

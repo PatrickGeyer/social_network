@@ -2,8 +2,8 @@
 
 class Base {
     const MALE_DEFAULT_ICON = "Images/male-default-icon.jpg";
-    const MALE_DEFAULT_CHAT = "Images/male-default-icon.jpg";
-    const MALE_DEFAULT_THUMB = "Images/male-default-icon.jpg";
+    const MALE_DEFAULT_CHAT = "Images/male-default-chat.jpg";
+    const MALE_DEFAULT_THUMB = "Images/male-default-chat.jpg";
     const FEMALE_DEFAULT_ICON = "Images/female-default-chat.jpg";
     const FEMALE_DEFAULT_CHAT = "Images/female-default-chat.jpg";
     const UNKNOWN_DEFAULT_ICON = "Images/unknown-default-chat.jpg";
@@ -16,6 +16,10 @@ class Base {
     const DOWN_ARROW_DARK = "Images/down.png";
     const DOWN_ARROW_LIGHT = "Images/down1.png";
     const DOWN_ARROW = "Images/down_arrow_select.png";
+    const ARROW_RIGHT_BLACK = "Images/Icons/Icon_Pacs/typicons.2.0/png-48px/chevron-right.png";
+    const ARROW_LEFT_BLACK = "Images/Icons/Icon_Pacs/typicons.2.0/png-48px/chevron-left.png";
+    const ARROW_RIGHT_WHITE = "Images/Icons/Icon_Pacs/typicons.2.0/png-48px/chevron-right-outline.png";
+    const ARROW_LEFT_WHITE = "Images/Icons/Icon_Pacs/typicons.2.0/png-48px/chevron-left-outline.png";
     const CONNECTION_ICON = "Images/Icons/icons/user-silhouette.png";
     const HEART_ICON = "Images/Icons/Icon_Pacs/Batch-master/Batch-master/PNG/16x16/heart-full.png";
     

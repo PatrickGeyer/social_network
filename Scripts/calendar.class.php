@@ -19,7 +19,7 @@ class Calendar {
         $this->system = System::getInstance();
         $this->database_connection = Database::getConnection();
         $this->files = Files::getInstance();
-        $this->event_types['Homework'] = array('color' => 'lightgreen');
+        $this->event_types['Homework'] = array('color' => 'rgb(50, 150, 50)');
     	$this->event_types['Event']['color'] = 'rgb(0, 40, 180)';
     	$this->event_types['Meeting']['color'] = 'orange';
     }
@@ -49,7 +49,7 @@ class Calendar {
         $dates_array = array();
 
         /* row for week one */
-        $calendar.= '<tr class="calendar-row">';
+        $calendar.= '<tr class="calendar-row calendar-events-row">';
 
         /* print "blank" days until the first of the current week */
         for ($x = 0; $x < $running_day; $x++):
@@ -74,7 +74,7 @@ class Calendar {
             if ($running_day == 6):
                 $calendar.= '</tr>';
                 if (($day_counter + 1) != $days_in_month):
-                    $calendar.= '<tr class="calendar-row">';
+                    $calendar.= '<tr class="calendar-row  calendar-events-row">';
                 endif;
                 $running_day = -1;
                 $days_in_this_week = 0;
@@ -95,10 +95,29 @@ class Calendar {
 
         $calendar.= '</tr>';
         $calendar.= '</table></div>';
+        return $calendar;
+    }
+    
+    function get_calendar($month, $year, $events = array()) {
+        $calendar = array();
+        
+        $calendar['date'] = date('F Y', strtotime($year."-".$month));
+        $calendar['year'] = $year;
+        $calendar['month'] = $month;
+        $calendar['running_day'] = date('w', mktime(0, 0, 0, $month, 1, $year));
+        $calendar['days_in_month'] = date('t', mktime(0, 0, 0, $month, 1, $year));
+        $calendar['days_in_this_week'] = $days_in_this_week = 1;
+        
+        $day_counter = 0;
+        $dates_array = array();
+        
+        $calendar['event'] = $this->getEvents(date('Y-m-d H:i:s', strtotime('-1 month')), date('Y-m-d H:i:s', strtotime('+1 month')));
 
-        $calendar = str_replace('</td>', '</td>' . "\n", $calendar);
-        $calendar = str_replace('</tr>', '</tr>' . "\n", $calendar);
-
+        foreach ($calendar['event'] as $key => $event){
+            $calendar['event'][$key]['event_day'] = date_format(new DateTime($event['start']), 'Y-m-d');
+            $calendar['event'][$key]['color'] = $this->event_types[$calendar['event'][$key]['type']]['color'];
+            $calendar['event'][$key]['file'] = $this->getAssocFiles($event['id']);
+        }
         return $calendar;
     }
 

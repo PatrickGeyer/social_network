@@ -14,6 +14,7 @@ class User {
     private $about = NULL;
     private $language = NULL;
     private $profile_picture = array("original" => NULL, "chat"=> NULL, "thumb" => NULL, "icon" => NULL);
+    private $attr = array();
     
     private $database_connection;
     private static $user = null;
@@ -34,7 +35,23 @@ class User {
     function getId() {
         return $this->user_id;
     }
-
+    function getAttr($attr, $id = NULL) {
+        $set = false;
+        if (!isset($id)) {
+            $set = true;
+            if(isset($this->attr[$attr]))
+                return $this->attr[$attr];
+            $id = $this->user_id;
+        }
+        $user_query = "SELECT :attr FROM user WHERE id = :user_id;";
+        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query->execute(array(":attr" => $attr,":user_id" => $id));
+        $user = $user_query->fetchColumn();
+        if($set) {
+            $this->attr[$attr] = $user;
+        }
+        return $user;
+    }
     function getName($id = null, $name = 3) {
         $set = false;
         if (!isset($id)) {
@@ -163,6 +180,7 @@ class User {
     }
 
     function getProfilePicture($size = "thumb", $id = null) {
+        $size = strtolower($size);
         $set = false;
         if ($id == null) {
             $set = true;
@@ -186,9 +204,9 @@ class User {
             $user =  $user_profile_picture;
         } else {
             if ($this->getGender($id) == "Male") {
-                $user = Base::MALE_DEFAULT_ICON;
+                $user = constant("BASE::MALE_DEFAULT_".strtoupper($size));
             } else {
-                $user = Base::FEMALE_DEFAULT_ICON;
+                $user = constant("BASE::FEMALE_DEFAULT_".strtoupper($size));
             }
         }
         if($set) {

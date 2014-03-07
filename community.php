@@ -132,7 +132,7 @@ else {
                         echo "</tbody></table>";
                     }
                     if ($feed_id == "c") {
-                        echo "<div>" . $calendar->draw_calendar(date('m'), date("Y")) . "</div>";
+                        echo "<div><script>print_calendar(" . json_encode($calendar->get_calendar(date('m'), date("Y")), JSON_HEX_APOS) . ");</script></div>";
                     }
                     else if ($feed_id == 'p') {
                         echo "<div class='home_feed_container'>";

@@ -20,6 +20,12 @@ include_once('Scripts/js.php');
         message_receivers.user = new Array();
         message_receivers.group = new Array();
         message_receivers.community = new Array();
+        
+        var sticky_receivers = new Object();
+        sticky_receivers.user = new Array();
+        sticky_receivers.group = new Array();
+        sticky_receivers.community = new Array();
+        var sticky_id = 0;
 
         function show_group() {
             dialog(
@@ -29,10 +35,13 @@ include_once('Scripts/js.php');
              <table class="none" style="width:100%;">\n\
  <tr>\n\
  <td>\n\
- <input style="border-radius:0; width:100%;" id="group_name_input" type="text" autocomplete="off" placeholder="Group Name" />\n\
+<div class="timestamp"><span>Name</span></div>\n\
+ <input style="border-radius:0; width:100%;" id="group_name_input" type="text" autocomplete="off" placeholder="Give the group a name..." />\n\
  </td>  </tr> <tr> <td>\n\
-<textarea style="border-radius:0; width:100%; height:100px;" id = "group_about" class="thin" placeholder="About..."></textarea>\n\
-</td> </tr> <tr> <td> <div style="border-radius:0;"> \n\
+ <div class="timestamp"><span>About</span></div>\n\
+<textarea style="border-radius:0; width:100%; height:100px;" id = "group_about" class="thin" placeholder="Write something about this group..."></textarea>\n\
+</td> </tr> <tr> <td> <div class="timestamp"><span>Members</span></div>\n\
+<div style="border-radius:0;"> \n\
 </div> </td> </tr> </table> \n\
 <table style="width:100%;"><tr><td class="group_names_slot"></td></tr></table> \n\
 <input autocomplete="off" style="border-radius:0; width:100%;" type="text" id="names_input" class="search_input" placeholder="Add Member..." />\n\
@@ -47,16 +56,27 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                         createGroup();
                         dialogLoad();
                     }
+                }, {
+                    type: "neutral",
+                    text: "Cancel",
+                    onclick: function() {
+                        removeDialog();
+                    }
                 }],
             properties = {
-                modal: false,
+                modal: true,
                 title: "Create a Group"
             });
         }
 
 
-        $(document).click(function(e)
+        $(document).on('click', '#names_universal .search_option', function(e)
         {
+            var type = $(this).attr('entity_type');
+            var info = '';
+            if(type == 'user') {
+                
+            }
             $("#names_universal").hide();
         });
 
@@ -372,7 +392,7 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                                if (event.keyCode == 13)
                                {
                                    $("#match").click();
-                               }' type='text' id='names_input' placeholder='Search...' name='receiver'>
+                               }' type='text' id='names_input' placeholder='Search for people, groups and files' name='receiver'>
                     <div class="search_results" id='names_universal'></div>
                 </div>
                 <div class="gear">

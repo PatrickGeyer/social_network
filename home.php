@@ -145,7 +145,7 @@ include_once('chat.php');
                                         <tr>
                                             <td class='post_content_wrapper'>
                                                 <div class="post_media_wrapper">
-                                                    <div class='post_media_wrapper_background post_comment_time'>Dropbox</div>
+                                                    <div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div>
                                                     <img class='post_media_loader' src='Images/ajax-loader.gif'></img>
                                                 </div>
                                             </td>

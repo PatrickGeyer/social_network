@@ -480,7 +480,7 @@ $system->jsVars();
         if (properties.modal == true) {
             $('body').append("<div class='background-overlay'></div>");
         } else {
-            $('body').append("<div onclick='removeDialog()' style='opacity:0.25' class='background_white_overlay'></div>");
+            $('body').append("<div onclick='removeDialog()' style='opacity:0.5' class='background_white_overlay'></div>");
         }
 
         if (properties.loading == true)

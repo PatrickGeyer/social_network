@@ -21,11 +21,14 @@ $calendar = new Calendar();
             echo $calendar->draw_event($quick_event, $classes); 
         }
     }
+    if($user->getAttr('password') != "true") {
+        echo "<div class='event event_expanded event_white'>"
+        ."<div class='paste_pad' contenteditable></div></div>";
+    }
     if (strpos($_SERVER['HTTP_USER_AGENT'], 'Chrome') === false) {
         echo "<div class='event event_expanded event_white'>"
         ."<a href='https://www.google.co.uk/chrome'><button class='pure-button-primary pure-button-round'>Get Chrome</button></a></div>";
     }
     echo "</div>";
 ?>
-<div id='audio_wave_test'></div>
 </div>

@@ -706,7 +706,7 @@ class Files {
     }
     
     function getUsedSize() {
-        $sql = "SELECT size FROM file WHERE user_id = :user_id;";
+        $sql = "SELECT size FROM file WHERE user_id = :user_id AND visible=1;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":user_id" => $this->user->user_id

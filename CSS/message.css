@@ -24,7 +24,6 @@ div.messagehi{
     width: 100%;
     height: 100%;
     background-color: white;
-
 }
 
 #title{
@@ -177,7 +176,7 @@ div.reply{
     bottom: 30px;
     z-index: 2;
     resize: none;
-    color: black;
+    color: #333;
 }
 .message_reply_options{
     border-top:1px solid #EDEDED;

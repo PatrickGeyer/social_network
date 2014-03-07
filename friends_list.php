@@ -35,7 +35,7 @@
                         . "</a></li>";
                     }
                     if (isset($valid0)) {
-                         echo "<script>$('.group_list').prepend('<p>Groups</p>');</script>";
+                         echo "<script>$('.group_list').prepend('<div class=\"timestamp\"><span>Groups</span></div>');</script>";
                     }
                     ?>
                 </ul>
@@ -61,7 +61,7 @@
                         . $user->getName($user_id) . "</a></li>";
                     }
                     if (isset($valid)) {
-                         echo "<script>$('.connection_list').prepend('<p>Connections</p>');</script>";
+                         echo "<script>$('.connection_list').prepend('<div class=\"timestamp\"><span>Connections</span></div>');</script>";
                     }
                     ?>
                 </ul>
@@ -83,7 +83,7 @@
                         . $friends['name'] . "</a></li>";
                     }
                     if (isset($valid)) {
-                         echo "<script>$('.community_list').prepend('<p>Community</p>');</script>";
+                         echo "<script>$('.community_list').prepend('<div class=\"timestamp\"><span>Community</span></div>');</script>";
                     }
                     ?>
                 </ul>
@@ -102,7 +102,7 @@
                             }
                     }
                     if (isset($valid6)) {
-                         echo "<script>$('.group_list_user').prepend('<p>Group</p>');</script>";
+                         echo "<script>$('.group_list_user').prepend('<div class=\"timestamp\"><span>Group</span></div>');</script>";
                     }
                     ?>
                 </ul>

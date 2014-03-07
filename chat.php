@@ -22,6 +22,7 @@ else {
         var bottom = true;
         var oldest = 0;
         var newest = 99999999999999;
+        var chat_ids = new Array();
         function iniScrollChat() {
             $('.chatoutput').on('scroll', function() {
                 bottom = false;
@@ -115,21 +116,21 @@ else {
             if (getting_previous == false) {
                 getting_previous = true;
 
-                var new_oldest = oldest - 20;
+                var new_oldest = Math.max(chat_ids) - 20;
                 if (new_oldest < 0) {
                     new_oldest = 0;
                 }
 
                 if (last_chat != true) {
-                    var last_chat = $('.chatoutput .single_chat:first');
-                    $('.chat_loader').fadeIn();
-                    $.post("Scripts/chat.class.php", {chat: current_view, all: "previous", oldest: new_oldest, newest: oldest}, function(response)
-                    { 
+                    var element = $('.chatoutput .single_chat:first');
+                    $('.chat_loader').css('visibility', 'visible');
+                    $.post("Scripts/chat.class.php", {chat: current_view, all: "previous", oldest: new_oldest, newest: oldest - 1}, function(response)
+                    {
                         $('#chatreceive').prepend(styleChatResponse($.parseJSON(response)));
-                        $('.chat_loader').fadeOut();
+                        $('.chat_loader').css('visibility', 'hidden');
                         getting_previous = false;
-                        last_chat = last_chat.offset().top;
-                        $('.chatoutput').scrollTop(last_chat);
+                        element = element.offset().top;
+                        $('.chatoutput').scrollTop(element);
                     });
                 }
             }
@@ -160,7 +161,6 @@ else {
                 }
             });
         }
-        var chat_ids = new Array();
         function styleChatResponse(response) {
             var string = '';
 
@@ -172,6 +172,12 @@ else {
                     string += "<div class='chatname'><span class='user_preview user_preview_name chatname' style='margin-right:5px;font-size:13px;' user_id='" + response[i]['user_id'] + "'>" + response[i]['name'] + "</span></div>";
                     string += "<div class='chattext'>" + response[i]['text'] + "</div></td></tr><tr><td colspan='2' style='text-align:right;'>";
                     string += "<span class='chat_time post_comment_time'>" + response[i]['time'] + "</span></td></tr></table></div></li>";
+                    if($.inArray(response[i]['id'], chat_ids) !== -1) {
+                        console.log(response[i]['id']);
+                        last_chat = true;
+                        console.log(last_chat);
+                        return "<div class='timestamp'><span>Start of Conversation</span></div>";
+                    }
                     chat_ids.push(response[i]['id']);
                 } else {
                     if (response[i]['code'] == 0) {
@@ -283,7 +289,7 @@ else {
         </table>
     </div>
     <div class="chatoutput">
-        <div class='chat_loader' style='display:none;'><div class='loader_outside_small'></div><div class='loader_inside_small'></div></div>
+        <div class='chat_loader' style='visibility:none;'><div class='loader_outside_small'></div><div class='loader_inside_small'></div></div>
         <ul style='max-width:225px;' class='chatbox' id="chatreceive">
             <script>//styleChatResponse($.parseJSON(<?php //$chat->getContent($chat_feed, 'true');  ?>));</script>
         </ul>
