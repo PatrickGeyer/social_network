@@ -144,7 +144,7 @@ if (isset($_GET['tab'])) {
                                     <li class='section'>
                                         <label class='settings'>Language</label>
                                         <div class='default_dropdown_selector' style='display:inline-block;' wrapper_id='language_selector'>
-                                            <span class='default_dropdown_text'>English</span>
+                                            <span class='default_dropdown_preview'>English</span>
                                             <div class='default_dropdown_wrapper' id='language_selector'>
                                                 <ul class='default_dropdown_menu'>
                                                     <li value='en' class='default_dropdown_item' controller_id='language_selector'>
@@ -160,7 +160,7 @@ if (isset($_GET['tab'])) {
                                     <li class='section'>
                                         <label class='settings'>Community</label>
                                         <div class='default_dropdown_selector' style='display:inline-block;' wrapper_id='community_selector'>
-                                            <span class='default_dropdown_text'><?php echo $user->getCommunityName(); ?></span>
+                                            <span class='default_dropdown_preview'><?php echo $user->getCommunityName(); ?></span>
                                             <div class='default_dropdown_wrapper' id='community_selector'>
                                                 <ul class='default_dropdown_menu'>
                                                     <?php
@@ -178,7 +178,7 @@ if (isset($_GET['tab'])) {
                                     <li class='section'>
                                         <label class='settings'>Current Position</label>
                                         <div class='default_dropdown_selector' style='display:inline-block;' wrapper_id='position_selector'>
-                                            <span class='default_dropdown_text'><?php echo $user->getPosition(); ?></span>
+                                            <span class='default_dropdown_preview'><?php echo $user->getPosition(); ?></span>
                                             <div class='default_dropdown_wrapper' id='position_selector'>
                                                 <ul class='default_dropdown_menu'>
                                                     <?php

@@ -1,0 +1,251 @@
+/*LOGIN*/
+
+.signupheader{
+    text-align: center !important;
+    width: 100% !important;
+}
+.login .login{
+    text-align: center;
+}
+
+.login .loginbox{
+    margin: 0 auto !important;
+    top: 5px !important;
+    right: 0px !important;
+    position: relative !important;
+}
+
+.login .loginbox table{
+    margin: 0 auto;
+}
+
+.login .loginheader{
+    position: absolute;
+    color: #3578FC;
+    font-size: 3em;
+    left:100px;
+    top: 0% !important;
+    margin:0;
+}
+.login .login_container{
+    height: 100px !important;
+    top: 5%;
+    border:0px solid lightgrey !important;
+    text-align: center !important;
+}
+.login .login_background{
+    display: none;
+}
+.login .signup{
+    padding-right: 10px !important;
+    padding-top: 70px !important;
+    padding-left: 15px !important;
+    bottom: 0px !important;
+    left: 0px !important;
+    display: none;
+    background-color: transparent !important;
+}
+
+.login .login_container input, .login .login_container button{
+    margin: 10 auto;
+    width: auto !important;
+    display: block !important;
+    max-width: 200px;
+}
+
+.login .login_container button{
+    margin-top: 20px !important;
+    display: inline-block !important;
+}
+
+.login div.signupbox table, .signupbox h1{
+    margin: 0 auto !important;
+}
+div.signup{
+    top: 5% !important;
+    position: relative !important;
+    bottom: 0px !important;
+}
+.login  .login a.loginas{
+    text-decoration:underline;
+    font-size:1em;
+}
+.login a.loginas:hover{
+    text-decoration:underline;
+    font-size:1em;
+    color:blue;
+}
+.login .bottom_bar{
+    display: none !important;
+    opacity: 0;
+}
+.login .signup_container{
+    width: 100%  !important;
+}
+/*END LOGIN*/
+
+/*SIGNUP*/
+.signup .signup_container{
+    padding-right: 10px !important;
+    padding-top: 10px !important;
+    padding-left: 10px !important;
+    bottom: 0px !important;
+    left: 0px !important;
+    background: rgb(0, 140, 250);
+}
+
+.signup button, .login button, .signup input, .login input{
+    margin: 10px auto;
+    width: 100% !important;
+    display: block !important;
+}
+
+.signup button{
+    margin-top: 20px !important;
+    width: 100% !important;
+    display: inline-block !important;
+}
+
+.signup .bottom_bar{
+    display: none !important;
+    opacity: 0;
+}
+.signup{
+    padding-top: 0px !important;
+    background-color: transparent !important;
+}
+/*END SIGNUP*/
+
+.left_bar_container{
+    position: fixed !important;
+    left: 0px !important;
+    top:22px !important;
+    padding-top: 22px !important;
+    bottom: 0px !important;
+    z-index: 1 !important;
+    border-right: 1px solid lightgrey !important;
+    display: block !important;
+    width: 0 !important;
+    opacity: 0;
+    height: 100% !important;
+    overflow: auto;
+}
+#friends_container{
+    width: 100% !important;
+}
+.right_bar_container{
+    display: none;
+}
+.global_container{
+    padding-left: 0px !important;
+    width: 100% !important;
+    margin: 0px !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: auto !important;
+}
+.global_container_menu > .left_bar_container{
+    width: 256px !important;
+    opacity: 1;
+}
+.global_container_menu > .container{
+    left: 256px !important;
+}
+.feed_wrapper_scroller {
+    display: none !important;
+}
+.container, .container_large, .container_small{
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    margin: 0 !important;
+    margin-left: 5px !important;
+    margin-right: 5px !important;
+    border: 0 !important;
+    display: inline-block !important;
+    white-space:nowrap;
+    float: none !important;
+}
+.chatcomplete{
+    display: none !important;
+    opacity: 0;
+    visibility: hidden;
+    z-index: -10;
+    pointer-events: none;
+}
+.global_header{
+    top: 0px;
+    padding: 0 !important; 
+    width: auto !important;
+}
+.container_headerbar{
+    margin-right: 0 !important;
+}
+.global_header .search, .global_header .gear, .global_header .logo {
+    display: none !important;
+}
+.container, .global_header{
+    min-width: 0 !important;
+    /*padding: 10px !important;*/
+}
+
+.global_header_icon_container{
+    position: relative !important;
+    right: 0 !important;
+    width: 90px;
+    margin: 0 auto;
+}
+
+.home_feed_post_container{
+    margin: 0px !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+}
+
+.post_height_restrictor{
+    width: 100% !important;
+    margin-right: 0px !important;
+    margin-left: 0px !important;
+    padding-left: 10px !important;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+    padding-right: 10px !important;
+    border: 1px solid lightgrey !important;
+    margin-bottom: 10px !important;
+    background-color: white !important;
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+}
+
+.post_content_wrapper{
+    margin: 0px !important;
+}
+
+.post_user_image {
+    float: none !important;
+    display: inline-block !important;
+    vertical-align: top !important;
+}
+.activity_stats{
+    float: none !important;
+    margin-top: 5px !important;
+    text-align: right;
+}
+* {
+    /*font-size: 2em;*/
+}
+
+html, body {
+    overflow-x: hidden !important;
+    background-color: #EDEDED;
+}
+
+/*CALENDAR*/
+
+
+
+/*END CALENDAR*/

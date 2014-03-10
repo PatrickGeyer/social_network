@@ -40,6 +40,8 @@ $system->jsVars();
 </script>
 
 <script type="text/javascript">
+    var loggedIn = getCookie('id');
+
     var min_activity_id = 0;
 
     function createMap(city, country) {
@@ -159,6 +161,9 @@ $system->jsVars();
     function updateProgress(id, progress) {
         //console.log(id);
         $('#progress_bar_' + id).width(progress + "%");
+        if(progress >= 100) {
+            $('#progress_bar_' + id).addClass('progress_bar_processing');
+        }
     }
     function removeProgress(id) {
         $('#progress_container_' + id).remove();
@@ -681,15 +686,12 @@ $system->jsVars();
         var text_to_append = '';
         var additional_close = '';
         var extra_params = " post_file_id='" + object.file_id + "' ";
-        //text_to_append += ">";
-        text_to_append += print_file(object, 0, USER_ID);
+        //text_to_append += ">"; 
+        text_to_append += print_file(object, USER_ID, 'Text');
         if (object.type == "Image")
         {
             post_media_classes += "post_media_photo post_media_full";
-//            post_media_style += "";
             additional_close += " post_media_single_close_file";
-            //text_to_append += documentStatus(object.path, object.name, object.description, object.path, type);
-            //text_to_append += ("><div style='height:100%;width:150px;background-size:cover;background-image:url(&quot;" + object.path + "&quot;);'></div>");
         } else if (object.type == "Audio")
         {
              post_media_classes += " post_media_item post_media_full";
@@ -698,15 +700,7 @@ $system->jsVars();
         } else if (object.type == "Video") {
             post_media_classes += " post_media_video";
             additional_close += " post_media_single_close_file";
-            var text = "<?php echo $system->videoPlayer(NULL, NULL, "post_media_video_element", "width:100%", "home_video_", TRUE); ?>";
-            text = text.replace(/:::webm_path:::/g, object.info.webm_path);
-            text = text.replace(/:::mp4_path:::/g, object.info.mp4_path);
-            text = text.replace(/:::flv_path:::/g, object.info.flv_path);
-            text = text.replace(/:::ogg_path:::/g, object.info.ogg_path);
-            text = text.replace(/:::name:::/g, object.name);
-            text = text.replace(/:::vid:::/g, object.file_id);
-            text = text.replace(/:::thumb:::/g, object.info.thumbnail);
-            text_to_append += (text);
+            //text_to_append += video_player(object, 'classes', 'styles', 'added_to_status_', true);
 
         } else if (object.type == "Webpage") {
             post_media_classes += " post_media_double";
@@ -719,17 +713,11 @@ $system->jsVars();
                     "<a class='user_preview_name' target='_blank' href='" + object.path + "'><span style='font-size:13px;'>" + object.info.title + "</span></a></div></td></tr>" +
                     "<tr><td><span style='font-size:12px;' class='user_preview_community'>" + object.info.description + "</span></td></tr></table>";
         } else if (object.type == "Folder") {
-//            console.log(object);
             text_to_append += documentStatus(object.path, object.name, object.description, FOLDER_THUMB);
         } else if (object.type == "WORD Document") {
-            //text_to_append += documentStatus(object.path, object.name, object.description, WORD_THUMB);
-
         } else if (object.type == "PDF Document") {
-            //text_to_append += documentStatus(object.path, object.name, object.description, PDF_THUMB);
         } else if (object.type == "PPT Document") {
-            //text_to_append += documentStatus(object.path, object.name, object.description, POWERPOINT_THUMB);
         } else {
-            
         }
         if (object.type == "WORD Document" 
                 || object.type == "PDF Document" 
@@ -740,7 +728,7 @@ $system->jsVars();
             post_media_classes += " post_media_double";
             post_media_style += "height:auto;";
             additional_close += " post_media_single_close_file";
-            extra_params = " post_file_id='" + object.file_id + "' ";
+            extra_params = " post_file_id='" + object.id + "' ";
         }
         var index;
         for (var i = 0; i < post_media_added_files.length; i++)
@@ -773,14 +761,12 @@ $system->jsVars();
             } else {
                 post_media_added_files.push(object.id);
             }
-
             $('.post_media_wrapper').append(text_to_append);
+            if(object.type == "Video") {
+                refreshVideoJs();
+            }
         }
-        if (object.type == "Video") {
 
-            videojs('home_video_' + object.id, {}, function() {
-            });
-        }
         if (post_media_added_files.length > 1) {
             $('#status_text').attr('placeholder', 'Write about these files...');
         }
@@ -893,7 +879,7 @@ $system->jsVars();
         var theater_info_padding = $("<div class='theater-info-padding'></div>");
             theater_info_container.append(theater_info_padding);
         var theater_picture = $("<div id='theater-picture' class='theater-picture'></div>");
-            theater_picture.append(close_theater);
+            theater_info_container.append(close_theater);
         $('body').append(background);
         $('body').append(theater_picture);
         $("body").css("overflow", "hidden");
@@ -1009,7 +995,7 @@ $system->jsVars();
 
     function joinGroup(group_id, invite_id)
     {
-        $.post("Scripts/group_actions.php", {action: "join", group_id: group_id, invite_id: invite_id}, function(response)
+        $.post("Scripts/group.class.php", {action: "join", group_id: group_id, invite_id: invite_id}, function(response)
         {
             $('#join_button_' + invite_id).fadeOut('fast');
             $('#reject_button_' + invite_id).fadeOut('fast', function()
@@ -1020,7 +1006,7 @@ $system->jsVars();
     }
     function rejectGroup(group_id, invite_id)
     {
-        $.post("Scripts/group_actions.php", {action: "reject", group_id: group_id, invite_id: invite_id}, function(response)
+        $.post("Scripts/group.class.php", {action: "reject", group_id: group_id, invite_id: invite_id}, function(response)
         {
             $('#reject_button_' + invite_id).slideUp();
             $('#join_button_' + invite_id).slideUp();

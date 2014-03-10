@@ -94,9 +94,16 @@ class Files {
     }
     
     public function format_file($file) {
-        $file['type_preview'] = $this->getFileTypeImage($file, 'THUMB');
-    	$file['uid'] = str_replace('.', '', uniqid('', true));
+    	if(!isset($file['type_preview'])) {
+    		$file['type_preview'] = $this->getFileTypeImage($file, 'THUMB');
+    	}
+        if(!isset($file['uid'])) {
+        	$file['uid'] = str_replace('.', '', uniqid('', true));
+        }
         $file['time'] = $this->system->humanTiming($file['time']);
+        if(!isset($file['view']['count'])) {
+        	$file['view']['count'] = $this->getViewCount($file['id']);
+        }
         return $file;
     }
     
@@ -778,7 +785,8 @@ class Files {
                 $thumbnail = $savepath . $pure_name . ".jpg";
 
                 $flv_path = $mp4_path = $ogg_path = $swf_path = $webm_path = $mp3_path = $thumbsavepath = $iconsavepath = '';
-                
+                ignore_user_abort(true);
+                set_time_limit(0);
                 if (move_uploaded_file($tmpFilePath, "../" . $savepath . $file_name)) {
                     $size = filesize("../" . $savepath . $file_name);
                     $type = $this->getType($file['file']['name']);
@@ -798,29 +806,39 @@ class Files {
                         $webm_path = $savepath . $pure_name . ".webm";
                         $flv_path = $savepath . $pure_name . ".flv";
                         if ($ext != "mp4") {
-//                            array_push($return_info, array(
-//                                "from" => $convert_path,
-//                                "to" => $base_path . $mp4_path,
-//                                "args" => " -vcodec copy -acodec copy ",
-//                                "before_args" => ""));
+                            $convert = $convert = $this->convert($convert_path, $base_path . $mp4_path, " -vcodec libx264 -profile:v baseline -preset ultrafast ");
+                            if ($convert != $base_path . $mp4_path) {
+                                echo("Error: " . $convert);
+                            }
+                        }
+                        
+                        if ($ext != "webm") {
+                            $convert = $convert = $this->convert($convert_path, $base_path . $webm_path, "-b 1500k -vcodec libvpx -acodec libvorbis -aq 3 -ab 128000 -f webm -g 30 -s 640x360", "");
+                            if ($convert != $base_path . $webm_path) {
+                                echo("Error: " . $convert);
+                            }
                         }
 
-                        $convert = $this->convert($convert_path, $base_path . $webm_path, "-b 1500k -vcodec libvpx -acodec libvorbis -aq 3 -ab 128000 -f webm -g 30 -s 640x360", "");
-                        if ($convert != $base_path . $webm_path) {
-                            echo("Error: " . $convert);
+//                       $convert = $this->convert($convert_path, $base_path . $webm_path, "-b 1500k -vcodec libvpx -acodec libvorbis -aq 3 -ab 128000 -f webm -g 30 -s 640x360", "");
+//                       if ($convert != $base_path . $webm_path) {
+//                           echo("Error: " . $convert);
+//                       }
+//                        $convert = $convert = $this->convert($convert_path, $base_path . $ogg_path, "");
+//                        if ($convert != $base_path . $ogg_path) {
+//                            echo("Error: " . $convert);
+//                        }
+                        
+                        
+                        if ($ext != "flv") {
+                            $convert = $convert = $this->convert($convert_path, $base_path . $flv_path, "");
+                            if ($convert != $base_path . $flv_path) {
+                                echo("Error: " . $convert);
+                            }
                         }
-                        $convert = $convert = $this->convert($convert_path, $base_path . $ogg_path, "");
-                        if ($convert != $base_path . $ogg_path) {
-                            echo("Error: " . $convert);
-                        }
-                        $convert = $convert = $this->convert($convert_path, $base_path . $mp4_path, "");
-                        if ($convert != $base_path . $mp4_path) {
-                            echo("Error: " . $convert);
-                        }
-                        $convert = $this->convert($convert_path, $base_path . $flv_path, "");
-                        if ($convert != $base_path . $flv_path) {
-                            echo("Error: " . $convert);
-                        }
+//                        $convert = $this->convert($convert_path, $base_path . $flv_path, "");
+//                        if ($convert != $base_path . $flv_path) {
+//                            echo("Error: " . $convert);
+//                        }
                         $convert = $this->convert($convert_path, $base_path . $thumbnail, "");
                         if ($convert != $base_path . $thumbnail) {
                             echo("Error: " . $convert);

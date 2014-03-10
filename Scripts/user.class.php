@@ -4,17 +4,17 @@ include_once('database.class.php');
 class User {
     public $user_id;
     private $password = NULL;
-    private $email = NULL;
-    private $name = array(1 => NULL, 2 => NULL, 3 => NULL);
-    private $community_id = NULL;
-    private $community_name = NULL;
-    private $position = NULL;
-    private $location = NULL;
-    private $gender = NULL;
-    private $about = NULL;
-    private $language = NULL;
-    private $profile_picture = array("original" => NULL, "chat"=> NULL, "thumb" => NULL, "icon" => NULL);
-    private $attr = array();
+    public $email = NULL;
+    public $name = array(1 => NULL, 2 => NULL, 3 => NULL);
+    public $community_id = NULL;
+    public $community_name = NULL;
+    public $position = NULL;
+    public $location = NULL;
+    public $gender = NULL;
+    public $about = NULL;
+    public $language = NULL;
+    public $profile_picture = array("original" => NULL, "chat"=> NULL, "thumb" => NULL, "icon" => NULL);
+    public $attr = array();
     
     private $database_connection;
     private static $user = null;

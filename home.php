@@ -40,6 +40,7 @@ include_once('chat.php');
 <html>
     <head>	
         <script>
+            loggedIn = true;
             $('.icon').click(function() {
                 $('.icon').fadeTo('slow', 0.5);
             });
@@ -79,7 +80,7 @@ include_once('chat.php');
 
                 $('#status_text').focus(function() {
                     $(this).css('min-height', '100px');
-                    $('#file_share').parent('td').css('width', '200px');
+                    $('#file_share').parent('td').css('width', '30%');
                     $('#file_share').show();
                     $('#post_more_options').show();
                     $('.post_wrapper').css('padding-bottom', $('.post_more_options').height());
@@ -197,48 +198,6 @@ include_once('chat.php');
                     </div>	
                     <div style="width:100%" id="progress_bar_holder"></div>
                 </div>
-                <div class='feed_wrapper_scroller scroll_thin_horizontal' style='margin-top:0px;margin-bottom: 20px;'>
-                        <table>
-                            <tr>
-                                <td>
-                                    <div id='a' feed_id='home' filter_id = 'a' class="feed_selector home_feed_selector 
-                                    <?php
-                                    if ($feed_id === 'a') {
-                                        echo 'active_feed';
-                                    }
-                                    ?>">All</div>
-                                </td>
-                                <td>
-                                    <div id='s' feed_id='home' filter_id = 's' class="feed_selector home_feed_selector 
-                                    <?php
-                                    if ($feed_id === 's') {
-                                        echo 'active_feed';
-                                    }
-                                    ?>">
-                                             <?php
-                                             echo $system->trimStr($user->getCommunityName(), 15);
-                                             ?>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div id='y' feed_id='home' filter_id = 'y' class="feed_selector home_feed_selector 
-                                    <?php
-                                    if ($feed_id === 'y') {
-                                        echo 'active_feed';
-                                    }
-                                    ?>">Year <?php
-                                             echo $user->getPosition();
-                                             ?>
-                                    </div>
-                                </td>
-                                <?php
-                                foreach ($group->getUserGroups() as $single_group) {
-                                    echo '<td><div feed_id="home" style="border-bottom:3px solid blue;" id="' . $single_group . '" filter_id = "' . $single_group . '" class="feed_selector home_feed_selector ' . ($feed_id == $single_group ? "active_feed" : "") . '">' . $system->trimStr($group->getGroupName($single_group), 15) . '</div></td>';
-                                }
-                                ?>
-                            </tr>
-                        </table>
-                    </div>
                 <div id='feed_refresh'> 
                     <div class='feed_container'>
                         <!--  Activity Here -->

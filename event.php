@@ -165,7 +165,7 @@ include_once('chat.php');
                                                 <?php
                                                 echo "<div class='post_feed_media_wrapper' activity_id='" . $event['id'] . "'>";
                                                 foreach ($event['files'] as $file) {
-                                                    echo $home->printFileItem($file, $event, $assocFiles_num);
+                                                    echo "<script>$('.post_feed_media_wrapper').append(print_file(".json_encode($files->format_file($file))."));</script>";
                                                 }
                                                 echo "</div>";
                                                 ?>

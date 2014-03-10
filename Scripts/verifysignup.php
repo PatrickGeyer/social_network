@@ -3,14 +3,14 @@
 include_once('declare.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $password = $_POST['password'];
-    $firstname = $_POST['firstname'];
-    $lastname = $_POST['lastname'];
+    $password = (isset($_POST['password']) ? $_POST['password'] : null);
+    $firstname = (isset($_POST['firstname']) ? $_POST['firstname'] : null);
+    $lastname = (isset($_POST['lastname']) ? $_POST['lastname'] : null);
     $name = $firstname . " " . $lastname;
-    $community = $_POST['community_id'];
-    $gender = $_POST['gender'];
-    $email = $_POST['email'];
-    $position = $_POST['position'];
+    $community = (isset($_POST['community_id']) ? $_POST['community_id'] : null);
+    $gender = (isset($_POST['gender']) ? $_POST['gender'] : null);
+    $email = (isset($_POST['email']) ? $_POST['email'] : null);
+    $position = (isset($_POST['position']) ? $_POST['position'] : null);
 
     $user_query = "SELECT id, name, community_id, position FROM user WHERE email = :email";
     $user_query = $database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
@@ -64,11 +64,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 //        $create_files_entry->execute(array(":user_id" => $user['id'], ":path" => "Users/Files/" . $user['id'], ":folder_id" => 1));
 
         $dir = '../User/Files/' . $user_id;
-        if(!is_dir($dir))
+        if(!is_dir($dir)) {
             mkdir($dir, 0777);
-        
+        }
         $system->create_zip($dir."/root.zip", array(), TRUE);
-
+        
         setcookie("id", base64_encode($user_id), time() + 3600000, '/');
         setcookie("chat_feed", 's', time() + 3600000, '/');
         setcookie("home_feed", 'a', time() + 3600000, '/');

@@ -107,6 +107,7 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
         function getNotificationNumber() {
             $.post('Scripts/notifications.class.php', {action: "alert_num"}, function(response) {
                 response = JSON.parse(response);
+                //console.log(response);
                 if (response.message != '0') {
                     $('#message_num').text(response.message);
                     $('#message_num').show();
@@ -227,6 +228,7 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
 
         $(function()
         {
+            refreshVideoJs();
             getNotificationNumber();
             var table = "<table style='min-height:100px;height:100px;width:100%;'><tr style='vertical-align:middle;'><td style='width:100%;text-align:center;'><div class='loader_outside_small'></div><div class='loader_inside_small'></div></td></tr></table>";
             $('ul.message, ul.network, ul.notify').prepend(table);
@@ -344,8 +346,8 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
     <div class="headerbar">
         <div class="global_header">
             <div class="container_headerbar">
-                <span style='cursor:pointer;color:white;font-weight: light;font-size:1.6em;' onclick='window.location.assign("home");'>Placeholder</span>
-                <div style="position:absolute;right:500px;top:0;">
+                <span class='logo' onclick='window.location.assign("home");'>Placeholder</span>
+                <div class='global_header_icon_container'>
                     <div class="message" id="message_click">
                         <img id="message" class ="message" src='<?php echo System::INBOX_IMG; ?>'></img>
                         <div id="messagediv" class="popup_div">

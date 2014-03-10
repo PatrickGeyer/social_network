@@ -137,7 +137,6 @@ class Home {
         $assocFiles = $this->getAssocFiles($activity['id']);
         foreach ($assocFiles as $key => $file) {
             $assocFiles[$key] = $this->files->format_file($assocFiles[$key]);
-            $assocFiles[$key]['view']['count'] = $this->files->getViewCount($assocFiles[$key]['id']);
         }
         return $assocFiles;
     }
@@ -218,6 +217,7 @@ class Home {
 //            }
 //
 //            $return .= "</div><hr class='post_comment_seperator'>";
+            $comment['user']['id'] = $comment['user_id'];
             $comment['user']['pic'] = $this->user->getProfilePicture('chat', $comment['user_id']);
             $comment['user']['name'] = $this->user->getName($comment['user_id']);
             $comment['user']['encrypted_id'] = urlencode(base64_encode($comment['user_id']));
@@ -509,25 +509,22 @@ class Home {
     
     function comment_like($comment_id, $post_id) {
         if ($this->has_voted_comment($comment_id) == TRUE) {
-            $sql = "UPDATE notification SET visible=0 WHERE type='comment_like' AND post_id=:post_id, element_id = :element_id "
-                    . "AND sender_id=:user_id;"
-                    . "UPDATE comment_vote SET visible = 1 WHERE user_id= :user_id AND comment_id = :element_id;";
+            $sql = "UPDATE comment_vote SET visible = 1 WHERE user_id= :user_id AND comment_id = :element_id;";
             $sql = $this->database_connection->prepare($sql);
             $sql->execute(array(
                 ":user_id" => $this->user->user_id,
-                ":post_id" => $post_id,
                 ":element_id" => $comment_id
             ));
         }
         else {
             $sql = "INSERT INTO comment_vote (user_id, comment_id) VALUES (:user_id, :comment_id)";
-            $user_sql = "SELECT user_id FROM comment WHERE id = :comment_id;";
-            $user_sql = $this->database_connection->prepare($user_sql);
-            $user_sql->execute(array(
-                ":comment_id" => $comment_id
-            ));
-            $user_id = $user_sql->fetchColumn();
-            $this->user->notify('comment_vote', $user_id, $post_id, $comment_id, 0, 0);
+            // $user_sql = "SELECT user_id FROM comment WHERE id = :comment_id;";
+            // $user_sql = $this->database_connection->prepare($user_sql);
+            // $user_sql->execute(array(
+            //     ":comment_id" => $comment_id
+            // ));
+            // $user_id = $user_sql->fetchColumn();
+            // $this->user->notify('comment_vote', $user_id, $post_id, $comment_id, 0, 0);
                     $sql = $this->database_connection->prepare($sql);
             $sql->execute(array(
                 ":user_id" => $this->user->user_id,
@@ -577,7 +574,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 echo $home->remove_comment_like($_POST['comment_id']);
             }
             else {   
-                echo $home->comment_like($_POST['comment_id'], $_POST['post_id']);
+                echo $home->comment_like($_POST['comment_id'], NULL);
             }
             echo $home->comment_like_count($_POST['comment_id']);
         }

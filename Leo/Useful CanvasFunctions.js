@@ -108,7 +108,7 @@ function Rectangle(x, y, wid, hei, cont, colour) {
         draw();
     };
     this.moveRect = function(moveX, moveY) {
-        remove();
+        //remove();
         xPos += moveX;
         yPos += moveY;
         draw();

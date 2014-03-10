@@ -2,7 +2,13 @@ var profile_picture_id;
 $(function() {
     
     //STICKIES
-    
+    if(1 == 1) {
+        $(document).on('click', '.headerbar', function() {
+            
+            $('.global_container').toggleClass('global_container_menu');
+                        
+        });
+    }
     var typingTimer;
     var doneTypingInterval = 3000;
 
@@ -69,9 +75,9 @@ $(function() {
         });
     });
     $(document).on('click', '.edit_activity', function() {
-        var activity_id = $(this).parents('[activity_id]').attr('activity_id');
+        var activity_id = $(this).parents('[data-activity_id]').data('activity_id');
 
-        var text = $('#single_post_' + activity_id).find('.post_text').text();
+        var text = $('[data-activity_id="' + activity_id + '"]').find('.post_text').text();
         var edit_element = $("<div class='post_text_editor'></div>");
         var post_text_editor = $('<textarea class="autoresize"></textarea>');
             post_text_editor.val(text);
@@ -79,18 +85,18 @@ $(function() {
         var options = $("<div class='post_more_options' style='display:block;'></div>");
             options.append($("<button class='pure-button-success small edit_activity_save'>Save</button>"));
             edit_element.append(options);
-        $('#single_post_' + activity_id).find('.post_text').hide().after(edit_element);
+        $('[data-activity_id="' + activity_id + '"]').find('.post_text').hide().after(edit_element);
         post_text_editor.after($("<div class='textarea_clone'></div>"));
         autoresize(post_text_editor);
     });
     $(document).on('click', '.edit_activity_save', function() {
-        var activity_id = $(this).parents('[activity_id]').attr('activity_id');
-        var text = $('#single_post_' + activity_id).find('textarea.autoresize').val();
-        $('#single_post_' + activity_id).find('.edit_activity_save').attr('disabled', 'disabled').addClass('pure-buton-disabled');
+        var activity_id = $(this).parents('[data-activity_id]').data('activity_id');
+        var text = $('[data-activity_id="' + activity_id + '"]').find('textarea.autoresize').val();
+        $('[data-activity_id="' + activity_id + '"]').find('.edit_activity_save').attr('disabled', 'disabled').addClass('pure-buton-disabled');
 
         $.post('Scripts/home.class.php', {activity_id : activity_id, action: "updatePost", text: text}, function() {
-            $('#single_post_' + activity_id).find('.post_text').show().html(text);
-            $('#single_post_' + activity_id).find('.post_text_editor').remove();
+            $('[data-activity_id="' + activity_id + '"]').find('.post_text').show().html(text);
+            $('[data-activity_id="' + activity_id + '"]').find('.post_text_editor').remove();
         });
     });
     
@@ -223,9 +229,9 @@ $(function() {
      });
     
     $(document).on('click', '.comment_delete', function() {
-        var comment_id = $(this).parents('div.single_comment_container').attr('comment_id');
+        var comment_id = $(this).parents('[data-comment_id]').data('comment_id');
         $(this).parents('.single_comment_container').next('hr.post_comment_seperator').remove();
-        $(this).parents('.single_comment_container').remove();
+        $(this).parents('.single_comment_container').hide();
         $.post('Scripts/home.class.php', {action: "deleteComment", comment_id: comment_id}, function(response) {});
     })
     $(document).on('click', '.post_like_activity', function(event) {
@@ -251,22 +257,27 @@ $(function() {
          });
     });
     $(document).on('click', '.post_comment_vote', function(event) {
-        var post_id = $(this).parents('[activity_id]').attr('activity_id');
-        var has_liked = $(this).attr('has_liked');
+        // var post_id = $(this).parents('[data-activity_id]').data('activity_id');
+        var comment_id = $(this).parents('[data-comment_id]').data('comment_id');
+        var has_liked = String($(this).data('has_liked'));
+        var like_count = parseInt($('[data-comment_id="' + comment_id + '"] .post_comment_liked_num').text());
         
-        if(has_liked === "false") {
-            $(this).attr('has_liked', "true");
-            $(this).text(COMMENT_UNLIKE_TEXT);
+        if(has_liked == "true") {
+            like_count--;
+            $(this).data('has_liked', "false");
+            $(this).text(COMMENT_LIKE_TEXT);
+            //console.log('This comment is LIKED, new COUNT: ' + like_count);
         }
         else {
-            $(this).attr('has_liked', "false");
-            $(this).text(COMMENT_LIKE_TEXT);
+            like_count++;
+            $(this).data('has_liked', "true");
+            $(this).text(COMMENT_UNLIKE_TEXT);
+            //console.log('This comment has NOT BEEN LIKED, new COUNT: ' + like_count);
         }
-        var like_count = parseInt($('[activity_id="' + post_id + '"] .post_like_count').val()); //NOT COMMENT LIKES!
-        like_count++;
-        $('[activity_id="' + post_id + '"] .post_like_count').val(like_count);
-        $.post('Scripts/home.class.php', {action: "comment_vote", post_id: post_id, comment_id: id}, function(response) {
-            //$('.post_comment_liked_num[comment_id="' + id + '"]').text("- " + response + " likes");
+
+        $('[data-comment_id="' + comment_id + '"] .post_comment_liked_num').text(like_count);
+        $.post('Scripts/home.class.php', {action: "comment_vote", comment_id: comment_id}, function(response) {
+            $('[data-comment_id="' + comment_id + '"] .post_comment_liked_num').text(response);
         });
     });
     
@@ -276,6 +287,7 @@ $(function() {
 
     $(window).on('resize', function() {
         resizeContainer();
+//        $('.global_container').css('min-height', getViewPortHeight() + "px")
     });
     resizeContainer();
 });
@@ -613,7 +625,7 @@ $(document).on('click', ".default_dropdown_selector .default_dropdown_item", fun
     $(this).parents('.default_dropdown_selector').removeClass('default_dropdown_active');
     wrapper.find('.default_dropdown_item').removeClass('default_dropdown_active');
     $(this).addClass('default_dropdown_active');
-    $(this).parents('.default_dropdown_selector').attr('value', selection_value).find('.default_dropdown_text').text($(this).text());
+    $(this).parents('.default_dropdown_selector').attr('value', selection_value).find('.default_dropdown_preview').text($(this).text());
 });
 $(function() {
     $('.default_dropdown_selector').on({

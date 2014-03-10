@@ -53,8 +53,9 @@ else {
             <div class="container container_full">
                 <table class="info_table_layout">
                     <tr>
-                        <td style='width:220px;'>
+                        <td>
                             <div class='profilepicturediv' style='background-image:url("<?php echo $community->getProfilePicture('chat', $community_id); ?>");'>
+                                <!-- <img src='<?php echo $community->getProfilePicture('chat', $community_id); ?>'></img> -->
                             </div>
                         </td>
                         <td>

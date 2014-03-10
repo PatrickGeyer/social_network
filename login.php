@@ -16,11 +16,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         die("200");
     }
     else {
-    $user_query = "SELECT password FROM user WHERE email = :email;";
-    $user_query = $database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-    $user_query->execute(array(":email" => $_POST['email']));
-    $user_data = $user_query->fetchColumn();
-        die('<p style="background-color:red;">'.$system->encrypt($_POST['password']).' <=> Your Email or Password is invalid</p>');
+        $user_query = "SELECT password FROM user WHERE email = :email;";
+        $user_query = $database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query->execute(array(":email" => $_POST['email']));
+        $user_data = $user_query->fetchColumn();
+        die('<p style="background-color:red;">' . $system->encrypt($_POST['password']) . ' <=> Your Email or Password is invalid</p>');
     }
 }
 
@@ -37,15 +37,14 @@ $system->getGlobalMeta();
 if (isset($_COOKIE['id'])) {
     header("location: home");
 }
-  $config = array(
-      'appId' => '219388501582266',
-      'secret' => 'c1684eed82295d4f1683367dd8c9a849',
-      'fileUpload' => false, // optional
-      'allowSignedRequest' => false, // optional, but should be set to false for non-canvas apps
-  );
+$config = array(
+    'appId' => '219388501582266',
+    'secret' => 'c1684eed82295d4f1683367dd8c9a849',
+    'fileUpload' => false, // optional
+    'allowSignedRequest' => false, // optional, but should be set to false for non-canvas apps
+);
 
-  $facebook = new Facebook($config);
-
+$facebook = new Facebook($config);
 ?>
 
 <html>
@@ -67,44 +66,6 @@ if (isset($_COOKIE['id'])) {
         <link href="Scripts/external/jquery.mCustomScrollbar.min.css" rel="stylesheet" type="text/css" />
         <script src="Scripts/eventhandlers.js"></script>
         <title>Login</title>
-        <style type="text/css">
-            .dropdown_login{
-                width:100%;
-                padding-left:0px;
-                padding-right:0px;
-                max-width:100%;
-                margin-bottom:10px;
-                border-radius: 5px;
-            }
-            body{
-                background: -webkit-linear-gradient(left, white 30%, #D3D8E8);
-                background: -moz-linear-gradient(left, white 30%, #D3D8E8);
-                background: linear-gradient(left, white 30%, #D3D8E8);
-            }
-            .login_button{
-                height:31px;
-                border-radius: 5px;
-                min-width: 60px;
-                border: 2px solid white;
-            }
-            .login_background{
-                position: fixed;
-                top: 100px;
-                left: 100px;
-            }
-            .blue_thick{
-                font-weight: bold;
-                font-size: 2em;
-                color: rgb(68, 185, 221);
-                margin-right: 10px;
-            }
-            .grey_thin{
-                font-style: italic;
-                font-size: 2em;
-                color: lightgrey;
-                margin-right: 10px;
-            }
-        </style>
         <script>
             function signUp() {
                 var error = false;
@@ -154,20 +115,20 @@ if (isset($_COOKIE['id'])) {
                         position: position,
                         gender: gender
                     }, function(response) {
-                        if (response =="") {
+                        if (response == "") {
                             window.location.replace('home');
                         }
                     });
                 }
             }
             function logIn() {
-                modal($('body'), 
-                            properties = {
-                                centered: true, 
-                                type: "", 
-                                text: "Logging in..."
-                            });
-                var error  = false;
+                modal($('body'),
+                        properties = {
+                            centered: true,
+                            type: "",
+                            text: "Logging in..."
+                        });
+                var error = false;
                 var email = $('.email_login').val();
                 if (email === "" || email === "undefined" || typeof email === "undefined") {
                     pulsate($('.email_login'), 300, "red");
@@ -178,18 +139,18 @@ if (isset($_COOKIE['id'])) {
                     pulsate($('.password_login'), 300, "red");
                     error = true;
                 }
-                if(error === false) {
+                if (error === false) {
                     $.post(window.location, {email: email, password: password}, function(response) {
                         if (response === "200") {
                             window.location.replace('home');
-                        } 
+                        }
                         else {
-                            modal($('body'), 
-                            properties = {
-                                centered: true, 
-                                type: "error", 
-                                text: "Incorrect Password or Email<br /><a style='font-weight:normal;' class='user_preview_name' href='accountrecovery'>Forgotten password?</a>"
-                            });
+                            modal($('body'),
+                                    properties = {
+                                        centered: true,
+                                        type: "error",
+                                        text: "Incorrect Password or Email<br /><a style='font-weight:normal;' class='user_preview_name' href='accountrecovery'>Forgotten password?</a>"
+                                    });
                             setTimeout(removeModal, 2000);
                         }
                     });
@@ -199,107 +160,117 @@ if (isset($_COOKIE['id'])) {
                 }
             }
             $(function() {
-                $('.email_login, .password_login').on('keypress', function(event){
-                    if(event.keyCode == 13) {
+                $('.email_login, .password_login').on('keypress', function(event) {
+                    if (event.keyCode == 13) {
                         logIn();
                     }
                 });
             });
+            <?php 
+            if(isset($_GET['m'])) {
+                showToast('Text');
+            }
+            ?>
+            function showToast(toast) {
+                alert(toast);
+                //Android.showToast(toast);
+            }
         </script>
     </head>
     <body class="login">
+        <?php //if (isset($_GET['m'])) die('WElcome to mobile site!');  ?>
         <div class="login_container">
-            <div class="loginbox">	
-                <table border="0">
-                    <tr>
-                        <td><input type="text" spellcheck="false" placeholder="Email" autocomplete="off" tabindex="1" class='email_login'/></td>
-                        <td><input type="password" spellcheck="false" tabindex="2" placeholder="Password" autocomplete="off" class='password_login'/></td>
-                        <td><button onclick='logIn();' class='pure-button-secondary small login_button'>Login</button></td>
-                    </tr>
-                </table>
+            <div class="loginbox">
+
+                <input type="text" spellcheck="false" placeholder="Email" autocomplete="off" tabindex="1" class='email_login'/>
+                <input type="password" spellcheck="false" tabindex="2" placeholder="Password" autocomplete="off" class='password_login'/>
+                <button onclick='logIn();' class='pure-button-secondary small'>Login</button>
+                <a href='signup?m'><button class='pure-button-neutral small signup_button'>Signup</button><a/>
+
             </div>
         </div>
         <div class='login_background'>
             <p class=''><span class='blue_thick'>DO IT</span><span class='grey_thin'>WITH COLLABORATOR</span></p>
             <hr style="border:0px;border-bottom: 1px dotted lightgrey;">
-            <p class=''><span class='blue_thick'>50GB+</span><span class='grey_thin'>FREE SPACE</span></p>
+            <p class=''><span class='blue_thick'>5GB+</span><span class='grey_thin'>FREE SPACE</span></p>
             <p class=''><span class='blue_thick'>SHARE</span><span class='grey_thin'>YOUR FILES</span></p>
             <p class=''><span class='blue_thick'>COLLABORATE</span><span class='grey_thin'></span></p>
             <p class=''><span class='blue_thick'>INSTANT</span><span class='grey_thin'>TEAMWORK</span></p>
         </div>
-        <div class="signup"  style='//background-image: url("");'>
-            <h1 class="signupheader">Join</h1>
-            <div class="signupbox">
-                <table border="0">
-                    <tr>
-                        <td><input type="text" class="first_name_signup" spellcheck="false" placeholder="First Name"autocomplete="off"/>
-                        </td><td><input type="text" class="last_name_signup" placeholder="Last Name"autocomplete="off"/></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><input class="password_signup" spellcheck="false" type="password" style="width:100%;" placeholder="Password" autocomplete="off"/></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><input class="email_signup" spellcheck="false" type="text" style="width:100%;" autocomplete="off" placeholder="Email"/></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2">
-                            <div tabindex="0" wrapper_id='organization_choose' class='dropdown_login default_dropdown_selector'>
-                                <span class='default_dropdown_text'>Choose School</span>
-                                <div id='organization_choose' class='scroll_thin default_dropdown_wrapper'>
-                                    <ul class='default_dropdown_menu'>
-                                        <?php
-                                        foreach ($allschools->fetchAll(PDO::FETCH_ASSOC) as $schools) {
-                                            echo "<li value='" . $schools['id'] . "' class='default_dropdown_item'>";
-                                            echo $schools['name'];
-                                            echo "</li>";
-                                        }
-                                        ?>
-                                    </ul>
+        <div class="signup">
+            <div class="signup_container">
+                <h1 class="signupheader">Join</h1>
+                <div class="signupbox">
+                    <table border="0">
+                        <tr>
+                            <td><input type="text" class="first_name_signup" spellcheck="false" placeholder="First Name"autocomplete="off"/>
+                            </td><td><input type="text" class="last_name_signup" placeholder="Last Name"autocomplete="off"/></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><input class="password_signup" spellcheck="false" type="password" style="width:100%;" placeholder="Password" autocomplete="off"/></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><input class="email_signup" spellcheck="false" type="text" style="width:100%;" autocomplete="off" placeholder="Email"/></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <div tabindex="0" wrapper_id='organization_choose' class='dropdown_login default_dropdown_selector'>
+                                    <span class='default_dropdown_preview'>Choose School</span>
+                                    <div id='organization_choose' class='scroll_thin default_dropdown_wrapper'>
+                                        <ul class='default_dropdown_menu'>
+                                            <?php
+                                            foreach ($allschools->fetchAll(PDO::FETCH_ASSOC) as $schools) {
+                                                echo "<li value='" . $schools['id'] . "' class='default_dropdown_item'>";
+                                                echo $schools['name'];
+                                                echo "</li>";
+                                            }
+                                            ?>
+                                        </ul>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="2">
-                            <div tabindex="0" wrapper_id='position_choose' class='dropdown_login default_dropdown_selector'>
-                                <span class='default_dropdown_text'>Select Year</span>
-                                <div id='position_choose' class='scroll_thin default_dropdown_wrapper'>
-                                    <ul class='default_dropdown_menu'>
-                                        <?php
-                                        $i = 7;
-                                        while ($i < 15) {
-                                            echo "<li value='" . $i . "' class='default_dropdown_item'>Year " . $i . "</li>";
-                                            $i++;
-                                        }
-                                        ?>
-                                    </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <div tabindex="0" wrapper_id='position_choose' class='dropdown_login default_dropdown_selector'>
+                                    <span class='default_dropdown_preview'>Select Year</span>
+                                    <div id='position_choose' class='scroll_thin default_dropdown_wrapper'>
+                                        <ul class='default_dropdown_menu'>
+                                            <?php
+                                            $i = 7;
+                                            while ($i < 15) {
+                                                echo "<li value='" . $i . "' class='default_dropdown_item'>Year " . $i . "</li>";
+                                                $i++;
+                                            }
+                                            ?>
+                                        </ul>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="2">
-                            <div tabindex="0" wrapper_id='gender_choose' class='dropdown_login default_dropdown_selector'>
-                                <span class='default_dropdown_text'>Gender</span>
-                                <div id='gender_choose' class='scroll_thin default_dropdown_wrapper'>
-                                    <ul class='default_dropdown_menu'>
-                                        <li value='Male' class='default_dropdown_item'>Male</li>
-                                        <li value='Female' class='default_dropdown_item'>Female</li>
-                                    </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <div tabindex="0" wrapper_id='gender_choose' class='dropdown_login default_dropdown_selector'>
+                                    <span class='default_dropdown_preview'>Gender</span>
+                                    <div id='gender_choose' class='scroll_thin default_dropdown_wrapper'>
+                                        <ul class='default_dropdown_menu'>
+                                            <li value='Male' class='default_dropdown_item'>Male</li>
+                                            <li value='Female' class='default_dropdown_item'>Female</li>
+                                        </ul>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="2">
-                            <button id="signup" onclick="signUp();" class="pure-button-success small">Sign Up</button>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <?php
-            if (isset($_GET['action'])) {
-                echo '  <h1 class="signupheader">Register a School</h1>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <button id="signup" onclick="signUp();" class="pure-button-success small">Sign Up</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <?php
+                if (isset($_GET['action'])) {
+                    echo '  <h1 class="signupheader">Register a School</h1>
 			<form id="school" action="Scripts/verifysignup.php" method="POST">
 			<div class="signupbox">
 			<table border="0">
@@ -332,22 +303,23 @@ if (isset($_COOKIE['id'])) {
 			</table>
 			</div>
 			</form>';
-            }
-            ?>
-        </div>
-        <div class='bottom_bar'>
-            <div style='float:left;margin-right:20px;'>
-                <a href="http://stackoverflow.com/users/2506225/patrick-geyer">
-                    <img src="http://stackoverflow.com/users/flair/2506225.png?theme=clean" width="208" height="58" alt="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers" title="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers">
-                </a>
+                }
+                ?>
             </div>
-            <span>Warning: This site is in development. I will not be held liable for any damages you may incur on this site. By signing up, you agree to these terms. Although you are welcome to sign-up, register schools and store your files here for testing purposes, I cannot guarantee the safety/availability of any of your data yet. Release date: 2014, June 21. You can watch the site develop everyday.</span>
-        </div>
-        <div class="links" style='display:none;'>
-            <a id="schoollink" href="login" style="text-decoration:none; font-size:0.8em;">Register a User</a>/
-            <a id="schoollink" href="login?action=school" style="text-decoration:none; font-size:0.8em;">Register a School + User</a>/
-            <a id="schoollink" href="about" style="text-decoration:none; font-size:0.8em;">About</a><br/>
-            <span>Suggestions/bugs? Email me at patrick.geyer1@gmail.com</span>
+            <div class='bottom_bar'>
+                <div style='float:left;margin-right:20px;'>
+                    <a href="http://stackoverflow.com/users/2506225/patrick-geyer">
+                        <img src="http://stackoverflow.com/users/flair/2506225.png?theme=clean" width="208" height="58" alt="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers" title="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers">
+                    </a>
+                </div>
+                <span>Warning: This site is in development. I will not be held liable for any damages you may incur on this site. By signing up, you agree to these terms. Although you are welcome to sign-up, register schools and store your files here for testing purposes, I cannot guarantee the safety/availability of any of your data yet. Release date: 2014, June 21. You can watch the site develop everyday.</span>
+            </div>
+            <div class="links" style='display:none;'>
+                <a id="schoollink" href="login" style="text-decoration:none; font-size:0.8em;">Register a User</a>/
+                <a id="schoollink" href="login?action=school" style="text-decoration:none; font-size:0.8em;">Register a School + User</a>/
+                <a id="schoollink" href="about" style="text-decoration:none; font-size:0.8em;">About</a><br/>
+                <span>Suggestions/bugs? Email me at patrick.geyer1@gmail.com</span>
+            </div>
         </div>
     </body>
 </html>

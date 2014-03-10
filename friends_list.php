@@ -1,14 +1,14 @@
 <head>
     <script>
         $(function() {
-            $('.friends_bar').mCustomScrollbar(SCROLL_OPTIONS);
+            //$('.friends_bar').mCustomScrollbar(SCROLL_OPTIONS);
             $(document).on('input', '#names_input', function() {
                 search($(this).val(), 'group', '.group_search_results', function() {
                 });
             });
-            $(window).on('resize', function() {
-                $('.friends_bar').mCustomScrollbar("update");
-            });
+//            $(window).on('resize', function() {
+//                $('.friends_bar').mCustomScrollbar("update");
+//            });
         });
 
         var auto_refresh = setInterval(
@@ -91,19 +91,19 @@
             <div class="group_list_user">
                 <ul style="width:100%;">
                     <?php
-                    $groups = $group->getUserGroups();
-                    foreach ($groups as $group_id) {
-                        $members = $group->getMembers($group_id);
-                        foreach ($members as $member) {
-                                $valid6 = true;
-                                echo "<li class='friend_list_on user_preview' user_id='" . $member . "'>"
-                                . "<a class='friend_list ellipsis_overflow' style='background-image:url(" . $user->getProfilePicture('chat', $member) . ");' "
-                                . "href ='user?id=" . urlencode(base64_encode($member)) . "'>" . $user->getName($member) . "</a></li>";
-                            }
-                    }
-                    if (isset($valid6)) {
-                         echo "<script>$('.group_list_user').prepend('<div class=\"timestamp\"><span>Group</span></div>');</script>";
-                    }
+                    // $groups = $group->getUserGroups();
+//                     foreach ($groups as $group_id) {
+//                         $members = $group->getMembers($group_id);
+//                         foreach ($members as $member) {
+//                                 $valid6 = true;
+//                                 echo "<li class='friend_list_on user_preview' user_id='" . $member . "'>"
+//                                 . "<a class='friend_list ellipsis_overflow' style='background-image:url(" . $user->getProfilePicture('chat', $member) . ");' "
+//                                 . "href ='user?id=" . urlencode(base64_encode($member)) . "'>" . $user->getName($member) . "</a></li>";
+//                             }
+//                     }
+//                     if (isset($valid6)) {
+//                          echo "<script>$('.group_list_user').prepend('<div class=\"timestamp\"><span>Group</span></div>');</script>";
+//                     }
                     ?>
                 </ul>
             </div>

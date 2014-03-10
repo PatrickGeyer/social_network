@@ -77,10 +77,18 @@ class System extends Base {
     }
 
     public function getGlobalMeta() {
+
         foreach ($this->meta_tag as $meta => $value) {
             echo "<meta name='" . $meta . "' content='" . $value . "' />";
         }
-        echo "<link rel='stylesheet' href='CSS/style.css' type='text/css'>"; //change to minified version after development
+        echo '<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">';
+        echo "<link rel='stylesheet' media='screen and (min-width: 180px) and (max-device-width : 780px)' href='CSS/style.mobile.css'/>";
+        if(isset($_GET['m']) || isset($_COOKIE['mobile'])) {
+            setcookie('mobile', 'true');
+            echo "<link rel='stylesheet' href='CSS/style.mobile.css'/>";
+        }
+        echo "<link rel='stylesheet' href='CSS/style.css' type='text/css'>"; //change to minified versions after development
+//      echo <link rel="stylesheet" media='screen and (min-width: 381px) and (max-width: 700px)' href="tablet.css"/>
         echo "<link rel='shortcut icon' href='" . self::SHORTCUT_ICON . "'>";
         echo "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>";
     }
@@ -227,8 +235,8 @@ class System extends Base {
                 . ">"; // data-setup={}
         if ($source == TRUE) {
             $return .= "<source src='" . $mp4_path . "' type='video/mp4'></source>"
-                    . "<source src='" . $flv_path . "' type='video/x-flv'></source>"
-                    . "<source src='" . $webm_path . "' type='video/webm'></source>";
+                    . "<source src='" . $flv_path . "' type='video/x-flv'></source>";
+//                    . "<source src='" . $webm_path . "' type='video/webm'></source>";
             //. "<source src='" . $original_path . "' type='video/avi'></source>";
         }
         $return .= "<object data='" . $mp4_path . "' width='320' height='240'>"
