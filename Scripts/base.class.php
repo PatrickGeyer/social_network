@@ -6,6 +6,7 @@ class Base {
     const MALE_DEFAULT_THUMB = "Images/male-default-chat.jpg";
     const FEMALE_DEFAULT_ICON = "Images/female-default-chat.jpg";
     const FEMALE_DEFAULT_CHAT = "Images/female-default-chat.jpg";
+    const FEMALE_DEFAULT_THUMB = "Images/female-default-chat.jpg";
     const UNKNOWN_DEFAULT_ICON = "Images/unknown-default-chat.jpg";
     const UNKNOWN_DEFAULT_CHAT = "Images/unknown-default-chat.jpg";
 
@@ -53,6 +54,7 @@ class Base {
     const ZIP_THUMB = "Images/Icons/Icon_Pacs/ecqlipse2/system_black/FILE - ZIP_48x48-32.png";
     const FILE_THUMB = "Images/Icons/Icon_Pacs/ecqlipse2/ecqlipse 2 - system black/FILE.png";
     const TEXT_THUMB = "Images/Icons/Icon_Pacs/ecqlipse2/ecqlipse%202%20-%20system%20black/FILE%20-%20TEXT.png";
+    const CODE_THUMB = "Images/Icons/file_type/code_large.png";
     
     const VIDEO_ICON = "Images/Icons/file_type/play-red.png";
     const IMAGE_ICON = "Images/Icons/Icon_Pacs/typicons.2.0/png-24px/image.png";
@@ -64,6 +66,7 @@ class Base {
     const ZIP_ICON = "Images/Icons/Icon_Pacs/ecqlipse2/system_black/FILE - ZIP_48x48-32.png";
     const FILE_ICON = "Images/Icons/Icon_Pacs/ecqlipse2/ecqlipse 2 - system black/FILE.png";
     const TEXT_ICON = "Images/Icons/Icon_Pacs/typicons.2.0/png-24px/document-text.png";
+    const CODE_ICON = "Images/Icons/file_type/code_icon.png";
     
     const AUDIO_THUMB = "Images/Icons/file_type/music-blue.png";
     const AUDIO_PLAY_THUMB = "Images/Icons/file_type/music-play-blue.png";

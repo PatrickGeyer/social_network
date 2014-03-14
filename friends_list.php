@@ -30,7 +30,7 @@
                         $valid0 = "";
                         echo "<li class='friend_list_group' >"
                         . "<a class='friend_list ellipsis_overflow' "
-                        . "style='background-image:url(" . $group->getProfilePicture('chat', $group_id) . ");'"
+                        . "style='background-image:url(\"" . $group->getProfilePicture('chat', $group_id) . "\");'"
                         . "href ='group?id=" . urlencode(base64_encode($group_id)) . "'>" . $group->getGroupName($group_id)
                         . "</a></li>";
                     }
@@ -38,6 +38,9 @@
                          echo "<script>$('.group_list').prepend('<div class=\"timestamp\"><span>Groups</span></div>');</script>";
                     }
                     ?>
+                    <li style='background-image:url("Images/Icons/icons/application-plus.png");' onclick="show_group();" class="nav_option">
+                        <a class="nav_option ellipsis_overflow">Create Group</a>
+                    </li>
                 </ul>
             </div>
             <div class="connection_list">
@@ -56,7 +59,7 @@
                             $user_id = $friends['receiver_id'];
                         }
                         echo "<li class='" . ($user->getOnline($user_id) == true ? 'friend_list_on' : 'friend_list_off') . " profile_picture_".$user_id." user_preview' user_id='" . $user_id . "'>"
-                        . "<a class='friend_list ellipsis_overflow' style='background-image:url(" . $user->getProfilePicture('chat', $user_id) . ");' 
+                        . "<a class='friend_list ellipsis_overflow' style='background-image:url(\"" . $user->getProfilePicture('chat', $user_id) . "\");' 
                         href ='user?id=" . urlencode(base64_encode($user_id)) . "'>"
                         . $user->getName($user_id) . "</a></li>";
                     }
@@ -78,7 +81,7 @@
                     while ($friends = $query->fetch(PDO::FETCH_ASSOC)) {
                         $valid = true;
                         echo "<li class='" . ($user->getOnline($friends['id']) == true ? 'friend_list_on' : 'friend_list_off') . " profile_picture_".$friends['id']." user_preview' user_id='" . $friends['id'] . "'>"
-                        . "<a class='friend_list ellipsis_overflow' style='background-image:url(" . $user->getProfilePicture('chat', $friends['id']) . ");' 
+                        . "<a class='friend_list ellipsis_overflow' style='background-image:url(\"" . $user->getProfilePicture('chat', $friends['id']) . "\");' 
                         href ='user?id=" . urlencode(base64_encode($friends['id'])) . "'>"
                         . $friends['name'] . "</a></li>";
                     }

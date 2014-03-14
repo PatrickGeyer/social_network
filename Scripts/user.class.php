@@ -444,6 +444,7 @@ class User {
         foreach ($users as $user_id) {
             $array[$user_id] = $this->getOnline($user_id);
         }
+        $this->setOnline();
         return $array;
     }
 

@@ -9,9 +9,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $status_text = nl2br($status_text);
     
     $type = 'Text';
-    if(count($post_media_added_files) == 1) {
-        $type = "File";
-    }
+    // if(count($post_media_added_files) == 1) {
+    //     $type = "File";
+    // }
 
     $database_connection->beginTransaction();
     try {

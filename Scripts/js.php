@@ -253,7 +253,7 @@ $system->jsVars();
         if (onComplete == "addToStatus")
         {
             response = $.parseJSON(event.responseText);
-            addToStatus(response);
+            addToStatus(response, 'create');
         }
         else
         {
@@ -408,7 +408,7 @@ $system->jsVars();
         if (text != "" || post_media_added_files.length != 0)
         {
             modal($('body'), properties = {type: "", text: "Posting content..."});
-            $.post("Scripts/update_status.php", {status_text: text, group_id: share_group_id, post_media_added_files: post_media_added_files}, function(data)
+            $.post("Scripts/home.class.php", {action:"update_status", status_text: text, group_id: share_group_id, post_media_added_files: post_media_added_files}, function(data)
             {
                 if (data == "")
                 {
@@ -561,12 +561,13 @@ $system->jsVars();
 
         }
         $('#comment_' + post_id).val("").blur();
-        $('[actual_id="comment_' + post_id + '"]').blur().val('');
 
-        $.post("Scripts/extends.class.php", {comment_text: comment_text, post_id: post_id, action: 'submitComment'}, function(data)
+        $.post("Scripts/home.class.php", {comment_text: comment_text, post_id: post_id, action: 'submitComment'}, function(data)
         {
+            data = $.parseJSON(data);
+            //console.log(data);
             refreshContent(post_id);
-            callback();
+            callback(data);
         });
     }
 
@@ -652,7 +653,7 @@ $system->jsVars();
                     response.info = response;
                     response.id = formatToID(link);
                     response.type = "Webpage";
-                    addToStatus(object);
+                    addToStatus(object, 'create');
                     post_media_load("stop");
                 });
             }
@@ -677,7 +678,7 @@ $system->jsVars();
         }
     }
 
-    function addToStatus(object)
+    function addToStatus(object, activity_id)
     {
     	//console.log(object);
         $('.post_media_wrapper_background').hide();

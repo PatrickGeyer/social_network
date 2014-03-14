@@ -57,10 +57,6 @@ if (!isset($page_identifier)) {
                 echo "current_page";
             }
             ?>"><a class="nav_option ellipsis_overflow" href="message">Inbox</a></li>
-
-            <li style='background-image:url("Images/Icons/icons/application-plus.png");' onclick="show_group();" class="nav_option">
-                <a class="nav_option ellipsis_overflow">Create Group</a>
-            </li>
         </ul>
     </div>
     <!--        <button style='float:right;margin-top:10px;' class='pure-button-primary smallest' onclick='' title='Create a Group'>+</button>-->

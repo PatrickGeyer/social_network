@@ -85,9 +85,16 @@ $(function() {
         var options = $("<div class='post_more_options' style='display:block;'></div>");
             options.append($("<button class='pure-button-success small edit_activity_save'>Save</button>"));
             edit_element.append(options);
+            
         $('[data-activity_id="' + activity_id + '"]').find('.post_text').hide().after(edit_element);
         post_text_editor.after($("<div class='textarea_clone'></div>"));
         autoresize(post_text_editor);
+        
+        var file_container = $("<div class='file_box' style='max-height:200px;'></div>");
+        $('[data-activity_id="' + activity_id + '"] .post_feed_media_wrapper').prepend(file_container);
+        fileList(file_container, '');
+        
+        
     });
     $(document).on('click', '.edit_activity_save', function() {
         var activity_id = $(this).parents('[data-activity_id]').data('activity_id');
@@ -102,15 +109,14 @@ $(function() {
     
     $(document).on('mouseover', '.search_option', function(event) {
         $(this).siblings().removeClass('match');
-        //alert($(this).siblings().length);
         $(this).addClass('match');
     })
+
     //FILES
     
     $(document).on('click', '#file_share div.file_item', function() {
         var file = $(this).data('file');
-        //console.log(file);
-        addToStatus(file);
+        addToStatus(file, 'create');
     });
     
     $(document).on('click', '.audio_hidden_container, .files_actions, p.files, div.files input', function(event) {
@@ -203,7 +209,9 @@ $(function() {
         var id = $(this).attr('id');
         var clone = $('#' + id + "_clone")
         if (event.keyCode == 13) {
-            submitcomment($(this).val(), $(this).data('activity_id'), function() {
+            var post_id = $(this).parents('[data-activity_id]').data('activity_id');
+            submitcomment($(this).val(), post_id, function(comment) {
+                append_comment(post_id, comment);
                 emptyText(id);
             });
             return false;
@@ -214,12 +222,43 @@ $(function() {
     	event.stopPropagation();
     	removeFromStatus(object = {type: "File", value: $(this).parents('[file_id]').attr('file_id')});
     });
-    $(document).on('click', '.remove_event_post', function() { //DELETE FILES FROM POST
-        var file_id = $(this).parents('[file_id]').attr('file_id');
-        
+    $(document).on('click', '.post_feed_media_wrapper .remove_event_post', function() { //DELETE FILES FROM POST
+        var file_id = $(this).parents('[file_id]').attr('file_id'); 
         var activity_id = $(this).parents('[data-activity_id]').data('activity_id');
-        $(this).parents('.post_feed_item').remove();
-        $.post('Scripts/files.class.php', {action: "removePostFile", file_id: file_id, activity_id: activity_id}, function() {});
+        var post_text = $('[data-activity_id="' + activity_id + '"] .post_text').text();
+        
+        if($(this).parents('.post_feed_item').siblings('.post_feed_item').length == 0 && post_text == "") {
+        	dialog(
+                content = {
+                    type: "html",
+                    content: "If you delete this file, your post will be removed, as it does not contain any content. Continue?"
+                },
+        		buttons = [
+        		{
+                	type: "success",
+                	text: "OK",
+                	onclick: function() {
+                            $.post('Scripts/files.class.php', {action: "removePostFile", file_id: file_id, activity_id: activity_id}, function() {});
+                            $(this).parents('.post_feed_item').remove();
+                            delete_post(activity_id);
+                            removeDialog();
+                        }
+                }, 
+                {
+                	type: "neutral",
+                	text: "Cancel",
+                	onclick: function() {
+                    	removeDialog();
+                }
+            }],
+        properties = {
+            modal: false,
+            title: "Remove File from Post"
+        });
+        } else {
+        	$(this).parents('.post_feed_item').remove();
+        	$.post('Scripts/files.class.php', {action: "removePostFile", file_id: file_id, activity_id: activity_id}, function() {});
+        }
     });
     
      $(document).on('click', '.post_media_photo.post_media_preview', function() {
@@ -409,12 +448,29 @@ $(function() {
 //END FEED SELECTORS
 
 // SEARCH & SETUP SCROLL
+$(document).on('click', '#names_universal .search_option', function() {
+    var entity = $(this).data('entity');
+    if(entity.type == 'user') {
+        window.location.assign('user?id=' + entity.eid);
+    } else if (entity.type == 'community') {
+        window.location.assign('community?id=' + entity.eid);
+    }
+});
+$(document).on('click', '.search_option', function() { // Hide the search results when the user selects an option.
+    $(this).parents('.search_results').hide();
+    $(this).closest('input.search').val('');
+});
 $(function() {
     $('.name_selector').hover(function() {
         $('.match').css('background-color', 'transparent');
     }, function()
     {
         //mouseleave
+    });
+    $('input.search').each(function() {
+        if($(this).attr('placeholder') == "") {
+            $(this).attr('placeholder', 'Search');
+        }
     });
     $('.match').hover(function() {
         $('.match').css('background-color', '#FAFAFA');
@@ -443,44 +499,33 @@ $(function() {
     });
     
     $(document).on('click', '#share_event_results .name_selector, #share_event_results .match', function(event) {
-            var id = $(this).attr('entity_id');
-            var name = $(this).attr('entity_name');
-            var type = $(this).attr('entity_type');
-            event_receivers = addreceiver(type, id, name, event_receivers, "event");            
-            event.stopPropagation();
+        var entity = $(this).data('entity');
+        event_receivers = addreceiver(entity.type, entity.id, entity.name, event_receivers, "event");            
+        event.stopPropagation();
     });
     
     $(document).on('click', '.message_search_results .name_selector, .message_search_results .match', function(event) {
-            var id = $(this).attr('entity_id');
-            var name = $(this).attr('entity_name');
-            var type = $(this).attr('entity_type');
-            message_receivers = addreceiver(type, id, name, message_receivers, "message");            
+        var entity = $(this).data('entity');
+            message_receivers = addreceiver(entity.type, entity.id, entity.name, message_receivers, "message");            
             event.stopPropagation();
-            console.log(message_receivers);
+            //console.log(message_receivers);
     });
 
     $(document).on('click', '.group_search_results .name_selector,  .group_search_results .match', function(event) {
-            var id = $(this).attr('entity_id');
-            var name = $(this).attr('entity_name');
-            var type = $(this).attr('entity_type');
-            group_receivers = addreceiver(type, id, name, group_receivers, "group");            
+            group_receivers = addreceiver(entity.type, entity.id, entity.name, group_receivers, "group");            
             event.stopPropagation();
-            console.log(group_receivers);
+            //console.log(group_receivers);
     });
     
     $(document).on('click', '#share_event_results .name_selector, #share_event_results .match', function(event) {
-            var id = $(this).attr('entity_id');
-            var name = $(this).attr('entity_name');
-            var type = $(this).attr('entity_type');
-            event_receivers = addreceiver(type, id, name, event_receivers, "event");            
+        var entity = $(this).data('entity');
+            event_receivers = addreceiver(entity.type, entity.id, entity.name, event_receivers, "event");            
             event.stopPropagation();
     });
 
     $(document).on('click', '#share_event_results .name_selector, #share_event_results .match', function(event) {
-            var id = $(this).attr('entity_id');
-            var name = $(this).attr('entity_name');
-            var type = $(this).attr('entity_type');
-            event_receivers = addreceiver(type, id, name, event_receivers, "event");            
+        var entity = $(this).data('entity');
+            event_receivers = addreceiver(entity.type, entity.id, entity.name, event_receivers, "event");            
             event.stopPropagation();
     });
 
@@ -504,11 +549,11 @@ $(function() {
 //END SEARCH
 var alignment;
 var needs_loading = true;
-setInterval(function() {
-    $.post('Scripts/user.class.php', {action: 'setOnline'}, function() {
+// setInterval(function() {
+//     $.post('Scripts/user.class.php', {action: 'setOnline'}, function() {
 
-    });
-}, 30000);
+//     });
+// }, 30000);
 function getViewPortHeight()
 {
     var viewportwidth;

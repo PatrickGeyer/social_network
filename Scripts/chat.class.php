@@ -55,17 +55,16 @@ class Chat {
     function getContent($chat_id, $all = 'false', $min = 0, $max = 999999999999) {
         $time = time();
         
-        $chat_query_string = "SELECT chat.user_id, chat.`text`, chat.time, chat.id FROM "
-                . "(SELECT * FROM chat ORDER BY id DESC LIMIT 25)chat "
-                . "WHERE chat_room = :chat_room ";
+        $chat_query_string = "SELECT chat.user_id, chat.text, chat.time, chat.id FROM "
+                . "(SELECT * FROM chat WHERE chat_room = :chat_room ".($all != "false" ? "AND id BETWEEN :min AND :max" : ""). " ORDER BY id DESC LIMIT 25)chat ";
         if ($all == 'false') {
-            $chat_query_string .= "AND id > :max ORDER BY id ASC;";
+            $chat_query_string .= "WHERE id > :max ORDER BY id ASC;";
             $options = array(
                     ":max" => $max,
                     ":chat_room" => $chat_id,
                         );
         } else if($all == "previous") {
-            $chat_query_string .= "AND (id BETWEEN :min AND :max) ORDER BY id ASC;";
+            $chat_query_string .= "WHERE (id BETWEEN :min AND :max) ORDER BY id ASC;";
             $options = array(
                     ":min" => $min, 
                     ":max" => $max,
@@ -75,6 +74,8 @@ class Chat {
             $chat_query_string .= " ORDER BY id ASC LIMIT 25;";
             $options = array(
                     ":chat_room" => $chat_id,
+                    ":min" => $min, 
+                    ":max" => $max,
                         );
         }        
         
@@ -88,16 +89,16 @@ class Chat {
                 $chat_query->execute($options);
                 $chat_number = $chat_query->rowCount();
                 if ($chat_number == 0) {
-                    usleep(500000);
+                    usleep(1000000);
                 } else {
                     $chat_entries = $chat_query->fetchAll(PDO::FETCH_ASSOC);
                     foreach ($chat_entries as $record) {
                         array_push($chat_ids, $record['id']);
                         $record['pic'] = $this->user->getProfilePicture('chat', $record['user_id']);
-                        $record['time'] = $this->system->humanTiming($record['time']);
+                        $record['time'] = $this->system->format_dates($record['time']);
                         $record['name'] = $this->user->getName($record['user_id']);
                         $chat_array[] = $record;
-                        $this->markChatRead($record['id']);
+                        //$this->markChatRead($record['id']);
                     }
                     break;
                 }
@@ -112,10 +113,10 @@ class Chat {
                     if($i < 20) {
                         array_push($chat_ids, $record['id']);
                         $record['pic'] = $this->user->getProfilePicture('chat', $record['user_id']);
-                        $record['time'] = $this->system->humanTiming($record['time']);
+                        $record['time'] = $this->system->format_dates($record['time']);
                         $record['name'] = $this->user->getName($record['user_id']);
                         $chat_array[] = $record;
-                        $this->markChatRead($record['id']);
+                        //$this->markChatRead($record['id']);
                     }
                     $i--;
                 }

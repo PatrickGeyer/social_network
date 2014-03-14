@@ -2,15 +2,21 @@
 if (isset($_GET['e'])) {
     include_once('Scripts/calendar.class.php');
     $calendar = Calendar::getInstance();
-    $event = $_GET['e'];
-    $event = $calendar->getEvent($event);
+    $event_id = $_GET['e'];
+    if (isset($_GET['action'])) {
+        $event_action = "edit";
+    } else {
+        $event_action = 'view';
+    }
+    $event = $calendar->getEvent($event_id);
     $event['time'] = strtotime($event['start']);
     echo "<title>Event: " . $event['title'] . "</title>";
     $assocFiles_num = count($event['files']);
     $receiver_num = count($event['receivers']['user'] + $event['receivers']['group'] + $event['receivers']['community']) - 1;
 }
 else {
-    $event = "create";
+    $event_action = "create";
+    $event = array('title' => '', 'description' => '');
     echo "<title>Create Event</title>";
 }
 
@@ -24,44 +30,61 @@ include_once('chat.php');
         var event_id = "<?php (isset($event['id']) ? $event['id'] : "''" ); ?>";
         var event_creator = "<?php (isset($event['user_id']) ? $event['user_id'] : "''") ?>";
         $('#datepicker').datetimepicker({
+            <?php echo ($event_action == "edit" ? "value: '" .$event['start']. "'," : ""); ?>
             format: 'Y-m-d H:i:s',
             inline: true,
             lang: 'en',
             onChangeDateTime: function(dp, $input) {
                 //alert($input.val())
-            }
+            },
+            scrollMonth: false
         });
         $('button#create_event').on('click', function() {
             var title = $('#event_title').val();
             var description = $('#event_description').val();
             var date = $('#datepicker').val();
 
-            $.post('Scripts/calendar.class.php', {action: "createEvent", title: title, description: description, date: date, files: event_files, receivers: event_receivers}, function(response) {
-                history.go(-1);
+            var data = {
+                action: "<?php echo ($event_action=='edit' ? 'editEvent' : 'createEvent'); ?>",
+                description: description,
+                title: title,
+                files: event_files,
+                receivers: event_receivers,
+                event_id: <?php echo ($event_action=='edit' ? $event_id : '""'); ?>
+            }
+            $.post('Scripts/calendar.class.php', data, function(response) {
+                alert('done');
             });
         });
-        $('button#share_event').on('click', function() {
-            var content = $('#share_event_dialog').html();
-            dialog({
-                type: "html",
-                content: content
-            },
-            [{
-                    text: "OK",
-                    type: "success",
-                    onclick: function() {
-                        removeDialog();
-                    }
-                }],
-            {
-                title: "Share this Event"
-            });
-        });
+        function select_event_files() {
+
+            <?php 
+            if($event_action == 'edit') {
+                foreach ($event['files'] as $file) {
+                    echo "$(\"[file_id='" . $file['id'] . "']\").addClass('file_highlighted_green');";
+                    echo "event_files.push(" . $file['id'] . ");";
+                    //echo "console.log('".$file['id']."');";
+                }
+            }?>
+
+            select_event_receivers();
+        }
+        function select_event_receivers() {
+            <?php 
+            if($event_action == 'edit') {
+                foreach ($event['receivers']['user'] as $id) {
+                    if ($id != $event['user_id'])
+                        echo 'addreceiver("user", '.$id.', "' . $user->getName($id) . '", event_receivers, "event");';
+                    }                
+            }?>
+        }
         $(document).on('click', '#delete_button', function() {
             $.post('Scripts/calendar.class.php', {action: "deleteEvent", event_id: event_id, event_creator: event_creator});
         });
 
-        fileList($('.file_box'), null);
+        fileList($('.file_box'), null, function() {
+            select_event_files();
+        });
         $('.file_box').on('click', 'div.file_item', function() {
             var file = $(this).data('file');
             if ($(this).hasClass('file_highlighted_green')) {
@@ -76,35 +99,19 @@ include_once('chat.php');
             history.go(-1);
         });
     });
-
-    function updateEventReceiverCount() {
-        var count = event_receivers.user.length + event_receivers.group.length + event_receivers.community.length;
-        $('#event_share_receiver_count').html(count + " other receivers");
-    }
 </script>
 <div class="global_container">
     <?php include_once 'left_bar.php'; ?>
     <div style='padding-top: 20px;' class='container'>
-
-        <div hidden style='display:none' id='share_event_dialog'>
-            <table>
-                <tr>
-                    <td class='event_names_slot'></td>
-                </tr>
-            </table>
-            <input class='search' mode='universal' />
-            <div id='share_event_results' class='search_results'></div>
-        </div>
-
         <div style='margin-top:0px;' class='box_container'>
-            <?php if ($event == "create"): ?>
-                <h3>Create Event<button id='back_to_cal' class='pure-button-neutral'>Back to Calendar</button></h3>
+            <?php if ($event_action == "create" || $event_action == "edit"): ?>
+                <h3><?php echo ($event_action == "create" ? "Create Event" : "Edit Event"); ?><button id='back_to_cal' class='pure-button-neutral'>Back to Calendar</button></h3>
                 <ul>
                     <li class='section'>
-                        <label class='settings'>Title</label><input id='event_title' type="text"/>
+                        <label class='settings'>Title</label><input id='event_title' type="text"/ value="<?php echo $event['title']; ?>">
                     </li>
                     <li class='section'>
-                        <label class='settings'>Notes</label><textarea class='autoresize' id='event_description'></textarea><div class='textarea_clone'></div>
+                        <label class='settings'>Notes</label><textarea class='autoresize' id='event_description'><?php echo $event['description']; ?></textarea><div class='textarea_clone'></div>
                     </li>
                     <li class='section'>
                         <table cellspacing="0">
@@ -120,8 +127,17 @@ include_once('chat.php');
                         </table>
                     </li>
                     <li class='section'>
-                        <button id='create_event' class='pure-button-success'>Create Event</button>
-                        <button id='share_event' class='pure-button-primary'>Share Event</button>
+                        <label class='settings'>Share</label>
+                        <div id='share_event_dialog'>
+                            <div class='search_container'>
+                                <div class='event_names_slot'></div>
+                                <input class='search' mode='universal' />
+                                <div id='share_event_results' class='search_results'></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class='section'>
+                        <button id='create_event' class='pure-button-success'><?php echo ($event_action == 'edit' ? "Save Event" : "Create Event"); ?></button>
                         <span id='event_share_receiver_count' class='post_comment_time'></span>
                     </li>
                 </ul>
@@ -189,7 +205,7 @@ include_once('chat.php');
     <?php endif; ?>
                     <li class='section'>
                         <button id='delete_button' class='pure-button-secondary'>Delete</button>
-                        <button class='pure-button-success'>Edit Event</button>
+                        <a style='display:inline-block;' href='event?e=<?php echo $event_id; ?>&action=edit'><button class='pure-button-success'>Edit Event</button></a>
                         <button class='pure-button-primary'>Complete</button>
                     </li>
                 </ul>

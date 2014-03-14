@@ -9,7 +9,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (!empty($user_data)) {
         setcookie("id", base64_encode($user_data), time() + 3600000);
-        setcookie("chat_feed", 'y', time() + 3600000);
+        $rooms = $chat->get_chat_rooms();
+        setcookie("chat_feed", $rooms[0]['id'], time() + 3600000);
         include_once('Scripts/user.class.php');
         $user = User::getInstance();
         //$user->setLocation($user_data);

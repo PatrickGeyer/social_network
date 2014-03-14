@@ -65,7 +65,7 @@ class Notification {
             $message['read'] = $read['read'];
             $message['seen'] = $read['seen'];
             $message['user'] = $this->user->get_user_preview($message['user_id']);
-            $message['time'] = $this->system->humanTiming($message['time']);
+            $message['time'] = $this->system->format_dates($message['time']);
             //$message['user_id'] = $read['user_id'];
         }
         return $user1;

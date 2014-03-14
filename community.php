@@ -120,7 +120,7 @@ else {
                             echo $member['year'];
                             echo "</td>";
                             echo "<td>";
-                            echo $system->humanTiming(strtotime($member['joined']));
+                            echo $system->format_dates(strtotime($member['joined']));
                             echo "</td>";
                             if ($user->isAdmin() == true || $community->getLeaderId($community_id) == $user->getId()) {
                                 echo "<td>";

@@ -34,7 +34,6 @@ include_once('chat.php');
 include_once('Scripts/base.class.php');
 
 $used_width = $files->getUsedSize();
-$used_width = ($used_width / 1073741824) * 100;
 ?>
 <html>
     <head>
@@ -74,26 +73,10 @@ $used_width = ($used_width / 1073741824) * 100;
                     var index = 0;
                     var files = getInputFiles('file');
                     var uploadCount = 0;
-                    // $('.upload_preview').each(function() {
-                    //     uploadCount++;
-                    //     $(this).css('padding-bottom', '25px');
-                    //     $(this).css('margin-bottom', '3px');
-                    //     $(this).css('position', 'relative');
-                                    // progressBar($(this), $(this).attr('id'));
-                                // });
-                                // for (var i = 0; i < input.length; i++) {
-                    //(function(sync_i) {
                         uploadFile(files,
                         function() {},
                         function(percent) {
-                            // updateProgress(sync_i + "_upload_preview", percent);
-                                            //console.log(i + "_upload_preview - " +  percent);
                         }, function() {
-                                            //removeProgress(sync_i + "_upload_preview");
-                                            //$("#" + sync_i + "_upload_preview").css('background-color', '#98FB98');
-                                            //uploadCount--;
-                                            //if (uploadCount == 0) {
-                                              //  removeDialog();
                             refreshFileContainer(encrypted_folder);
                         }, 
                         properties = {
@@ -116,12 +99,11 @@ $used_width = ($used_width / 1073741824) * 100;
 
                 $(document).on('mouseover', "div.files, div.folder", function()
                 {
-                    var $this = $(this);
-                    $('.audio_hidden_container').not($this.children('.audio_hidden_container')).hide();
-                    $this.find('.audio_hidden_container').fadeIn("fast");
-                    setTimeout(function() {
-                        $('.audio_hidden_container').not($this.children('.audio_hidden_container')).hide();
-                    }, 10);
+//                    $('.audio_hidden_container').not($(this).children('.audio_hidden_container')).hide();
+//                    $(this).find('.audio_hidden_container').fadeIn("fast");
+//                    setTimeout(function() {
+//                        $('.audio_hidden_container').not($(this).children('.audio_hidden_container')).hide();
+//                    }, 10);
                 });
                 $(document).on('mouseleave', "div.files, div.folder", function()
                 {
@@ -137,37 +119,33 @@ $used_width = ($used_width / 1073741824) * 100;
                 }, function() {
                 });
 
-                $(document).on('click', '.files_actions_share', function(e) {
-                    e.preventDefault();
-                    var file_id = $(this).data('file_id');
-                    var receivers;
-                    //alert($(this).data('file_id'));
-                    dialog(
-                            content = {
-                                type: "html",
-                                content: "<input type='text' class='search' mode='share'/><div class='search_results' id='share_div'></div>"
-                            },
-                    buttons = [{
-                            type: "success",
-                            text: "Share",
-                            onclick: function() {
-                                $.post("Scripts/files.class.php", {action: "share", file_id: file_id, receivers: receivers}, function(response) {
-                                    console.log(response);
-                                });
-                            }
-                        }],
-                    properties = {
-                        title: "Share file",
-                        modal: false
-                    }
-                    );
-                });
+//                $(document).on('click', '.files_actions_share', function(e) {
+//                    e.preventDefault();
+//                    var file_id = $(this).data('file_id');
+//                    var receivers;
+//                    //alert($(this).data('file_id'));
+//                    dialog(
+//                            content = {
+//                                type: "html",
+//                                content: "<input type='text' class='search' mode='share'/><div class='search_results' id='share_div'></div>"
+//                            },
+//                    buttons = [{
+//                            type: "success",
+//                            text: "Share",
+//                            onclick: function() {
+//                                $.post("Scripts/files.class.php", {action: "share", file_id: file_id, receivers: receivers}, function(response) {
+//                                    console.log(response);
+//                                });
+//                            }
+//                        }],
+//                    properties = {
+//                        title: "Share file",
+//                        modal: false
+//                    }
+//                    );
+//                });
                 setRecentFileScroller();
             });
-
-            function get_preview_image(ext) {
-                return VIDEO_THUMB;
-            }
 
             function getInputFiles(element) {
                 var files1 = document.getElementById(element).files;
@@ -178,7 +156,7 @@ $used_width = ($used_width / 1073741824) * 100;
                     files[i].extension = files1[i].name.split('.').pop();
                     files[i].name = files1[i].name;
                     files[i].type = getType(files[i].extension);
-                    files[i].pic = get_preview_image(files[i].type);
+                    files[i].pic = VIDEO_THUMB;
                     files[i].size = files1[i].size;
                 }
                 return files;

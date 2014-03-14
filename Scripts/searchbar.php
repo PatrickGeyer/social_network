@@ -24,7 +24,9 @@ $files_sql->execute();
 $files_sql = $files_sql->fetchAll(PDO::FETCH_ASSOC);
 
 function searchDiv($type, $entity_id, $div_class, $div_onclick, $img_src, $name, $info) {
-    $return = "<div entity_name='".$name."' entity_type='".$type."' entity_id='".$entity_id."' class='search_option ".$div_class."' onclick=''>"
+    // $name = str_replace(' ', '_', $name);
+    $entity = array("name" => $name, 'type' => $type, 'id' => $entity_id);
+    $return = "<div data-entity='".json_encode($entity, JSON_HEX_APOS)."' class='search_option ".$div_class."' onclick=''>"
             . "<table style='width:100%;'><tr><td rowspan='2' style='width:35px;'>"
             . $img_src
             . "</td><td>"

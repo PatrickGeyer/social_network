@@ -2,11 +2,19 @@
  var isMobile = navigator.userAgent.match(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/);
 
 Array.max = function(array) {
-    return Math.max.apply(Math, array);
+    var final_array = new Array();
+    for(var i = 0; i < array.length; i++) {
+        final_array.push(parseInt(array[i]));
+    }
+    return Math.max.apply(Math, final_array);
 };
 
 Array.min = function(array) {
-    return Math.min.apply(Math, array);
+    var final_array = new Array();
+    for(var i = 0; i < array.length; i++) {
+        final_array.push(parseInt(array[i]));
+    }
+    return Math.min.apply(Math, final_array);
 };
 
 //END PROTOTYPES
@@ -98,7 +106,7 @@ function scroll_to_bottom(element, is_bottom, force) {
         element.mCustomScrollbar("update");
         //console.log('scrolling: ' + element.get(0).scrollHeight + " - " + element.scrollTop());
     } else {
-        console.log('false');
+        //console.log('false');
     }
 }
 
@@ -156,10 +164,12 @@ function alignTooltip(element, tooltip) {
     //console.log('tooltip created');
 }
 
-function fileList(element, type) {
+function fileList(element, type, callback) {
+    callback = typeof callback !== 'undefined' ? callback : function(){};
     $.post('Scripts/home.class.php', {type: type, action: "file_list"}, function(response) {
         $(element).html(response);
         $(element).mCustomScrollbar(SCROLL_OPTIONS);
+        callback();
     });
 }
 
@@ -201,13 +211,10 @@ function show_photo_choose() {
     $(document).on('click', '.profile_picture_chooser .file_item', function(event) {
         event.stopPropagation();
         var file = $(this).data('file');
-        var activity_id = $(this).attr('activity_id');
-        $.post('Scripts/files.class.php', {action: "preview", file_id: file.object.file_id, activity_id: activity_id}, function(response) {
-            response = $.parseJSON(response);
-            $('.upload_here').css('background-size', 'cover');
-            $('.upload_here').css('background-image', 'url("' + response.file.path + '")');
-            profile_picture_id = response.file.id;
-        });
+        console.log(file);
+        $('.upload_here').css('background-size', 'cover');
+        $('.upload_here').css('background-image', 'url("' + file.thumb_path + '")');
+        profile_picture_id = file.id;
     });
 }
 
@@ -238,7 +245,7 @@ function showUserPreview(element, user_id) {
             }
             else
             {
-                console.log("Preview is already in place.");
+               // console.log("Preview is already in place.");
             }
         }
     }
@@ -371,8 +378,28 @@ function getFeed(entity_id, entity_type, min_activity_id, activity_id, callback)
     $.post('Scripts/home.class.php', data, function(response) {
         response = $.parseJSON(response);
         callback(response);
-        console.log(response);
+        //console.log(response);
     });
+}
+
+function create_post(text, files, activity_id) {
+    var string = "<div class='home_feed_post_container'><div class='home_feed_post_container_arrow_border'>";
+    string += "<div class='home_feed_post_container_arrow'></div>";
+    string += "</div>";
+    string += "<div class='post_wrapper'>";
+    string += "<table style='width:100%;' cellspacing='0' cellpadding='0'>";
+    string += "<tr><td><table style='width:100%;' cellspacing='0' cellpadding='0'>";
+    string += "<tr style='height:100%;'><td><textarea tabindex='1' placeholder= 'Update Status or Share Files...' class='status_text scroll_thin'>" + text + "</textarea>";
+    string += "</td></tr><tr><td class='post_content_wrapper'>";
+    string += "<div class='post_media_wrapper'>";
+    string += "<div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div>";
+    string += "<img class='post_media_loader' src='Images/ajax-loader.gif'></img> </div></td></tr></table></td>";
+    string += "<td style='width:00px;height:100%;position: relative;'><div id='file_share'>";
+    string += "<table id='file_dialog' style='width:100%;' cellspacing='0' cellpadding='0'>";
+    string += "<div class='home_feed_post_container'></table></div>";
+    string += "</td></tr></table><div id='post_more_options' class='post_more_options'>";
+    string += "<button class='pure-button-success small submit_post'>Post</button>";
+    string += "</div></div></div></div></div>";
 }
 
 function empty_feed(properties) {
@@ -387,7 +414,7 @@ function homify(activity) {
         string += '<div id="single_post_' + activity.id + '" class="singlepostdiv">';
         string += "<div id='" + activity.id + "'>";
         string += "<a class='user_name_post' href='user?id=" + activity.user.encrypted_id + "'>";
-        string += "<div class='post_user_image' style='background-image:url(" + activity.user.pic + ");'></div></a>";
+        string += "<div class='post_user_image' style='background-image:url(\"" + activity.user.pic + "\");'></div></a>";
         string += "<a class='user_name_post user_preview user_preview_name' user_id='" + activity.user.id
                 + "' href='user?id=" + activity.user.encrypted_id + "'>";
         string += activity.user.name + "</a>";
@@ -419,17 +446,8 @@ function homify(activity) {
             string += show_comment(activity.comment[i]);
         }
 
-        string += "</div><div id='comment_input_" + activity.id + "' class='comment_input' ";
-        string += "style='padding-left:2px;padding-top:2px;'><table style='width:100%;'>";
-        string += "<tr><td style='vertical-align:top;width:40px;'>";
-        string += "<div class='post_comment_profile_picture post_comment_profile_picture_user' ";
-        string += "style='background-image:url(" + activity.user.pic + ");'></div></td><td cellspacing='0' style='vertical-align:top;'>"; //WRONG PIC
-        string += '<textarea data-activity_id="' + activity.id + '" placeholder="Write a comment..." ';
-        string += 'class="home_comment_input_text inputtext" id="comment_' + activity.id;
-        string += '"></textarea>';
-        string += "<div class='home_comment_input_text textarea_clone' id='comment_" + activity.id + "_clone'></div></td></tr></table></div>";
         string += "</div>";
-        string += "</td></tr></table></div>";
+        string += print_comment_input(activity.id);
         string += "</div></div>";
         string += "</div>";
     }
@@ -472,12 +490,29 @@ function homify(activity) {
     return string;
 }
 
+function print_comment_input(activity_id) {
+    var string = '';
+    string += "<div class='comment_input' ";
+    string += "style='padding-left:2px;padding-top:2px;'><table style='width:100%;'>";
+    string += "<tr><td style='vertical-align:top;width:40px;'>";
+    string += "<div class='post_comment_profile_picture post_comment_profile_picture_user' ";
+    string += "style='background-image:url(\"" + USER_PIC + "\");'></div></td><td cellspacing='0' style='vertical-align:top;'>"; //WRONG PIC
+    string += '<textarea placeholder="Write a comment..." ';
+    string += 'class="home_comment_input_text inputtext" id="comment_' + activity_id;
+    string += '"></textarea>';
+    string += "<div class='home_comment_input_text textarea_clone' id='comment_" + activity_id + "_clone'></div></td></tr></table></div>";
+    string += "</div>";
+    string += "</td></tr></table></div>";
+    return string;
+}
+
 function show_comment(comment) {
+    //console.log(comment);
     var string = '';
     comment.like.like_text = (comment.like.has_liked ? "Unlike" : "Like");
     string += "<div class='single_comment_container' data-comment_id='" + comment.id + "'>";
     string += "<table style='font-size: 0.9em;'><tr><td style='vertical-align:top;' rowspan='2'>";
-    string += "<div class='post_comment_profile_picture post_comment_profile_picture_user' style='background-image:url(" + comment.user.pic + ");'></div></td><td style='vertical-align:top;'>";
+    string += "<div class='post_comment_profile_picture post_comment_profile_picture_user' style='background-image:url(\"" + comment.user.pic + "\");'></div></td><td style='vertical-align:top;'>";
     string += "<a class='userdatabase_connection' href='user?id=" + comment.user.encrypted_id + "'>";
     string += "<span class='user_preview user_preview_name post_comment_user_name' user_id='" + comment.user.id + "'>" + comment.user.name + " </span></a>";
     string += "";
@@ -496,6 +531,13 @@ function show_comment(comment) {
 
     string += "</div><hr class='post_comment_seperator'>";
     return string;
+}
+
+function append_comment(post_id, comment) {
+    if ($('[data-comment_id="' + comment.id + '"]').length == 0) {
+        var comment_container = $('[data-activity_id="' + post_id + '"] .comment_box_comment');
+        comment_container.append(show_comment(comment));
+    }
 }
 
 function print_stats(activity) {
@@ -568,12 +610,12 @@ function print_file(file, activity_user, activity_type) {
     var classes = '';
     if (file.type == "Audio") {
         post_classes += "post_media_double";
-        //            post_styles += " height:auto; ";
+        //post_styles += " height:auto; ";
         post_content += print_doc_file(file);
     }
     else if (file.type == "Image") {
         //post_styles += "height:150px;";
-        post_classes += "post_media_full post_media_photo";
+        post_classes += "post_media_photo";
         post_content += print_doc_file(file);
         //post_styles += "' onclick='initiateTheater(" + activity_id + ", " + file.id + ");";
     }
@@ -598,14 +640,16 @@ function print_file(file, activity_user, activity_type) {
     else if (file.type == "Webpage") {
         post_classes += "post_media_full";
         post_styles += "height:auto;";
-        post_content += "<table style='height:100%;'><tr><td rowspan='3'>"
-                + "<div class='post_media_webpage_favicon' style='background-image:url(&quot;"
-                + file.web_favicon + "&quot;);'></div></td>" + "<td>"
-                + "<a class='user_preview_name' target='_blank' href='"
-                + file.URL + "'><span style='font-size:13px;'>"
-                + file.web_title + "</span></a></div></td></tr>"
-                + "<tr><td><span style='font-size:12px;' class='user_preview_community'>"
-                + file.web_description + "</span></td></tr></table>";
+        post_content += "<table style='height:100%;'><tr><td rowspan='3'>";
+        post_content += "<div class='post_media_webpage_favicon' style='background-image:url(&quot;";
+        post_content += file.web_favicon + "&quot;);'></div></td>" + "<td>";
+        post_content += "<a class='user_preview_name' target='_blank' href='";
+        post_content += file.URL + "'><span style='font-size:13px;'>";
+        post_content += file.web_title + "</span></a></div></td></tr>";
+        post_content += "<tr><td><span style='font-size:12px;' class='user_preview_community'>";
+        post_content += file.web_description + "</span></td></tr>";
+        post_content += "</table>";
+        
     } else {
         post_classes += "post_media_full";
         post_content += print_doc_file(file);
@@ -618,6 +662,16 @@ function print_file(file, activity_user, activity_type) {
         post_content += "<div style='background-image: url(\"" + DELETE + "\");' class='delete_cross delete_cross_top remove_event_post'></div>";
     }
     post_content += "</div>";
+    if(activity_type != "File" && typeof file.activity != 'undefined') {
+    	post_content += '<div data-activity_id="' + file.activity.id + '"><div class="comment_box"><div class="comment_box_comment">';
+        	for(var i in file.activity.comment) {
+            	post_content += show_comment(file.activity.comment[i]);
+        	}
+    	post_content += "</div>";
+    	post_content += print_comment_input(file.activity.id);
+    }
+        
+        
     string += "<div file_id='" + file.id + "' " + post_classes + "' " + post_styles + "'>" + post_content;
     string += "</div>";
     return string;
@@ -634,7 +688,9 @@ function print_doc_file(file) {
     var path = file.type_preview;
     if (file.type == "Folder") {
         path = FOLDER_THUMB;
-        link = "files?pd=" + file.encrypted_folder_id;
+        console.log(file);
+        console.log('FOLDER');
+        link = "files?pd=" + file.enc_parent_folder_id;
     } else if (file.type == "Image") {
         path = file.thumb_path;
         preview_classes += " post_media_photo ";
@@ -658,11 +714,20 @@ function print_doc_file(file) {
     string += "<a class='user_preview_name' target='_blank' href='" + link + "'>";
     string += "<p style='max-width:90%;margin:0px;font-size:13px;'>";
     string += file.name + "</p></a></td></tr>";
-    string += post_content_under_title;
-    string += "</td></tr><tr><td style='height:20px;'><span style='font-size:12px;' class='post_comment_time'>";
-    string += file.description + "</span></td></tr><tr><td><span class='post_comment_time'>Uploaded: ";
+    if(post_content_under_title != "") {
+        string += post_content_under_title;
+        string += "</td></tr>";
+    }
+    if(file.description != "") {
+        string += "<tr><td style='height:20px;'><span style='font-size:12px;' class='post_comment_time'>";
+    string += file.description + "</span></td></tr>";
+    }
+    string += "<tr><td><span class='post_comment_time'>Uploaded: ";
     string += file.time + "</span></td></tr>";
-    string += post_content + "</td></tr></table>";
+    if(post_content != "<tr><td>") {
+        string += post_content + "</td></tr>";
+    }
+    string += "</table>";
     return string;
 }
 function audio_player(file, part) {
@@ -726,6 +791,8 @@ function startAudioInfo(id, start, progress, end, uid)
         var audio = $('[uid="' + uid + '"] audio');
         audio.get(0).play();
         audio_items[uid] = audio.get(0);
+        audio_items[uid].volume = audio_volume;
+
         audio.bind('progress', function() {
             var track_length = audio.get(0).duration;
             var secs = audio.get(0).buffered.end(0);
@@ -773,6 +840,12 @@ function startAudioInfo(id, start, progress, end, uid)
     };
     start();
 }
+function audio_volume(vol) {
+    $('audio').each(function() {
+        console.log($(this).attr('id'));
+        $(this).get(0).volume = vol;
+    });
+}
 
 function createWaveForm(uid, progress) {
     if (uid in audio_items === false) {
@@ -811,7 +884,7 @@ function removeAudio(id)
 function video_player(file, classes, style, prepend, to_summin) {
     var string = '';
 
-    string += "<video width='100%' height='100%' id='" + prepend + file.id + "' class='video-js vjs-default-skin " + classes + "'"
+    string += "<div class='video_box'><video width='100%' height='100%' id='" + prepend + file.id + "' class='video-js vjs-default-skin " + classes + "'"
             + "preload='auto' controls poster='" + file.thumbnail + "'"
             + "style='" + style + "' "
             + "data-setup={}>"; // 
@@ -822,7 +895,7 @@ function video_player(file, classes, style, prepend, to_summin) {
     string += "<object data='" + file.mp4_path + "' width='320' height='240'>"
             + "<embed src='" + file.flv_path + "' width='320' height='240'>"
             + "</object>"
-            + "</video>";
+            + "</video></div>";
     return string;
 }
 function videoPlay(id) {
@@ -853,27 +926,25 @@ function videoPlay(id) {
     }
 
 }
-//var activity_timeout;
-function refreshContent(id) {
-//clearTimeout(activity_timeout);
 
+function refreshContent(id) {
     getFeed(null, null,null, id, function(response) {
         var activity_container = $('[data-activity_id="' + id + '"]');
         var comment_container = activity_container.find('.comment_box_comment');
-        for (var i in response) { //SHOULD ONLY BE 1
+        for (var i in response) { // FOR THAT ONE ACTIVITY
 
             for (var key in response[i].comment) {
-                if (comment_container.find('[data-comment_id="' + response[i].comment[key].id + '"]').length == 0) {
-                    comment_container.append(show_comment(response[i].comment[key]));
+                append_comment(response[i].id, response[i].comment[key]);
+            }
+            
+            for (var media_id in response[i].media) {
+                for (var key in response[i].media[media_id].activity.comment) {
+                    append_comment(response[i].media[media_id].activity.id, response[i].media[media_id].activity.comment[key]);
                 }
             }
-
-
         }
+        
     });
-//    activity_timeout = setTimeout(function() {
-//        refreshContent(id);
-//    }, 10000);
 }
 
 function isEmpty(input) {

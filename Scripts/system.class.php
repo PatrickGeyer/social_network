@@ -251,9 +251,8 @@ class System extends Base {
         return $string;
     }
 
-    public function findexts($filename) {
-        $filename = strtolower($filename);
-        return pathinfo($filename, PATHINFO_EXTENSION);
+    public function findexts($path) {
+        return pathinfo($path, PATHINFO_EXTENSION);
     }
 
     public function stripexts($filename) {
@@ -261,7 +260,7 @@ class System extends Base {
         return $exts;
     }
 
-    function humanTiming($time) {
+    function format_dates($time) {
         $time = time() - $time;
         $return;
         $tokens = array(
@@ -283,7 +282,11 @@ class System extends Base {
                 $return = "Just Now";
             }
             else {
-                $return = $numberOfUnits . ' ' . $text . (($numberOfUnits > 1) ? 's' : '') . " ago";
+                if($numberOfUnits == 1) {
+                    $return = 'a ' . $text . (($numberOfUnits > 1) ? 's' : '') . " ago";
+                } else {
+                    $return = $numberOfUnits . ' ' . $text . (($numberOfUnits > 1) ? 's' : '') . " ago";
+                }
             }
             if ($return != "") {
                 return $return;

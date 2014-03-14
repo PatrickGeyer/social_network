@@ -26,6 +26,10 @@ include_once('Scripts/js.php');
         sticky_receivers.group = new Array();
         sticky_receivers.community = new Array();
         var sticky_id = 0;
+        
+        
+        var USER_PIC = '<?php echo $user->getProfilePicture('THUMB'); ?>';
+        var audio_volume = 1;
 
         function show_group() {
             dialog(
@@ -175,9 +179,6 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                 } else if (type == 'community') {
                     receivers.community.push(new_receiver);
                 }
-                if (receivers_type == "event") {
-                    updateEventReceiverCount();
-                }
                 $('#names_input').val("");
                 var html = "<div class='message_added_receiver message_added_receiver_" + new_receiver + "' search_type='"
                         + receivers_type + "' entity_type='"
@@ -185,7 +186,6 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                     <span class='delete_receiver'>x \
                     </span></div>";
                 $('.' + receivers_type + '_names_slot').after(html);
-                //.alert($('#' + receivers_type + '_names_slot').length);
             }
             alignDialog();
             return receivers;
@@ -387,15 +387,17 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                     </div>
                 </div>
                 <div style="z-index:11;" class="search">
-                    <input class="search_box search_input" autocomplete='off'
-                           onkeyup='
-                               search(this.value, "universal", "#names_universal", function() {
-                               });
-                               if (event.keyCode == 13)
-                               {
-                                   $("#match").click();
-                               }' type='text' id='names_input' placeholder='Search for people, groups and files' name='receiver'>
-                    <div class="search_results" id='names_universal'></div>
+                    <div class='search_container'>
+                        <input class="search_box search_input" autocomplete='off'
+                               onkeyup='
+                                   search(this.value, "universal", "#names_universal", function() {
+                                   });
+                                   if (event.keyCode == 13)
+                                   {
+                                       $("#match").click();
+                                   }' type='text' id='names_input' placeholder='Search for people, groups and files' name='receiver'>
+                        <div class="search_results" id='names_universal'></div>
+                    </div>
                 </div>
                 <div class="gear">
                     <a style = "cursor:pointer;">

@@ -9,17 +9,214 @@ class Files {
     protected $user;
     protected $database_connection;
     protected $system;
-    public $supported_types = array(
-        "mp3", "jpg",
+    public $extension_to_mime = array(
+        'acx' => 'application/internet-property-stream',
+        'ai' => 'application/postscript',
+        'aif' => 'audio/x-aiff',
+        'aifc' => 'audio/x-aiff',
+        'aiff' => 'audio/x-aiff',
+        'asf' => 'video/x-ms-asf',
+        'asr' => 'video/x-ms-asf',
+        'asx' => 'video/x-ms-asf',
+        'au' => 'audio/basic',
+        'avi' => 'video/x-msvideo',
+        'axs' => 'application/olescript',
+        'bas' => 'text/plain',
+        'bcpio' => 'application/x-bcpio',
+        'bin' => 'application/octet-stream',
+        'bmp' => 'image/bmp',
+        'c' => 'text/plain',
+        'cat' => 'application/vnd.ms-pkiseccat',
+        'cdf' => 'application/x-cdf',
+        'cdf' => 'application/x-netcdf',
+        'cer' => 'application/x-x509-ca-cert',
+        'class' => 'application/octet-stream',
+        'clp' => 'application/x-msclip',
+        'cmx' => 'image/x-cmx',
+        'cod' => 'image/cis-cod',
+        'cpio' => 'application/x-cpio',
+        'crd' => 'application/x-mscardfile',
+        'crl' => 'application/pkix-crl',
+        'crt' => 'application/x-x509-ca-cert',
+        'csh' => 'application/x-csh',
+        'css' => 'text/css',
+        'dcr' => 'application/x-director',
+        'der' => 'application/x-x509-ca-cert',
+        'dir' => 'application/x-director',
+        'dll' => 'application/x-msdownload',
+        'dms' => 'application/octet-stream',
+        'doc' => 'application/msword',
+        'docx' => 'application/msword',
+        'dot' => 'application/msword',
+        'dvi' => 'application/x-dvi',
+        'dxr' => 'application/x-director',
+        'eps' => 'application/postscript',
+        'etx' => 'text/x-setext',
+        'evy' => 'application/envoy',
+        'exe' => 'application/octet-stream',
+        'fif' => 'application/fractals',
+        'flr' => 'x-world/x-vrml',
+        'gif' => 'image/gif',
+        'gtar' => 'application/x-gtar',
+        'gz' => 'application/x-gzip',
+        'h' => 'text/plain',
+        'hdf' => 'application/x-hdf',
+        'hlp' => 'application/winhlp',
+        'hqx' => 'application/mac-binhex40',
+        'hta' => 'application/hta',
+        'htc' => 'text/x-component',
+        'htm' => 'text/html',
+        'html' => 'text/html',
+        'htt' => 'text/webviewhtml',
+        'ico' => 'image/x-icon', 
+       'ief' => 'image/ief',
+        'iii' => 'application/x-iphone',
+        'ins' => 'application/x-internet-signup',
+        'isp' => 'application/x-internet-signup',
+        'jfif' => 'image/pipeg',
+        'jpe' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'jpg' => 'image/jpeg',
+        'js' => 'application/javascript',
+        'latex' => 'application/x-latex',
+        'lha' => 'application/octet-stream',
+        'lsf' => 'video/x-la-asf',
+        'lsx' => 'video/x-la-asf',
+        'lzh' => 'application/octet-stream',
+        'm13' => 'application/x-msmediaview',
+        'm14' => 'application/x-msmediaview',
+        'm3u' => 'audio/x-mpegurl',
+        'man' => 'application/x-troff-man',
+        'mdb' => 'application/x-msaccess',
+        'me' => 'application/x-troff-me',
+        'mht' => 'message/rfc822',
+        'mhtml' => 'message/rfc822',
+        'mid' => 'audio/mid',
+        'mny' => 'application/x-msmoney',
+        'mov' => 'video/quicktime',
+        'movie' => 'video/x-sgi-movie',
+        'mp2' => 'video/mpeg',
+        'mp3' => 'audio/mpeg',
+        'mpa' => 'video/mpeg',
+        'mpe' => 'video/mpeg',
+        'mpeg' => 'video/mpeg',
+        'mpg' => 'video/mpeg',
+        'mpp' => 'application/vnd.ms-project',
+        'mpv2' => 'video/mpeg',
+        'ms' => 'application/x-troff-ms',
+        'msg' => 'application/vnd.ms-outlook',
+        'mvb' => 'application/x-msmediaview',
+        'nc' => 'application/x-netcdf',
+        'nws' => 'message/rfc822',
+        'oda' => 'application/oda',
+        'p10' => 'application/pkcs10',
+        'p12' => 'application/x-pkcs12',
+        'p7b' => 'application/x-pkcs7-certificates',
+        'p7c' => 'application/x-pkcs7-mime',
+        'p7m' => 'application/x-pkcs7-mime',
+        'p7r' => 'application/x-pkcs7-certreqresp',
+        'p7s' => 'application/x-pkcs7-signature',
+        'pbm' => 'image/x-portable-bitmap',
+        'pdf' => 'application/pdf',
+        'pfx' => 'application/x-pkcs12',
+        'pgm' => 'image/x-portable-graymap',
+        'pko' => 'application/ynd.ms-pkipko',
+        'pma' => 'application/x-perfmon',
+        'pmc' => 'application/x-perfmon',
+        'pml' => 'application/x-perfmon',
+        'pmr' => 'application/x-perfmon',
+        'pmw' => 'application/x-perfmon',
+        'pnm' => 'image/x-portable-anymap',
+        'png' => 'image/png',
+        'pot' => 'application/vnd.ms-powerpoint',
+        'ppm' => 'image/x-portable-pixmap',
+        'pps' => 'application/vnd.ms-powerpoint',
+        'ppt' => 'application/vnd.ms-powerpoint',
+        'pptx' => 'application/vnd.ms-powerpoint',
+        'prf' => 'application/pics-rules',
+        'ps' => 'application/postscript',
+        'pub' => 'application/x-mspublisher',
+        'qt' => 'video/quicktime',
+        'ra' => 'audio/x-pn-realaudio',
+        'ram' => 'audio/x-pn-realaudio',
+        'ras' => 'image/x-cmu-raster',
+        'rgb' => 'image/x-rgb',
+        'rmi' => 'audio/mid',
+        'roff' => 'application/x-troff',
+        'rtf' => 'text/rtf',
+        'rtx' => 'text/richtext',
+        'scd' => 'application/x-msschedule',
+        'sct' => 'text/scriptlet',
+        'setpay' => 'application/set-payment-initiation',
+        'setreg' => 'application/set-registration-initiation',
+        'sh' => 'application/x-sh',
+        'shar' => 'application/x-shar',
+        'sit' => 'application/x-stuffit',
+        'snd' => 'audio/basic',
+        'spc' => 'application/x-pkcs7-certificates',
+        'spl' => 'application/futuresplash',
+        'src' => 'application/x-wais-source',
+        'sst' => 'application/vnd.ms-pkicertstore',
+        'stl' => 'application/vnd.ms-pkistl',
+        'stm' => 'text/html',
+        'sv4cpio' => 'application/x-sv4cpio',
+        'sv4crc' => 'application/x-sv4crc',
+        'svg' => 'image/svg+xml',
+        'swf' => 'application/x-shockwave-flash',
+        't' => 'application/x-troff',
+        'tar' => 'application/x-tar',
+        'tcl' => 'application/x-tcl',
+        'tex' => 'application/x-tex',
+        'texi' => 'application/x-texinfo',
+        'texinfo' => 'application/x-texinfo',
+        'tgz' => 'application/x-compressed',
+        'tif' => 'image/tiff',
+        'tiff' => 'image/tiff',
+        'tr' => 'application/x-troff',
+        'trm' => 'application/x-msterminal',
+        'tsv' => 'text/tab-separated-values',
+        'txt' => 'text/plain',
+        'uls' => 'text/iuls',
+        'ustar' => 'application/x-ustar',
+        'vcf' => 'text/x-vcard',
+        'vrml' => 'x-world/x-vrml',
+        'wav' => 'audio/x-wav',
+        'wcm' => 'application/vnd.ms-works',
+        'wdb' => 'application/vnd.ms-works',
+        'wks' => 'application/vnd.ms-works',
+        'wmf' => 'application/x-msmetafile',
+        'wps' => 'application/vnd.ms-works',
+        'wri' => 'application/x-mswrite',
+        'wrl' => 'x-world/x-vrml',
+        'wrz' => 'x-world/x-vrml',
+        'xaf' => 'x-world/x-vrml',
+        'xbm' => 'image/x-xbitmap',
+        'xla' => 'application/vnd.ms-excel',
+        'xlc' => 'application/vnd.ms-excel',
+        'xlm' => 'application/vnd.ms-excel',
+        'xls' => 'application/vnd.ms-excel',
+        'xltv' => 'application/vnd.ms-excel',
+        'xlw' => 'application/vnd.ms-excel',
+        'xof' => 'x-world/x-vrml',
+        'xpm' => 'image/x-xpixmap',
+        'xwd' => 'image/x-xwindowdump',
+        'z' => 'application/x-compress',
+        'zip' => 'application/zip',
     );
-    public $video_types = array(
-        "mp4", "webm", "ogg",
+    public $mime_to_extension = array();
+    public $alias_mime = array(
+        'text/javascript' => 'application/javascript',
+        'application/x-javascript' => 'application/javascript',
+        'rtf' => 'application/rtf',
     );
 
     public function __construct() {
         $this->user = User::getInstance();
         $this->database_connection = Database::getConnection();
         $this->system = System::getInstance();
+        foreach ($this->extension_to_mime as $ext => $mimetype) {
+            $this->mime_to_extension[$mimetype] = $ext;
+        }
     }
 
     public static function getInstance() {
@@ -56,7 +253,7 @@ class Files {
         $return_array = $sql->fetchAll();
         return $return_array;
     }
-    
+
     public function getActivity($file_id) {
         $sql = "SELECT activity_id FROM activity_media WHERE file_id = :file_id AND activity_id IN"
                 . " (SELECT id FROM activity WHERE type = 'File'); ";
@@ -66,7 +263,7 @@ class Files {
         ));
         return $sql->fetchColumn();
     }
-    
+
     public function get_folder_file_id($folder_id) {
         $sql = "SELECT id FROM file WHERE user_id = :user_id AND folder_id = :folder_id;";
         $sql = $this->database_connection->prepare($sql);
@@ -76,37 +273,30 @@ class Files {
         ));
         return $sql->fetchColumn();
     }
-    
+
     public function getInfo($file_id) {
-        $array = array(
-            "id" => $file_id,
-            "type" => $this->getType('', $file_id), 
-            "path" => $this->getPath($file_id, ''),
-            "webm_path" => $this->getPath($file_id, 'webm'),
-            "flv_path" => $this->getPath($file_id, 'flv'),
-            "mp4_path" => $this->getPath($file_id, 'mp4'),
-            "thumb_path" => $this->getPath($file_id, 'thumb'),
-            "icon_path" => $this->getPath($file_id, 'icon'),
-            "thumbnail" => $this->getAttr($file_id, 'thumbnail'),
-            "type_preview" => $this->getFileTypeImage($file_id, 'THUMB')
-            );
-        return $array;
+        $sql = "SELECT * FROM file WHERE id = :file_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":file_id" => $file_id));
+        return $sql->fetch(PDO::FETCH_ASSOC);
     }
-    
+
     public function format_file($file) {
-    	if(!isset($file['type_preview'])) {
-    		$file['type_preview'] = $this->getFileTypeImage($file, 'THUMB');
-    	}
-        if(!isset($file['uid'])) {
-        	$file['uid'] = str_replace('.', '', uniqid('', true));
+        if (!isset($file['type_preview'])) {
+            $file['type_preview'] = $this->getFileTypeImage($file, 'THUMB');
         }
-        $file['time'] = $this->system->humanTiming($file['time']);
-        if(!isset($file['view']['count'])) {
-        	$file['view']['count'] = $this->getViewCount($file['id']);
+        if (!isset($file['uid'])) {
+            $file['uid'] = str_replace('.', '', uniqid('', true));
+        }
+        $file['enc_parent_folder_id'] = $this->system->encrypt($file['parent_folder_id']);
+        $file['time'] = $this->system->format_dates($file['time']);
+        if (!isset($file['view']['count'])) {
+            $file['view']['count'] = $this->getViewCount($file['id']);
         }
         return $file;
     }
-    
+
     public function styleRecentlyShared($file) {
         $post_classes = " class='files_feed_item ";
         $post_styles = " style='";
@@ -196,9 +386,14 @@ class Files {
         }
     }
 
-    function getType($extn, $file_id = NULL) {
+    function getType($mime_type, $file_id = NULL) {
+        $mime_type = $this->alias_mime_type($mime_type);
         if ($file_id === NULL) {
-            $extn = $this->system->findexts($extn);
+            //die($mime_type.  print_r($this->mime_to_extension));
+            if (array_key_exists($mime_type, $this->mime_to_extension)) {
+                $extn = $this->mime_to_extension[$mime_type];
+            }
+
             switch ($extn) {
 
                 case "png" :
@@ -228,6 +423,7 @@ class Files {
                     break;
 
                 case "txt" :
+                case "rtf" :
                     $extn = "Text File";
                     break;
                 case "pdf" :
@@ -235,6 +431,7 @@ class Files {
                     break;
                 case "docx" :
                 case "doc" :
+                case "dot" :
                     $extn = "WORD Document";
                     break;
                 case "pptx" :
@@ -253,6 +450,15 @@ class Files {
                     $extn = "Backup File";
                     break;
 
+                //CODE
+                case "html" :
+                case "css" :
+                case "js" :
+                case "php" :
+                case "cs":
+                case "dll":
+                    $extn = "Code";
+
                 case "" :
                     $extn = "Folder";
                     break;
@@ -270,6 +476,22 @@ class Files {
                 ":file_id" => $file_id
             ));
             return $sql->fetchColumn();
+        }
+    }
+
+    function mime_content_type($path) {
+        $file_info = new finfo(FILEINFO_MIME);  // object oriented approach!
+        $mime_type = $file_info->buffer(file_get_contents($path));  // e.g. gives "image/jpeg"
+        $mime_type = explode(';', $mime_type);
+        return $this->alias_mime_type($mime_type[0]);
+    }
+    
+    function alias_mime_type($mime) {
+        if (array_key_exists($mime, $this->alias_mime)) {
+             return $this->alias_mime[$mime];
+             
+        } else {
+            return $mime;
         }
     }
 
@@ -306,7 +528,7 @@ class Files {
                 . ">&#9658;</div>";
             }
         }
-        echo "<div class='files_actions'><table><tr style='vertical-align:middle;'><td>";
+        echo "<div class='files_actions'><table cellspacing='0' cellpadding='0'><tr style='vertical-align:middle;'><td>";
 
         echo "<a href='" . $file['path'] . "' download><div class='files_actions_item files_actions_download'></div></a></td><td>";
         echo "<hr class='files_actions_seperator'></td><td>";
@@ -481,41 +703,45 @@ class Files {
             echo $this->imagePreview($file);
         }
     }
+
     function getFileTypeImage($file, $size = "THUMB") {
         if ($file['type'] == "Audio") {
             return constant("BASE::AUDIO_THUMB"); //CHANGE TO SIZE
         }
         else if ($file['type'] == "Image") {
-            return constant("BASE::IMAGE_".$size);
+            return constant("BASE::IMAGE_" . $size);
         }
         else if ($file['type'] == "Video") {
-            return constant("BASE::VIDEO_".$size);
+            return constant("BASE::VIDEO_" . $size);
         }
         else if ($file['type'] == "Folder") {
-            return constant("BASE::FOLDER_".$size);
+            return constant("BASE::FOLDER_" . $size);
         }
         else if ($file['type'] == "PDF Document") {
-            return constant("BASE::PDF_".$size);
+            return constant("BASE::PDF_" . $size);
         }
         else if ($file['type'] == "WORD Document") {
-            return constant("BASE::WORD_".$size);
+            return constant("BASE::WORD_" . $size);
         }
         else if ($file['type'] == "EXCEL Document") {
-            return constant("BASE::EXCEL_".$size);
+            return constant("BASE::EXCEL_" . $size);
         }
         else if ($file['type'] == "ZIP Archive") {
-            return constant("BASE::ZIP_".$size);
+            return constant("BASE::ZIP_" . $size);
         }
-        else if($file['type'] == "PPT Document") {
-            return constant("BASE::POWERPOINT_".$size);
+        else if ($file['type'] == "PPT Document") {
+            return constant("BASE::POWERPOINT_" . $size);
         }
-        else if($file['type'] == "Text File") {
-        	return constant("BASE::TEXT_".$size);
+        else if ($file['type'] == "Text File") {
+            return constant("BASE::TEXT_" . $size);
+        } else if($file['type'] == "Code") {
+            return constant("BASE::CODE_" . $size);
         }
         else {
-            return constant("BASE::FILE_".$size);
+            return constant("BASE::FILE_" . $size);
         }
     }
+
     private function imagePreview($file) {
         return "<div class='audio_hidden_container' id='file_div_hidden_container_" . $file['id'] . "'>"
                 . "<div id='buffer_" . $file['id'] . "' style='position:absolute;height:20px;width:20px;"
@@ -585,15 +811,15 @@ class Files {
         $sql->execute(array(
             ":user_id" => $this->user->user_id,
             ":name" => $name,
-            ":path" =>"User/Files/".$this->user->user_id."/".$name.".zip",
+            ":path" => "User/Files/" . $this->user->user_id . "/" . $name . ".zip",
             ":type" => "Folder",
             ":folder_id" => $new_folder_id,
             ":parent_folder_id" => $parent_folder,
             ":time" => time(),
         ));
 
-        $this->system->create_zip($_SERVER['DOCUMENT_ROOT']."/User/Files/".$this->user->user_id."/".$name.".zip", array(), true);
-        
+        $this->system->create_zip($_SERVER['DOCUMENT_ROOT'] . "/User/Files/" . $this->user->user_id . "/" . $name . ".zip", array(), true);
+
         return true;
     }
 
@@ -614,7 +840,7 @@ class Files {
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $this->user->user_id, ":id" => $id));
         $file = $sql->fetch(PDO::FETCH_ASSOC);
-        echo $file['type']. "/";
+        echo $file['type'] . "/";
         if ($file['type'] != "Folder") {
             foreach ($file as $key => $value) {
                 if ($key != "type" || $key != "folder_id") {
@@ -640,7 +866,7 @@ class Files {
         $sql = "UPDATE file SET visible=0 WHERE user_id = :user_id AND id = :id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
-            ":user_id" => $this->user->user_id, 
+            ":user_id" => $this->user->user_id,
             ":id" => $id));
     }
 
@@ -702,7 +928,7 @@ class Files {
             ":file_id" => $file_id
         ));
     }
-    
+
     function removeFromPost($file_id, $post_id) {
         $sql = "UPDATE activity_media SET visible = 0 WHERE file_id = :file_id AND activity_id = :post_id;";
         $sql = $this->database_connection->prepare($sql);
@@ -711,29 +937,29 @@ class Files {
             ":file_id" => $file_id
         ));
     }
-    
+
     function getUsedSize() {
         $sql = "SELECT size FROM file WHERE user_id = :user_id AND visible=1;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":user_id" => $this->user->user_id
-            ));
+        ));
         $used_size = 0;
-        foreach($sql->fetchAll(PDO::FETCH_ASSOC) as $size) {
+        foreach ($sql->fetchAll(PDO::FETCH_ASSOC) as $size) {
             $used_size += $size['size'];
         }
+        $used_size = round(($used_size/1073741824) * 100);
         return $used_size;
     }
+
     function upload($post, $file) {
         require_once ('thumbnail.php');
 
         $tmpFilePath = $file['file']['tmp_name'];
-        $savename = preg_replace("/[^A-Za-z0-9.]/", '_', $file['file']['name']);
-        $savename = str_replace('/', '_', $savename);
-        $savename = str_replace(' ', '_', $savename);
+        $savename = preg_replace("/[^a-z0-9]+/i", '', $file['file']['name']);
         $savepath = 'User/Files/' . $this->user->user_id . "/";
-        $base_path = $_SERVER['DOCUMENT_ROOT']."/";
-        $dir = $base_path.$savepath;
+        $base_path = $_SERVER['DOCUMENT_ROOT'] . "/";
+        $dir = $base_path . $savepath;
         $parent_folder = $post['parent_folder'];
         if (!file_exists($dir)) {
             mkdir($dir, 0777, true);
@@ -779,20 +1005,20 @@ class Files {
                 $return_info = array();
                 $lastInsertId;
                 $name = preg_replace("/[^A-Za-z0-9 ]/", '', $this->system->stripexts($file['file']['name']));
-                $pure_name = str_replace(' ', '', $name);
                 $ext = $this->system->findexts($file['file']['name']);
-                $file_name = $pure_name . "." . $ext;
-                $thumbnail = $savepath . $pure_name . ".jpg";
+                $file_name = $name . ($ext != null && $ext != "" ? "." : "" ) . $ext;
+                $mimetype = $this->mime_content_type($tmpFilePath);
+                $thumbnail = $savepath . $name . ".jpg";
 
                 $flv_path = $mp4_path = $ogg_path = $swf_path = $webm_path = $mp3_path = $thumbsavepath = $iconsavepath = '';
                 ignore_user_abort(true);
                 set_time_limit(0);
                 if (move_uploaded_file($tmpFilePath, "../" . $savepath . $file_name)) {
                     $size = filesize("../" . $savepath . $file_name);
-                    $type = $this->getType($file['file']['name']);
+                    $type = $this->getType($mimetype);
                     if ($type == "Audio") {
                         $convert_path = $base_path . $savepath . $file_name;
-                        $iconsavepath = $mp3_path = $thumbsavepath = $savepath . $pure_name . "_thumb.mp3";
+                        $iconsavepath = $mp3_path = $thumbsavepath = $savepath . $name . "_thumb.mp3";
                         $convert = $this->convert($convert_path, $base_path . $mp3_path, '-ab 64');
                         if ($convert != $base_path . $mp3_path) {
                             echo ("Error: " . $convert);
@@ -800,18 +1026,18 @@ class Files {
                     }
                     else if ($type == "Video") {
                         $convert_path = $base_path . $savepath . $file_name;
-                        $mp4_path = $savepath . $pure_name . ".mp4";
-                        $ogg_path = $savepath . $pure_name . ".ogg";
-                        $flv_path = $savepath . $pure_name . ".flv";
-                        $webm_path = $savepath . $pure_name . ".webm";
-                        $flv_path = $savepath . $pure_name . ".flv";
+                        $mp4_path = $savepath . $name . ".mp4";
+                        $ogg_path = $savepath . $name . ".ogg";
+                        $flv_path = $savepath . $name . ".flv";
+                        $webm_path = $savepath . $name . ".webm";
+                        $flv_path = $savepath . $name . ".flv";
                         if ($ext != "mp4") {
                             $convert = $convert = $this->convert($convert_path, $base_path . $mp4_path, " -vcodec libx264 -profile:v baseline -preset ultrafast ");
                             if ($convert != $base_path . $mp4_path) {
                                 echo("Error: " . $convert);
                             }
                         }
-                        
+
                         if ($ext != "webm") {
                             $convert = $convert = $this->convert($convert_path, $base_path . $webm_path, "-b 1500k -vcodec libvpx -acodec libvorbis -aq 3 -ab 128000 -f webm -g 30 -s 640x360", "");
                             if ($convert != $base_path . $webm_path) {
@@ -827,8 +1053,8 @@ class Files {
 //                        if ($convert != $base_path . $ogg_path) {
 //                            echo("Error: " . $convert);
 //                        }
-                        
-                        
+
+
                         if ($ext != "flv") {
                             $convert = $convert = $this->convert($convert_path, $base_path . $flv_path, "");
                             if ($convert != $base_path . $flv_path) {
@@ -843,7 +1069,6 @@ class Files {
                         if ($convert != $base_path . $thumbnail) {
                             echo("Error: " . $convert);
                         }
-                        
                     }
                     else {
                         $thumbsavepath = $savepath . "thumb_" . $file_name;
@@ -861,11 +1086,11 @@ class Files {
                     $sql = "INSERT INTO `file` (user_id, "
                             . "size, path, thumb_path, icon_path, "
                             . "thumbnail, flv_path, mp4_path, ogg_path, webm_path, "
-                            . "name, type, parent_folder_id, time, last_mod) "
+                            . "name, type, mime_type, parent_folder_id, time, last_mod) "
                             . "VALUES (:user_id, :size, :file_path, "
                             . ":thumbsavepath, :iconsavepath, :thumbnail, "
                             . ":flv_path, :mp4_path, :ogg_path, :webm_path, "
-                            . ":name, :type, :parent_folder, :time, :time);";
+                            . ":name, :type, :mime_type, :parent_folder, :time, :time);";
                     $sql = $this->database_connection->prepare($sql);
                     $sql->execute(array(
                         ":user_id" => $this->user->user_id,
@@ -876,6 +1101,7 @@ class Files {
                         ":thumbnail" => $thumbnail,
                         ":name" => $file['file']['name'],
                         ":type" => $type,
+                        ":mime_type" => $mimetype,
                         ":parent_folder" => $parent_folder,
                         ":flv_path" => $flv_path,
                         ":mp4_path" => $mp4_path,
@@ -885,7 +1111,7 @@ class Files {
                     ));
                     $lastInsertId = $this->database_connection->lastInsertId();
                     $this->database_connection->commit();
-                    
+
                     $this->database_connection->beginTransaction();
                     $sql = "INSERT INTO `activity` (user_id, type, visible, time) "
                             . "VALUES (:user_id, :type, 0, :time);";
@@ -897,7 +1123,7 @@ class Files {
                     ));
                     $lastActivityInsertId = $this->database_connection->lastInsertId();
                     $this->database_connection->commit();
-                    
+
                     $this->database_connection->beginTransaction();
                     $sql = "INSERT INTO `activity_media` (activity_id, file_id) "
                             . "VALUES (:activity_id, :file_id);";
@@ -908,14 +1134,14 @@ class Files {
                     ));
                     $lastActivityInsertId = $this->database_connection->lastInsertId();
                     $this->database_connection->commit();
-                    if($parent_folder == 0) {
-                        $path = "User/Files/".$this->user->user_id."/root.zip";
+                    if ($parent_folder == 0) {
+                        $path = "User/Files/" . $this->user->user_id . "/root.zip";
                     }
                     else {
                         $path = $this->getAttr($this->get_folder_file_id($parent_folder), 'path');
                     }
                     $this->system->add_to_zip($path, array($savepath . $file_name), TRUE);
-                    die(json_encode($this->getInfo($lastInsertId)));
+                    die(json_encode($this->format_file($this->getInfo($lastInsertId))));
                 }
                 else {
                     echo "Upload Failed!";
@@ -966,18 +1192,18 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         else if ($_POST['action'] == "rename") {
             die($files->rename($_POST['file_id'], $_POST['text']));
         }
-        else if($_POST['action'] == "upload") {
+        else if ($_POST['action'] == "upload") {
             ignore_user_abort(true);
             $files->upload($_POST, $_FILES);
         }
-        else if($_POST['action'] == "preview") {
+        else if ($_POST['action'] == "preview") {
             $activity_id = NULL;
-            if(isset($_POST['activity_id'])) {
+            if (isset($_POST['activity_id'])) {
                 $activity_id = $_POST['activity_id'];
             }
             die(json_encode($home->homeify($home->getSingleActivity($files->getActivity($_POST['file_id'], "File")), 'preview', $activity_id), JSON_HEX_APOS));
         }
-        else if($_POST['action'] == "removePostFile") {
+        else if ($_POST['action'] == "removePostFile") {
             $files->removeFromPost($_POST['file_id'], $_POST['activity_id']);
         }
     }
