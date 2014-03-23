@@ -2,13 +2,13 @@
 
 require_once('user.class.php');
 require_once('system.class.php');
+require_once('home.class.php');
 
-class Files {
+class Files extends System {
 
     private static $files = NULL;
     protected $user;
-    protected $database_connection;
-    protected $system;
+    protected $home;
     public $extension_to_mime = array(
         'acx' => 'application/internet-property-stream',
         'ai' => 'application/postscript',
@@ -213,7 +213,6 @@ class Files {
     public function __construct() {
         $this->user = User::getInstance();
         $this->database_connection = Database::getConnection();
-        $this->system = System::getInstance();
         foreach ($this->extension_to_mime as $ext => $mimetype) {
             $this->mime_to_extension[$mimetype] = $ext;
         }
@@ -241,13 +240,11 @@ class Files {
             $id = $this->user->user_id;
         }
         $sql = "SELECT * FROM file WHERE type != 'Webpage' AND id IN (SELECT file_id FROM file_share WHERE user_id = :viewed_id "
-                . "AND (receiver_id = :user_id OR (position = :user_position AND community_id = :user_school)"
+                . "AND (receiver_id = :user_id "
                 . "OR group_id IN(SELECT group_id FROM group_member WHERE member_id = :user_id)));";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":user_id" => $this->user->user_id,
-            ":user_position" => $this->user->getPosition(),
-            ":user_school" => $this->user->getCommunityId(),
             ":viewed_id" => $viewed_id,
         ));
         $return_array = $sql->fetchAll();
@@ -283,17 +280,29 @@ class Files {
     }
 
     public function format_file($file) {
+        $this->home = Home::getInstance();
+        $activity = array('id' => $this->getActivity($file['id']));
+        if($file['type'] != "Folder") {
+            $file['type'] = $this->getType($this->mime_content_type($file['path']));
+        }
         if (!isset($file['type_preview'])) {
             $file['type_preview'] = $this->getFileTypeImage($file, 'THUMB');
         }
         if (!isset($file['uid'])) {
             $file['uid'] = str_replace('.', '', uniqid('', true));
         }
-        $file['enc_parent_folder_id'] = $this->system->encrypt($file['parent_folder_id']);
-        $file['time'] = $this->system->format_dates($file['time']);
+        $file['enc_parent_folder_id'] = $this->encrypt($file['parent_folder_id']);
+        $file['time'] = $this->format_dates($file['time']);
         if (!isset($file['view']['count'])) {
             $file['view']['count'] = $this->getViewCount($file['id']);
         }
+        if (!isset($file['like']['count'])) {
+            $file['like']['count'] = $this->home->getLikeNumber($activity['id']);
+        }
+        if(!isset($file['activity']['id'])) {
+            $file['activity']['id'] = $this->getActivity($file['id']);
+        }
+        $file['activity']['stats'] = $this->home->getStats($activity);
         return $file;
     }
 
@@ -306,15 +315,15 @@ class Files {
         if ($file['type'] == "Audio") {
             $post_classes .= "files_shared_audio";
             $post_styles .= " height:auto; ";
-            $post_content .= $this->system->audioPlayer($file['thumb_path'], $file['name'], false, false);
+            $post_content .= $this->audioPlayer($file['thumb_path'], $file['name'], false, false);
         }
         else if ($file['type'] == "Image") {
-            $post_styles .= "background-image:url(\"" . $file['thumb_path'] . "\")' "
-                    . "onclick='initiateTheater(\"no_text\", " . $file['id'] . ");";
+            //$post_styles .= "background-image:url(\"" . $file['thumb_path'] . "\")' "
+                    //. "onclick='initiateTheater(\"no_text\", " . $file['id'] . ");";
         }
         else if ($file['type'] == "Video") {
             $post_classes .= "files_shared_video";
-            $post_content .= $this->system->videoPlayer(
+            $post_content .= $this->videoPlayer(
                     $file['id'], $file['path'], $classes, "height:100%;", "home_feed_video_", TRUE, "display:none;");
         }
         else if ($file['type'] == "PDF Document") {
@@ -330,6 +339,17 @@ class Files {
                     "<tr><td><span style='font-size:12px;' class='user_preview_community'>" . $file['web_description'] . "</span></td></tr></table>";
         }
         return "<td><div " . $post_classes . "' " . $post_styles . "'>" . $post_content . "</div></td>";
+    }
+    
+    function get_shared($file_id) {
+        $sql = "SELECT group_id, user_id FROM activity_share WHERE activity_id IN "
+                . "(SELECT activity_id FROM activity_media WHERE file_id = :file_id);";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":file_id" => $file_id
+        ));
+        $return = $sql->fetchAll(PDO::FETCH_ASSOC);
+        return $return;
     }
 
     public function convert($from, $to, $args = NULL, $before_args = NULL) {
@@ -388,98 +408,80 @@ class Files {
 
     function getType($mime_type, $file_id = NULL) {
         $mime_type = $this->alias_mime_type($mime_type);
-        if ($file_id === NULL) {
-            //die($mime_type.  print_r($this->mime_to_extension));
-            if (array_key_exists($mime_type, $this->mime_to_extension)) {
-                $extn = $this->mime_to_extension[$mime_type];
-            }
+        $extn = '';
+        switch ($mime_type) {
 
-            switch ($extn) {
+            case "image/png" :
+            case "image/jpg" :
+            case "image/jpeg" :
+            case "image/svg" :
+            case "image/gif" :
+            case "image/ico" :
+                $extn = "Image";
+                break;
 
-                case "png" :
-                case "jpg" :
-                case "jpeg" :
-                case "svg" :
-                case "gif" :
-                case "ico" :
-                    $extn = "Image";
-                    break;
+            case "video/mp4" :
+            case "video/mov" :
+            case "video/wmv" :
+            case "video/avi" :
+            case "video/mpg" :
+            case "video/mpeg" :
+            case "video/m4p" :
+            case "video/mkv" :
+                $extn = "Video";
+                break;
 
-                case "mp4" :
-                case "mov" :
-                case "wmv" :
-                case "avi" :
-                case "mpg" :
-                case "mpeg" :
-                case "m4p" :
-                case "mkv" :
-                    $extn = "Video";
-                    break;
+            case "audio/mp3" :
+            case "audio/mpeg" :
+            case "audio/wav" :
+            case "audio/m4a" :
+                $extn = "Audio";
+                break;
 
-                case "mp3" :
-                case "wav" :
-                case "m4a" :
-                    $extn = "Audio";
-                    break;
+            case "text/plain" :
+            case "text/rtf" :
+                $extn = "Text File";
+                break;
+            case "application/pdf" :
+                $extn = "PDF Document";
+                break;
+            case "application/msword" :
+                $extn = "WORD Document";
+                break;
+            case "application/vnd.ms-powerpoint" :
+                $extn = "PPT Document";
+                break;
+            case "application/vnd.ms-excel" :
+                $extn = "EXCEL Document";
+            case "zip" :
+                $extn = "ZIP Archive";
+                break;
+            case "bak" :
+                $extn = "Backup File";
+                break;
 
-                case "txt" :
-                case "rtf" :
-                    $extn = "Text File";
-                    break;
-                case "pdf" :
-                    $extn = "PDF Document";
-                    break;
-                case "docx" :
-                case "doc" :
-                case "dot" :
-                    $extn = "WORD Document";
-                    break;
-                case "pptx" :
-                case "ppt" :
-                    $extn = "PPT Document";
-                    break;
-                case "xls" :
-                case "xlsx" :
-                case "xlsm" :
-                case "xlsb" :
-                    $extn = "EXCEL Document";
-                case "zip" :
-                    $extn = "ZIP Archive";
-                    break;
-                case "bak" :
-                    $extn = "Backup File";
-                    break;
+            //CODE
+            case "text/html" :
+            case "text/css" :
+            case "application/js" :
+            case "text/php" :
+            case "text/cs":
+            case "application/x-msdownload":
+                $extn = "Code";
 
-                //CODE
-                case "html" :
-                case "css" :
-                case "js" :
-                case "php" :
-                case "cs":
-                case "dll":
-                    $extn = "Code";
+            case "" :
+                $extn = "Folder";
+                break;
 
-                case "" :
-                    $extn = "Folder";
-                    break;
-
-                default :
-                    $extn = strtoupper($extn) . " File";
-                    break;
-            }
-            return $extn;
+            default :
+                $extn = strtoupper($extn) . " File";
+                break;
         }
-        else {
-            $sql = "SELECT type FROM file WHERE id = :file_id;";
-            $sql = $this->database_connection->prepare($sql);
-            $sql->execute(array(
-                ":file_id" => $file_id
-            ));
-            return $sql->fetchColumn();
-        }
+        return $extn;
     }
 
     function mime_content_type($path) {
+        $path = $_SERVER['DOCUMENT_ROOT']."/".$path;
         $file_info = new finfo(FILEINFO_MIME);  // object oriented approach!
         $mime_type = $file_info->buffer(file_get_contents($path));  // e.g. gives "image/jpeg"
         $mime_type = explode(';', $mime_type);
@@ -495,7 +497,7 @@ class Files {
         }
     }
 
-    function getContents($parent_folder = 0, $user_id = null) {
+    function get_content($parent_folder = 0, $user_id = null) {
         if ($user_id == null) {
             $user_id = $this->user->user_id;
         }
@@ -503,58 +505,11 @@ class Files {
                 . "AND parent_folder_id = :parent_folder AND visible=1 ORDER BY name;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":user_id" => $user_id, ":parent_folder" => $parent_folder));
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    function tableSort($file, $actions = true, $directions = false, $viewed_id = null) {
-
-        if ($file['type'] != "Folder") {
-            echo "<div file_id='" . $file['id'] . "' id='file_div_" . $file['id'] . "' path='" . $file['name'] . "' class='files'>";
+        $sql = $sql->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($sql as $key => $file) {
+            $sql[$key] = $this->format_file($file);
         }
-        else {
-            echo $this->folderDiv($file['id'], $file['folder_id'], $file['path']);
-        }
-        echo $this->filePreview($file, 'icon');
-        echo $this->filePreview($file, 'thumb');
-
-        if ($directions == true) {
-            $this->printDirections($file, $viewed_id);
-        }
-        else {
-            echo "<p class='files ellipsis_overflow'>" . $this->system->stripexts($file['name']) . "</p>";
-            if ($file['type'] == "Video" || $file['type'] == "Audio") {
-                echo "<div id='audio_play_icon_" . $file['id'] . "' "
-                . "class='file_play_icon'"
-                . ">&#9658;</div>";
-            }
-        }
-        echo "<div class='files_actions'><table cellspacing='0' cellpadding='0'><tr style='vertical-align:middle;'><td>";
-
-        echo "<a href='" . $file['path'] . "' download><div class='files_actions_item files_actions_download'></div></a></td><td>";
-        echo "<hr class='files_actions_seperator'></td><td>";
-
-        if ($actions != false) {
-            echo "<div class='files_actions_item files_actions_delete' "
-            . "onclick='deleteFile(this, " . $file['id'] . ");if(event.stopPropagation){event.stopPropagation();}"
-            . "event.cancelBubble=true;'></div></td><td>"
-            . "<hr class='files_actions_seperator'></td><td>"
-            . "<div class='files_actions_item files_actions_share' data-file_id='" . $file['id'] . "'></div></td>";
-        }
-
-        if ($file['type'] == "Audio" || $file['type'] == "Video") {
-            echo "<td><hr id='audio_play_icon_seperator_" . $file['id'] . "' style='display:none;' "
-            . "class='files_actions_seperator'></td><td><div id='audio_play_icon_" . $file['id'] . "' "
-            . "class='audio_play_icon' style='display:none;'"
-            . ">&#9658;</div></td>";
-        }
-
-        echo "</tr></table></div>";
-        $views = $this->getViewCount($file['id']);
-        echo "<p class='files ellipsis_overflow' style='float:right;'>" . $views . " views</p>";
-        $home = Home::getInstance();
-        $likes = $home->getLikeNumber($this->getActivity($file['id']));
-        echo "<p class='files ellipsis_overflow' style='float:right;margin-right:5px;'>" . $likes . " likes -</p>";
-        echo "</div>";
+        return $sql;
     }
 
     public function getViewCount($file) {
@@ -567,27 +522,18 @@ class Files {
     }
 
     private function printDirections($file, $viewed_id) {
-        $sql = "SELECT id, file_id, user_id, community_id, position, group_id, receiver_id FROM file_share WHERE file_id = :file_id;";
+        $sql = "SELECT id, file_id, user_id, position, group_id, receiver_id FROM file_share WHERE file_id = :file_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(":file_id" => $file['id']));
         $file_props = $sql->fetch(PDO::FETCH_ASSOC);
 
         $options = array();
 
-        $school_sql = "SELECT name FROM community WHERE id = :receiver_id;";
         $group_sql = "SELECT group_name FROM `group` WHERE id = :receiver_id;";
 
         $final_sql;
 
         switch ($file_props) {
-            case isset($file_props['year']):
-            case isset($file_props['community_id']):
-                $final_sql = $school_sql;
-                $options = array(
-                    ":receiver_id" => $file_props['community_id']
-                );
-                break;
-
             case isset($file_props['group_id']):
                 $final_sql = $group_sql;
                 $options = array(
@@ -606,7 +552,7 @@ class Files {
         if (!empty($final_sql)) {
             echo $receiver;
         }
-        echo "<p class='files ellipsis_overflow'>" . $this->user->getName($viewed_id) . " &#65515; &#10162; <em>" . $this->system->stripexts($file['name']) . "</em></p><br>";
+        echo "<p class='files ellipsis_overflow'>" . $this->user->getName($viewed_id) . " &#65515; &#10162; <em>" . $this->stripexts($file['name']) . "</em></p><br>";
     }
 
     public function getName($file_id) {
@@ -742,57 +688,6 @@ class Files {
         }
     }
 
-    private function imagePreview($file) {
-        return "<div class='audio_hidden_container' id='file_div_hidden_container_" . $file['id'] . "'>"
-                . "<div id='buffer_" . $file['id'] . "' style='position:absolute;height:20px;width:20px;"
-                . "background-image:url(\"Images/ajax-loader.gif\");background-size:cover;'></div>"
-                . "<div style='background-image:url(&quot;" . $file['thumb_path'] . "&quot;);"
-                . "background-size:cover;background-repeat:no-repeat;background-position:center;width:100%;height:100%;max-height:400px;'>"
-                . "<img class='image_placeholder' f_id='" . $file['id'] . "'"
-                . "style=' visibility:hidden; width:100%;height:100%;max-width:300px;max-height:280px;' src='" . $file['thumb_path']
-                . "'onload='$(\"#buffer_" . $file['id'] . "\").fadeOut();resizeDiv($(this));'></img>"
-                . "</div></div>";
-    }
-
-    private function audioPreview($file) {
-        return "<div class='audio_hidden_container' id='file_div_hidden_container_" . $file['id'] . "'>"
-                . $this->system->audioPlayer($file['path'], $this->system->stripexts($file['name']), false, $file['id'])
-                . "</div>";
-    }
-
-    private function videoPreview($file) {
-        return "<div style='height:200px;' class='audio_hidden_container' id='file_div_hidden_container_" . $file['id'] . "'>"
-                . $this->system->videoPlayer($file['id'], $file['path'], "file_video", NULL, "file_video_", TRUE)
-                . "</div>";
-    }
-
-    private function folderPreview($file) {
-        $return = "<div class='audio_hidden_container' id='file_div_hidden_container_" . $file['id'] . "'>";
-        $files_list = $this->getContents($file['folder_id'], $this->user->user_id);
-        $nmr = count($files_list);
-        $return .= "<span style='color:grey; font-size:13px;'>There are " . $nmr . " files in this folder</span>";
-        if (isset($nmr) && $nmr <= 0) {
-            //echo "<div class='files' onclick='if(event.stopPropagation){event.stopPropagation();}event.cancelBubble=true;'>No Files in this Directory</div>";
-        }
-        $return .= "</div>";
-
-        return $return;
-    }
-
-    private function pdfPreview($file) {
-        $return = "<div style='max-height:300px;' class='audio_hidden_container' id='file_div_hidden_container_" . $file['id'] . "'>";
-        //$return .= "<embed src='viewer?id=" . $file['id'] . "' height='100%' width='100%' >"; TOO MANY RESOURCES
-        $return .= "</div>";
-
-        return $return;
-    }
-
-    private function folderDiv($file_id, $folder_id, $path) {
-        return "<div id='file_div_" . $file_id . "' onclick ='window.location.assign(&quot;files?pd="
-                . urlencode($this->system->encrypt($folder_id))
-                . "&quot;);' id='" . $path . "' class='folder'>";
-    }
-
     function createFolder($parent_folder = 1, $name) {
         $sql = "SELECT MAX(folder_id) FROM file WHERE user_id = :user_id;";
         $sql = $this->database_connection->prepare($sql);
@@ -818,7 +713,7 @@ class Files {
             ":time" => time(),
         ));
 
-        $this->system->create_zip($_SERVER['DOCUMENT_ROOT'] . "/User/Files/" . $this->user->user_id . "/" . $name . ".zip", array(), true);
+        $this->create_zip($_SERVER['DOCUMENT_ROOT'] . "/User/Files/" . $this->user->user_id . "/" . $name . ".zip", array(), true);
 
         return true;
     }
@@ -889,14 +784,6 @@ class Files {
     function shareFile($file_id, $receivers) {
 
         switch ($receivers) {
-            case isset($file_props['position']):
-            case isset($file_props['community_id']):
-                $final_sql = $school_sql;
-                $options = array(
-                    ":receiver_id" => $file_props['community_id']
-                );
-                break;
-
             case isset($file_props['group_id']):
                 $final_sql = $group_sql;
                 $options = array(
@@ -1004,16 +891,16 @@ class Files {
             if ($file['file']['name'] != "" || ".") {
                 $return_info = array();
                 $lastInsertId;
-                $name = preg_replace("/[^A-Za-z0-9 ]/", '', $this->system->stripexts($file['file']['name']));
-                $ext = $this->system->findexts($file['file']['name']);
+                $name = preg_replace("/[^A-Za-z0-9 ]/", '', $this->stripexts($file['file']['name']));
+                $ext = $this->findexts($file['file']['name']);
                 $file_name = $name . ($ext != null && $ext != "" ? "." : "" ) . $ext;
-                $mimetype = $this->mime_content_type($tmpFilePath);
                 $thumbnail = $savepath . $name . ".jpg";
 
                 $flv_path = $mp4_path = $ogg_path = $swf_path = $webm_path = $mp3_path = $thumbsavepath = $iconsavepath = '';
                 ignore_user_abort(true);
                 set_time_limit(0);
                 if (move_uploaded_file($tmpFilePath, "../" . $savepath . $file_name)) {
+                    $mimetype = $this->mime_content_type($savepath . $file_name);
                     $size = filesize("../" . $savepath . $file_name);
                     $type = $this->getType($mimetype);
                     if ($type == "Audio") {
@@ -1075,8 +962,9 @@ class Files {
                         $iconsavepath = $savepath . "icon_" . $file_name;
                     }
 
-                    if (strcmp($type, 'Image') === 0) {
-                        $resizeObj = new resize('../' . $savepath . $file_name);
+                    if ($type == 'Image') {
+                        
+                        $resizeObj = new resize("../" . $savepath . $file_name);
                         $resizeObj->resizeImage(300, 300, 'crop');
                         $resizeObj->saveImage("../" . $thumbsavepath);
                         $resizeObj->resizeImage(50, 50, 'crop');
@@ -1140,8 +1028,8 @@ class Files {
                     else {
                         $path = $this->getAttr($this->get_folder_file_id($parent_folder), 'path');
                     }
-                    $this->system->add_to_zip($path, array($savepath . $file_name), TRUE);
-                    die(json_encode($this->format_file($this->getInfo($lastInsertId))));
+                    $this->add_to_zip($path, array($savepath . $file_name), TRUE);
+                    return $this->format_file($this->getInfo($lastInsertId));
                 }
                 else {
                     echo "Upload Failed!";
@@ -1194,14 +1082,14 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
         else if ($_POST['action'] == "upload") {
             ignore_user_abort(true);
-            $files->upload($_POST, $_FILES);
+            die(json_encode($files->upload($_POST, $_FILES)));
         }
         else if ($_POST['action'] == "preview") {
             $activity_id = NULL;
             if (isset($_POST['activity_id'])) {
                 $activity_id = $_POST['activity_id'];
             }
-            die(json_encode($home->homeify($home->getSingleActivity($files->getActivity($_POST['file_id'], "File")), 'preview', $activity_id), JSON_HEX_APOS));
+            die(json_encode($home->homeify($home->getSingleActivity($files->getActivity($_POST['file_id'], "File")), 'home', $activity_id), JSON_HEX_APOS)); //HOME WAS PREVIEW
         }
         else if ($_POST['action'] == "removePostFile") {
             $files->removeFromPost($_POST['file_id'], $_POST['activity_id']);

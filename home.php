@@ -56,7 +56,7 @@ include_once('chat.php');
                 getFeed(share_group_id, 'home', min_activity_id, activity_id, function(response){
                     var string = '';
                     for (var i in response) {
-                        string += homify(response[i]);
+                        string +=  Application.prototype.feed.homify(response[i]);
                     }
                     $('.feed_container').prepend(string);
                 });
@@ -176,12 +176,6 @@ include_once('chat.php');
                                     <ul class='default_dropdown_menu'>
                                         <li class='default_dropdown_item' controller_id='audience_selector' share_id='a'>
                                             <span>Everyone</span>
-                                        </li>
-                                        <li class='default_dropdown_item' controller_id='audience_selector' share_id='s'>
-                                            <span><?php echo $user->getCommunityName(); ?></span>
-                                        </li>
-                                        <li class='default_dropdown_item' controller_id='audience_selector' share_id='y'>
-                                            <span>Year <?php echo $user->getPosition(); ?></span>
                                         </li>
                                         <?php
                                         foreach ($group->getUserGroups() as $single_group) {

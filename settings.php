@@ -1,31 +1,7 @@
 <?php
 include_once('welcome.php');
 include_once('chat.php');
-$allschools = "SELECT id, name, FROM community";
-$allschools = $database_connection->prepare($allschools);
-$allschools->execute();
-$allschools = $allschools->fetchAll(PDO::FETCH_ASSOC);
 $emailvalid = false;
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    include_once('Scripts/lock.php');
-    $database_connection->beginTransaction();
-
-    if ($user->getGender() == "Male") {
-        $activity_query = "INSERT INTO activity (user_id, status_text, type) 
-        VALUES(:user_id' changed his profile picture','profile');
-        INSERT INTO activity_share(activity_id, community_id) VALUES(" . $database_connection->lastInsertId() . ", :community_id)";
-        $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $activity_query->execute(array(":user_id" => $user->getId(), ":community_id" => $user->getCommunityId()));
-    }
-    else {
-        $activity_query = "INSERT INTO activity (user_id, status_text, type) 
-        VALUES(:user_id, ' changed her profile picture','profile')";
-        $activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $activity_query->execute(array(":user_id" => $user->getId()));
-    }
-    $database_connection->commit();
-}
 ?>
 <?php
 $current_tab = 'profile';
@@ -50,7 +26,6 @@ if (isset($_GET['tab'])) {
             var email = $('#email_primary').val();
             var password = $('#password_first').val();
 //            var language = ;
-//            var community = ;
 //            var position = ;
         }
         function updateFiles() {
@@ -122,6 +97,16 @@ if (isset($_GET['tab'])) {
                             <?php if ($current_tab == "profile") : ?>
                                 <h3>Profile</h3>
                                 <ul>
+                                    <?php if(Base::$FB->getUser()) { ?>
+                                    <li class='section'>
+                                        <div>
+                                            <img style='display:inline-block;' src='https://graph.facebook.com/<?php echo Base::$FB->getUser(); ?>/picture'></img>
+                                            <a style='display:inline-block;vertical-align:top;' href='<?php echo Base::$FB->getLogoutUrl();?>'>
+                                                <button class='pure-button-success'>Unlink Facebook</button>
+                                            </a>
+                                        </div>
+                                    </li>
+                                    <?php } ?>
                                     <li class='section'>
                                         <label class='settings'>Email</label>
                                         <input type="text" placeholder="Email..." autocomplete="off" id="email_primary" value="<?php
@@ -153,24 +138,6 @@ if (isset($_GET['tab'])) {
                                                     <li value='ge' class='default_dropdown_item' controller_id='language_selector'>
                                                         <span>German</span>
                                                     </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li class='section'>
-                                        <label class='settings'>Community</label>
-                                        <div class='default_dropdown_selector' style='display:inline-block;' wrapper_id='community_selector'>
-                                            <span class='default_dropdown_preview'><?php echo $user->getCommunityName(); ?></span>
-                                            <div class='default_dropdown_wrapper' id='community_selector'>
-                                                <ul class='default_dropdown_menu'>
-                                                    <?php
-                                                    foreach ($community->getCommunities() as $community) {
-                                                        echo "<li value='" . $community['id']
-                                                        . "' class='default_dropdown_item' controller_id='community_selector'><span>"
-                                                        . $community['name']
-                                                        . "</span></li>";
-                                                    }
-                                                    ?>
                                                 </ul>
                                             </div>
                                         </div>

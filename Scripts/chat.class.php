@@ -3,15 +3,14 @@
 include_once('database.class.php');
 include_once('user.class.php');
 include_once('system.class.php');
+include_once('base.class.php');
 
-class Chat {
+class Chat extends System {
     private static $chat = NULL;
     private $user;
-    protected $database_connection;
     public function __construct() {
+        parent::__construct();
         $this->user = User::getInstance();
-        $this->database_connection = Database::getConnection();
-        $this->system = System::getInstance();
     }
     public static function getInstance ( ) {
         if (self :: $chat) {
@@ -22,12 +21,12 @@ class Chat {
         return self :: $chat;
     }
     public function get_chat_rooms() {
-        $sql = "SELECT name, id FROM chat_room WHERE id IN( SELECT chat_room FROM chat_member WHERE user_id = :user_id OR community_id = :community_id OR group_id IN "
+        $sql = "SELECT name, id FROM chat_room WHERE id IN"
+                . "(SELECT chat_room FROM chat_member WHERE user_id = :user_id OR group_id IN "
                 . "(SELECT group_id FROM group_member WHERE user_id = :user_id));";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
              ":user_id" => $this->user->user_id,
-             ":community_id" => $this->user->getCommunityId(),
         ));
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -35,42 +34,56 @@ class Chat {
         
         $text = strip_tags($text);
         $text = trim($text);
-        $text = $this->system->linkReplace($text, NULL, "[", "]");
-        $text = preg_replace('/\n(\s*\n){2,}/', "<br>", $text);
+        //$text = $this->linkReplace($text, NULL, "[", "]");
+        $text = nl2br($text);
+        // $text = preg_replace('/\n(\s*\n){2,}/', "<br>", $text);
         if ($text == "" || $text == "<br>") {
-            
-        } else {
-            $sql = "INSERT INTO chat(user_id, `text`, chat_room, time) VALUES(:user_id, :text, :aimed, :time);";
-            $variables = array(
-                ":user_id" => $this->user->getId(),
-                ":text" => $text,
-                ":time" => time(),
-                ":aimed" => $aimed,
-            );
+            return;
         }
+        $this->database_connection->beginTransaction();
+        $sql = "INSERT INTO chat(user_id, `text`, chat_room, time) VALUES(:user_id, :text, :aimed, :time);";
+        $variables = array(
+            ":user_id" => $this->user->getId(),
+            ":text" => $text,
+            ":time" => time(),
+            ":aimed" => $aimed,
+        );
         $sql = $this->database_connection->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $sql->execute($variables);
+        $last_chat_id = $this->database_connection->lastInsertId();
+        $this->database_connection->commit();
+        $sql = "SELECT `user_id`, `text`, `time`, `id` FROM chat WHERE id = :id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(":id" => $last_chat_id));
+        $chat_array = array();
+        $chat = $sql->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($chat as $record) {
+                    $chat_array[] = $this->format_chat($record);
+                    //$this->markChatRead($record['id']);
+                }
+        return $chat_array;
     }
 
-    function getContent($chat_id, $all = 'false', $min = 0, $max = 999999999999) {
+    function getContent($chat_id, $all = 'false', $min = 0, $max = Base::LARGEST_INT) {
         $time = time();
         
         $chat_query_string = "SELECT chat.user_id, chat.text, chat.time, chat.id FROM "
                 . "(SELECT * FROM chat WHERE chat_room = :chat_room ".($all != "false" ? "AND id BETWEEN :min AND :max" : ""). " ORDER BY id DESC LIMIT 25)chat ";
+
         if ($all == 'false') {
             $chat_query_string .= "WHERE id > :max ORDER BY id ASC;";
             $options = array(
                     ":max" => $max,
                     ":chat_room" => $chat_id,
                         );
-        } else if($all == "previous") {
+        } else if($all == 'previous') {
             $chat_query_string .= "WHERE (id BETWEEN :min AND :max) ORDER BY id ASC;";
             $options = array(
                     ":min" => $min, 
                     ":max" => $max,
                     ":chat_room" => $chat_id,
                         );
-        } else {
+        } else if($all == 'true') {
             $chat_query_string .= " ORDER BY id ASC LIMIT 25;";
             $options = array(
                     ":chat_room" => $chat_id,
@@ -79,43 +92,34 @@ class Chat {
                         );
         }        
         
-        $chat_query = $this->database_connection->prepare($chat_query_string);
 
         $chat_array = array();
         $chat_ids = array();
 
         if ($all == 'false') {
-            while ((time() - $time) < 30) {
-                $chat_query->execute($options);
-                $chat_number = $chat_query->rowCount();
-                if ($chat_number == 0) {
-                    usleep(1000000);
-                } else {
-                    $chat_entries = $chat_query->fetchAll(PDO::FETCH_ASSOC);
-                    foreach ($chat_entries as $record) {
-                        array_push($chat_ids, $record['id']);
-                        $record['pic'] = $this->user->getProfilePicture('chat', $record['user_id']);
-                        $record['time'] = $this->system->format_dates($record['time']);
-                        $record['name'] = $this->user->getName($record['user_id']);
-                        $chat_array[] = $record;
-                        //$this->markChatRead($record['id']);
-                    }
-                    break;
+            $chat_query = $this->database_connection->prepare($chat_query_string);
+            $chat_query->execute($options);
+            $chat_number = $chat_query->rowCount();
+            if ($chat_number > 0) {
+                $chat_entries = $chat_query->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($chat_entries as $record) {
+                    array_push($chat_ids, $record['id']);
+                    $chat_array[] = $this->format_chat($record);
+                    //$this->markChatRead($record['id']);
                 }
             }
-        } else {
+        }
+        else {
+            $chat_query = $this->database_connection->prepare($chat_query_string);
             $chat_query->execute($options);
             $chat_number = $chat_query->rowCount();
             if ($chat_number > 0) {
                 $chat_entries = $chat_query->fetchAll(PDO::FETCH_ASSOC);
                 $i = count($chat_entries);
                 foreach ($chat_entries as $record) {
-                    if($i < 20) {
+                    if ($i < 20) {
                         array_push($chat_ids, $record['id']);
-                        $record['pic'] = $this->user->getProfilePicture('chat', $record['user_id']);
-                        $record['time'] = $this->system->format_dates($record['time']);
-                        $record['name'] = $this->user->getName($record['user_id']);
-                        $chat_array[] = $record;
+                        $chat_array[] = $this->format_chat($record);
                         //$this->markChatRead($record['id']);
                     }
                     $i--;
@@ -141,6 +145,13 @@ class Chat {
         	}
         }
         return json_encode(array_reverse($chat_array));
+    }
+
+    function format_chat($chat) {
+        $chat['pic'] = $this->user->getProfilePicture('chat', $chat['user_id']);
+        $chat['time'] = $this->format_dates($chat['time']);
+        $chat['name'] = $this->user->getName($chat['user_id']);
+        return $chat;
     }
 
     private function markChatRead($id = NULL) {
@@ -174,19 +185,21 @@ class Chat {
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $chat = Chat::getInstance();
-    if (isset($_POST['chat'])) {
-        $oldest = 0;
-        $newest = 9999999999999;
-        if(isset($_POST['oldest'])) {
-            $min = $_POST['oldest'];
-        }
-        if(isset($_POST['newest'])) {
-            $newest = $_POST['newest'];
-        }
-        die($chat->getContent($_POST['chat'], $_POST['all'], $oldest, $newest));
-    }
     if (isset($_POST['action']) && $_POST['action'] == "addchat") {
-        $chat->submitChat($_POST['aimed'], $_POST['chat_text']);
+        die(json_encode($chat->submitChat($_POST['aimed'], $_POST['chat_text'])));
     }
+} else if ($_SERVER['REQUEST_METHOD'] == "GET"){    
+    $chat = Chat::getInstance();
+    if (isset($_GET['chat'])) {
+        $oldest = 0;
+        $newest = null;
+        if(isset($_GET['oldest'])) {
+            $min = $_GET['oldest'];
+        }
+        if(isset($_GET['newest'])) {
+            $newest = $_GET['newest'];
+        }
+        echo ($chat->getContent($_GET['chat'], $_GET['all'], $oldest, $newest));
+    } 
 }
 ?>

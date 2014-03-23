@@ -1,21 +1,9 @@
 <?php
 include_once("Scripts/config.php");
-require_once("../Global_Tools/facebook-php-sdk-master/facebook.php");
-//include_once("Scripts/demo.php");
 include_once("Scripts/system.class.php");
 //include_once("Scripts/js.php");
-$allschools = "SELECT name, id FROM community;";
-$allschools = $database_connection->prepare($allschools, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-$allschools->execute();
 $system = System::getInstance();
 $system->getGlobalMeta();
-$config = array(
-    'appId' => '219388501582266',
-    'secret' => 'c1684eed82295d4f1683367dd8c9a849',
-    'fileUpload' => false, // optional
-    'allowSignedRequest' => false, // optional, but should be set to false for non-canvas apps
-);
-$facebook = new Facebook($config);
 ?>
 
 <html>
@@ -28,7 +16,6 @@ $facebook = new Facebook($config);
         <script src="//cdn.jsdelivr.net/jquery.mcustomscrollbar/2.8.1/jquery.mCustomScrollbar.min.js"></script>
         <script>window.mCustomScrollbar || document.write('<script src="Scripts/external/jquery.mCustomScrollbar.min.js">\x3C/script>');</script>
         <link href="Scripts/external/jquery.mCustomScrollbar.min.css" rel="stylesheet" type="text/css" />
-        <script src="Scripts/eventhandlers.js"></script>
         <title>Login</title>
         <script>
             function signUp() {
@@ -53,11 +40,6 @@ $facebook = new Facebook($config);
                     pulsate($('.password_signup'), 300, "red");
                     error = true;
                 }
-                var community_id = $('.default_dropdown_selector[wrapper_id="organization_choose"]').attr('value');
-                            if (community_id === "" || community_id === "undefined" || typeof community_id === "undefined") {
-                                pulsate($('.default_dropdown_selector[wrapper_id="organization_choose"]'), 300, "red");
-                                error = true;
-                            }
                             var position = $('.default_dropdown_selector[wrapper_id="position_choose"]').attr('value');
                             if (position === "" || position === "undefined" || typeof position === "undefined") {
                                 pulsate($('.default_dropdown_selector[wrapper_id="position_choose"]'), 300, "red");
@@ -75,7 +57,6 @@ $facebook = new Facebook($config);
                                     lastname: lastname,
                                     email: email,
                                     password: password,
-                                    community_id: community_id,
                                     position: position,
                                     gender: gender
                                 }, function(response) {

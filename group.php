@@ -93,9 +93,7 @@ else {
         <table class='info_table_layout'>
             <tr>
                 <td style='width:220px;'>
-                    <div class='profilepicturediv' style='background-image:url("<?php echo $group->getProfilePicture('thumb', $group_id); ?>");' 
-                         onclick='initiateTheater("ACTIVITY_ID", "FILE_ID");
-                                                        adjustTheater("no_text");'>
+                    <div class='profilepicturediv' style='background-image:url("<?php echo $group->getProfilePicture('thumb', $group_id); ?>");'>
 <?php
 //if($user->getId() == $group->getFounder())
 // {

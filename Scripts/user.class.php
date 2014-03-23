@@ -1,13 +1,13 @@
 <?php
 include_once('database.class.php');
+include_once('system.class.php');
 
 class User {
     public $user_id;
+    private $system = NULL;
     private $password = NULL;
     public $email = NULL;
     public $name = array(1 => NULL, 2 => NULL, 3 => NULL);
-    public $community_id = NULL;
-    public $community_name = NULL;
     public $position = NULL;
     public $location = NULL;
     public $gender = NULL;
@@ -19,10 +19,11 @@ class User {
     private $database_connection;
     private static $user = null;
     public function __construct() {
-        if(isset($_COOKIE['id'])) {
-            $this->user_id = base64_decode($_COOKIE['id']);
+        //if(isset($_COOKIE['id'])) {
+            $this->user_id = (isset($_COOKIE['id']) ? base64_decode($_COOKIE['id']) : "''");
             $this->database_connection = Database::getConnection();
-        }
+            $this->system = System::getInstance();
+       // }
     }
     public static function getInstance ( ) {
         if (self :: $user) {
@@ -32,6 +33,44 @@ class User {
         self :: $user = new User;
         return self :: $user;
     }
+
+    function create($user_info) {
+        $user_info = array(
+            'password' => (isset($user_info['password']) ? $user_info['password'] : 'social'),
+            'firstname' => (isset($user_info['firstname']) ? $user_info['firstname'] : null),
+            'lastname' => (isset($user_info['lastname']) ? $user_info['lastname'] : null),
+            'gender' => (isset($user_info['gender']) ? $user_info['gender'] : null),
+            'email' => (isset($user_info['email']) ? $user_info['email'] : null),
+            'position' => (isset($user_info['position']) ? $user_info['position'] : null),
+            'dob' => (isset($user_info['dob']) ? $user_info['dob'] : null),
+            'fb_id' => (isset($user_info['fb_id']) ? $user_info['fb_id'] : null),
+        );
+        $this->database_connection->beginTransaction();
+        $user_query = "INSERT INTO user (fb_id, password, dob, position, email,  gender, first_name, last_name) "
+                . "VALUES (:fb_id, :password, :dob, :position, :email, :gender, :first_name, :last_name);";
+        $user_query = $this->database_connection->prepare($user_query);
+        $user_query->execute(
+                array(
+                    ":password" => $this->system->encrypt($user_info['password']),
+                    ":position" => $user_info['position'],
+                    ":email" => $user_info['email'],
+                    ":gender" => $user_info['gender'],
+                    ":first_name" => $user_info['firstname'],
+                    ":last_name" => $user_info['lastname'],
+                    ":dob" => $user_info['dob'],
+                    ":fb_id" => $user_info['fb_id']
+        ));
+        $user_id = $this->database_connection->lastInsertId();
+        $this->database_connection->commit();
+
+        $dir = $_SERVER['DOCUMENT_ROOT'] . '/User/Files/' . $user_id;
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777);
+        }
+        $this->system->create_zip($dir . "/root.zip", array(), TRUE);
+        return $user_id;
+    }
+
     function getId() {
         return $this->user_id;
     }
@@ -61,7 +100,7 @@ class User {
             $id = $this->user_id;
         }
         if($name === 3) {
-            $user_query = "SELECT name FROM user WHERE id = :user_id";
+            $user_query = "SELECT CONCAT(`first_name`, ' ' ,`last_name`)as name FROM user WHERE id = :user_id";
         }
         else if($name === 1) {
             $user_query = "SELECT first_name FROM user WHERE id = :user_id";
@@ -76,6 +115,20 @@ class User {
             $this->name[$name] = $user;
         }
         return $user;
+    }
+
+    function getConnections($id = NULL) {
+        if(!isset($id)) {
+            $id = $this->user_id;
+        }
+        $query = "SELECT IF(receiver_id = :user_id, user_id, receiver_id)as user_id FROM connection "
+                . "WHERE user_id = :user_id OR receiver_id = :user_id;";
+        $query = $this->database_connection->prepare($query);
+        $query->execute(array(
+            ":user_id" => $id
+        ));
+        $connections = $query->fetchAll(PDO::FETCH_ASSOC);
+        return $this->system->array_values_r($connections);
     }
 
     function getPosition($id = null) {
@@ -111,7 +164,7 @@ class User {
         $location_query->execute(array(":user_id" => $id));
         $location = $location_query->fetch(PDO::FETCH_ASSOC);
         if($set) {
-            $this->community_name = $user;
+            //$this->comun_name = $user;
         }
         return $location;
     }
@@ -141,43 +194,43 @@ class User {
                 ));
     }
     
-    function getCommunityId($id = null) {
-        $set = false;
-        if (!isset($id)) {
-            $id = $this->user_id;
-            $set = true;
-            if(!is_null($this->community_id)) {
-                return $this->community_id;
-            }
-        }
-        $user_query = "SELECT community_id FROM user WHERE id = :user_id";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $user_query->execute(array(":user_id" => $id));
-        $user = $user_query->fetchColumn();
-        if($set) {
-            $this->community_id = $user;
-        }
-        return $user;
-    }
-
-    function getCommunityName($id = null) {
-        $set = false;
-        if (!isset($id)) {
-            $id = $this->user_id;
-            $set = true;
-            if(!is_null($this->community_name)) {
-                return $this->community_name;
-            }
-        }
-        $user_query = "SELECT name FROM community WHERE id = (SELECT community_id FROM user WHERE id = :user_id);";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $user_query->execute(array(":user_id" => $id));
-        $user = $user_query->fetchColumn();
-        if($set) {
-            $this->community_name = $user;
-        }
-        return $user;
-    }
+//    function getComunityId($id = null) {
+//        $set = false;
+//        if (!isset($id)) {
+//            $id = $this->user_id;
+//            $set = true;
+//            if(!is_null($this->comunity_id)) {
+//                return $this->commnity_id;
+//            }
+//        }
+//        $user_query = "SELECT comunity_id FROM user WHERE id = :user_id";
+//        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+//        $user_query->execute(array(":user_id" => $id));
+//        $user = $user_query->fetchColumn();
+//        if($set) {
+//            $this->comunity_id = $user;
+//        }
+//        return $user;
+//    }
+//
+//    function getComunityName($id = null) {
+//        $set = false;
+//        if (!isset($id)) {
+//            $id = $this->user_id;
+//            $set = true;
+//            if(!is_null($this->comunity_name)) {
+//                return $this->comunity_name;
+//            }
+//        }
+//        $user_query = "SELECT name FROM comunity WHERE id = (SELECT commnity_id FROM user WHERE id = :user_id);";
+//        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+//        $user_query->execute(array(":user_id" => $id));
+//        $user = $user_query->fetchColumn();
+//        if($set) {
+//            $this->commuity_name = $user;
+//        }
+//        return $user;
+//    }
 
     function getProfilePicture($size = "thumb", $id = null) {
         $size = strtolower($size);
@@ -322,24 +375,18 @@ class User {
         return $user;
     }
 
-    function updateSettings($about = null, $community = null, $year = null, $email = null, $language = null) {
+    function updateSettings($about = null, $year = null, $email = null, $language = null) {
         $sql = "UPDATE user SET ";
         if (isset($about)) {
             $sql .= 'about="' . $about . '"';
         }
-        if (isset($community) && $community != "") {
-            $sql .= ',school = "' . $community . '"';
-        }
-        if (isset($year) && $community != "") {
-            $sql .= ', year = "' . $year . '" ';
-        }
-        if (isset($email) && $community != "") {
+        if (isset($email)) {
             $sql .= ',email="' . $email . '" ';
         }
-        if (isset($language) && $community != "") {
+        if (isset($language)) {
             $sql .= ',default_language="' . $language . '"';
         }
-        $sql .= ' WHERE id=' . $this->getId();
+        $sql .= ' WHERE id=' . $this->user_id;
         $sql = $this->database_connection->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $sql->execute(array());
     }
@@ -493,9 +540,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             $array[] = $user->getName($_POST['id']);
             $array[] = $user->getProfilePicture('chat', $_POST['id']);
             $array[] = $user->getAbout($_POST['id']);
-            $array[] = $user->getCommunityName($_POST['id']);
             $array[] = $user->getPosition($_POST['id']);
-            $array[] = urlencode(base64_encode($user->getCommunityId($_POST['id'])));
             echo json_encode($array);
         } else if ($_POST['action'] == 'setOnline') {
             $user->setOnline();

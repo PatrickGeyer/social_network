@@ -61,9 +61,17 @@ $used_width = $files->getUsedSize();
                         title: 'Create Folder',
                     });
                 });
-                $(document).on('click', 'div.files', function() {
+                $(document).on('click', 'div.files, div.folder', function() {
                     var id = $(this).attr('file_id');
-                    window.location.assign('files?f=' + id);
+                    $('.file_hidden_container').slideUp('fast');
+                    //if($(this).hasClass('file_hidden_container_active')) {
+                        //$(this).children('.file_hidden_container').slideUp('fast');
+                    //} else {
+                        $(this).children('.file_hidden_container').slideDown('fast');
+                    //}
+                    $(this).toggleClass('file_hidden_container_active');
+                    
+                    //window.location.assign('files?f=' + id);
                 });
 
                 refreshVideoJs();
@@ -73,7 +81,7 @@ $used_width = $files->getUsedSize();
                     var index = 0;
                     var files = getInputFiles('file');
                     var uploadCount = 0;
-                        uploadFile(files,
+                        Application.prototype.file.upload.upload(files,
                         function() {},
                         function(percent) {
                         }, function() {
@@ -155,7 +163,7 @@ $used_width = $files->getUsedSize();
                     files[i].file = files1[i];
                     files[i].extension = files1[i].name.split('.').pop();
                     files[i].name = files1[i].name;
-                    files[i].type = getType(files[i].extension);
+                    files[i].type = 'File';
                     files[i].pic = VIDEO_THUMB;
                     files[i].size = files1[i].size;
                 }
@@ -184,6 +192,49 @@ $used_width = $files->getUsedSize();
                 reader.onload = function(e) {
                     image.css('background-image', "url('" + e.target.result + "')");
                 };
+            }
+            function print_folder_content(folder) {
+                var string = '';
+                console.log(folder);
+
+                for(var file in folder) {
+                    string += print_single_file(folder[file]);
+                }
+                $('.feed_container').append(string);
+            }
+            function print_single_file(file) {
+                var string = '';
+
+                if(file.type != "Folder") {
+                    string += "<div data-file_id='" + file.id + "' class='files'>";
+                } else {
+                    string += "<div data-file_id='" + file.id + "' class='folder'>"; // SAME
+                }
+                string += "<div class='files_icon_preview' style='background-image:url(\"" + file.type_preview + "\");'></div>";
+                string += "<p class='files ellipsis_overflow'>" + file.name + "</p>";
+                
+                string += "<div class='files_actions'><table cellspacing='0' cellpadding='0'><tr style='vertical-align:middle;'><td>";
+
+                string +=  "<a href='" + file.path + "' download><div class='files_actions_item files_actions_download'></div></a></td><td>";
+                string +=  "<hr class='files_actions_seperator'></td><td>";
+
+                string += "<div class='files_actions_item files_actions_delete' "
+                + "onclick='deleteFile(this, " + file.id + ");if(event.stopPropagation){event.stopPropagation();}"
+                + "event.cancelBubble=true;'></div></td><td>"
+                + "<hr class='files_actions_seperator'></td><td>"
+                + "<div class='files_actions_item files_actions_share' data-file_id='" + file.id + "'></div></td>";
+                string += "</tr></table></div>";
+
+                //string += "<p class='files ellipsis_overflow' style='float:right;'>" + file.view.count + " <img class='heart_like_icon' src='" + EYE_ICON + "'/></p>";
+                //string += "<p class='files ellipsis_overflow' style='float:right;margin-right:5px;'>" + file.like.count + " <img class='heart_like_icon' src='" + HEART_ICON + "'/></p>";
+
+                string += "<div class='file_hidden_container'>";
+                string += Application.prototype.file.print(file, "File");
+                string += "</div>";
+
+                string += "</div>";
+
+                return string;
             }
         </script>
     </head>
@@ -250,19 +301,16 @@ $used_width = $files->getUsedSize();
                     <div id='main_file' class="file feed_container" style='border-bottom:1px solid lightblue;'>
                         <?php
                         if (isset($file_id)) {
-                            echo "<script>$('.feed_container').prepend(homify(".json_encode($home->homeify($home->getSingleActivity($files->getActivity($file_id))))."));</script>";
+                            echo $file_id." - ";
+                            echo $files->getActivity($file_id);
+                            echo "<script>$('.feed_container').prepend( Application.prototype.feed.homify(".json_encode($home->homeify($home->getSingleActivity($files->getActivity($file_id))))."));</script>";
                             echo "<script>$('.file_actions').hide();</script>";
                             echo "<script>$('#main_file').css('border', '0px');</script>";
                         }
                         else {
-                            $files_list = $files->getContents($parent_folder, $files_user_id);
-                            $nmr = count($files_list);
-                            foreach ($files_list as $file) {
-                                $files->tableSort($file);
-                            }
-                            if (isset($nmr) && $nmr <= 0) {
-                                echo "<div class='files' onclick='if(event.stopPropagation){event.stopPropagation();}event.cancelBubble=true;'>No Files in this Directory</div>";
-                            }
+                            $files_list = $files->get_content($parent_folder, $files_user_id);
+                            //$nmr = count($files_list);
+                            echo "<script>print_folder_content(".json_encode($files_list).");</script>";
                         }
                         ?>
                     </div>

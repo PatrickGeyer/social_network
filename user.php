@@ -64,7 +64,7 @@ include_once('chat.php');
                getFeed(<?php echo $userid; ?>, 'user', min_activity_id, null, function(response){
                     			var string = '';
                     			for (var i in response) {
-                        			string += homify(response[i]);
+                        			string +=  Application.prototype.feed.homify(response[i]);
                     			}
                     			if(response.length == 0) {
                     				$('.feed_container').prepend(empty_feed({text:"This user has not made any posts!"}));
@@ -142,12 +142,6 @@ include_once('chat.php');
                     <td>
                         <div class="pseudonym" entity_type='user' entity_id='<?php echo $userid; ?>'>
                             <p class='name_title'><?php echo $user->getName($userid); ?></p>
-                            <div style="padding-bottom:5px;">
-                                <a href="community?id=<?php echo urlencode(base64_encode($user->getCommunityId($userid))); ?>">
-                                    <span class='user_preview_community'><?php echo $user->getCommunityName($userid); ?></span>
-                                    <span class='user_preview_position'> &bull; <?php echo $user->getPosition($userid); ?></span>
-                                </a>
-                            </div>
                             <?php
                             if ($user->getAbout($userid) != "") {
                                 echo "<div style='margin-top:10px;'>"

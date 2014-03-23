@@ -9,8 +9,8 @@ Class resize {
     private $ext;
 
     public function __construct($file) {
+        
         $this->image = $this->openImage($file);
-
         $this->width = imagesx($this->image);
         $this->height = imagesy($this->image);
         $this->ext = strtolower(strrchr($file, '.'));
@@ -22,13 +22,13 @@ Class resize {
         switch ($extension) {
             case '.jpg':
             case '.jpeg':
-                $img = @imagecreatefromjpeg($file);
+                $img = imagecreatefromjpeg($file);
                 break;
             case '.gif':
-                $img = @imagecreatefromgif($file);
+                $img = imagecreatefromgif($file);
                 break;
             case '.png':
-                $img = @imagecreatefrompng($file);
+                $img = imagecreatefrompng($file);
                 break;
             default:
                 $img = false;

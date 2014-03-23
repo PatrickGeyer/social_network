@@ -5,7 +5,7 @@ include_once('database.class.php');
 include_once('base.class.php');
 
 class System extends Base {
-
+    public $database_connection = NULL;
     private static $system = NULL;
     private $url;
     private $meta_tag = array(
@@ -22,7 +22,7 @@ class System extends Base {
     static $KEY = 'thisismykey';
 
     public function __construct() {
-        
+        $this->database_connection = Database::getConnection();
     }
 
     public static function getInstance() {
@@ -33,13 +33,15 @@ class System extends Base {
         self :: $system = new System();
         return self :: $system;
     }
-
-    function getSchoolNames() {
-        $query = "SELECT name FROM community;";
-    }
-
-    function getSchoolIds() {
-        
+    
+    function array_values_r($arr) {
+        $arr = array_values($arr);
+        foreach ($arr as $key => $value) {
+            if (is_array($value)) {
+                $arr[$key] = $this->array_values_r($value);
+            }
+        }
+        return $arr;
     }
 
     public function encrypt($plaintext) {
@@ -318,7 +320,7 @@ class System extends Base {
         $return_info = array();
         $return_info['favicon'] = $this->getFavicon($this->url);
         $return_info['title'] = $this->trimStr($this->getTitle($html), 80);
-        $return_info['description'] = $this->trimStr($this->getDescription($html), 100);
+        $return_info['description'] = $this->trimStr($this->getWebDescription($html), 100);
         return $return_info;
     }
 
@@ -334,7 +336,7 @@ class System extends Base {
         return 'http://www.google.com/s2/favicons?domain=' . $url;
     }
 
-    private function getDescription($html = NULL) {
+    private function getWebDescription($html = NULL) {
         $description = 'No Description available';
 
         $tag = $html->find("meta[name='description']", 0)->content;

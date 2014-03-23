@@ -22,11 +22,6 @@ if (!isset($page_identifier)) {
                                             ?>
                                         </span>
                                     </a>
-                                    <span class='edit_user_text'>
-                                        <?php
-                                        echo $system->trimStr($user->getCommunityName(), 15);
-                                        ?>
-                                    </span>
                                 </div>
                             </td>
                         </tr>
@@ -46,7 +41,7 @@ if (!isset($page_identifier)) {
                 echo "current_page";
             }
             ?>
-                "><a class="nav_option ellipsis_overflow" href="community?id=<?php echo urlencode(base64_encode($user->getCommunityId())); ?>"><?php echo $user->getCommunityName(); ?></a></li> 
+                ">
             <li style='background-image:url("Images/Icons/icons/paper-clip.png");' class="nav_option <?php
             if ($page_identifier == "files") {
                 echo "current_page";

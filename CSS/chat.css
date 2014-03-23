@@ -30,7 +30,6 @@ div.chatoff{
     background-color:#EDEDED;
     border-top: 1px solid lightgrey;
     border-left: 1px solid lightgrey;
-    z-index: 10;
 }
 
 div.chat_text{
@@ -203,7 +202,7 @@ span.chatname:hover{
     font-size:12px;
 }
 .mychattext img, .chattext img{
-    margin:3px;
+    margin-bottom: -3px;
     margin-left: 0px;
     max-width: 150px;
 }
@@ -233,16 +232,6 @@ span.chatname:hover{
 }
 #school_tab:hover, #year_tab:hover, .group_tab:hover{
     opacity: 1;
-}
-
-div.onlinestatus{
-    float: left;
-    margin-right: 5px;
-    margin-top: 6px;
-    width: 5px;
-    height: 5px;
-    border-radius: 50px;
-    background-color: red;
 }
 .chat_broken_image{
     max-height: 50px;

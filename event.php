@@ -12,7 +12,7 @@ if (isset($_GET['e'])) {
     $event['time'] = strtotime($event['start']);
     echo "<title>Event: " . $event['title'] . "</title>";
     $assocFiles_num = count($event['files']);
-    $receiver_num = count($event['receivers']['user'] + $event['receivers']['group'] + $event['receivers']['community']) - 1;
+    $receiver_num = count($event['receivers']['user'] + $event['receivers']['group']) - 1;
 }
 else {
     $event_action = "create";
@@ -48,6 +48,7 @@ include_once('chat.php');
                 action: "<?php echo ($event_action=='edit' ? 'editEvent' : 'createEvent'); ?>",
                 description: description,
                 title: title,
+                date: date,
                 files: event_files,
                 receivers: event_receivers,
                 event_id: <?php echo ($event_action=='edit' ? $event_id : '""'); ?>
@@ -79,10 +80,15 @@ include_once('chat.php');
             }?>
         }
         $(document).on('click', '#delete_button', function() {
-            $.post('Scripts/calendar.class.php', {action: "deleteEvent", event_id: event_id, event_creator: event_creator});
+            var event_id = <?php echo ($event_action=='edit' || $event_action=='view' ? $event_id : '""'); ?>;
+            $.post('Scripts/calendar.class.php', {action: "deleteEvent", event_id: event_id});
+        });
+        $(document).on('click', '#complete_button', function() {
+            var event_id = <?php echo ($event_action=='edit' || $event_action=='view' ? $event_id : '""'); ?>;
+            $.post('Scripts/calendar.class.php', {action: "completeEvent", event_id: event_id});
         });
 
-        fileList($('.file_box'), null, function() {
+        Application.prototype.file.list($('.file_box'), null, function() {
             select_event_files();
         });
         $('.file_box').on('click', 'div.file_item', function() {
@@ -132,7 +138,9 @@ include_once('chat.php');
                             <div class='search_container'>
                                 <div class='event_names_slot'></div>
                                 <input class='search' mode='universal' />
-                                <div id='share_event_results' class='search_results'></div>
+                                <div id='share_event_results' class='search_results'>
+                                    <div class='search_slider'></div>
+                                </div>
                             </div>
                         </div>
                     </li>
@@ -181,7 +189,7 @@ include_once('chat.php');
                                                 <?php
                                                 echo "<div class='post_feed_media_wrapper' activity_id='" . $event['id'] . "'>";
                                                 foreach ($event['files'] as $file) {
-                                                    echo "<script>$('.post_feed_media_wrapper').append(print_file(".json_encode($files->format_file($file))."));</script>";
+                                                    echo "<script>$('.post_feed_media_wrapper').append(Application.prototype.file.print(".json_encode($files->format_file($file))."));</script>";
                                                 }
                                                 echo "</div>";
                                                 ?>
@@ -204,9 +212,11 @@ include_once('chat.php');
                         </li>
     <?php endif; ?>
                     <li class='section'>
-                        <button id='delete_button' class='pure-button-secondary'>Delete</button>
+                        <?php if($event['user_id'] == $user->user_id) { ?>
+                        <button id='delete_button' class='pure-button-warning'>Remove</button>
+                        <?php } ?>
                         <a style='display:inline-block;' href='event?e=<?php echo $event_id; ?>&action=edit'><button class='pure-button-success'>Edit Event</button></a>
-                        <button class='pure-button-primary'>Complete</button>
+                        <button id='complete_button' class='pure-button-primary'>Complete</button>
                     </li>
                 </ul>
 <?php endif; ?>

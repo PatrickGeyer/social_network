@@ -1,6 +1,26 @@
 <?php
 
 class Base {
+    public static $FB_LOGIN;
+    public static $FB;
+
+    public function __construct() {
+        require_once($_SERVER['DOCUMENT_ROOT']."/../Global_Tools/facebook-php-sdk-master/facebook.php");
+        $config = array(
+            'appId' => '219388501582266',
+            'secret' => 'c1684eed82295d4f1683367dd8c9a849',
+            'fileUpload' => false, // optional
+            'allowSignedRequest' => false, // optional, but should be set to false for non-canvas apps
+        );
+        self::$FB = new Facebook($config);
+        self::$FB_LOGIN = self::$FB->getLoginUrl(array(
+           'next' => '',
+           'cancel_url' => '',
+           //'req_perms' => 'email,publish_stream,status_update',
+           'scope' => 'email,publish_stream,status_update,user_birthday'
+        ));
+    }
+
     const MALE_DEFAULT_ICON = "Images/male-default-icon.jpg";
     const MALE_DEFAULT_CHAT = "Images/male-default-chat.jpg";
     const MALE_DEFAULT_THUMB = "Images/male-default-chat.jpg";
@@ -23,6 +43,9 @@ class Base {
     const ARROW_LEFT_WHITE = "Images/Icons/Icon_Pacs/typicons.2.0/png-48px/chevron-left-outline.png";
     const CONNECTION_ICON = "Images/Icons/icons/user-silhouette.png";
     const HEART_ICON = "Images/Icons/Icon_Pacs/Batch-master/Batch-master/PNG/16x16/heart-full.png";
+    const EYE_ICON = "Images/Icons/Icon_Pacs/Batch-master/Batch-master/PNG/16x16/eye.png";
+    const COMMENT_ICON = "Images/Icons/Icon_Pacs/Batch-master/Batch-master/PNG/16x16/speech-bubble-left-3.png";
+    const VIDEO_BUTTON = "Images/icons/v_play.png";
     
     const INBOX_IMG = "Images/Icons/Icon_Pacs/ecqlipse2/system_white/MAIL_32x32-32.png";
     const NOTIFICATION_IMG = "Images/Icons/Icon_Pacs/ecqlipse2/system_white/WIFI_32x32-32.png";
@@ -92,6 +115,9 @@ class Base {
  * limitations under the License.
  *
 ';
+    
+//    DATABASE
+    const LARGEST_INT = 2147483648;
 
 }
 

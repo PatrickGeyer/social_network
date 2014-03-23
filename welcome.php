@@ -9,22 +9,18 @@ include_once('Scripts/js.php');
         var event_receivers = new Object();
         event_receivers.user = new Array();
         event_receivers.group = new Array();
-        event_receivers.community = new Array();
 
         var group_receivers = new Object();
         group_receivers.user = new Array();
         group_receivers.group = new Array();
-        group_receivers.community = new Array();
 
         var message_receivers = new Object();
         message_receivers.user = new Array();
         message_receivers.group = new Array();
-        message_receivers.community = new Array();
         
         var sticky_receivers = new Object();
         sticky_receivers.user = new Array();
         sticky_receivers.group = new Array();
-        sticky_receivers.community = new Array();
         var sticky_id = 0;
         
         
@@ -48,7 +44,7 @@ include_once('Scripts/js.php');
 <div style="border-radius:0;"> \n\
 </div> </td> </tr> </table> \n\
 <table style="width:100%;"><tr><td class="group_names_slot"></td></tr></table> \n\
-<input autocomplete="off" style="border-radius:0; width:100%;" type="text" id="names_input" class="search_input" placeholder="Add Member..." />\n\
+<input autocomplete="off" style="border-radius:0; width:100%;" type="text" id="names_input" class="search" placeholder="Add Member..." />\n\
 <div class="search_results group_search_results" \n\
 style="max-height:100px; position:relative; padding:2px;border: 1px solid lightgrey; background-color:white;" id="names">\n\
  </div> </div>'
@@ -74,15 +70,15 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
         }
 
 
-        $(document).on('click', '#names_universal .search_option', function(e)
-        {
-            var type = $(this).attr('entity_type');
-            var info = '';
-            if(type == 'user') {
-                
-            }
-            $("#names_universal").hide();
-        });
+//        $(document).on('click', '#names_universal .search_option', function(e)
+//        {
+//            var type = $(this).attr('entity_type');
+//            var info = '';
+//            if(type == 'user') {
+//                
+//            }
+//            $("#names_universal").hide();
+//        });
 
         function getMessageBox() {
             $.post('Scripts/notifications.class.php', {action: "messageList"}, function(response) {
@@ -165,9 +161,6 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
             if (type == 'group') {
                 found = $.inArray(new_receiver, receivers.group);
             }
-            if (type == 'community') {
-                found = $.inArray(new_receiver, receivers.community);
-            }
             if (found != -1) {
             }
             else
@@ -176,8 +169,6 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
                     receivers.user.push(new_receiver);
                 } else if (type == 'group') {
                     receivers.group.push(new_receiver);
-                } else if (type == 'community') {
-                    receivers.community.push(new_receiver);
                 }
                 $('#names_input').val("");
                 var html = "<div class='message_added_receiver message_added_receiver_" + new_receiver + "' search_type='"
@@ -202,10 +193,6 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
             if (type == 'group') {
                 index = receivers.group.indexOf(new_receiver);
                 receivers.group.splice(index, 1);
-            }
-            if (type == 'community') {
-                index = receivers.community.indexOf(new_receiver);
-                receivers.community.splice(index, 1);
             }
             //updateEventReceiverCount();
             return receivers;

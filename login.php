@@ -1,6 +1,12 @@
 <?php
+include_once 'Scripts/declare.php';
+
+function login($user_id) {
+    setcookie("home_feed", 'a', time() + 3600000, '/');
+    setcookie("id", base64_encode($user_id), time() + 3600000);
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    include_once 'Scripts/declare.php';
     $user_query = "SELECT id FROM user WHERE email = :email AND password = :password;";
     $user_query = $database_connection->prepare($user_query);
     $user_query->execute(array(":email" => $_POST['email'], ":password" => $system->encrypt($_POST['password'])));
@@ -8,12 +14,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     //die("ID:".$user_data. "EMAIL:".$_POST['email'] ."ENCRYOT:".$system->encrypt($_POST['password']));
 
     if (!empty($user_data)) {
-        setcookie("id", base64_encode($user_data), time() + 3600000);
-        $rooms = $chat->get_chat_rooms();
-        setcookie("chat_feed", $rooms[0]['id'], time() + 3600000);
-        include_once('Scripts/user.class.php');
-        $user = User::getInstance();
+        
+        //$rooms = $chat->get_chat_rooms();
+        //setcookie("chat_feed", $rooms[0]['id'], time() + 3600000);
+        //include_once('Scripts/user.class.php');
+        //$user = User::getInstance();
         //$user->setLocation($user_data);
+        login($user_data);
         die("200");
     }
     else {
@@ -24,28 +31,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         die('<p style="background-color:red;">' . $system->encrypt($_POST['password']) . ' <=> Your Email or Password is invalid</p>');
     }
 }
-
 include_once("Scripts/config.php");
-require_once("../Global_Tools/facebook-php-sdk-master/facebook.php");
-//include_once("Scripts/demo.php");
 include_once("Scripts/system.class.php");
-//include_once("Scripts/js.php");
-$allschools = "SELECT name, id FROM community;";
-$allschools = $database_connection->prepare($allschools, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-$allschools->execute();
 $system = System::getInstance();
 $system->getGlobalMeta();
 if (isset($_COOKIE['id'])) {
     header("location: home");
 }
-$config = array(
-    'appId' => '219388501582266',
-    'secret' => 'c1684eed82295d4f1683367dd8c9a849',
-    'fileUpload' => false, // optional
-    'allowSignedRequest' => false, // optional, but should be set to false for non-canvas apps
-);
+$fb_id = Base::$FB->getUser();
 
-$facebook = new Facebook($config);
+if ($fb_id) {
+    if(isset($_GET['code'])) {
+        $user_profile = Base::$FB->api('/me');
+        $user_info = array(
+            'firstname' => $user_profile['first_name'],
+            'lastname' => $user_profile['last_name'],
+            'gender' => $user_profile['gender'],
+            'email' => $user_profile['email'],
+            'dob' => date("Y-m-d H:i:s", strtotime($user_profile['birthday'])),
+            'fb_id' => $fb_id
+        );
+        login($user->create($user_info));
+        header("location: home");
+    } else {
+        $sql = "SELECT id FROM user WHERE fb_id=:fb_id;";
+        $sql = $database_connection->prepare($sql);
+        $sql->execute(array(
+            ":fb_id" => $fb_id
+        ));
+        login($sql->fetchColumn());
+    }
+}
+else {
+    $loginUrl = Base::$FB->getLoginUrl(); //USER HAS NOT LINKED FB
+}
 ?>
 
 <html>
@@ -65,7 +84,6 @@ $facebook = new Facebook($config);
         <script src="//cdn.jsdelivr.net/jquery.mcustomscrollbar/2.8.1/jquery.mCustomScrollbar.min.js"></script>
         <script>window.mCustomScrollbar || document.write('<script src="Scripts/external/jquery.mCustomScrollbar.min.js">\x3C/script>');</script>
         <link href="Scripts/external/jquery.mCustomScrollbar.min.css" rel="stylesheet" type="text/css" />
-        <script src="Scripts/eventhandlers.js"></script>
         <title>Login</title>
         <script>
             function signUp() {
@@ -90,16 +108,16 @@ $facebook = new Facebook($config);
                     pulsate($('.password_signup'), 300, "red");
                     error = true;
                 }
-                var community_id = $('.default_dropdown_selector[wrapper_id="organization_choose"]').attr('value');
-                if (community_id === "" || community_id === "undefined" || typeof community_id === "undefined") {
-                    pulsate($('.default_dropdown_selector[wrapper_id="organization_choose"]'), 300, "red");
-                    error = true;
-                }
-                var position = $('.default_dropdown_selector[wrapper_id="position_choose"]').attr('value');
-                if (position === "" || position === "undefined" || typeof position === "undefined") {
-                    pulsate($('.default_dropdown_selector[wrapper_id="position_choose"]'), 300, "red");
-                    error = true;
-                }
+//                var community_id = $('.default_dropdown_selector[wrapper_id="organization_choose"]').attr('value');
+//                if (community_id === "" || community_id === "undefined" || typeof community_id === "undefined") {
+//                    pulsate($('.default_dropdown_selector[wrapper_id="organization_choose"]'), 300, "red");
+//                    error = true;
+//                }
+//                var position = $('.default_dropdown_selector[wrapper_id="position_choose"]').attr('value');
+//                if (position === "" || position === "undefined" || typeof position === "undefined") {
+//                    pulsate($('.default_dropdown_selector[wrapper_id="position_choose"]'), 300, "red");
+//                    error = true;
+//                }
                 var gender = $('.default_dropdown_selector[wrapper_id="gender_choose"]').attr('value');
                 if (gender === "" || gender === "undefined" || typeof gender === "undefined") {
                     pulsate($('.default_dropdown_selector[wrapper_id="gender_choose"]'), 300, "red");
@@ -112,7 +130,6 @@ $facebook = new Facebook($config);
                         lastname: lastname,
                         email: email,
                         password: password,
-                        community_id: community_id,
                         position: position,
                         gender: gender
                     }, function(response) {
@@ -179,15 +196,12 @@ $facebook = new Facebook($config);
         </script>
     </head>
     <body class="login">
-        <?php //if (isset($_GET['m'])) die('WElcome to mobile site!');  ?>
         <div class="login_container">
             <div class="loginbox">
-
                 <input type="text" spellcheck="false" placeholder="Email" autocomplete="off" tabindex="1" class='email_login'/>
                 <input type="password" spellcheck="false" tabindex="2" placeholder="Password" autocomplete="off" class='password_login'/>
                 <button onclick='logIn();' class='pure-button-secondary small'>Login</button>
                 <a href='signup?m'><button class='pure-button-neutral small signup_button'>Signup</button><a/>
-
             </div>
         </div>
         <div class='login_background'>
@@ -265,52 +279,54 @@ $facebook = new Facebook($config);
                         <tr>
                             <td colspan="2">
                                 <button id="signup" onclick="signUp();" class="pure-button-success small">Sign Up</button>
+                                <a href='<?php echo Base::$FB_LOGIN;?>'>
+                                    <button class="pure-button-success small">Facebook Sign Up</button>
+                                </a>
                             </td>
                         </tr>
                     </table>
                 </div>
                 <?php
-                if (isset($_GET['action'])) {
-                    echo '  <h1 class="signupheader">Register a School</h1>
-			<form id="school" action="Scripts/verifysignup.php" method="POST">
-			<div class="signupbox">
-			<table border="0">
-			<tr>
-			<td colspan="2"><input type="text" style="width:100%;" autocomplete="off" placeholder="School Name (e.g. Clifford School)" name="school"/></td>
-			</tr>
-			<tr>
-			<td><input type="text" placeholder="First Name"autocomplete="off" name="firstname"/></td><td><input type="text" placeholder="Last Name"autocomplete="off" name="lastname"/></td>
-			</tr>
-			<tr>
-			<td colspan="2"><input type="password" style="width:100%;" placeholder="Password" autocomplete="off" name="newpassword"/></td>
-			</tr>
-			<tr>
-			<td colspan="2"><input type="text" style="width:100%;" autocomplete="off" placeholder="Email" name="email"/></td>
-			</tr>
-			<tr>
-			<td><label>Select Year:</label></td><td><div class="styled-select"><select style="width:100%;" name="year"> <option>1</option><option>2</option><option>3</option>
-			<option>4</option><option>5</option><option>6</option><option>7</option><option>10</option><option>8</option><option>9</option><option>10</option>
-			<option>11</option><option>12</option><option>13</option><option>14</option></select></div></td>
-			</tr>
-			<tr>
-			<td><div class="styled-select"><select style="width:100%;" name="gender"><option>Male</option><option>Female</option></select></div></td>
-			</tr>
-			<tr>
-			<td colspan="2"><input type="submit" value="Register User and School"></input></td>
-			</tr>
-			<tr>
-			<td colspan="2"><label>*When you register a school <br>you will automatically be<br> appointed admin.</label></td>
-			</tr>
-			</table>
-			</div>
-			</form>';
-                }
-                ?>
-            </div>
-            <div class='bottom_bar'>
-                <div style='float:left;margin-right:20px;'>
-                    <a href="http://stackoverflow.com/users/2506225/patrick-geyer">
-                        <img src="http://stackoverflow.com/users/flair/2506225.png?theme=clean" width="208" height="58" alt="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers" title="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers">
+                if (isset($_GET['action'])) { ?> <h1 class="signupheader">Register a School</h1>
+                <form id="school" action="Scripts/verifysignup.php" method="POST">
+                 <div class="signupbox">
+                     <table border="0">
+                         <tr>
+                             <td colspan="2"><input type="text" style="width:100%;" autocomplete="off" placeholder="School Name (e.g. Clifford School)" name="school"/></td>
+                         </tr>
+                         <tr>
+                             <td><input type="text" placeholder="First Name"autocomplete="off" name="firstname"/></td><td><input type="text" placeholder="Last Name"autocomplete="off" name="lastname"/></td>
+                         </tr>
+                         <tr>
+                             <td colspan="2"><input type="password" style="width:100%;" placeholder="Password" autocomplete="off" name="newpassword"/></td>
+                         </tr>
+                         <tr>
+                             <td colspan="2"><input type="text" style="width:100%;" autocomplete="off" placeholder="Email" name="email"/></td>
+                         </tr>
+                         <tr>
+                             <td><label>Select Year:</label></td><td><div class="styled-select"><select style="width:100%;" name="year"> <option>1</option><option>2</option><option>3</option>
+                             <option>4</option><option>5</option><option>6</option><option>7</option><option>10</option><option>8</option><option>9</option><option>10</option>
+                             <option>11</option><option>12</option><option>13</option><option>14</option></select></div></td>
+                         </tr>
+                         <tr>
+                             <td><div class="styled-select"><select style="width:100%;" name="gender"><option>Male</option><option>Female</option></select></div></td>
+                         </tr>
+                         <tr>
+                             <td colspan="2"><input type="submit" value="Register User and School"></input></td>
+                         </tr>
+                         <tr>
+                             <td colspan="2"><label>*When you register a school <br>you will automatically be<br> appointed admin.</label></td>
+                         </tr>
+                     </table>
+                 </div>
+             </form>';
+             <?php }
+             ?>
+         </div>
+         <div class='bottom_bar'>
+            <div style='float:left;margin-right:20px;'>
+                <a href="http://stackoverflow.com/users/2506225/patrick-geyer">
+                    <img src="http://stackoverflow.com/users/flair/2506225.png?theme=clean" width="208" height="58" alt="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers" title="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers">
                     </a>
                 </div>
                 <span>Warning: This site is in development. I will not be held liable for any damages you may incur on this site. By signing up, you agree to these terms. Although you are welcome to sign-up, register schools and store your files here for testing purposes, I cannot guarantee the safety/availability of any of your data yet. Release date: 2014, June 21. You can watch the site develop everyday.</span>

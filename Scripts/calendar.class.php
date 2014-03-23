@@ -111,14 +111,26 @@ class Calendar {
         $day_counter = 0;
         $dates_array = array();
         
-        $calendar['event'] = $this->getEvents(date('Y-m-d H:i:s', strtotime('-1 month')), date('Y-m-d H:i:s', strtotime('+1 month')));
-
-        foreach ($calendar['event'] as $key => $event){
-            $calendar['event'][$key]['event_day'] = date_format(new DateTime($event['start']), 'Y-m-d');
-            $calendar['event'][$key]['color'] = $this->event_types[$calendar['event'][$key]['type']]['color'];
-            $calendar['event'][$key]['file'] = $this->getAssocFiles($event['id']);
-        }
+        $calendar['event'] = $this->get_events(date('Y-m-d H:i:s', strtotime('-1 month')), date('Y-m-d H:i:s', strtotime('+1 month')));
         return $calendar;
+    }
+    
+    function format_event($event) {
+        $event['event_day'] = date_format(new DateTime($event['start']), 'Y-m-d');
+        $event['color'] = $this->event_types[$event['type']]['color'];
+        $sql = "SELECT complete FROM event_status WHERE event_id=:event_id "
+                . "AND user_id=:user_id;";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":event_id" => $event['id'],
+            ":user_id" => $this->user->user_id
+        ));
+        $event['complete'] = $sql->fetchColumn();
+        if($event['complete'] == 1) {
+            $event['color'] = "rgb(0,140,280);opacity:0.2;";
+        }
+        $event['file'] = $this->getAssocFiles($event['id']);
+        return $event;
     }
 
     function draw_event($event, $classes = '') {
@@ -146,16 +158,27 @@ class Calendar {
         return $calendar;
     }
 
-    function getEvents($start, $end) {
-        $sql = "SELECT * FROM event WHERE id IN(SELECT event_id FROM event_share WHERE community_id = :community_id OR group_id IN "
-            . "(SELECT group_id FROM group_member WHERE user_id = :user_id) OR user_id = :user_id) "
-            . "AND `start` BETWEEN '".$start."' AND '".$end."' AND id NOT IN (SELECT event_id FROM event_status WHERE user_id = :user_id AND deleted = 1);";
+    function get_events($start, $end, $limit = null) {
+        if(!is_null($limit)) {
+            $limit = " LIMIT ".$limit;
+        }
+        $sql = "SELECT * FROM event WHERE id IN"
+                . "(SELECT event_id FROM event_share WHERE "
+                . "group_id IN "
+                . "(SELECT group_id FROM group_member WHERE user_id = :user_id) "
+                . "OR user_id = :user_id) "
+                . "AND `start` BETWEEN '" . $start . "' AND '" . $end . "' AND id NOT IN "
+                . "(SELECT event_id FROM event_status WHERE user_id = :user_id "
+                . "AND deleted = 1);" . $limit;
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
-            ":community_id" => $this->user->getCommunityId(),
             ":user_id" => $this->user->user_id
         ));
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
+        $events = $sql->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($events as $key => $event){
+            $events[$key] = $this->format_event($event);
+        }
+        return $events;
     }
     
     function getAssocFiles($event) {
@@ -164,7 +187,11 @@ class Calendar {
         $sql->execute(array(
             ":event_id" => $event
             ));
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
+        $files = $sql->fetchAll(PDO::FETCH_ASSOC);
+        foreach($files as $file) {
+            $file = $this->files->format_file($file);
+        }
+        return $files;
     }
 
     function create_event($date, $title, $description) {
@@ -191,23 +218,23 @@ class Calendar {
     }
 
     function edit_event($event_id, $date, $title, $description) {
-        $sql = "UPDATE event SET title=:title, description=:description, start:start WHERE id=:event_id;";
+        $sql = "UPDATE event SET title=:title, description=:description, start=:start WHERE id=:event_id;";
             $sql = $this->database_connection->prepare($sql);
             $sql->execute(array(
                 ":title" => $title,
                 ":description" => $description,
-                ":user_id" => $this->user->user_id,
+//                ":user_id" => $this->user->user_id,
                 ":start" => $date,
                 ":event_id" => $event_id
-                )); //ERROR
+                ));
         return $event_id;
     }
 
-    function share_event($event_id, $users) {
+    function share_event($event_id, $receivers) {
         $receivers['user'][] = $this->user->user_id;
         foreach ($receivers as $key => $receiver) {
              foreach ($receiver as $single_id) {
-                $sql = "DELETE FROM event_share WHERE event_id=:event_id;INSERT INTO event_share(event_id, ".$key."_id) "
+                $sql = "INSERT INTO event_share(event_id, ".$key."_id) "
                 . "VALUES(:event_id, :receiver_id);";
                 $sql = $this->database_connection->prepare($sql);
                 $sql->execute(array(
@@ -216,12 +243,13 @@ class Calendar {
                     ));
             }
         }
+        var_dump($receivers);
     }
 
     function add_files_to_event($event_id, $files) {
         foreach ($files as $file) {
-            $sql = "DELETE FROM event_file WHERE event_id=:event_id AND user_id=:user_id;INSERT INTO event_file(event_id, file_id, user_id) "
-            . "VALUES(:event_id, :file_id, :user_id);";
+            $sql = "INSERT INTO event_file(event_id, file_id, user_id) "
+                    . "VALUES(:event_id, :file_id, :user_id);";
             $sql = $this->database_connection->prepare($sql);
             $sql->execute(array(
                 ":event_id" => $event_id,
@@ -240,7 +268,8 @@ class Calendar {
             ":id" => $event_id
             ));
         $event = $sql->fetch(PDO::FETCH_ASSOC);
-        $sql = "SELECT * FROM `file` WHERE id IN(SELECT file_id FROM event_file WHERE event_id = :id AND visible=1);";
+        $sql = "SELECT DISTINCT * FROM `file` WHERE id IN"
+                . "(SELECT file_id FROM event_file WHERE event_id = :id AND visible=1);";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":id" => $event_id
@@ -248,9 +277,9 @@ class Calendar {
         $event['files'] = $sql->fetchAll(PDO::FETCH_ASSOC);
         $event['type'] = "event"; 
 
-        $event['receivers'] = array("user" => array(), "group" => array(), "community" => array());
+        $event['receivers'] = array("user" => array(), "group" => array());
 
-        $sql = "SELECT user_id, group_id, community_id FROM event_share WHERE event_id = :event_id;";
+        $sql = "SELECT DISTINCT user_id, group_id, FROM event_share WHERE event_id = :event_id;";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":event_id" => $event_id,
@@ -291,26 +320,29 @@ class Calendar {
     }
 
 
-    function delete($event_id, $event_creator) {
+    function delete($event_id) {
         $sql = "INSERT INTO event_status (event_id, user_id, deleted) VALUES (:event_id, :user_id, 1);";
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":event_id" => $event_id,
             ":user_id" => $this->user->user_id
             ));
-        if($event_creator == $this->user->user_id) {
-            $sql = "UPDATE event SET visible = 0 WHERE event_id = :event_id;";
-            $sql = $this->database_connection->prepare($sql);
-            $sql->execute(array(
-                ":event_id" => $event_id
-                ));
-        }
+    }
+
+    function markDone($event_id) {
+        $sql = "INSERT INTO event_status (complete, user_id, event_id)"
+                . "VALUES(1,:user_id, :event_id);";
+        $sql = $this->database_connection->prepare($sql);
+        $sql->execute(array(
+            ":event_id" => $event_id,
+            ":user_id" => $this->user->user_id
+        ));
     }
 
 }
 
-if($_SERVER['REQUEST_METHOD'] == "POST") {
-    if(isset($_POST['action'])) {
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
+    if (isset($_POST['action'])) {
         $calendar = Calendar::getInstance();
         if($_POST['action'] == "createEvent") {
             $receivers = array();
@@ -331,15 +363,22 @@ if($_SERVER['REQUEST_METHOD'] == "POST") {
             if(isset($_POST['files'])) {
                 $files = $_POST['files'];
             }
-            $calendar->share_event($calendar->add_files_to_event($calendar->edit_event($_POST['date'], $_POST['title'], $_POST['description'], $_POST['event_id']), $files), $receivers);
+            $calendar->share_event($calendar->add_files_to_event($calendar->edit_event($_POST['event_id'], $_POST['date'], $_POST['title'], $_POST['description']), $files), $receivers);
         }
 
         else if($_POST['action'] == "removeEventFile") {
             $calendar->remove_file($_POST['event_id'], $_POST['file_id']);
         } else if($_POST['action'] == "deleteEvent") {
-            $calendar->delete($_POST['event_id'], $_POST['event_creator']);
+            $calendar->delete($_POST['event_id']);
+        } else if($_POST['action'] == "completeEvent") {
+            $calendar->markDone($_POST['event_id']);
+        }
+    }
+} else if($_SERVER['REQUEST_METHOD'] == "GET") {
+    if(isset($_GET['action'])) {
+        $calendar = Calendar::getInstance();
+        if($_GET['action'] == 'get_events') {
+            die(json_encode($calendar->get_events(date('Y:m:d 00:00:00'), date('Y:m:d H:i:s', strtotime("+1 year")), $_GET['limit'])));
         }
     }
 }
-
-

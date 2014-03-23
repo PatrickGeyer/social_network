@@ -155,7 +155,6 @@ class Notification {
         $receivers['user'] = $sql->fetchAll(PDO::FETCH_COLUMN);
         $receivers['user'] = array_values($receivers['user']);
         $receivers['group'] = array();
-        $receivers['community'] = array();
         //echo $thread;
         //var_dump($receivers);
         if ($style !== false) {
@@ -176,7 +175,7 @@ class Notification {
             }
         }
         $return = '';
-        $count = count($all_receivers['user'] + $all_receivers['group'] + $all_receivers['community']);
+        $count = count($all_receivers['user'] + $all_receivers['group']);
         
         $width = array();
         $height = array();
@@ -225,11 +224,8 @@ class Notification {
         if(!array_key_exists('group', $receivers)) {
             $receivers['group'] = array();
         }
-        if(!array_key_exists('community', $receivers)) {
-            $receivers['community'] = array();
-        }
         $return = NULL;
-        $num = count($receivers['user'] + $receivers['group'] + $receivers['community']);
+        $num = count($receivers['user'] + $receivers['group']);
         $current_num = 0;
 
         foreach ($receivers as $key => $receiver) {
@@ -264,9 +260,6 @@ class Notification {
     private function format_receivers($receivers) {
         if (!array_key_exists('group', $receivers)) {
             $receivers['group'] = array();
-        }
-        if (!array_key_exists('community', $receivers)) {
-            $receivers['community'] = array();
         }
         foreach ($receivers as $key => $receiver) {
             if ($key == 'user' && !in_array($this->user->user_id, $receivers[$key])) {
