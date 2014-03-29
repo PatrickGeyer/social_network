@@ -37,7 +37,7 @@ Application.prototype.generic = {
 };
 Application.prototype.feed = {
     comment: {
-        comments : new Array()
+        comments: new Array()
     }
 };
 Application.prototype.calendar = {
@@ -92,7 +92,6 @@ Application.prototype.UI.getViewPortWidth = function() {
     var viewportwidth;
     var viewportheight;
 
-    //Standards compliant browsers (mozilla/netscape/opera/IE7)
     if (typeof window.innerWidth != 'undefined') {
         viewportwidth = window.innerWidth,
                 viewportheight = window.innerHeight
@@ -142,8 +141,11 @@ Application.prototype.UI.dialog = function(content, buttons, properties) {
     var dialog_container = $("<div class='dialog_container'></div>").css({'opacity': '0'});
     $('body').append(dialog_container);
 
-    var dialog_title = $("<div class='dialog_title'>" + properties.title +
-            "<span onclick='removeDialog();' class='dialog_close_button'>x</span></div>");
+    var closingX = $("<span class='dialog_close_button'>x</span>").click(function() {
+        Application.prototype.UI.removeDialog();
+    });
+    var dialog_title = $("<div class='dialog_title'>" + properties.title + "</div>").append(closingX);
+
     var content_container = $("<div class='dialog_content_container'></div>");
     dialog_container.append(dialog_title);
     dialog_container.append(content_container);
@@ -178,7 +180,7 @@ Application.prototype.UI.dialog = function(content, buttons, properties) {
     if (properties.loading == true) {
         dialogLoad();
     }
-    alignDialog();
+    this.alignDialog();
     var real_height = dialog_container.height();
     content_container.mCustomScrollbar({
         scrollInertia: 10,
@@ -252,7 +254,10 @@ Application.prototype.generic.relocate = function(event, element) {
     event.preventDefault();
     $('.container').html("<div class='loader_outside'></div><div class='loader_inside'></div>");
     $.get($(element).attr('href'), {ajax: 'ajax'}, function(response) {
-        $('.container').replaceWith(response);
+        var container = $(response);
+        container.hide();
+        $('.container').replaceWith(container);
+        container.fadeIn('fast');
         window.history.pushState({}, 'WhatTheHellDoesThisDo?!', '/' + $(element).attr('href'));
     });
 }
@@ -446,8 +451,10 @@ Application.prototype.UI.resizeContainer = function() {
     var width = Application.prototype.UI.getViewPortWidth();
     if (width < 1400) {
         $('.container').addClass('container_small');
+        $('.global_header_container').addClass('global_header_container_small');
     } else {
         $('.right_bar_container').removeClass('right_bar_shift');
+        $('.global_header_container').removeClass('global_header_container_small');
         $('.container').removeClass('container_small');
     }
 };
@@ -708,6 +715,7 @@ Application.prototype.file.print = function(file, activity_type) {
     file.description = typeof file.description !== 'undefined' && !isEmpty(file.description) ? file.description : '';
     file.time = typeof file.time !== 'undefined' && !isEmpty(file.time) ? file.time : 'No Date';
     file.type_preview = typeof file.type_preview !== 'undefined' && !isEmpty(file.type_preview) ? file.type_preview : file.thumb_path;
+    this.files[file.uid] = file;
     var string = '';
     var post_classes = " class='post_feed_item ";
     var post_styles = " style='";
@@ -802,8 +810,8 @@ Application.prototype.file.printDoc = function(file) {
         preview_content += "<img style='opacity:0;max-width:150px;max-height:150px;' src='" + path + "'></img>";
         preview_content += "<img style='position:absolute;top:40%;left:40%;' src='" + VIDEO_BUTTON + "'></img>"
     } else if (file.type == "Audio") {
-        preview_styles = 'background-image: none;';
-        preview_content += this.audioPlayer(file, 'button');
+        preview_styles = 'background-image: none !important;';
+        preview_content += this.audioPlayer(file, 'button', false);
         post_content_under_title += this.audioPlayer(file, 'timeline');
     } else {
         preview_classes += "";
@@ -848,17 +856,16 @@ Application.prototype.file.printDoc = function(file) {
     return string;
 };
 
-Application.prototype.file.audioPlayer = function(file, part) {
-
+Application.prototype.file.audioPlayer = function(file, part, source) {
     var string = '';
     string += '<div data-path="' + file.thumb_path + '" uid="' + file.uid + '" data-file_id="' + file.id + '">';
     if (part == 'all') {
         string += '<div class="audio_container">';
-        string += this.audioButton(file);
+        string += this.audioButton(file, source);
         string += this.audioInfo(file);
         string += '</div>';
     } else if (part == "button") {
-        string += this.audioButton(file);
+        string += this.audioButton(file, source);
     } else if (part == "info") {
         string += this.audioInfo(file);
     } else if (part == 'timeline') {
@@ -868,11 +875,15 @@ Application.prototype.file.audioPlayer = function(file, part) {
     return string;
 };
 
-Application.prototype.file.audioButton = function(file) {
-    return '<audio preload="none" style="display:none;"><source src="' + file.path + '"></source><source src="'
-            + file.thumb_path + '"></source></audio><div class="audio_button">'
-            + '<div class="audio_button_inside"></div><div class="audio_loader"><div class="loader_outside"></div><div class="loader_inside">'
+Application.prototype.file.audioButton = function(file, source) {
+    var string = '<div class="audio_button">';
+    if (source === true) {
+        string += '<audio style="display:none;"><source src="' + file.path + '"></source><source src="'
+                + file.thumb_path + '"></source></audio>';
+    }
+    string += '<div class="audio_button_inside"></div><div class="audio_loader"><div class="loader_outside"></div><div class="loader_inside">'
             + '</div><span class="audio_loader_text loader_text"></span></div></div>';
+    return string;
 };
 
 Application.prototype.file.audioInfo = function(file) {
@@ -890,33 +901,41 @@ Application.prototype.file.audioPlay = function(id, start, progress, end, uid) {
         this.startAudioInfo(id, start, progress, end, uid);
         $('[uid="' + uid + '"] .audio_button').addClass('audio_playing');
     } else {
-        this.files[uid].pause();
+        this.files[uid]['element'].pause();
         $('[uid="' + uid + '"] .audio_button').removeClass('audio_playing');
     }
 };
 
 Application.prototype.file.startAudioInfo = function(id, start, progress, end, uid) {
     if (uid in this.files) {
-        this.files[uid].play();
-    } else {
-        this.view(id);
-        $("[uid='" + uid + "'] .audio_loader").fadeIn();
-        //            createWaveForm(uid, progress);
-        //            audio_items[uid].on('ready', function() {
-        //                audio_items[uid].play();
-        //            });
+        if (typeof this.files[uid]['element'] != 'undefined') {
+            this.files[uid]['element'].play();
+            return;
+        }
+    }
 
-        var audio = $('[uid="' + uid + '"] audio');
-        audio.get(0).play();
-        this.files[uid] = audio.get(0);
-        this.files[uid].volume = audio_volume;
+    this.view(id);
 
+    var headerControl = $("<div uid='" + uid + "'></div>");
+    headerControl.append(this.audioPlayer(this.files[uid], 'all', true));
+    $('.global_media_container').html(headerControl);
+
+    $("[uid='" + uid + "'] .audio_loader").fadeIn();
+    var audio = headerControl.find('audio');
+    this.files[uid]['element'] = audio.get(0);
+    this.files[uid]['element'].volume = 1;
+    this.files[uid]['element'].play();
+    audio.bind('loadedmetadata', function() {
         audio.bind('progress', function() {
             var track_length = audio.get(0).duration;
             var secs = audio.get(0).buffered.end(0);
-            var progress = (secs / track_length) * 100;
+            var progress = 0;
+            if (secs > 0 && track_length > 0) {
+                progress = (secs / track_length) * 100;
+            }
             $('[uid="' + uid + '"] .audio_buffered').css('width', progress + "%");
         });
+
         audio.bind('timeupdate', function() {
             var track_length = audio.get(0).duration;
             var secs = audio.get(0).currentTime;
@@ -930,15 +949,17 @@ Application.prototype.file.startAudioInfo = function(id, start, progress, end, u
             $('[uid="' + uid + '"] .audio_time').html(done_minutes + ":" + pad(done_remaining_secons) + " - " + minutes + ":" + seconds);
             $("[uid='" + uid + "'] .audio_loader").fadeOut();
         });
+
         audio.bind('canplaythrough', function() {
             $('[uid="' + uid + '"] .audio_buffered').css('background-color', 'grey');
         });
+
         audio.bind('ended', function() {
             audio.get(0).currentTime = 0;
-            $('[uid="' + uid + '"] .audio_button').css('background-image', "url('../Images/Icons/Icon_Pacs/glyph-icons/glyph-icons/PNG/Play.png')");
+            $('[uid="' + uid + '"] .audio_button').removeClass('audio_playing');
         });
-        $('[uid="' + uid + '"] .audio_progress_container').click(function(e)
-        {
+
+        $('[uid="' + uid + '"] .audio_progress_container').click(function(e) {
             var x = $(this).offset().left;
             var width_click = e.pageX - x;
             var width = $(this).width();
@@ -948,7 +969,7 @@ Application.prototype.file.startAudioInfo = function(id, start, progress, end, u
             var new_secs = secs * (percent_width / 100);
             audio.get(0).currentTime = new_secs;
         });
-    }
+    });
 
     start = typeof start !== 'undefined' ? start : function() {
     };
@@ -1190,7 +1211,7 @@ Application.prototype.file.theater.remove = function() {
 
 Application.prototype.user.setProfilePicture = function(file_id) {
     $.post('Scripts/user.class.php', {action: "profile_picture", file_id: file_id}, function(response) {
-        removeDialog();
+        Application.prototype.UI.removeDialog();
         window.location.reload();
     });
 };
@@ -1371,7 +1392,10 @@ Application.prototype.user.showInvite = function(group, id, group_id) {
             buttons = [{
                     type: "success",
                     text: "Invite",
-                    onclick: function() {this.inviteUser(id, group_id); dialogLoad();}
+                    onclick: function() {
+                        this.inviteUser(id, group_id);
+                        dialogLoad();
+                    }
                 }],
     properties = {
         modal: false,
@@ -1852,42 +1876,39 @@ function getPreviousChat(chat_index) {
         }
     }
 }
-function sendChatRequest(all, chat_index)
-{
-    $.ajax({type: "GET", async: true, url: "Scripts/chat.class.php", data: {chat: chat_index, all: all, oldest: 0, newest: newest[chat_index]}, success: function(response)
-        {
-            $('[data-chat_room="' + chat_index + '"] .chat_loader').slideUp('fast');
-            response = $.parseJSON(response);
+function sendChatRequest(all, chat_index) {
+    $.get("Scripts/chat.class.php", {chat: chat_index, all: all, oldest: 0, newest: newest[chat_index]}, function(response) {
+        $('[data-chat_room="' + chat_index + '"] .chat_loader').slideUp('fast');
+        response = $.parseJSON(response);
 
-            if (all == 'true')
-            {
-                $('.chatcomplete').fadeIn("fast");
-                $('[data-chat_room="' + chat_index + '"] .chatreceive').append(styleChatResponse(response, chat_index));
-            }
-            else
-            {
-                $('[data-chat_room="' + chat_index + '"] .chatreceive').append(styleChatResponse(response, chat_index));
-            }
-            if (all == 'false' && response.length > 0) {
-                for (var i = response.length - 1; i >= 0; i--) {
-                    if (response[i]['user_id'] != USER_ID) {
-                        $('#chat_new_message_sound').get(0).play();
-                    }
-                }
-                if (chat_index != chat_room) {
-                    $('.chat_feed_selector[chat_feed="' + chat_index + '"] *').css('color', 'red');
-                    //alert('unread in another chat');
+        if (all == 'true') {
+            $('.chatcomplete').fadeIn("fast");
+            $('[data-chat_room="' + chat_index + '"] .chatreceive').append(styleChatResponse(response, chat_index));
+            $('[data-chat_room="' + chat_index + '"] .chatoutput').scrollTop($('[data-chat_room="' + chat_index + '"] .chatoutput').get(0).scrollHeight);
+
+        } else {
+            $('[data-chat_room="' + chat_index + '"] .chatreceive').append(styleChatResponse(response, chat_index));
+        }
+        if (all == 'false' && response.length > 0) {
+            for (var i = response.length - 1; i >= 0; i--) {
+                if (response[i]['user_id'] != USER_ID) {
+                    $('#chat_new_message_sound').get(0).play();
                 }
             }
-            var timeout = 3000;
             if (chat_index != chat_room) {
-                timeout = 10000;
+                $('.chat_feed_selector[chat_feed="' + chat_index + '"] *').css('color', 'red');
+                //alert('unread in another chat');
             }
-            setTimeout(function() {
-                sendChatRequest('false', chat_index);
-            }, timeout);
-            detectChange();
-        }});
+        }
+        var timeout = 3000;
+        if (chat_index != chat_room) {
+            timeout = 10000;
+        }
+        setTimeout(function() {
+            sendChatRequest('false', chat_index);
+        }, timeout);
+        detectChange();
+    });
 }
 function styleChatResponse(response, chat_index) {
     var string = '';
@@ -1950,18 +1971,17 @@ function submitchat(chat_text, chat_index)
     }
 }
 
-function change_chat_view(change_view)
-{
-    $('.chat_feed_selector[chat_feed="' + change_view + '"] *').css('color', 'black');
-//            $('.chat_loader').slideDown('fast');
-    $('.chatoutput').hide();
-    $('[data-chat_room="' + change_view + '"]').show();
-//            clearTimeout(timer);
-    chat_room = change_view;
-    //current_view = change_view;
-    scroll2Bottom(true, chat_room);
-    setCookie('chat_feed', change_view, 5);
-}
+//function change_chat_view(change_view) {
+//    $('.chat_feed_selector[chat_feed="' + change_view + '"] *').css('color', 'black');
+////            $('.chat_loader').slideDown('fast');
+//    $('.chatoutput').hide();
+//    $('[data-chat_room="' + change_view + '"]').show();
+////            clearTimeout(timer);
+//    chat_room = change_view;
+//    //current_view = change_view;
+//    scroll2Bottom(true, chat_room);
+//    setCookie('chat_feed', change_view, 5);
+//}
 
 function calculateDistance(elem, mouseX, mouseY)
 {
@@ -2789,9 +2809,8 @@ $(function() {
         }
     });
 
-    $(document).on('click', '.chat_feed_selector', function()
-    {
-        change_chat_view($(this).attr("chat_feed"));
+    $(document).on('click', '.chat_feed_selector', function() {
+        //change_chat_view($(this).attr("chat_feed"));
     });
 
     $(document).on("propertychange keydown input change", '.chatinputtext', function(e) {
@@ -2916,10 +2935,11 @@ $(function() {
         e.preventDefault();
         $('.circle').toggleClass('open');
     });
-    
+
     $(document).on('click', '.menuItem', function() {
         $(this).siblings().removeClass('current_page');
         $(this).addClass('current_page');
+        $('.circle').toggleClass('open');
     });
 
 });

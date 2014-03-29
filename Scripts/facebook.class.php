@@ -1,14 +1,17 @@
 <?php
-require_once("../Global_Tools/facebook-php-sdk-master/facebook.php");
-class FB extends Facebook {
+//require_once($_SERVER['DOCUMENT_ROOT'] . "../Global_Tools/facebook-php-sdk-master/facebook.php");
+//class FB extends Facebook {
+//    
+//    public function __construct($config) {
+//        parent::__construct($config);
+//    }
+//    
+//    public function post($attachement) {
+//        return $this->api('/me/feed', 'POST', $attachment);
+//    }
+//}
+class FB {
     
-    public function __construct($config) {
-        parent::__construct($config);
-    }
-    
-    public function post($attachement) {
-        return $this->api('/me/feed', 'POST', $attachment);
-    }
 }
 
 //$attachment =  array(

@@ -17,8 +17,8 @@ $system->jsVars();
 <script>window.mCustomScrollbar || document.write('<script src="Scripts/external/jquery.mCustomScrollbar.min.js">\x3C/script>');</script>
 <link href="Scripts/external/jquery.mCustomScrollbar.min.css" rel="stylesheet" type="text/css" />
 
-<link href="Scripts/external/video-js/video-js.min.css" rel="stylesheet">
-<script src="Scripts/external/video-js/video.min.js"></script>
+<link href="Scripts/external/video-js/video-js.css" rel="stylesheet">
+<script src="Scripts/external/video-js/video.js"></script>
 
 <!--<script src="Scripts/external/jquery.scrollTo-1.4.3.1.js"></script>-->
 

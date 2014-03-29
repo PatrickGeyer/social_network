@@ -172,7 +172,7 @@ var MESSAGE_SCROLL = SCROLL_OPTIONS;
             function composeMessage() {
                 //title, content, button, properties
                 var html = $('#compose_dialog').html();
-                dialog(
+                Application.prototype.UI.dialog(
                         {type: "html", content: html},
                 [{text: "Send", type: "success", onclick: function() {
                             sendMessage(false);
