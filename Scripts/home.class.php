@@ -1,28 +1,24 @@
 <?php
 
-include_once('database.class.php');
-include_once('system.class.php');
-include_once('user.class.php');
-include_once('files.class.php');
+require_once('system.class.php');
+require_once('user.class.php');
+require_once('files.class.php');
 
-class Home {
+class Home extends System {
 
     private static $home = NULL;
-    public $system;
     private $user;
     private $files;
-    private $database_connection;
-    
+
     const SHOW_COMMENT_NUM = 5;
 
     public function __construct() {
-        $this->user = User::getInstance();
-        $this->system = System::getInstance();
-        $this->files = Files::getInstance();
-        $this->database_connection = Database::getConnection();
+        parent::__construct();
+        $this->files = Files::getInstance($args = array());
+        $this->user = User::getInstance($args = array());
     }
 
-    public static function getInstance() {
+    public static function getInstance($args = array()) {
         if (self :: $home) {
             return self :: $home;
         }
@@ -57,7 +53,7 @@ class Home {
         echo "data-file='" . $data_file . "'";
         echo ">";
         echo $this->files->filePreview($file, 'icon');
-        echo "<span class='search_option_name'>" . $this->system->trimStr($file['name'], 15) . "</span>";
+        echo "<span class='search_option_name'>" . $this->trimStr($file['name'], 15) . "</span>";
         //echo "<span class='search_option_info'> - ".$file['type']."</span>";
         echo "</div>";
         echo "</td></tr>";
@@ -129,7 +125,7 @@ class Home {
         $response['user']['pic'] = $this->user->getProfilePicture("thumb", $activity['user_id']);
 
         $response['stats'] = $this->getStats($activity);
-        $response['time'] = $this->system->format_dates($activity['time']);
+        $response['time'] = $this->format_dates($activity['time']);
         $response['media'] = $this->getPostMedia($activity);
 
         $response['comment'] = $this->get_comments($activity['id']);
@@ -148,7 +144,7 @@ class Home {
         return $assocFiles;
     }
 
-    function get_comments($activity_id, $min = 0, $max = Base::LARGEST_INT) {        
+    function get_comments($activity_id, $min = 0, $max = Base::LARGEST_INT) {
         $between = " AND id BETWEEN :min AND :max AND visible = 1 ";
         $limit = $between . " ORDER BY id DESC LIMIT 5;";
         $format = 'all';
@@ -225,7 +221,7 @@ class Home {
         $comment['like'] = array();
         $comment['like']['count'] = $this->comment_like_count($comment['id']);
         $comment['like']['has_liked'] = $this->has_liked_comment($comment['id']);
-        $comment['time'] = $this->system->format_dates($comment['time']);
+        $comment['time'] = $this->format_dates($comment['time']);
         return $comment;
     }
 
@@ -489,8 +485,8 @@ class Home {
     }
 
     function share_activity($activity, $group_id) {
-        include_once('group.class.php');
-        $this->group = Group::getInstance();
+        require_once('group.class.php');
+        $this->group = Group::getInstance($args = array());
         if ($group_id == 'a') {
             foreach ($this->group->getUserGroups() as $single_group) {
                 $school_query = "INSERT INTO activity_share (activity_id, group_id, direct) 
@@ -510,7 +506,7 @@ class Home {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
-    $home = Home::getInstance();
+    $home = Home::getInstance($args = array());
     if (isset($_POST['activity_id'])) {
         
     }
@@ -547,8 +543,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             $home->updatePost($_POST['activity_id'], $_POST['text'], $files);
         }
         else if ($_POST['action'] == "get_feed") {
-            include_once 'entity.class.php';
-            $entity = Entity::getInstance();
+            require_once 'entity.class.php';
+            $entity = Entity::getInstance($args = array());
             $min_activity_id = $user_id = $group_id = $filter = $activity_id = NULL;
 
             if (isset($_POST['min_activity_id'])) {

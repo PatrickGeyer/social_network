@@ -2,13 +2,11 @@
 
 require_once('user.class.php');
 require_once('system.class.php');
-require_once('home.class.php');
 
 class Files extends System {
-
     private static $files = NULL;
+    public static $PARENT_DIR = NULL;
     protected $user;
-    protected $home;
     public $extension_to_mime = array(
         'acx' => 'application/internet-property-stream',
         'ai' => 'application/postscript',
@@ -211,14 +209,14 @@ class Files extends System {
     );
 
     public function __construct() {
-        $this->user = User::getInstance();
-        $this->database_connection = Database::getConnection();
+        parent::__construct();
+        $this->user = User::getInstance($args = array());
         foreach ($this->extension_to_mime as $ext => $mimetype) {
             $this->mime_to_extension[$mimetype] = $ext;
         }
     }
 
-    public static function getInstance() {
+    public static function getInstance($args = array()) {
         if (self :: $files) {
             return self :: $files;
         }
@@ -280,7 +278,8 @@ class Files extends System {
     }
 
     public function format_file($file) {
-        $this->home = Home::getInstance();
+        require_once('home.class.php');
+        $this->home = Home::getInstance($args = array());
         $activity = array('id' => $this->getActivity($file['id']));
         if($file['type'] != "Folder") {
             $file['type'] = $this->getType($this->mime_content_type($file['path']));
@@ -1039,11 +1038,10 @@ class Files extends System {
     }
 
 }
-
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
-    include_once 'home.class.php';
-    $home = Home::getInstance();
-    $files = Files::getInstance();
+    require('home.class.php');
+    $home = Home::getInstance($args = array());
+    $files = Files::getInstance($args = array());
     if (isset($_POST['dir'])) {
         $pdir = $_POST['dir'] . "/";
     }

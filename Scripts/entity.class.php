@@ -1,7 +1,7 @@
 <?php
 
-include_once('user.class.php');
-include_once('system.class.php');
+require_once('user.class.php');
+require_once('system.class.php');
 
 class Entity extends System{
 
@@ -10,9 +10,10 @@ class Entity extends System{
 
     public function __construct() {
         parent::__construct();
+        $this->user = User::getInstance($args = array());
     }
 
-    static function getInstance() {
+    static function getInstance($args = array()) {
         if (self :: $entity) {
             return self :: $entity;
         }
@@ -31,7 +32,7 @@ class Entity extends System{
       /* 4. $min_activity_id (default = 0)
      */
     function getActivityQuery($filter = NULL, $group_id = NULL, $user_id = NULL, $min_activity_id = 0, $activity_id = NULL) {
-        $this->user = User::getInstance();
+        $this->user = User::getInstance($args = array());
         $min_activity_id_query = "AND id >" . ($min_activity_id == 0 ? "=" . $min_activity_id : $min_activity_id);
         if(isset($activity_id)) {
             $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id = :activity_id AND visible = 1 ORDER BY time DESC";
@@ -58,14 +59,14 @@ class Entity extends System{
             $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN "
                     . "(SELECT activity_id FROM activity_share WHERE "
                     . "group_id in (SELECT group_id FROM group_member WHERE user_id = :user_id) "
-                    . "OR user_id = :user_id))"
+                    . "OR user_id = :user_id)"
                     . " AND visible = 1 " . $min_activity_id_query . " ORDER BY time DESC";
             $activity_query = $this->database_connection->prepare($activity_query);
             $activity_query->execute(array(
                 ":user_id" => $this->user->user_id,
             ));
         }
-        //return $filter.  $group_id . $user_id . $min_activity_id ;
+//        die($filter);
         return $activity_query;
     }
 

@@ -1,16 +1,15 @@
 <?php
 
-include_once('database.class.php');
-include_once('user.class.php');
-include_once('system.class.php');
-include_once('base.class.php');
+require_once('user.class.php');
+require_once('system.class.php');
+require_once('base.class.php');
 
 class Chat extends System {
     private static $chat = NULL;
     private $user;
     public function __construct() {
         parent::__construct();
-        $this->user = User::getInstance();
+        $this->user = User::getInstance($args = array());
     }
     public static function getInstance ( ) {
         if (self :: $chat) {
@@ -184,12 +183,12 @@ class Chat extends System {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
-    $chat = Chat::getInstance();
+    $chat = Chat::getInstance($args = array());
     if (isset($_POST['action']) && $_POST['action'] == "addchat") {
         die(json_encode($chat->submitChat($_POST['aimed'], $_POST['chat_text'])));
     }
 } else if ($_SERVER['REQUEST_METHOD'] == "GET"){    
-    $chat = Chat::getInstance();
+    $chat = Chat::getInstance($args = array());
     if (isset($_GET['chat'])) {
         $oldest = 0;
         $newest = null;

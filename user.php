@@ -1,12 +1,14 @@
 <?php
-include_once('Scripts/lock.php');
-$user = new User;
+function print_body() {
+	global $feed_id, $home, $files, $user, $userid, $group, $database_connection;
+
 if (isset($_GET['id'])) {
     $userid = urldecode(base64_decode($_GET['id']));
     if ($userid == $user->getId()) {
         $page_identifier = 'user';
     }
-} else {
+}
+else {
     $userid = $user->user_id;
 }
 
@@ -17,109 +19,10 @@ if (isset($_GET['tab']) && $_GET['tab'] == 'f') {
 else {
     $feed_id = 'p';
 }
-
-include_once('welcome.php');
-include_once('chat.php');
-?>
-<head>
-    <title><?php echo $name = $user->getName($userid); ?></title>
-    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBtmd6SX8JrdtTWhuVqIA37XJPO2nwtM6g&sensor=true"></script>
-
-    <script>
-        function showInvite(group, id, group_id)
-        {
-            dialog(
-                    content = {
-                        type: "text",
-                        content: "Invite <em><?php echo $user->getName($userid); ?></em> to join the group <em>" + group + "</em>.</p>",
-                    },
-                    buttons = [{
-                            type: "success",
-                            text: "Invite",
-                            onclick: "inviteUser(" + id + ", " + group_id + ");dialogLoad();"
-                        }],
-            properties = {
-                modal: false,
-                title: "Invite"
-            });
-        }
-        function inviteUser(id, group_id)
-        {
-            $.post("Scripts/group_actions.php", {action: "invite", user_id: id, group_id: group_id}, function(response)
-            {
-                if (("success").indexOf(response))
-                {
-                    removeDialog();
-                }
-                else
-                {
-                    alert(response);
-                }
-            });
-        }
-        $(function()
-        {
-        	<?php
-        	if ($feed_id == "p") :?>
-               getFeed(<?php echo $userid; ?>, 'user', min_activity_id, null, function(response){
-                    			var string = '';
-                    			for (var i in response) {
-                        			string +=  Application.prototype.feed.homify(response[i]);
-                    			}
-                    			if(response.length == 0) {
-                    				$('.feed_container').prepend(empty_feed({text:"This user has not made any posts!"}));
-                    			} else {
-                    				$('.feed_container').prepend(string);
-                    			}
-                			});
-            <?php endif; ?>
-            $('#about_edit_show').mouseenter(function() {
-                $('#profile_about_edit').show();
-            }).mouseleave(
-                    function() {
-                        $('#profile_about_edit').hide();
-                    });
-
-            $('.profilepicture').mouseenter(function() {
-                $('#profile_picture_edit').show();
-            }).mouseleave(
-                    function() {
-                        $('#profile_picture_edit').hide();
-                    });
-            $('#about_edit_show').blur(function()
-            {
-                submitData();
-            });
-
-            $("#about_edit_show").focusin(function() {
-                $("#about_edit_show").css("background", "white");
-            });
-            $("#about_edit_show").focusout(function() {
-                $("#about_edit_show").css("background", "");
-            });
-            createMap('<?php echo $user->getLocation($userid)['country']; ?>', '<?php echo $user->getLocation($userid)['city']; ?>');
-        });
-        function submitData()
-        {
-            var about = $('#about_edit_show').html();
-            var email = '';
-            var school = '';
-            var year = '';
-            $.post('Scripts/user.class.php', {about: about, email: email, year: year}, function(response)
-            {
-                $('#about_saved').fadeIn(function()
-                {
-                    $('#about_saved').fadeOut(1000);
-                });
-                //alert(response);
-            });
-        }
-    </script>
-</head>
-<body>
-    <div class="global_container">
-        <?php include_once('left_bar.php'); ?>
-        <div class="container">
+    if(TRUE) { ?>
+            <script>document.title = "<?php echo $name = $user->getName($userid); ?>";</script>
+<!--     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBtmd6SX8JrdtTWhuVqIA37XJPO2nwtM6g&sensor=true"></script> -->
+            <div class='container'>
             <table class='info_table_layout'>
                 <tr>
                     <td rowspan='2' style='width:220px;'>
@@ -242,7 +145,22 @@ include_once('chat.php');
                 </div>
             </div>
             <div id='invite_text' style='display:none;'></div>
-        </div>
-        <?php include_once 'right_bar.php'; ?>
     </div>
-</body>
+    <?php }
+    if ($feed_id == "p") { ?>
+    <script>
+    Application.prototype.feed.get(<?php echo $userid; ?>, 'user', min_activity_id, null, function(response){
+		var string = '';
+        for (var i in response) {
+    		string +=  Application.prototype.feed.homify(response[i]);
+        }
+        if(response.length == 0) {
+            $('.feed_container').prepend("This user has not made any posts!");
+        } else {
+            $('.feed_container').prepend(string);
+        }
+    });
+    </script>
+<?php } 
+}
+require_once('Scripts/lock.php');

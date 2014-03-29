@@ -1,11 +1,11 @@
 <?php
-include("lock.php");
 $system->getGlobalMeta();
 $system->jsVars();
 ?>
 
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-<script>window.jQuery || document.write('<script src="Scripts/external/jquery-1.10.2.js">\x3C/script>');</script>
+<script src="Scripts/external/jquery-1.10.2.js"></script>
+<!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>-->
+<!--<script>window.jQuery || document.write('<script src="Scripts/external/jquery-1.10.2.js">\x3C/script>');</script>-->
 
 <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/smoothness/jquery-ui.min.css" />
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
@@ -55,7 +55,7 @@ $system->jsVars();
                     draggable: true,
                 });
                 google.maps.event.addListener(marker, "dragend", function() {
-                    dialog(
+                    Application.prototype.UI.dialog(
                             content = {
                                 type: "html",
                                 content: "Are you sure you want to update your location?",
@@ -102,34 +102,14 @@ $system->jsVars();
             $('#names_universal').hide();
         });
 
-        alignNavFriend();
     });
 
     var currentPage = getCookie('current_feed');
 
 
     setInterval(function() {
-        // alignNavFriend();
-        resizeScrollers();
+        //resizeScrollers();
     }, 25000);
-    function alignNavFriend()
-    {
-//        var container_left = $('.container_headerbar').offset().left;
-//        container_left = container_left - $('.left_bar_container').outerWidth();
-//
-//        var nav_height = $('.navigation').outerHeight(true);
-//
-//        $('.left_bar_container').css('left', container_left - 1);
-//        $('#friends_container').css('top', nav_height + 22);
-//        $('.messagecomplete').css('top', nav_height + 22);
-    }
-
-    function scrollH(element_id, wrapper_id, speed)
-    {
-        //speed = typeof speed !== 'undefined' ? speed : 400;
-        //var offset = ($(wrapper_id).width() / 2) - $(element_id).width() / 2;
-        //$(wrapper_id).scrollTo(element_id, speed, {offset: 0 - offset});
-    }
 
     function submitPost()
     {
@@ -142,12 +122,12 @@ $system->jsVars();
                 if (data == "")
                 {
                     removeModal('', function() {
-                        getFeed(share_group_id, min_activity_id, activity_id, function(response){
+                        Application.prototype.feed.get(share_group_id, null, 0, min_activity_id, activity_id, function(response){
                     		var string = '';
                     		for (var i in response) {
-                        		string += Application.prototype.feed.homify(response[i]);
+                                    string += Application.prototype.feed.homify(response[i]);
                     		}
-                    		$('.feed_container').html(string);
+                    		$('.feed_container').prepend(string);
                 		});
                     });
                     clearPostArea();
@@ -164,99 +144,6 @@ $system->jsVars();
         scrollH("#" + value, "#feed_wrapper_scroller", 0);
     }
 
-
-// POPUP
-
-    function getDialog()
-    {
-        return $('.dialog_container');
-    }
-    function dialog(content, buttons, properties)
-    {
-        properties.modal = (typeof properties.modal === "undefined") ? true : properties.modal;
-        properties.loading = (typeof properties.loading === "undefined") ? false : properties.loading;
-        properties.title = (typeof properties.title === "undefined") ? "Undefined Title" : properties.title;
-        properties.width = (typeof properties.width === "undefined") ? "auto" : properties.width;
-
-        var dialog_container = $("<div class='dialog_container'></div>").css({'opacity': '0'});
-        $('body').append(dialog_container);
-
-        var dialog_title = $("<div class='dialog_title'>" + properties.title +
-                "<span onclick='removeDialog();' class='dialog_close_button'>x</span></div>");
-        var content_container = $("<div class='dialog_content_container'></div>");
-        dialog_container.append(dialog_title);
-        dialog_container.append(content_container);
-
-        if (content.type == "text")
-        {
-            dialog_container.append(content.content);
-        }
-        else if (content.type == "html")
-        {
-            content_container.append(content.content);
-        }
-        dialog_container.width(properties.width);
-        var button_complete = $('<div></div>');
-        for (var i = 0; i < buttons.length; i++) {
-            var single_button = document.createElement('button');
-            $(single_button).addClass('small');
-            $(single_button).addClass('pure-button-' + buttons[i].type);
-            $(single_button).css('float', 'right');
-            $(single_button).text(buttons[i].text);
-            single_button.onclick = buttons[i].onclick;
-            button_complete.append(single_button);
-        }
-
-        var dialog_buttons = $("<div class='dialog_buttons'><img class='dialog_loading' src='Images/ajax-loader.gif'></img></div>");
-        dialog_container.append(dialog_buttons);
-        dialog_buttons.append(button_complete);
-
-        if (properties.modal == true) {
-            $('body').append("<div class='background-overlay'></div>");
-        } else {
-            $('body').append("<div onclick='removeDialog()' style='opacity:0.5' class='background_white_overlay'></div>");
-        }
-
-        if (properties.loading == true)
-        {
-            dialogLoad();
-        }
-        alignDialog();
-        var real_height = dialog_container.height();
-        content_container.mCustomScrollbar({
-            scrollInertia: 10,
-            autoHideScrollbar: true,
-        });
-        dialog_container.css({height: "0px"});
-        dialog_container.animate({minHeight: real_height + "px", opacity: 1}, 100, function() {
-            dialog_container.css({height: "auto", opacity: 1}, 'fast');
-            content_container.mCustomScrollbar("update");
-            setTimeout(function() {
-                content_container.mCustomScrollbar("update");
-            }, 200);
-        });
-    }
-
-    function alignDialog()
-    {
-        var width = $('.dialog_container').width();
-        var height = $('.dialog_container').height();
-        $('.dialog_container').css({
-            'margin-left': '-' + width / 2 + "px",
-            'margin-top': '-' + height / 2 + "px",
-        });
-    }
-
-    function removeDialog()
-    {
-        $('.background-overlay, .background_white_overlay').remove();
-
-        $('.dialog_container').css('min-height', '0px');
-        $('.dialog_container').animate({height: 0, opacity: 0}, 100, function() {
-            $(this).remove();
-        });
-    }
-// #POPUP
 // #HOME
     $(function() {
         $(document).on('click', '.post_media_single_close_webpage', function() {
@@ -441,7 +328,7 @@ $system->jsVars();
             if (post_media_added_files[i].id == object.id || post_media_added_files[i] == object.id)
             {
                 index = "found";
-                dialog(
+                Application.prototype.UI.dialog(
                         content = {
                             type: 'html',
                             content: "Sorry, but you have already added this file to your post. Please choose another instead!"
@@ -581,30 +468,10 @@ $system->jsVars();
         });
     }
 
-
-    $(function() {
-        $('.autoresize').each(function(){
-            autoresize($(this));
-        });
-    });
-    function autoresize(textarea)
-    {
-        var clone = $(textarea).next('.textarea_clone');
-        clone.css('font-size', $(textarea).css('font-size'));
-        clone.css('font-family', $(textarea).css('font-family'));
-        clone.css('padding', $(textarea).css('padding'));
-        $(document).on('propertychange keyup input change', textarea, function(event) {
-            var text = $(textarea).val();
-            clone.text(text);
-            $(textarea).height(clone.height());
-        });
-    }
-
     function get_folder_contents(element, action, parent_folder, actions)
     {
         $('#loading_icon').show();
-        if (action == "remove")
-        {
+        if (action == "remove") {
             $(element).children('div').slideUp(function() {
             });
             var new_onclick = $(element).attr('previous_onclick');
@@ -615,8 +482,7 @@ $system->jsVars();
             });
             $('#loading_icon').fadeOut();
         }
-        else
-        {
+        else {
             $.post('Scripts/files.class.php', {parent_folder: parent_folder, action: "getContents", actions: actions}, function(response)
             {
                 var previous_onclick = $(element).attr("onclick");

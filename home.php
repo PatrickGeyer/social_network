@@ -1,69 +1,95 @@
 <?php
-include_once('Scripts/lock.php');
-
-$min_activity_id = $user_id = $group_id = $filter = NULL;
-if (isset($_GET['min_activity_id'])) {
-    $min_activity_id = $_GET['min_activity_id'];
-}
-
-if (isset($_GET['fg'])) {
-    $group_id = $feed_id = $_GET['fg'];
-}
-else if (isset($_GET['f'])) {
-    if($_GET['f'] == 'a') {
-        $filter = $feed_id = 'a';
-    }
-    else {
-        $filter = $feed_id = $_GET['f'];
-    }
-    
-}
-else if (isset($_GET['u'])) {
-    $user_id = $_GET['u'];
-    $feed_id = 'u_'.$user_id;
-} 
-else {
-    $filter = $feed_id = 'a';
-}
-
-$activity_query = $entity->getActivityQuery($filter, $group_id, $user_id, $min_activity_id);
-
-// if (isset($_GET['min_activity_id'])) {
-//     die("<script>min_activity_id = " . $home->getActivity($activity_query, $min_activity_id) . ";</script>");
-// }
-$page_identifier = "home";
-
-include_once('welcome.php');
-include_once('chat.php');
-?>
-
-<html>
-    <head>	
+function print_body() {
+    if (TRUE) { 
+        global $files, $home, $group, $feed_id;
+        ?>
+        <div class="container">
+            <div class='home_feed_post_container'>
+                <div class='home_feed_post_container_arrow_border'>
+                    <div class='home_feed_post_container_arrow'></div>
+                </div>
+                <div class='post_wrapper'>
+                    <table style='width:100%;' cellspacing='0' cellpadding='0'>
+                        <tr>
+                            <td>
+                                <table style='width:100%;' cellspacing='0' cellpadding='0'>
+                                    <tr style='height:100%;'>
+                                        <td>
+                                            <textarea tabindex='1' id="status_text" placeholder= "Update Status or Share Files..." class="status_text autoresize"></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class='post_content_wrapper'>
+                                            <div class="post_media_wrapper">
+                                                <div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div>
+                                                <img class='post_media_loader' src='Images/ajax-loader.gif'></img>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td style='width:00px;height:100%;position: relative;'>
+                                <div id='file_share'>
+                                    <table id='file_dialog' style='width:100%;' cellspacing="0" cellpadding="0">
+                                        <?php
+                                        foreach ($files->getList_r() as $file) {
+                                            $home->fileList($file);
+                                        }
+                                        ?>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div id='post_more_options' class='post_more_options'>
+                        <button onclick="submitPost();" class="pure-button-success small">Post</button>
+                        <button id='attach_file_button' class='pure-button-neutral smallest' style="cursor:pointer;" onclick="$('#post_file').trigger('click');">+</button>
+                        <input type="file" name="file" id="post_file" multiple style='display:none;' />
+                        <div class='default_dropdown_selector' style='display:inline-block;' wrapper_id='audience_selector'>
+                            <span class='default_dropdown_preview'>Everyone</span>
+                            <div class='default_dropdown_wrapper' style='display:none;' id='audience_selector'>
+                                <ul class='default_dropdown_menu'>
+                                    <li class='default_dropdown_item' controller_id='audience_selector' share_id='a'>
+                                        <span>Everyone</span>
+                                    </li>
+                                    <?php
+                                    foreach ($group->getUserGroups() as $single_group) {
+                                        echo "<li class='default_dropdown_item' "
+                                        . "controller_id='audience_selector' share_id='" . $single_group . "'>";
+                                        echo "<span>" . $group->getGroupName($single_group) . "</span>";
+                                        echo "</li>";
+                                    }
+                                    ?>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>	
+                <div style="width:100%" id="progress_bar_holder"></div>
+            </div>
+            <div id='feed_refresh'> 
+                <div class='feed_container'>
+                    <!--  Activity Here -->
+                </div>
+            </div>
+        </div>
         <script>
-            loggedIn = true;
-            $('.icon').click(function() {
-                $('.icon').fadeTo('slow', 0.5);
-            });
-            function openDialog() {
-                $("#status_image_selector").click();
-            }
-
+            min_activity_id = <?php echo (isset($max) ? $max : '0'); ?>;
             var share_group_id = <?php echo (is_int($feed_id) ? $feed_id : "'$feed_id'"); ?>;
             var activity_id = null;
             $(function($)
             {
-                //getFeedContent(share_group_id, min_activity_id, 'home', function(){});
-                getFeed(share_group_id, 'home', min_activity_id, activity_id, function(response){
+                Application.prototype.feed.get(share_group_id, 'home', min_activity_id, activity_id, function(response) {
                     var string = '';
                     for (var i in response) {
-                        string +=  Application.prototype.feed.homify(response[i]);
+                        string += Application.prototype.feed.homify(response[i]);
                     }
                     $('.feed_container').prepend(string);
                 });
 
                 $(document).on('click', '.home_like_icon', function() {
                     var has_liked = $(this).attr('has_liked');
-                    if(has_liked == "false") {
+                    if (has_liked == "false") {
                         $(this).text(COMMENT_UNLIKE_TEXT);
                         $(this).attr('has_liked', 'true')
                     }
@@ -90,12 +116,7 @@ include_once('chat.php');
                 }).focusout(function() {
                     $('.home_feed_post_container_arrow_border').css('border-right-color', 'lightgrey');
                 });
-
-                $('#status_text').on('input', function() {
-                    $(this).css('height', '0px');
-                    $(this).css('height', $(this)[0].scrollHeight + "px");
-                });
-
+                
                 $('.default_dropdown_item').click(function()
                 {
                     $('div[wrapper_id="' + $(this).attr('controller_id') + '"]').find('.default_dropdown_preview').text($(this).text());
@@ -121,92 +142,37 @@ include_once('chat.php');
                 added_URLs = new Array();
                 typed_URLs = new Array();
             }
+            document.title = 'Home';
         </script>
-        <title>Home</title>
-    </head>
+        <?php
+    }
+}
 
-    <body>
-        <div class='global_container'>
-            <?php include_once 'left_bar.php';?>
-            <div class="container">
-                <div class='home_feed_post_container'>
-                    <div class='home_feed_post_container_arrow_border'>
-                        <div class='home_feed_post_container_arrow'></div>
-                    </div>
-                    <div class='post_wrapper'>
-                        <table style='width:100%;' cellspacing='0' cellpadding='0'>
-                            <tr>
-                                <td>
-                                    <table style='width:100%;' cellspacing='0' cellpadding='0'>
-                                        <tr style='height:100%;'>
-                                            <td>
-                                                <textarea tabindex='1' id="status_text" placeholder= "Update Status or Share Files..." class="status_text scroll_thin"></textarea>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class='post_content_wrapper'>
-                                                <div class="post_media_wrapper">
-                                                    <div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div>
-                                                    <img class='post_media_loader' src='Images/ajax-loader.gif'></img>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                                <td style='width:00px;height:100%;position: relative;'>
-                                    <div id='file_share'>
-                                        <table id='file_dialog' style='width:100%;' cellspacing="0" cellpadding="0">
-                                            <?php
-                                            foreach ($files->getList_r() as $file) {
-                                                $home->fileList($file);
-                                            }
-                                            ?>
-                                        </table>
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
-                        <div id='post_more_options' class='post_more_options'>
-                            <button onclick="submitPost();" class="pure-button-success small">Post</button>
-                            <button id='attach_file_button' class='pure-button-neutral smallest' style="cursor:pointer;" onclick="$('#post_file').trigger('click');">+</button>
-                            <input type="file" name="file" id="post_file" multiple style='display:none;' />
-                            <div class='default_dropdown_selector' style='display:inline-block;' wrapper_id='audience_selector'>
-                                <span class='default_dropdown_preview'>Everyone</span>
-                                <div class='default_dropdown_wrapper' style='display:none;' id='audience_selector'>
-                                    <ul class='default_dropdown_menu'>
-                                        <li class='default_dropdown_item' controller_id='audience_selector' share_id='a'>
-                                            <span>Everyone</span>
-                                        </li>
-                                        <?php
-                                        foreach ($group->getUserGroups() as $single_group) {
-                                            echo "<li class='default_dropdown_item' "
-                                            . "controller_id='audience_selector' share_id='" . $single_group . "'>";
-                                            echo "<span>" . $group->getGroupName($single_group) . "</span>";
-                                            echo "</li>";
-                                        }
-                                        ?>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>	
-                    <div style="width:100%" id="progress_bar_holder"></div>
-                </div>
-                <div id='feed_refresh'> 
-                    <div class='feed_container'>
-                        <!--  Activity Here -->
-                    </div>
-                </div>
-            </div>
-            <?php include_once 'right_bar.php';?>
-        </div>
-        <script>
-            min_activity_id = <?php echo (isset($max) ? $max : '0'); ?>;
-            function showhide(element)
-            {
-                $(element).toggle("slide");
-            }
+require_once('Scripts/lock.php');
+$min_activity_id = $user_id = $group_id = $filter = NULL;
+if (isset($_GET['min_activity_id'])) {
+    $min_activity_id = $_GET['min_activity_id'];
+}
 
-        </script>
-    </body>
-</html>
+if (isset($_GET['fg'])) {
+    $group_id = $feed_id = $_GET['fg'];
+}
+else if (isset($_GET['f'])) {
+    if ($_GET['f'] == 'a') {
+        $filter = $feed_id = 'a';
+    }
+    else {
+        $filter = $feed_id = $_GET['f'];
+    }
+}
+else if (isset($_GET['u'])) {
+    $user_id = $_GET['u'];
+    $feed_id = 'u_' . $user_id;
+}
+else {
+    $filter = $feed_id = 'a';
+}
+
+
+$page_identifier = "home";
+?>

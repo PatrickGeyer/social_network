@@ -35,18 +35,19 @@ if (!isset($page_identifier)) {
             }
             ?>
                 "><a class="nav_option ellipsis_overflow" href="home">Home</a></li> 
-            <li style='background-image:url("Images/Icons/icons/paper-plane.png");' class="nav_option 
-            <?php
-            if ($page_identifier == "school") {
-                echo "current_page";
-            }
-            ?>
-                ">
+            
             <li style='background-image:url("Images/Icons/icons/paper-clip.png");' class="nav_option <?php
             if ($page_identifier == "files") {
                 echo "current_page";
             }
             ?>"><a class="nav_option ellipsis_overflow" href="files">My Files</a></li> 
+
+            <li style='background-image:url("Images/Icons/icons/paper-clip.png");' class="nav_option <?php
+            if ($page_identifier == "calendar") {
+                echo "current_page";
+            }
+            ?>"><a class="nav_option ellipsis_overflow" href="calendar">Calendar</a></li> 
+
             <li style='background-image:url("Images/Icons/icons/mail.png");' class="nav_option <?php
             if ($page_identifier == "inbox") {
                 echo "current_page";

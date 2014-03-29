@@ -11,38 +11,44 @@
  ****************************************************/
 
 function Application() {
-};
+}
+;
 
 Application.prototype.user = {
-    preview : {
-        showing : false
+    preview: {
+        showing: false
     },
     isMobile: navigator.userAgent.match(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/)
 };
 Application.prototype.file = {
-    theater : {
+    theater: {
         active: false,
-        removeTime : 0
+        removeTime: 0
     },
-    upload  : {
-        instance : new Array()
-    }
+    upload: {
+        instance: new Array(),
+        session: 0
+    },
+    files: new Array()
 };
 Application.prototype.chat = {
 };
 Application.prototype.generic = {
 };
 Application.prototype.feed = {
-    comment : {}
+    comment: {
+        comments : new Array()
+    }
 };
 Application.prototype.calendar = {
 };
 Application.prototype.UI = {
-    progress : {
-        instance : new Array()
+    progress: {
+        instance: new Array()
     }
 };
-
+Application.prototype.notification = {
+};
 /****************************************************
  * 1. Functions (Network and Widgets)                *
  ****************************************************/
@@ -82,30 +88,20 @@ Application.prototype.UI.getViewPortHeight = function()
     return viewportheight;
 }
 
-Application.prototype.UI.getViewPortWidth = function()
-{
+Application.prototype.UI.getViewPortWidth = function() {
     var viewportwidth;
     var viewportheight;
 
     //Standards compliant browsers (mozilla/netscape/opera/IE7)
-    if (typeof window.innerWidth != 'undefined')
-    {
+    if (typeof window.innerWidth != 'undefined') {
         viewportwidth = window.innerWidth,
                 viewportheight = window.innerHeight
-    }
-
-    // IE6
-    else if (typeof document.documentElement != 'undefined'
+    } else if (typeof document.documentElement != 'undefined'
             && typeof document.documentElement.clientWidth !=
-            'undefined' && document.documentElement.clientWidth != 0)
-    {
+            'undefined' && document.documentElement.clientWidth != 0) {
         viewportwidth = document.documentElement.clientWidth,
                 viewportheight = document.documentElement.clientHeight
-    }
-
-    //Older IE
-    else
-    {
+    } else {
         viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
                 viewportheight = document.getElementsByTagName('body')[0].clientHeight
     }
@@ -119,8 +115,8 @@ Application.prototype.UI.progress.create = function(element, id) {
     upload.append($("<div class='progress_bar'></div>"));
     $(element).append(upload);
     this.instance[id] = {
-        element : upload,
-        progress : 0
+        element: upload,
+        progress: 0
     };
 };
 
@@ -137,6 +133,85 @@ Application.prototype.UI.progress.remove = function(id) {
     this.instance.splice(id, 1);
 };
 
+Application.prototype.UI.dialog = function(content, buttons, properties) {
+    properties.modal = (typeof properties.modal === "undefined") ? true : properties.modal;
+    properties.loading = (typeof properties.loading === "undefined") ? false : properties.loading;
+    properties.title = (typeof properties.title === "undefined") ? "Undefined Title" : properties.title;
+    properties.width = (typeof properties.width === "undefined") ? "auto" : properties.width;
+
+    var dialog_container = $("<div class='dialog_container'></div>").css({'opacity': '0'});
+    $('body').append(dialog_container);
+
+    var dialog_title = $("<div class='dialog_title'>" + properties.title +
+            "<span onclick='removeDialog();' class='dialog_close_button'>x</span></div>");
+    var content_container = $("<div class='dialog_content_container'></div>");
+    dialog_container.append(dialog_title);
+    dialog_container.append(content_container);
+
+    if (content.type == "text") {
+        dialog_container.append(content.content);
+    } else if (content.type == "html") {
+        content_container.append(content.content);
+    }
+    dialog_container.width(properties.width);
+    var button_complete = $('<div></div>');
+    for (var i = 0; i < buttons.length; i++) {
+        var single_button = document.createElement('button');
+        $(single_button).addClass('small');
+        $(single_button).addClass('pure-button-' + buttons[i].type);
+        $(single_button).css('float', 'right');
+        $(single_button).text(buttons[i].text);
+        single_button.onclick = buttons[i].onclick;
+        button_complete.append(single_button);
+    }
+
+    var dialog_buttons = $("<div class='dialog_buttons'><img class='dialog_loading' src='Images/ajax-loader.gif'></img></div>");
+    dialog_container.append(dialog_buttons);
+    dialog_buttons.append(button_complete);
+
+    if (properties.modal == true) {
+        $('body').append("<div class='background-overlay'></div>");
+    } else {
+        $('body').append("<div onclick='removeDialog()' style='opacity:0.5' class='background_white_overlay'></div>");
+    }
+
+    if (properties.loading == true) {
+        dialogLoad();
+    }
+    alignDialog();
+    var real_height = dialog_container.height();
+    content_container.mCustomScrollbar({
+        scrollInertia: 10,
+        autoHideScrollbar: true,
+    });
+    dialog_container.css({height: "0px"});
+    dialog_container.animate({minHeight: real_height + "px", opacity: 1}, 100, function() {
+        dialog_container.css({height: "auto", opacity: 1}, 'fast');
+        content_container.mCustomScrollbar("update");
+        setTimeout(function() {
+            content_container.mCustomScrollbar("update");
+        }, 200);
+    });
+};
+
+Application.prototype.UI.alignDialog = function() {
+    var width = $('.dialog_container').width();
+    var height = $('.dialog_container').height();
+    $('.dialog_container').css({
+        'margin-left': '-' + width / 2 + "px",
+        'margin-top': '-' + height / 2 + "px",
+    });
+};
+
+Application.prototype.UI.removeDialog = function() {
+    $('.background-overlay, .background_white_overlay').remove();
+
+    $('.dialog_container').css('min-height', '0px');
+    $('.dialog_container').animate({height: 0, opacity: 0}, 100, function() {
+        $(this).remove();
+    });
+};
+
 /****************************************************
  * 1.1 Generic Functions                             *
  ****************************************************/
@@ -150,23 +225,21 @@ Application.prototype.search = function(text, mode, element, callback) {
         $(element).show();
     }
     $.post("Scripts/searchbar.php", {search: mode, input_text: text}, function(response) {
-        $(element).find('.search_slider').slideUp("fast", function() {
-            $(this).remove();
-        });
-        var slider = $("<div class='search_slider'></div>").hide();
+        $(element).find('.search_slider').remove();
+        var slider = $("<div class='search_slider'></div>");
         slider.append(response);
         $(element).append(slider);
         loader.remove();
-        var scrollElement = element.find('.search_slider').get(0);
-        slider.slideDown(function() {
-            if (scrollElement.offsetHeight < scrollElement.scrollHeight || scrollElement.offsetWidth < scrollElement.scrollWidth) {
-                $(element).mCustomScrollbar();
-                $(element).find('.mCustomScrollBox ').height('');
-                $(element).mCustomScrollbar("update");
-                $(element).find('.mCS_container').css('top', '0px');
-            }
-            callback();
-        });
+        // var scrollElement = element.find('.search_slider').get(0);
+        slider.show();
+        //if (scrollElement.offsetHeight < scrollElement.scrollHeight || scrollElement.offsetWidth < scrollElement.scrollWidth) {
+        //$(element).mCustomScrollbar();
+        //$(element).find('.mCustomScrollBox ').height('');
+        //$(element).mCustomScrollbar("update");
+        //$(element).find('.mCS_container').css('top', '0px');
+        //}
+        callback();
+
     });
     $(element).off('click');
     $(element).on('click', function(e) {
@@ -175,12 +248,20 @@ Application.prototype.search = function(text, mode, element, callback) {
     });
 }
 
+Application.prototype.generic.relocate = function(event, element) {
+    event.preventDefault();
+
+    $.get($(element).attr('href'), {ajax: 'ajax'}, function(response) {
+        $('.container').replaceWith(response);
+        window.history.pushState({}, 'WhatTheHellDoesThisDo?!', '/' + $(element).attr('href'));
+    });
+}
 
 /****************************************************
  * 1.1 Prototypes                                    *
  ****************************************************/
 
-String.prototype.replace_links = function() {
+String.prototype.replaceLinks = function() {
     var replacedText, replacePattern1, replacePattern2, replacePattern3;
 
     //URLs starting with http://, https://, or ftp://
@@ -198,7 +279,7 @@ String.prototype.replace_links = function() {
     return this;
 };
 
-String.prototype.replace_emoticons = function() {
+String.prototype.replaceEmoticons = function() {
     var emoticons = {
         ':)[': 'smiley/clean/money-mouth.png',
         ':)': 'smiley/clean/smile.png',
@@ -246,21 +327,7 @@ Array.min = function(array) {
  * 1.2 Generic User Interface                        *
  ****************************************************/
 
-function changePostFeed(view) {
-    if (view == "File") {
-        $(".activity_comment_div").hide();
-        $('.comment_box_original').show();
-    }
-    else if (view == "Post") {
-        $(".activity_comment_div").show();
-        $('.comment_box_original').hide();
-    }
-    else {
-
-    }
-}
-
-function modal(container, properties) {
+Application.prototype.UI.modal = function(container, properties) {
     if ($('.background_white_overlay').length > 0) {
         removeModal('', function() {
             modal(container, properties);
@@ -304,9 +371,9 @@ function modal(container, properties) {
         overlay.append(text);
     }
     container.append(overlay).hide().fadeIn();
-}
+};
 
-function removeModal(type, callback) {
+Application.prototype.UI.removeModal = function(type, callback) {
     if (typeof callback == "undefined") {
         callback = function() {
         };
@@ -321,17 +388,17 @@ function removeModal(type, callback) {
         $('.background_white_overlay').remove();
         callback();
     }
-}
+};
 
-function pulsate(element, speed, color) {
+Application.prototype.UI.pulsate = function(element, speed, color) {
     var prev_border = element.css('border');
     element.css("border", "1px solid " + color);
     setTimeout(function() {
         element.css("border", '');
     }, speed);
-}
+};
 
-function toolTip(element, content, buttons, properties) {
+Application.prototype.UI.toolTip = function(element, content, buttons, properties) {
     properties.modal = (typeof properties.modal === "undefined") ? true : properties.modal;
     properties.loading = (typeof properties.loading === "undefined") ? false : properties.loading;
     properties.title = (typeof properties.title === "undefined") ? "Undefined Title" : properties.title;
@@ -363,9 +430,9 @@ function toolTip(element, content, buttons, properties) {
     dialog_container.append(dialog_buttons);
     dialog_buttons.append(button_complete);
     alignTooltip(element, dialog_container);
-}
+};
 
-function alignTooltip(element, tooltip) {
+Application.prototype.UI.alignTooltip = function(element, tooltip) {
     var top = element.offset().top;
     var left = element.offset().left;
     tooltip.css({
@@ -373,9 +440,9 @@ function alignTooltip(element, tooltip) {
         top: top,
         left: left
     });
-}
+};
 
-function resizeContainer() {
+Application.prototype.UI.resizeContainer = function() {
     var width = Application.prototype.UI.getViewPortWidth();
     if (width < 1400) {
         $('.container').addClass('container_small');
@@ -383,32 +450,100 @@ function resizeContainer() {
         $('.right_bar_container').removeClass('right_bar_shift');
         $('.container').removeClass('container_small');
     }
-}
-function adjustSwitches() {
+};
+
+Application.prototype.UI.adjustSwitches = function() {
     $('.switch_container').find('.switch_option').each(function() {
         var siblings = $(this).parents('.switch_container').find('.switch_option').length;
         var width = $(this).parents('.switch_container').width() / siblings;
         $(this).width(width);
     });
-}
+};
 
-function resizeTextarea(element, clone) {
-    var text = $(element).val();
-    $(clone).text(text);
-    $(element).height($(clone).height());
-}
+/****************************************************
+ * 1.3 Welcome Bar                                   *
+ ****************************************************/
+
+Application.prototype.notification.getMessageBox = function() {
+    $.post('Scripts/notifications.class.php', {action: "messageList"}, function(response) {
+        $('ul.message').html(response);
+        $('#popup_message').height($('ul.message').outerHeight(true));
+        $('#popup_message').mCustomScrollbar('update');
+    });
+};
+
+Application.prototype.notification.getNotificationBox = function() {
+    $.post('Scripts/notifications.class.php', {action: "notificationList"}, function(response) {
+        $('ul.notify').html(response);
+        $('#popup_notify').height($('ul.notify').outerHeight(true));
+        $('#popup_notify').mCustomScrollbar('update');
+    });
+};
+
+Application.prototype.notification.getNetworkBox = function() {
+    $.post('Scripts/notifications.class.php', {action: "networkList"}, function(response) {
+        $('ul.network').html(response);
+        $('#popup_network').height($('ul.network').outerHeight(true));
+        $('#popup_network').mCustomScrollbar('update');
+    });
+};
+
+Application.prototype.notification.getNotificationNumber = function() {
+    $.post('Scripts/notifications.class.php', {action: "alert_num"}, function(response) {
+        response = JSON.parse(response);
+        if (response.message != '0') {
+            $('#message_num').text(response.message);
+            $('#message_num').show();
+            getMessageBox();
+        }
+        else {
+            $('#message_num').hide();
+        }
+        if (response.notification != '0') {
+            $('#notification_num').text(response.notification);
+            $('#notification_num').show();
+            getNotificationBox();
+        }
+        else {
+            $('#notification_num').hide();
+        }
+        if (response.network != '0') {
+            $('#network_num').text(response.network);
+            $('#network_num').show();
+            getNetworkBox();
+        }
+        else {
+            $('#network_num').hide();
+        }
+
+        var all = response.message + response.notification + response.network;
+        var title = document.title.lastIndexOf(')');
+        if (all > 0) {
+            if (title == -1) {
+                document.title = "(" + all + ") " + document.title;
+            }
+            else {
+                title = document.title.substring(title + 1);
+                document.title = "(" + all + ") " + title;
+            }
+        }
+        // $('#popup_message').mCustomScrollbar('scrollTo', 'top');
+        // $('#popup_network').mCustomScrollbar('scrollTo', 'top');
+        // $('#popup_notify').mCustomScrollbar('scrollTo', 'top');
+        setTimeout(Application.prototype.notification.getNotificationNumber, 10000);
+    });
+
+};
 
 /****************************************************
  * 1.3 Files                                         *
  ****************************************************/
 
-var audio_items = new Array();
-var upload_session = 0;
+/****************************************************
+ * 1.3.0 Files - Upload                              *
+ ****************************************************/
 
-var q = 0;
-Application.prototype.file.upload.upload = function(files, onStart, onProgress, onComplete, properties)
-{
-    upload_session++;
+Application.prototype.file.upload.upload = function(files, onStart, onProgress, onComplete, properties) {
     if ($('.upload_file_container').length == 0) {
         var file_container = $('<div class="event upload_file_container"></div>');
         file_container.append("<a>Upload</a>");
@@ -418,7 +553,7 @@ Application.prototype.file.upload.upload = function(files, onStart, onProgress, 
     } else {
         var file_upload_container = $('.upload_file_container .calendar-event-info-files');
     }
-
+    var session = this.session++;
     onStart();
     var length = files.length;
     var files_left = length;
@@ -427,8 +562,7 @@ Application.prototype.file.upload.upload = function(files, onStart, onProgress, 
     properties.type = typeof properties.type !== 'undefined' ? properties.type : 'File';
 
     for (var i = 0; i < length; i++) {
-        q++;
-        (function(count, upload_session) {
+        (function(count, session) {
             var file = files[count].file;
             var formdata = new FormData();
             formdata.append("file", file);
@@ -436,79 +570,116 @@ Application.prototype.file.upload.upload = function(files, onStart, onProgress, 
             formdata.append("parent_folder", parent_folder);
             var xhr = new XMLHttpRequest();
             xhr.upload.onprogress = function(event) {
-                progressHandler(event, "" + upload_session + count, onProgress);
+                Application.prototype.file.upload.progressHandler(event, "" + session + count, onProgress);
             };
             xhr.onload = function() {
-                completeHandler(this, "" + upload_session + count, onComplete, name);
+                Application.prototype.file.upload.completeHandler(this, "" + session + count, onComplete, name);
             };
-            xhr.addEventListener("error", errorHandler, false);
-            xhr.addEventListener("abort", abortHandler, false);
+            xhr.addEventListener("error", Application.prototype.file.upload.errorHandler, false);
+            xhr.addEventListener("abort", Application.prototype.file.upload.abortHandler, false);
             xhr.open("post", "Scripts/files.class.php");
             xhr.send(formdata);
             var file_container = $("<div class='upload_preview'>");
-            file_container.attr('id', "" + upload_session + count + "_upload_preview");
+            file_container.attr('id', "" + session + count + "_upload_preview");
             file_container.append(file.name);
             file_container.append("<br />");
             file_upload_container.append(file_container);
-            Application.prototype.UI.progress.create(file_container, "" + upload_session + count);
-        })(i, upload_session);
+            Application.prototype.UI.progress.create(file_container, "" + session + count);
+        })(i, session);
     }
-}
-function progressHandler(event, id, callback) {
+};
+
+Application.prototype.file.upload.progressHandler = function(event, id, callback) {
     $('#loading_icon').show();
     var percent = (event.loaded / event.total) * 100;
     percent = Math.round(percent);
     Application.prototype.UI.progress.update(id, percent);
     callback(percent);
-}
-function completeHandler(event, id, onComplete) {
+};
+
+Application.prototype.file.upload.completeHandler = function(event, id, onComplete) {
     $('#' + id + '_upload_preview').slideUp();
     Application.prototype.UI.progress.remove(id);
-    if (q > 1)
-    {
-        q--;
+    if (this.session > 0) {
+        this.session--;
+        if (this.session === 0) {
+            $('#loading_icon').fadeOut();
+            $('.upload_file_container').slideUp(function() {
+                $(this).remove();
+            });
+        }
     }
-    else
-    {
-        $('#loading_icon').fadeOut();
-        $('.upload_file_container').slideUp(function() {
-            $(this).remove();
-        });
-
-    }
-    if (onComplete == "addToStatus")
-    {
+    if (onComplete == "addToStatus") {
         response = $.parseJSON(event.responseText);
         addToStatus(response, 'create');
-    }
-    else
-    {
-        if (q == 0) {
+    } else {
+        if (this.session == 0) {
             removeDialog();
             refreshFileContainer(encrypted_folder);
         }
     }
     onComplete($.parseJSON(event.responseText));
 }
-function errorHandler(event)
-{
-    if (q > 1)
-    {
-        q--;
+Application.prototype.file.upload.errorHandler = function(event) {
+    if (this.session > 0) {
+        this.session--;
     }
-    // _("status").innerHTML = "Upload Failed!";
     alert('upload failed');
     $('#loading_icon').fadeOut();
-}
-function abortHandler(event)
-{
-    if (q > 1)
-    {
-        q--;
+};
+Application.prototype.file.upload.abortHandler = function(event) {
+    if (this.session > 0) {
+        this.session--;
     }
-    // _("status").innerHTML = "Upload Aborted!";
-    // $('#loading_icon').fadeOut();
-}
+};
+
+/****************************************************
+ * 1.3.1 Files - Print                               *
+ ****************************************************/
+
+Application.prototype.file.print_folder = function(folder) {
+    var string = '';
+    for (var file in folder) {
+        string += this.print_row(folder[file]);
+    }
+    return string;
+};
+
+Application.prototype.file.print_row = function(file) {
+    var string = '';
+
+    if (file.type != "Folder") {
+        string += "<div data-file_id='" + file.id + "' class='files'>";
+    } else {
+        string += "<div data-file_id='" + file.id + "' class='folder'>"; // SAME
+    }
+    string += "<div class='files_icon_preview' style='background-image:url(\"" + file.type_preview + "\");'></div>";
+    string += "<p class='files ellipsis_overflow'>" + file.name + "</p>";
+
+    string += "<div class='files_actions'><table cellspacing='0' cellpadding='0'><tr style='vertical-align:middle;'><td>";
+
+    string += "<a href='" + file.path + "' download><div class='files_actions_item files_actions_download'></div></a></td><td>";
+    string += "<hr class='files_actions_seperator'></td><td>";
+
+    string += "<div class='files_actions_item files_actions_delete' "
+            + "onclick='deleteFile(this, " + file.id + ");if(event.stopPropagation){event.stopPropagation();}"
+            + "event.cancelBubble=true;'></div></td><td>"
+            + "<hr class='files_actions_seperator'></td><td>"
+            + "<div class='files_actions_item files_actions_share' data-file_id='" + file.id + "'></div></td>";
+    string += "</tr></table></div>";
+
+    string += "<div class='file_hidden_container'>";
+    string += Application.prototype.file.print(file, "File");
+    string += "</div>";
+
+    string += "</div>";
+    return string;
+};
+
+Application.prototype.file.view = function(id) {
+    $.post("Scripts/files.class.php", {file_id: id, action: "view"}, function() {
+    });
+};
 
 Application.prototype.file.list = function(element, type, callback) {
     callback = typeof callback !== 'undefined' ? callback : function() {
@@ -544,12 +715,12 @@ Application.prototype.file.print = function(file, activity_type) {
     var classes = '';
     if (file.type == "Audio") {
         post_classes += "post_media_double";
-        post_content += print_doc_file(file);
+        post_content += this.printDoc(file);
     } else if (file.type == "Image") {
         post_classes += "post_media_photo";
-        post_content += print_doc_file(file);
+        post_content += this.printDoc(file);
     } else if (file.type == "Video") {
-        post_content += print_doc_file(file);
+        post_content += this.printDoc(file);
         post_classes += "post_media_video";
 //        post_content += video_player(file, classes, "height:100%;", "home_feed_video_", true);
     } else if (file.type == "WORD Document"
@@ -559,11 +730,11 @@ Application.prototype.file.print = function(file, activity_type) {
             || file.type == "Folder") {
         post_styles += "height:auto;";
         post_classes += "post_media_double";
-        post_content += print_doc_file(file);
+        post_content += this.printDoc(file);
     } else if (file.type == "Folder") {
         post_styles += "height:auto;";
         post_classes += "post_media_double";
-        post_content += print_doc_file(file);
+        post_content += this.printDoc(file);
     } else if (file.type == "Webpage") {
         post_classes += "post_media_full";
         post_styles += "height:auto;";
@@ -578,7 +749,7 @@ Application.prototype.file.print = function(file, activity_type) {
         post_content += "</table>";
     } else {
         post_classes += "post_media_full";
-        post_content += print_doc_file(file);
+        post_content += this.printDoc(file);
     }
 
     post_content += "<div class='top_right_actions'>";
@@ -590,9 +761,9 @@ Application.prototype.file.print = function(file, activity_type) {
     if (activity_type == "Text" && typeof file.activity != 'undefined') {
         post_content += '<div class="comment_box">';
         post_content += '<div class="comment_box_comment">';
-        post_content += show_comments(file.activity);
+        post_content += Application.prototype.feed.comment.showComments(file.activity);
         post_content += "</div>"
-        post_content += print_comment_input(file.activity.id);
+        post_content += Application.prototype.feed.comment.printInput(file.activity.id);
         post_content += "</div>";
     }
     post_content += "</div></div>"; //CLOSE file_activity_section AND POST_CONTENT;
@@ -607,7 +778,7 @@ Application.prototype.file.print = function(file, activity_type) {
     return string;
 };
 
-function print_doc_file(file) {
+Application.prototype.file.printDoc = function(file) {
     var preview_classes = '';
     var preview_styles = '';
     var preview_content = '';
@@ -632,8 +803,8 @@ function print_doc_file(file) {
         preview_content += "<img style='position:absolute;top:40%;left:40%;' src='" + VIDEO_BUTTON + "'></img>"
     } else if (file.type == "Audio") {
         preview_styles = 'background-image: none;';
-        preview_content += audio_player(file, 'button');
-        post_content_under_title += audio_player(file, 'timeline');
+        preview_content += this.audioPlayer(file, 'button');
+        post_content_under_title += this.audioPlayer(file, 'timeline');
     } else {
         preview_classes += "";
         preview_styles += "background-image: url(\"" + path + "\")";
@@ -668,65 +839,67 @@ function print_doc_file(file) {
     string += "</div>";
 
     string += "<div style='margin-top:5px;'>";
-    string += "<a href='" + file.path + "' download>" + "<button class='pure-button-neutral'>Download</button></a>";
-    string += "<button has_liked='" + (file.activity.stats.like.has_liked === true ? "true" : "false") + "' class='activity_like_text post_like_activity pure-button-neutral'>";
+    string += "<a href='" + file.path + "' download>" + "<button class='pure-button-success'>Download</button></a>";
+    string += "<button has_liked='" + (file.activity.stats.like.has_liked === true ? "true" : "false") + "' class='activity_like_text post_like_activity pure-button-success'>";
     string += (file.activity.stats.like.has_liked === true ? COMMENT_UNLIKE_TEXT : COMMENT_LIKE_TEXT) + "</button>";
     string += ""; //LEAVING file_activity_section OPEN!!
 
     string += post_content;
     return string;
-}
-function audio_player(file, part) {
+};
+
+Application.prototype.file.audioPlayer = function(file, part) {
 
     var string = '';
     string += '<div data-path="' + file.thumb_path + '" uid="' + file.uid + '" data-file_id="' + file.id + '">';
     if (part == 'all') {
         string += '<div class="audio_container">';
-        string += audio_button(file.thumb_path);
-        string += audio_info(file.name, file.thumb_path);
+        string += this.audioButton(file);
+        string += this.audioInfo(file);
         string += '</div>';
     } else if (part == "button") {
-        string += audio_button(file.thumb_path);
+        string += this.audioButton(file);
     } else if (part == "info") {
-        string += audio_info(file.thumb_path);
+        string += this.audioInfo(file);
     } else if (part == 'timeline') {
-        string += audio_timeline();
+        string += this.audioTimeline();
     }
     string += "</div>";
     return string;
+};
 
-    function audio_button(path) {
-        return '<audio preload="none" style="display:none;"><source src="' + file.path + '"></source><source src="'
-                + file.thumb_path + '"></source></audio><div class="audio_button">'
-                + '<div class="audio_button_inside"></div><div class="audio_loader"><div class="loader_outside"></div><div class="loader_inside">'
-                + '</div><span class="audio_loader_text loader_text"></span></div></div>';
-    }
+Application.prototype.file.audioButton = function(file) {
+    return '<audio preload="none" style="display:none;"><source src="' + file.path + '"></source><source src="'
+            + file.thumb_path + '"></source></audio><div class="audio_button">'
+            + '<div class="audio_button_inside"></div><div class="audio_loader"><div class="loader_outside"></div><div class="loader_inside">'
+            + '</div><span class="audio_loader_text loader_text"></span></div></div>';
+};
 
-    function audio_info(name) {
-        return '<div class="audio_info"><div class="ellipsis_overflow audio_title">' + file.name + '</div>'
-                + audio_timeline() + '<div class="audio_time">0:00</div></div>';
-    }
+Application.prototype.file.audioInfo = function(file) {
+    return '<div class="audio_info"><div class="ellipsis_overflow audio_title">' + file.name + '</div>'
+            + this.audioTimeline() + '<div class="audio_time">0:00</div></div>';
+};
 
-    function audio_timeline() {
-        return '<div class="audio_progress_container"><div class="audio_progress"></div><div class="audio_buffered"></div><div class="audio_line"></div></div>';
-    }
-}
-function audioPlay(id, start, progress, end, uid)
-{
+Application.prototype.file.audioTimeline = function() {
+    return '<div class="audio_progress_container"><div class="audio_progress"></div><div class="audio_buffered">'
+            + '</div><div class="audio_line"></div></div>';
+};
+
+Application.prototype.file.audioPlay = function(id, start, progress, end, uid) {
     if (!$('[uid="' + uid + '"] .audio_button').hasClass('audio_playing')) {
-        startAudioInfo(id, start, progress, end, uid);
+        this.startAudioInfo(id, start, progress, end, uid);
         $('[uid="' + uid + '"] .audio_button').addClass('audio_playing');
     } else {
-        audio_items[uid].pause();
+        this.files[uid].pause();
         $('[uid="' + uid + '"] .audio_button').removeClass('audio_playing');
     }
-}
-function startAudioInfo(id, start, progress, end, uid)
-{
-    if (uid in audio_items) {
-        audio_items[uid].play();
+};
+
+Application.prototype.file.startAudioInfo = function(id, start, progress, end, uid) {
+    if (uid in this.files) {
+        this.files[uid].play();
     } else {
-        fileView(id);
+        this.view(id);
         $("[uid='" + uid + "'] .audio_loader").fadeIn();
         //            createWaveForm(uid, progress);
         //            audio_items[uid].on('ready', function() {
@@ -735,8 +908,8 @@ function startAudioInfo(id, start, progress, end, uid)
 
         var audio = $('[uid="' + uid + '"] audio');
         audio.get(0).play();
-        audio_items[uid] = audio.get(0);
-        audio_items[uid].volume = audio_volume;
+        this.files[uid] = audio.get(0);
+        this.files[uid].volume = audio_volume;
 
         audio.bind('progress', function() {
             var track_length = audio.get(0).duration;
@@ -784,15 +957,16 @@ function startAudioInfo(id, start, progress, end, uid)
     end = typeof end !== 'undefined' ? end : function() {
     };
     start();
-}
-function audio_volume(vol) {
+};
+
+Application.prototype.file.audioVolume = function(vol) {
     $('audio').each(function() {
         console.log($(this).attr('id'));
         $(this).get(0).volume = vol;
     });
-}
+};
 
-function createWaveForm(uid, progress) {
+Application.prototype.file.createWaveForm = function(uid, progress) {
     if (uid in audio_items === false) {
         $("[uid='" + uid + "'] .audio_loader").fadeIn();
         var wavesurfer = Object.create(WaveSurfer);
@@ -820,14 +994,16 @@ function createWaveForm(uid, progress) {
         wavesurfer.load($("[uid='" + uid + "']").data('path'));
         audio_items[uid] = wavesurfer;
     }
-}
+};
 
-function removeAudio(id) {
+Application.prototype.file.removeAudio = function(id) {
     $('#audio_container_' + id).remove();
-}
+};
+
 Application.prototype.file.videoFrame = function(uid) {
     return "<div class='video_box'><video id='vid" + uid + "'></video></div>";
-}
+};
+
 Application.prototype.file.videoPlayer = function(file, onload, onplay, onend) {
     var string = '';
     var attributes = {
@@ -850,12 +1026,13 @@ Application.prototype.file.videoPlayer = function(file, onload, onplay, onend) {
     player.ready(function() {
         onload(player);
     });
-    
+
     return video;
-}
-function videoPlay(id) {
+};
+
+Application.prototype.file.videoPlay = function(id) {
     var file_id = id.replace(/[A-Za-z_$-]/g, "");
-    fileView(file_id);
+    this.view(file_id);
     if ($("#" + id).parents('#file_container').length !== 0) {
         id = file_id;
         $('#audio_play_icon_' + id).css('visibility', 'visible');
@@ -892,16 +1069,16 @@ Application.prototype.file.upload.drag = function(element, files) {
 
 Application.prototype.file.theater.initiate = function(activity_id, file_id, properties) {
     var self = this;
-    fileView(file_id);
-    if(self.active) {
+    Application.prototype.file.view(file_id);
+    if (self.active) {
         self.remove();
     }
     self.active = true;
 
-    self.background = $("<div class='background-overlay'></div>").click(function(){
+    self.background = $("<div class='background-overlay'></div>").click(function() {
         self.remove();
     });
-    self.close_theater = $("<div class='close-theater'></div>").click(function(){
+    self.close_theater = $("<div class='close-theater'></div>").click(function() {
         self.remove();
     });
     self.theater_picture_container = $("<div class='theater-picture-container'></div>").click(function(e) {
@@ -913,7 +1090,7 @@ Application.prototype.file.theater.initiate = function(activity_id, file_id, pro
     self.theater_picture = $("<div class='theater-picture'></div>").click(function() {
         self.remove();
     });
-    self.toggle_view = $("<div class='theater-info-toggle'></div>").click(function(){
+    self.toggle_view = $("<div class='theater-info-toggle'></div>").click(function() {
         self.theater_picture.toggleClass('theater-info-container_active');
         self.theater_info_container.slideToggle("fast");
     });
@@ -938,7 +1115,7 @@ Application.prototype.file.theater.initiate = function(activity_id, file_id, pro
     $('body').append(self.background);
     $('body').append(self.theater_picture);
     $("body").css("overflow", "hidden");
-    
+
     self.loader = $("<table id='load_popup' style='height:100%;width:100%;padding:200px;'><tr style='vertical-align:middle;'><td style='text-align:center;'><div class='loader_outside'></div><div class='loader_inside'></div></td></tr></table>");
     self.theater_picture_container.append(self.loader);
 
@@ -963,17 +1140,18 @@ Application.prototype.file.theater.initiate = function(activity_id, file_id, pro
         }
         else {
             self.theater_picture_container.append(Application.prototype.file.videoFrame(response.media[0].uid));
-            image = Application.prototype.file.videoPlayer(response.media[0], function(video){
-                console.log(video);
+            image = Application.prototype.file.videoPlayer(response.media[0], function(video) {
                 video.play();
                 setTimeout(function() {
                     self.adjust();
                 }, 100);
                 self.loaded();
-            }, function(){}, function(){});
+            }, function() {
+            }, function() {
+            });
             self.theater_picture_container.addClass('theater_video');
-       }
-    self.theater_picture_container.append(image);
+        }
+        self.theater_picture_container.append(image);
         // theater_info_container.mCustomScrollbar(SCROLL_OPTIONS);
     });
 };
@@ -988,16 +1166,16 @@ Application.prototype.file.theater.adjust = function() {
 
     this.theater_picture.css('margin-top', "-" + this.theater_picture.height() / 2);
     Application.prototype.UI.resizeToMax(this.theater_picture_container.children('img:first'), 690, 85);
-    
+
     // $('#theater-info-container').mCustomScrollbar("update");
 };
 
 Application.prototype.file.theater.remove = function() {
-    if(this.active) {
+    if (this.active) {
         this.background.fadeOut(function() {
             $(this).remove();
         });
-        this.theater_picture.animate({height:'0'}, this.removeTime, function() {
+        this.theater_picture.animate({height: '0'}, this.removeTime, function() {
             $(this).remove();
         });
         $('body').css('overflow', 'auto');
@@ -1015,11 +1193,11 @@ Application.prototype.user.setProfilePicture = function(file_id) {
         removeDialog();
         window.location.reload();
     });
-}
+};
 
-Application.prototype.user.show_photo_choose = function() {
+Application.prototype.user.showPhotoChoose = function() {
     var content = $("<div><table><tr><td><div class='upload_here'></div></td><td><div class='profile_picture_chooser' style='max-height:200px;overflow:auto;margin-left:20px;height:100%;' id='file_container'>Loading...</div></td></tr></table></div>");
-    dialog(
+    Application.prototype.UI.dialog(
             content = {
                 content: content.html(),
                 type: "html"
@@ -1149,19 +1327,19 @@ Application.prototype.user.preview.remove = function(mode, event) {
     }
 };
 
-function connect(element, user_id) {
+Application.prototype.user.connect = function(element, user_id) {
     $.post('Scripts/user.class.php', {action: "connect", user_id: user_id}, function() {
         element.addClass('connect_button_invited');
     });
-}
+};
 
-function connectAccept(invite_id) {
+Application.prototype.user.connectAccept = function(invite_id) {
     $.post('Scripts/user.class.php', {invite_id: invite_id, action: "acceptInvite"}, function() {
 
     });
-}
+};
 
-function getOnlineMass() {
+Application.prototype.user.getOnlineMass = function() {
     var users = new Array();
     $('[data-user_id]').each(function() {
         if ($.inArray($(this).data('user_id'), users) === -1) {
@@ -1182,13 +1360,83 @@ function getOnlineMass() {
             }
         });
     }
-}
+};
+
+Application.prototype.user.showInvite = function(group, id, group_id) {
+    Application.prototype.UI.dialog(
+            content = {
+                type: "text",
+                content: "Invite <em><?php echo $user->getName($userid); ?></em> to join the group <em>" + group + "</em>.</p>",
+            },
+            buttons = [{
+                    type: "success",
+                    text: "Invite",
+                    onclick: function() {this.inviteUser(id, group_id); dialogLoad();}
+                }],
+    properties = {
+        modal: false,
+        title: "Invite"
+    });
+};
+
+Application.prototype.user.inviteUser = function(id, group_id) {
+    $.post("Scripts/group_actions.php", {action: "invite", user_id: id, group_id: group_id}, function(response) {
+        if (("success").indexOf(response))
+        {
+            removeDialog();
+        }
+        else
+        {
+            alert(response);
+        }
+    });
+};
+
+$(function()
+{
+    $('#about_edit_show').mouseenter(function() {
+        $('#profile_about_edit').show();
+    }).mouseleave(
+            function() {
+                $('#profile_about_edit').hide();
+            });
+
+    $('.profilepicture').mouseenter(function() {
+        $('#profile_picture_edit').show();
+    }).mouseleave(
+            function() {
+                $('#profile_picture_edit').hide();
+            });
+    $('#about_edit_show').blur(function()
+    {
+        submitData();
+    });
+
+    $("#about_edit_show").focusin(function() {
+        $("#about_edit_show").css("background", "white");
+    });
+    $("#about_edit_show").focusout(function() {
+        $("#about_edit_show").css("background", "");
+    });
+    //createMap('<?php echo $user->getLocation($userid)['country']; ?>', '<?php echo $user->getLocation($userid)['city']; ?>');
+});
+Application.prototype.user.submitData = function() {
+    var about = $('#about_edit_show').html();
+    var email = '';
+    var school = '';
+    var year = '';
+    $.post('Scripts/user.class.php', {about: about, email: email, year: year}, function(response) {
+        $('#about_saved').fadeIn(function() {
+            $('#about_saved').fadeOut(1000);
+        });
+    });
+};
 
 /****************************************************
  * 1.5 Feeds                                         *
  ****************************************************/
 
-function getFeed(entity_id, entity_type, min_activity_id, activity_id, callback) {
+Application.prototype.feed.get = function(entity_id, entity_type, min_activity_id, activity_id, callback) {
     var data = {
         action: "get_feed",
         min_activity_id: min_activity_id,
@@ -1200,10 +1448,9 @@ function getFeed(entity_id, entity_type, min_activity_id, activity_id, callback)
         response = $.parseJSON(response);
         callback(response);
     });
-}
+};
 
-function getFeedContent(feed_id, min_activity_id, page, callback)
-{
+Application.prototype.feed.getContent = function(feed_id, min_activity_id, page, callback) {
     var link = page;
     if (page == "user") {
         link = "home"
@@ -1214,8 +1461,7 @@ function getFeedContent(feed_id, min_activity_id, page, callback)
         page = 'f';
     }
 
-    if (typeof feed_id !== "undefined")
-    {
+    if (typeof feed_id !== "undefined") {
         var container = $('.container').find('.feed_container');
 
 
@@ -1244,8 +1490,7 @@ function getFeedContent(feed_id, min_activity_id, page, callback)
             refreshVideoJs();
         }
 
-        if (isNaN(feed_id))
-        {
+        if (isNaN(feed_id)) {
             if (feed_id == 'a' || feed_id == 's' || feed_id == 'y') {
                 refreshElement('#feed_refresh', link, "f=" + feed_id + "&min_activity_id=" + min_activity_id, "#feed_refresh", callbak);
             }
@@ -1253,15 +1498,27 @@ function getFeedContent(feed_id, min_activity_id, page, callback)
                 feed_id = feed_id.replace('u_', '');
                 refreshElement('#feed_refresh', link, "u=" + feed_id + "&min_activity_id=" + min_activity_id, "#feed_refresh", callbak);
             }
-        }
-        else
-        {
+        } else {
             refreshElement('#feed_refresh', link, "fg=" + feed_id + "&min_activity_id=" + min_activity_id, "#feed_refresh", callbak);
         }
     }
-}
+};
 
-function create_post(text, files, activity_id) {
+Application.prototype.feed.changeTheaterFeed = function(view) {
+    if (view == "File") {
+        $(".activity_comment_div").hide();
+        $('.comment_box_original').show();
+    }
+    else if (view == "Post") {
+        $(".activity_comment_div").show();
+        $('.comment_box_original').hide();
+    }
+    else {
+
+    }
+};
+
+Application.prototype.feed.createPost = function(text, files, activity_id) {
     var string = "<div class='home_feed_post_container'><div class='home_feed_post_container_arrow_border'>";
     string += "<div class='home_feed_post_container_arrow'></div>";
     string += "</div>";
@@ -1279,11 +1536,7 @@ function create_post(text, files, activity_id) {
     string += "</td></tr></table><div id='post_more_options' class='post_more_options'>";
     string += "<button class='pure-button-success small submit_post'>Post</button>";
     string += "</div></div></div></div></div>";
-}
-
-function empty_feed(properties) {
-    return '<div style="margin:auto;margin-top:20px;text-align:center;"><span class="post_comment_time">' + properties.text + "</span></div>";
-}
+};
 
 Application.prototype.feed.homify = function(activity) {
     activity.stats.like.count = parseInt(activity.stats.like.count);
@@ -1299,14 +1552,14 @@ Application.prototype.feed.homify = function(activity) {
                 + "' href='user?id=" + activity.user.encrypted_id + "'>";
         string += activity.user.name + "</a>";
         if (!Application.prototype.user.isMobile) {
-            string += print_stats(activity);
+            string += this.printStats(activity);
         }
         if (activity.type == "Text" || activity.type == "File") {
             if (!Application.prototype.user.isMobile) {
                 string += "<hr class='post_user_name_underline'>";
             }
         }
-        string += "<div class='post_content_wrapper'>"
+        string += "<div class='post_content_wrapper'>";
         string += "<p class='post_text'>" + activity.status_text + '</p>';
 
         if (activity.media.length > 0) {
@@ -1318,14 +1571,14 @@ Application.prototype.feed.homify = function(activity) {
         }
         if (Application.prototype.user.isMobile) {
             string += "<div class='activity_stats_mobile'>";
-            string += print_stats(activity);
-            string += "</div>"
+            string += this.printStats(activity);
+            string += "</div>";
         }
         string += '<div class="comment_box">';
         string += '<div class="comment_box_comment">';
-        string += show_comments(activity);
-        string += "</div>"
-        string += print_comment_input(activity.id);
+        string += this.comment.showComments(activity);
+        string += "</div>";
+        string += this.comment.printInput(activity.id);
         string += "</div>";
 
         string += "</div></div></div></div>";
@@ -1369,7 +1622,7 @@ Application.prototype.feed.homify = function(activity) {
     return string;
 }
 
-function print_comment_input(activity_id) {
+Application.prototype.feed.comment.printInput = function(activity_id) {
     var string = '';
     string += "<div class='comment_input' style='padding-left:2px;padding-top:2px;'>";
     string += "<table style='width:100%;'>";
@@ -1379,29 +1632,29 @@ function print_comment_input(activity_id) {
     string += '<textarea placeholder="Write a comment..." ';
     string += 'class="home_comment_input_text inputtext" id="comment_' + activity_id;
     string += '"></textarea>';
-    string += "<div class='home_comment_input_text textarea_clone' id='comment_" + activity_id + "_clone'></div></td></tr></table>";
+    string += "</td></tr></table>";
     string += "</td></tr></table></div>";
     return string;
-}
-function show_comments(activity) {
-    comments[activity.id] = new Array();
+};
+
+Application.prototype.feed.comment.showComments = function(activity) {
+    this.comments[activity.id] = new Array();
     var string = '';
 
     if (activity.comment.format == 'top') {
         string += "<div class='activity_actions user_preview_name post_comment_user_name' style='font-weight:100;'>Show <span class='num_comments'>" + activity.comment.hidden + "</span> more comments...</div>";
     }
     for (var i in activity.comment.comment) {
-        comments[activity.id].push(activity.comment.comment[i].id);
-        string += show_comment(activity.comment.comment[i]);
+        this.comments[activity.id].push(activity.comment.comment[i].id);
+        string += this.show(activity.comment.comment[i]);
     }
 
-    comments[activity.id]['max'] = Array.max(comments[activity.id]);
-    comments[activity.id]['min'] = Array.min(comments[activity.id]);
+    this.comments[activity.id]['max'] = Array.max(this.comments[activity.id]);
+    this.comments[activity.id]['min'] = Array.min(this.comments[activity.id]);
     return string;
-}
+};
 
-var comments = new Array();
-function show_comment(comment) {
+Application.prototype.feed.comment.show = function(comment) {
     var string = '';
     comment.like.like_text = (comment.like.has_liked ? "Unlike" : "Like");
     string += "<div class='single_comment_container' data-comment_id='" + comment.id + "'>";
@@ -1424,23 +1677,23 @@ function show_comment(comment) {
     }
     string += "</div>";
     return string;
-}
+};
 
-function append_comment(post_id, comment) {
+Application.prototype.feed.comment.append = function(post_id, comment) {
     if ($('[data-comment_id="' + comment.id + '"]').length == 0) {
         var comment_container = $('[data-activity_id="' + post_id + '"]').find('.comment_box_comment').last();
-        comment_container.append(show_comment(comment));
+        comment_container.append(this.show(comment));
     }
-    console.log('POST ID:' + post_id + " COMMENT: " + comment);
+//    console.log('POST ID:' + post_id + " COMMENT: " + comment);
     // $("[data-activity_id='" + post_id + "'] [data-comment_id]").sort(function(left, right) {
     //     return parseInt($(right).data("comment_id")) - parseInt($(left).data("comment_id"));
     // }).each(function() {
     //     $("[data-activity_id='" + post_id + "']").find('.comment_box_comment').last().append($(this));
     //     //console.log('fe');
     // });
-}
+};
 
-function print_stats(activity) {
+Application.prototype.feed.printStats = function(activity) {
     var string = '';
     string += "<div class='activity_stats'>";
     string += print_likes(activity);
@@ -1467,6 +1720,7 @@ function print_stats(activity) {
     }
     string += "</div>";
     return string;
+
     function print_likes(activity) {
         var string = '';
         string += '<div class="who_liked_hover" ';
@@ -1497,9 +1751,9 @@ function print_stats(activity) {
     }
 }
 
-function refreshContent(id) {
+Application.prototype.feed.refreshContent = function(id) {
     return;
-    getFeed(null, null, null, id, function(response) {
+    Application.prototype.feed.get(null, null, null, id, function(response) {
         var activity_container = $('[data-activity_id="' + id + '"]');
         var comment_container = activity_container.find('.comment_box_comment');
         for (var i in response) { // FOR THAT ONE ACTIVITY
@@ -1541,7 +1795,7 @@ Application.prototype.feed.comment.submit = function(comment_text, post_id, call
 
     $.post("Scripts/home.class.php", {comment_text: comment_text, post_id: post_id, action: 'submitComment'}, function(data) {
         $('[data-activity_id="' + post_id + '"] .inputtext').each(function() {
-            if($(this).parents('[data-activity_id]').data('activity_id') == post_id) {
+            if ($(this).parents('[data-activity_id]').data('activity_id') == post_id) {
                 $(this).val("").blur();
             }
         });
@@ -1646,7 +1900,7 @@ function styleChatResponse(response, chat_index) {
             string += "<div data-user_id='" + response[i]['user_id'] + "' class='profile_picture_medium online_status' style='float:left;";
             string += "background-image:url(\"" + response[i]['pic'] + "\");'></div></td><td>";
             string += "<div class='chatname'><span class='user_preview user_preview_name chatname' style='margin-right:5px;font-size:13px;' user_id='" + response[i]['user_id'] + "'>" + response[i]['name'] + "</span></div>";
-            string += "<div class='chattext'>" + response[i]['text'].replace_links().replace_emoticons() + "</div></td></tr><tr><td colspan='2' style='text-align:right;'>";
+            string += "<div class='chattext'>" + response[i]['text'].replaceLinks().replaceEmoticons() + "</div></td></tr><tr><td colspan='2' style='text-align:right;'>";
             string += "<span class='chat_time post_comment_time'>" + response[i]['time'] + "</span></td></tr></table></div></li>";
             if ($.inArray(response[i]['id'], chat_ids[chat_index]) !== -1) {
 
@@ -1724,7 +1978,6 @@ $(document).on('click', '.message_inbox_item', function() {
 });
 function deleteMessage(thread) {
     $.post('Scripts/notifications.class.php', {action: "deleteMessage", thread: thread}, function(response) {
-        console.log('response:' + response);
     });
     $('#inbox_message_' + thread).remove();
 }
@@ -1756,7 +2009,7 @@ function implode(glue, pieces) {
  ****************************************************/
 
 function print_calendar(calendar) {
-    var sting = '';
+    var string = '';
     string = '<div class="box_container"><h3><button  style="float:left !important; display:inline-block;" class="navigate_left"><</button>'
             + calendar.date + '<button  style="float:left !important; display:inline-block;" class="navigate_right">></button>'
             + '<button class="pure-button-neutral" id="create_event">Create Event</button></h3><table cellpadding="0" cellspacing="0" class="calendar">';
@@ -1828,7 +2081,7 @@ function print_event(event, classes) {
     var file_string = '<table>';
 
     for (var file in event.file) {
-        console.log(event.file[file]);
+//        console.log(event.file[file]);
         file_string += '<tr><td>';
         file_string += "<div class='profile_picture_icon' style='vertical-align:top;display:inline-block;background-image: url(\""
                 + event.file[file].preview_thumb + "\");'></div>";
@@ -1871,10 +2124,14 @@ $(function() {
      * 2.1.1 Startup - Generic                           *
      ****************************************************/
 
-    adjustSwitches();
+    $(document).on('click', 'a[href!="#"][href]:not([download])', function(e) {
+        Application.prototype.generic.relocate(e, $(this));
+    });
+
+    Application.prototype.UI.adjustSwitches();
 
     $(window).on('resize', function() {
-        resizeContainer();
+        Application.prototype.UI.resizeContainer();
     });
 
     $(document).on('click', '.headerbar', function() {
@@ -1909,37 +2166,45 @@ $(function() {
     /****************************************************
      * 2.1.1.1 Startup - Generic - Dropdown                *
      ****************************************************/
-    $(document).on('click', ".default_dropdown_selector", function(event)
+    $(document).on('mousedown', ".default_dropdown_selector", function(event)
     {
-        event.stopPropagation();
-        $('.default_dropdown_wrapper').hide();
-        var wrapper = '#' + $(this).attr('wrapper_id');
-        $(wrapper).toggle();
-        $(wrapper).mCustomScrollbar(SCROLL_OPTIONS);
-        $(this).toggleClass('default_dropdown_active');
+        if (event.which == 1) {
+            event.stopPropagation();
+//            $('.default_dropdown_wrapper').hide();
+//            var wrapper = '#' + $(this).attr('wrapper_id');
+//            $(wrapper).toggle();
+            //$(wrapper).mCustomScrollbar(SCROLL_OPTIONS);
+            $(this).toggleClass('default_dropdown_active');
+        }
     });
 
-    $(document).on('click', "html", function(event)
+    $(document).on('mousedown', "html", function(event)
     {
-        $('.default_dropdown_selector').removeClass('default_dropdown_active');
-        $('.default_dropdown_wrapper').hide();
+        if (event.which == 1) {
+            $('.default_dropdown_selector').removeClass('default_dropdown_active');
+//            $('.default_dropdown_wrapper').hide();
+        }
     });
 
-    $(document).on('click', ".default_dropdown_selector .default_dropdown_item", function(event)
+    $(document).on('mousedown', ".default_dropdown_selector .default_dropdown_item", function(event)
     {
-        event.stopPropagation();
-        var selection_value = $(this).attr('value');
-        var wrapper = $(this).parents('.default_dropdown_wrapper');
-        wrapper.hide();
-        $(this).parents('.default_dropdown_selector').removeClass('default_dropdown_active');
-        wrapper.find('.default_dropdown_item').removeClass('default_dropdown_active');
-        $(this).addClass('default_dropdown_active');
-        $(this).parents('.default_dropdown_selector').attr('value', selection_value).find('.default_dropdown_preview').text($(this).text());
+        if (event.which == 1) {
+            event.stopPropagation();
+            var selection_value = $(this).attr('value');
+            var wrapper = $(this).parents('.default_dropdown_wrapper');
+//            wrapper.hide();
+            $(this).parents('.default_dropdown_selector').removeClass('default_dropdown_active');
+            wrapper.find('.default_dropdown_item').removeClass('default_dropdown_active');
+            $(this).addClass('default_dropdown_active');
+            $(this).parents('.default_dropdown_selector').attr('value', selection_value).find('.default_dropdown_preview').text($(this).text());
+        }
     });
 
     $('.default_dropdown_selector').on({
         focus: function() {
-            $(this).trigger('click');
+            if (!$(this).hasClass('default_dropdown_active')) {
+                $(this).trigger('click');
+            }
         },
         blur: function() {
             $('html').trigger('click');
@@ -1959,15 +2224,15 @@ $(function() {
      * 2.1.2 Startup - User                              *
      ****************************************************/
 
-    getOnlineMass();
-    setInterval(getOnlineMass, 15000);
+    Application.prototype.user.getOnlineMass();
+    setInterval(Application.prototype.user.getOnlineMass, 15000);
 
     $(document).on('click', '.connect_button', function() {
-        connect($(this), $(this).parents('[entity_id]').attr('entity_id'));
+        Application.prototype.user.connect($(this), $(this).parents('[entity_id]').attr('entity_id'));
     });
 
     $(document).on('click', '.connect_accept', function() {
-        connectAccept($(this).data('invite_id'));
+        Application.prototype.user.connectAccept($(this).data('invite_id'));
     });
 
     $(document).on('mouseover', '.user_preview', function(event) {
@@ -1984,7 +2249,8 @@ $(function() {
      * 2.1.3 Startup - Search                            *
      ****************************************************/
 
-    $(document).on('keyup', '.search', function() {
+    $(document).on('keyup', '.search', function(e) {
+        e.stopPropagation();
         Application.prototype.search($(this).val(), $(this).attr('mode'), $(this).parents('div').children('.search_results'), function() {
         });
     });
@@ -2073,21 +2339,21 @@ $(function() {
         $('.' + type + '_feed_selector').removeClass('active_feed');
         $(this).addClass('active_feed');
         if (type != "chat" && action != 'prevent_activity') {
-            if (action == "user_files") {
-                getFeedContent(value, 0, 'user_files', function() {
-                });
-            }
-            else {
-                var value = $(this).attr('filter_id');
-                getFeedContent(value, min_activity_id, type, function() {
-                });
-            }
+//            if (action == "user_files") {
+//                Application.prototype.feed.getContent(value, 0, 'user_files', function() {
+//                });
+//            }
+//            else {
+//                var value = $(this).attr('filter_id');
+//                Application.prototype.feed.getContent(value, min_activity_id, type, function() {
+//                });
+//            }
         }
     });
 
     $(document).on('click', '.delete_activity', function() {
         var activity_id = $(this).parents('[data-activity_id]').data('activity_id');
-        dialog(
+        Application.prototype.UI.dialog(
                 content = {
                     type: "html",
                     content: "Are you sure you want to delete this Post?"
@@ -2119,8 +2385,6 @@ $(function() {
         edit_element.append(options);
 
         $('[data-activity_id="' + activity_id + '"]').find('.post_text').hide().after(edit_element);
-        post_text_editor.after($("<div class='textarea_clone'></div>"));
-        autoresize(post_text_editor);
 
         var file_container = $("<div class='file_box' style='max-height:200px;'></div>");
         $('[data-activity_id="' + activity_id + '"] .post_feed_media_wrapper').prepend(file_container);
@@ -2139,16 +2403,16 @@ $(function() {
     });
 
     $(document).on('keyup', '.inputtext', function(event) {
-        var id = $(this).attr('id');
-        var clone = $('#' + id + "_clone")
-        if (event.keyCode == 13) {
-            var post_id = $(this).parents('[data-activity_id]').data('activity_id');
-            Application.prototype.feed.comment.submit($(this).val(), post_id, function(comment) {
-                append_comment(post_id, comment);
-            });
-            return false;
-        }
-        resizeTextarea($(this), clone);
+//        var id = $(this).attr('id');
+//        var clone = $('#' + id + "_clone")
+//        if (event.keyCode == 13) {
+//            var post_id = $(this).parents('[data-activity_id]').data('activity_id');
+//            Application.prototype.feed.comment.submit($(this).val(), post_id, function(comment) {
+//                append_comment(post_id, comment);
+//            });
+//            return false;
+//        }
+//        resizeTextarea($(this), clone);
     });
 
     $(document).on('click', '.activity_actions', function(event) {
@@ -2182,7 +2446,7 @@ $(function() {
         var post_text = $('[data-activity_id="' + activity_id + '"] .post_text').text();
 
         if ($(this).parents('.post_feed_item').siblings('.post_feed_item').length == 0 && post_text == "") {
-            dialog(
+            Application.prototype.UI.dialog(
                     content = {
                         type: "html",
                         content: "If you delete this file, your post will be removed, as it does not contain any content. Continue?"
@@ -2295,7 +2559,7 @@ $(function() {
     $(document).on('click', '.audio_button', function(event) {
         var id = $(this).parents('[data-file_id]').data('file_id');
         var uid = $(this).parents('[uid]').attr('uid');
-        audioPlay(id, function() {
+        Application.prototype.file.audioPlay(id, function() {
         }, function(progress) {
         }, function() {
         }, uid);
@@ -2356,6 +2620,62 @@ $(function() {
         event.preventDefault();
     });
 
+    $(document).on('click', '#create_folder', function() {
+        Application.prototype.UI.dialog(
+                content = {
+                    type: "html",
+                    content: '<input id="creat_folder_name" type="text" style="width:100%;" name="folder_name" placeholder="Name..." />'
+                },
+        buttons = [{
+                text: "Create",
+                type: "primary",
+                onclick: function() {
+                    createFolder(parent_folder);
+                }
+            }],
+        properties = {
+            modal: false,
+            title: 'Create Folder',
+        });
+    });
+    $(document).on('click', 'div.files, div.folder', function() {
+        var id = $(this).attr('file_id');
+        $('.file_hidden_container').slideUp('fast');
+        $(this).children('.file_hidden_container').slideDown('fast');
+        $(this).toggleClass('file_hidden_container_active');
+    });
+
+    refreshVideoJs();
+
+    $(document).on('change', '#file', function() {
+        var input = $(this).get(0).files;
+        var index = 0;
+        var files = getInputFiles('file');
+        var uploadCount = 0;
+        Application.prototype.file.upload.upload(files,
+                function() {
+                },
+                function(percent) {
+                }, function() {
+            refreshFileContainer(encrypted_folder);
+        },
+                properties = {
+                    type: "File",
+                });
+    });
+    $('#loading_icon').fadeOut();
+
+    $(document).on('mouseleave', "div.files, div.folder", function() {
+        $('.audio_hidden_container').fadeOut("fast");
+    });
+
+    $('.audio_hidden_container').hover(function() {
+    }, function() {
+    });
+
+    //setRecentFileScroller();
+
+
     /****************************************************
      * 2.1.3 Startup - Stickies                          *
      ****************************************************/
@@ -2408,14 +2728,19 @@ $(function() {
         $(this).hide();
         $(this).next('.hidden_section').show();
     });
-    
+
     /****************************************************
      * 2.1.3 Startup - Resize                            *
      ****************************************************/
 
+    $(document).on('keydown', '.autoresize, .inputtext', function(e) {
+        $(this).css('height', '0px');
+        $(this).css('height', $(this)[0].scrollHeight + "px");
+    });
+
     $(window).resize(function() {
         detectChange();
-        if(Application.prototype.file.theater.active) {
+        if (Application.prototype.file.theater.active) {
             Application.prototype.file.theater.adjust();
         }
     });
@@ -2443,7 +2768,7 @@ $(function() {
      ****************************************************/
 
     iniScrollChat();
-    var cookie = getCookie("chat_feed");
+    var cookie = 0; //getCookie('chat_feed');
     if (cookie == 0)
     {
         $('#chat').hide();
@@ -2479,6 +2804,122 @@ $(function() {
             }
         }
         detectChange();
+    });
+
+    /****************************************************
+     * 2.1.4 Startup - Notification                      *
+     ****************************************************/
+
+    refreshVideoJs();
+    Application.prototype.notification.getNotificationNumber();
+    var table = "<table style='min-height:100px;height:100px;width:100%;'><tr style='vertical-align:middle;'><td style='width:100%;text-align:center;'><div class='loader_outside_small'></div><div class='loader_inside_small'></div></td></tr></table>";
+    $('ul.message, ul.network, ul.notify').prepend(table);
+
+    $('#popup_message').mCustomScrollbar(SCROLL_OPTIONS);
+    $('#popup_network').mCustomScrollbar(SCROLL_OPTIONS);
+    $('#popup_notify').mCustomScrollbar(SCROLL_OPTIONS);
+
+    $(document).on('click', "img.message", function(event)
+    {
+        $('img.message').removeClass('message_active');
+        $(this).addClass('message_active');
+    });
+    $(document).on('click', "#home_icon", function(event)
+    {
+        event.stopPropagation();
+        window.location.replace("home");
+        $("#notificationdiv").hide();
+        $("#networkdiv").hide();
+        $("#geardiv").hide();
+    });
+    $(document).on('click', "#personal", function(event)
+    {
+        event.stopPropagation();
+        $(".personal").show();
+        $(".general").hide();
+        $("#messagediv").hide();
+        $("#notificationdiv").hide();
+        $("#networkdiv").hide();
+        $("#geardiv").hide();
+    });
+    $(document).on('click', "#message_click", function(event)
+    {
+        Application.prototype.notification.getMessageBox();
+        markAllSeen('message');
+        event.stopPropagation();
+        $("#messagediv").show()
+        $(".personal").hide();
+        $(".general").hide();
+        $("#notificationdiv").hide();
+        $("#networkdiv").hide();
+        $("#geardiv").hide();
+        $('.message_notification').hide();
+    });
+    $(document).on('click', "#notification_click", function(event)
+    {
+        Application.prototype.notification.getNotificationBox();
+        markAllSeen('notification');
+        event.stopPropagation();
+        $("#notificationdiv").show();
+        $(".personal").hide();
+        $(".general").hide();
+        $("#messagediv").hide();
+        $("#networkdiv").hide();
+        $("#geardiv").hide();
+        $('#notification_counter').hide();
+    });
+    $(document).on('click', "#network_click", function(event)
+    {
+        Application.prototype.notification.getNetworkBox();
+        markAllSeen('network');
+        event.stopPropagation();
+        $("#notificationdiv").hide();
+        $(".personal").hide();
+        $(".general").hide();
+        $("#messagediv").hide();
+        $("#networkdiv").show();
+        $("#geardiv").hide();
+        $('#network_counter').hide();
+    });
+    $(document).on('click', "#gear_click", function(event)
+    {
+        event.stopPropagation();
+        $("#notificationdiv").hide();
+        $(".personal").hide();
+        $(".general").hide();
+        $("#messagediv").hide();
+        $("#geardiv").show();
+    });
+    $(document).on('click', "html", function()
+    {
+        $(".general").hide();
+        $(".personal").hide();
+        $("#messagediv").hide();
+        $("#notificationdiv").hide();
+        $("#networkdiv").hide();
+        $("#geardiv").hide();
+        $('img.message').removeClass('message_active');
+    });
+
+    /****************************************************
+     * 2.1.4 Startup - NavTog                            *
+     ****************************************************/
+
+    var items = document.querySelectorAll('.menuItem');
+
+    for (var i = 0, l = items.length; i < l; i++) {
+        items[i].style.left = (50 - 35 * Math.cos(-0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%";
+        items[i].style.top = (50 + 35 * Math.sin(-0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%";
+    }
+
+    $(document).on('click', '.center', function(e) {
+        e.preventDefault();
+        $('.circle').toggleClass('open');
+    });
+    
+    $(document).on('click', '.menuItem', function() {
+        $(this).siblings().removeClass('current_page');
+        $(this).addClass('current_page');
     });
 
 });

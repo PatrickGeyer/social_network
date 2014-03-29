@@ -1,30 +1,26 @@
 <?php
 
-include_once('database.class.php');
-include_once('system.class.php');
-include_once('user.class.php');
-include_once('files.class.php');
+require_once('system.class.php');
+require_once('user.class.php');
+require_once('files.class.php');
 
-class Calendar {
+class Calendar extends System {
 
     private static $calendar = NULL;
-    protected $system;
     protected $user;
-    protected $database_connection;
     private $files;
     public $event_types = array();
 
     public function __construct() {
-        $this->user = User::getInstance();
-        $this->system = System::getInstance();
-        $this->database_connection = Database::getConnection();
-        $this->files = Files::getInstance();
+        parent::__construct();
+        $this->user = User::getInstance($args = array());
+        $this->files = Files::getInstance($args = array());
         $this->event_types['Homework'] = array('color' => 'rgb(50, 150, 50)');
     	$this->event_types['Event']['color'] = 'rgb(0, 40, 180)';
     	$this->event_types['Meeting']['color'] = 'orange';
     }
 
-    public static function getInstance() {
+    public static function getInstance($args = array()) {
         if (self :: $calendar) {
             return self :: $calendar;
         }
@@ -169,7 +165,7 @@ class Calendar {
                 . "OR user_id = :user_id) "
                 . "AND `start` BETWEEN '" . $start . "' AND '" . $end . "' AND id NOT IN "
                 . "(SELECT event_id FROM event_status WHERE user_id = :user_id "
-                . "AND deleted = 1);" . $limit;
+                . "AND deleted = 1) " . $limit;
         $sql = $this->database_connection->prepare($sql);
         $sql->execute(array(
             ":user_id" => $this->user->user_id
@@ -343,7 +339,7 @@ class Calendar {
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     if (isset($_POST['action'])) {
-        $calendar = Calendar::getInstance();
+        $calendar = Calendar::getInstance($args = array());
         if($_POST['action'] == "createEvent") {
             $receivers = array();
             if(isset($_POST['receivers'])) {
@@ -376,7 +372,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     }
 } else if($_SERVER['REQUEST_METHOD'] == "GET") {
     if(isset($_GET['action'])) {
-        $calendar = Calendar::getInstance();
+        $calendar = Calendar::getInstance($args = array());
         if($_GET['action'] == 'get_events') {
             die(json_encode($calendar->get_events(date('Y:m:d 00:00:00'), date('Y:m:d H:i:s', strtotime("+1 year")), $_GET['limit'])));
         }

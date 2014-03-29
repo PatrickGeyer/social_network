@@ -1,7 +1,7 @@
 <?php
 
-include_once('user.class.php');
-include_once('entity.class.php');
+require_once('user.class.php');
+require_once('entity.class.php');
 
 class Group extends Entity{
 
@@ -13,12 +13,12 @@ class Group extends Entity{
         parent::__construct();
         if (isset($_COOKIE['id'])) {
             $this->user_id = base64_decode($_COOKIE['id']);
-            $this->user = User::getInstance();
+            $this->user = User::getInstance($args = array());
         }
         return true;
     }
 
-    public static function getInstance() {
+    public static function getInstance($args = array()) {
         if (self :: $group) {
             return self :: $group;
         }
@@ -90,7 +90,7 @@ class Group extends Entity{
         if (!isset($user_id) || $user_id == "") {
             $user_id = $this->user_id;
         }
-        $user_query = "SELECT group_id FROM group_member WHERE user_id = :user_id;";
+        $user_query = "SELECT DISTINCT group_id FROM group_member WHERE user_id = :user_id;";
         $user_query = $this->database_connection->prepare($user_query);
         $user_query->execute(array(":user_id" => $user_id));
         $usergroups = $user_query->fetchAll(PDO::FETCH_COLUMN);
@@ -153,12 +153,9 @@ class Group extends Entity{
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    include_once('user.class.php');
-    include_once('database.class.php');
-    $database_connection = Database::getConnection();
-    $user = User::getInstance();
+    require_once("lock.php");
+
     if (isset($_POST['action'])) {
-        include_once("lock.php");
         if ($_POST['action'] == "leave") {
             if ($database_connection->query("DELETE FROM group_member WHERE member_id = " . $user->getId() . " AND group_id = " . $_POST['group_id'] . "")) {
                 die("success/" . urlencode(base64_encode($_POST['group_id'])));

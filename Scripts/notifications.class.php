@@ -1,35 +1,27 @@
 <?php
 
-include_once('database.class.php');
-include_once('user.class.php');
-include_once('group.class.php');
-include_once('phrase.class.php');
-include_once('system.class.php');
+require_once('system.class.php');
 
-class Notification {
-
-    private static $notifiction = NULL;
+class Notification extends System {
+    private static $notification = NULL;
     private $user;
     private $group;
     private $phrase;
-    private $system;
-    protected $database_connection;
 
-    public function __construct() {
-        $this->user = User::getInstance();
-        $this->database_connection = Database::getConnection();
-        $this->group = new Group();
-        $this->phrase = new Phrase();
-        $this->system = System::getInstance();
+    public function __construct($args) {
+        parent::__construct();
+        $this->user = $args['user'];
+        $this->group = $args['group'];
+        $this->phrase = $args['phrase'];
     }
 
-    public static function getInstance() {
-        if (self :: $notifiction) {
-            return self :: $notifiction;
+    public static function getInstance($args = array()) {
+        if (self :: $notification) {
+            return self :: $notification;
         }
 
-        self :: $notifiction = new Notification();
-        return self :: $notifiction;
+        self :: $notification = new Notification($args);
+        return self :: $notification;
     }
 
     function getMessage($type = null, $id = null, $oldest = 0, $newest = 999999999) {
@@ -65,7 +57,7 @@ class Notification {
             $message['read'] = $read['read'];
             $message['seen'] = $read['seen'];
             $message['user'] = $this->user->get_user_preview($message['user_id']);
-            $message['time'] = $this->system->format_dates($message['time']);
+            $message['time'] = $this->format_dates($message['time']);
             //$message['user_id'] = $read['user_id'];
         }
         return $user1;

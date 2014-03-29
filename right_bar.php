@@ -1,5 +1,5 @@
 <?php
-include_once 'Scripts/calendar.class.php';
+require_once 'Scripts/calendar.class.php';
 $calendar = new Calendar();
 ?>
 

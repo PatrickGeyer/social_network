@@ -1,14 +1,11 @@
 <?php
+require_once('Scripts/lock.php');
 $page_identifier = "inbox";
 $current_thread;
-include_once('welcome.php');
-include_once('chat.php');
 ?>
-<html>
-    <head>
         <link rel="stylesheet" type="text/css" href="CSS/message.css">
-        <title>Inbox</title>
         <script>
+        document.title = "Inbox";
             $(document).on('click', '#message_reply_button', function() {
                 $(this).attr("disabled", "disabled");
                 $(this).addClass("pure-button-disabled");
@@ -52,7 +49,7 @@ if (isset($_GET['id'])) {
 }
 ?>
                 var box_shadow = $('.message_convo_header').css('box-shadow');
-                var MESSAGE_SCROLL = SCROLL_OPTIONS;
+var MESSAGE_SCROLL = SCROLL_OPTIONS;
                 MESSAGE_SCROLL.callbacks = {onScroll: function() {
                         message_bottom = false
                     }, onTotalScroll: function() {
@@ -187,8 +184,6 @@ if (isset($_GET['id'])) {
                 );
             }
         </script>
-    </head>
-    <body>
         <div hidden id='compose_dialog' style='display: none;'>
             <table><tr><td class='message_names_slot'></td><td>
                         <input autocomplete='off' id='names_input' class='search search_input message_search_input' placeholder='To...'>
@@ -197,14 +192,11 @@ if (isset($_GET['id'])) {
             <textarea id='1message' placeholder='Message...' class='thin message_compose_box' style='height:200px;margin-top: 10px;'></textarea>
             <br/><br/>
         </div>
-        <div class="global_container">
             <?php
-            include_once 'left_bar.php';
             if (!isset($current_thread)) {
 //                            
             }
             else {
-                echo "<div class='container' style='height:80%;' id='compose'>";
                 $messages = $notification->getMessage('thread', $current_thread);
                 $messagecount = count($messages);
                 if ($messagecount != 0) {
@@ -226,10 +218,6 @@ if (isset($_GET['id'])) {
                     . "<span style='font-size:10em;cursor:pointer;' onclick='$(&quot;#message_compose&quot;).trigger(&quot;click&quot;);'>&#8617;</span>"
                     . "</div>";
                 }
-                echo "</div>";
             }
             ?>	
-            <?php include_once 'right_bar.php'; ?>
         </div>
-    </body>
-</html>

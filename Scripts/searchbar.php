@@ -6,7 +6,7 @@ include_once('lock.php');
 $searchTxt = $_POST['input_text'];
 $return_data;
 
-$sql = "SELECT id FROM user WHERE INSTR(`name`, '{$searchTxt}') > 0;";
+$sql = "SELECT id FROM user WHERE INSTR(CONCAT(`first_name`, ' ', `last_name`), '{$searchTxt}') > 0;";
 $sql = $database_connection->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
 $sql->execute();
 $sql = $sql->fetchAll(PDO::FETCH_ASSOC);
@@ -18,13 +18,12 @@ $group_sql->execute();
 $group_sql = $group_sql->fetchAll(PDO::FETCH_ASSOC);
 
 
-$files_sql = "SELECT id FROM `files` WHERE INSTR(`name`, '{$searchTxt}') > 0;";
+$files_sql = "SELECT id FROM `file` WHERE INSTR(`name`, '{$searchTxt}') > 0;";
 $files_sql = $database_connection->prepare($files_sql);
 $files_sql->execute();
 $files_sql = $files_sql->fetchAll(PDO::FETCH_ASSOC);
 
 function searchDiv($type, $entity_id, $div_class, $div_onclick, $img_src, $name, $info) {
-    // $name = str_replace(' ', '_', $name);
     $entity = array("name" => $name, 'type' => $type, 'id' => $entity_id);
     $return = "<div data-entity='".json_encode($entity, JSON_HEX_APOS)."' class='search_option ".$div_class."' onclick=''>"
             . "<table style='width:100%;'><tr><td rowspan='2' style='width:35px;'>"
