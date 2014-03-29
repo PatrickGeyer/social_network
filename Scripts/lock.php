@@ -15,6 +15,8 @@ else {
         print_body();
         require_once 'right_bar.php';
         echo "</div>";
+    } else {
+     print_body();
     }
 }
 ?>

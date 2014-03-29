@@ -250,7 +250,7 @@ Application.prototype.search = function(text, mode, element, callback) {
 
 Application.prototype.generic.relocate = function(event, element) {
     event.preventDefault();
-
+    $('.container').html("<div class='loader_outside'></div><div class='loader_inside'></div>");
     $.get($(element).attr('href'), {ajax: 'ajax'}, function(response) {
         $('.container').replaceWith(response);
         window.history.pushState({}, 'WhatTheHellDoesThisDo?!', '/' + $(element).attr('href'));

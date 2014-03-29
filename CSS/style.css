@@ -2861,7 +2861,6 @@ div.inputtext{
 
 table.calendar{ 
     border-left:1px solid lightgrey;
-    table-layout: fixed;
     width: 100%;
 }
 tr.calendar-row	{ 
@@ -2927,7 +2926,7 @@ td.calendar-day .event, td.calendar-day-current .event, .calendar-container .eve
     padding: 5px;
     margin-bottom: 5px;
     overflow: hidden;
-    font-size: 13px;
+    font-size: 11px;
 }
 .calendar-container .event{
     background-color: rgb(245, 245, 245) !important;
@@ -2947,6 +2946,7 @@ td.calendar-day .event, td.calendar-day-current .event, .calendar-container .eve
 
 .event a{
     color: inherit;
+    font-size: 11px;
 }
 
 .event_white a{
@@ -2976,7 +2976,7 @@ td.calendar-day .event, td.calendar-day-current .event, .calendar-container .eve
     transition: all 0.3s linear;
 }
 .calendar-event-info * {
-    font-size: 12px !important;
+    font-size: 10px !important;
 }
 
 .calendar-event-info-files {
