@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_info = $user_query->fetch(PDO::FETCH_ASSOC);
 
     if ($count == 1) {
-        echo '<p style = "background-color:orange;">This email has already been registered by ' 
+        echo '<p style = "background-color:orange;">This email has already been Registryed by ' 
         . $user_info['name'] . ' from ' . $user_info['school'] . '?</p>';
     }
     else {

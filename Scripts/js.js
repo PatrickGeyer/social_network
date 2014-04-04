@@ -23,7 +23,8 @@ Application.prototype.user = {
 Application.prototype.file = {
     theater: {
         active: false,
-        removeTime: 0
+        removeTime: 0,
+        previousUrl: ''
     },
     upload: {
         instance: new Array(),
@@ -258,7 +259,8 @@ Application.prototype.generic.relocate = function(event, element) {
         container.hide();
         $('.container').replaceWith(container);
         container.fadeIn('fast');
-        window.history.pushState({}, 'WhatTheHellDoesThisDo?!', '/' + $(element).attr('href'));
+        window.history.replaceState({}, 'WhatTheHellDoesThisDo?!', '/' + $(element).attr('href')); //pushState would be better
+        $('body').scrollTop(0);
     });
 }
 
@@ -857,6 +859,7 @@ Application.prototype.file.printDoc = function(file) {
 };
 
 Application.prototype.file.audioPlayer = function(file, part, source) {
+console.log(file);
     var string = '';
     string += '<div data-path="' + file.thumb_path + '" uid="' + file.uid + '" data-file_id="' + file.id + '">';
     if (part == 'all') {
@@ -1095,7 +1098,8 @@ Application.prototype.file.theater.initiate = function(activity_id, file_id, pro
         self.remove();
     }
     self.active = true;
-
+    self.previousUrl = window.location;
+    window.history.pushState('File', {}, 'files?f=' + file_id);
     self.background = $("<div class='background-overlay'></div>").click(function() {
         self.remove();
     });
@@ -1201,6 +1205,7 @@ Application.prototype.file.theater.remove = function() {
         });
         $('body').css('overflow', 'auto');
         this.active = false;
+        window.history.pushState('Close Theater', {}, this.previousUrl);
     }
 };
 
@@ -1613,11 +1618,11 @@ Application.prototype.feed.homify = function(activity) {
 //            + "<td class='updatepic' style='max-width:50px;'>";
 //            string += "<a class='user_name_post' href='user?id=" + urlencode(base64_encode(activity['user_id'])) + "'>";
 //            string += "<div class='imagewrap' style='background-image:url(\""
-//            + $this->user->getProfilePicture("thumb", activity['user_id'])
+//            + Registry::get('user')->getProfilePicture("thumb", activity['user_id'])
 //            + "\");'></div></a></td><td class='update'>";
 //            string += "<a class='user_name_post user_preview user_preview_name' user_id='" + activity['user_id']
 //            + "' href='user?id=" + urlencode(base64_encode(activity['user_id'])) + "'>";
-//            string += $this->user->getName(activity['user_id']) + "</a>";
+//            string += Registry::get('user')->getName(activity['user_id']) + "</a>";
 //
 //            string += $this->getStats(activity, 'none');
 //
@@ -2147,6 +2152,34 @@ $(function() {
     $(document).on('click', 'a[href!="#"][href]:not([download])', function(e) {
         Application.prototype.generic.relocate(e, $(this));
     });
+//    $(window).on('statechange', function(e) {
+//        alert('fe');
+////        e.preventDefault();
+////        console.log('doing');
+////        
+//    });
+//    window.onbeforeunload = function(event) {
+//        if (event.state != null) {
+//            alert('fe');
+//            var state = History.getState();
+//            var link = $('<a></a>');
+//            link.attr('href', state);
+//            Application.prototype.generic.relocate(event, link);
+//        }
+//    };
+//Back and forward button
+    $(window).bind('popstate', function(event) {
+        //alert('f');
+        // if the event has our history data on it, load the page fragment with AJAX
+        var state = event.originalEvent.state;
+        if (state) {
+            //container.load(state.path);
+            alert(state.path);
+            return false;
+        }
+        event.preventDefault();
+    });
+
 
     Application.prototype.UI.adjustSwitches();
 

@@ -1,10 +1,6 @@
 <?php
 
-require_once('system.class.php');
-require_once('user.class.php');
-require_once('files.class.php');
-
-class Home extends System {
+class Home {
 
     private static $home = NULL;
     private $user;
@@ -13,12 +9,10 @@ class Home extends System {
     const SHOW_COMMENT_NUM = 5;
 
     public function __construct() {
-        parent::__construct();
-        $this->files = Files::getInstance($args = array());
-        $this->user = User::getInstance($args = array());
+        
     }
 
-    public static function getInstance($args = array()) {
+    public static function getInstance() {
         if (self :: $home) {
             return self :: $home;
         }
@@ -26,9 +20,15 @@ class Home extends System {
         self :: $home = new Home();
         return self :: $home;
     }
+    
+    public static function set($args) {
+    	foreach($args as $key => $value) {
+    		self :: $key = $value;
+    	}
+    }
 
     function printFileList($type = NULL) {
-        $files = $this->files->getList_r();
+        $files = Registry::get('files')->getList_r();
         echo "<table style='width:100%;'>";
         foreach ($files as $file) {
             if ($type == $file['type'] || $type === NULL || !isset($type) || $type == "") {
@@ -39,7 +39,7 @@ class Home extends System {
     }
 
     function fileList($file) {
-        $file = $this->files->format_file($file);
+        $file = Registry::get('files')->format_file($file);
         $data_file = json_encode($file, JSON_HEX_APOS);
         echo "<tr><td>";
         echo "<div class='file_item' id='home_file_list_item_" . $file['id'] . "' file_id='" . $file['id']
@@ -52,7 +52,7 @@ class Home extends System {
         }
         echo "data-file='" . $data_file . "'";
         echo ">";
-        echo $this->files->filePreview($file, 'icon');
+        echo Registry::get('files')->filePreview($file, 'icon');
         echo "<span class='search_option_name'>" . $this->trimStr($file['name'], 15) . "</span>";
         //echo "<span class='search_option_info'> - ".$file['type']."</span>";
         echo "</div>";
@@ -75,7 +75,7 @@ class Home extends System {
 
     function getSingleActivity($activity_id) {
         $sql = "SELECT * FROM activity WHERE id = :activity_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":activity_id" => $activity_id
         ));
@@ -86,7 +86,7 @@ class Home extends System {
         $return = array();
 
         $who_liked_query = "SELECT user_id FROM `activity_vote` WHERE activity_id = :activity_id AND vote_value = 1;";
-        $who_liked_query = $this->database_connection->prepare($who_liked_query);
+        $who_liked_query = Registry::get('db')->prepare($who_liked_query);
         $who_liked_query->execute(array(":activity_id" => $activity['id']));
         $who_liked_all = $who_liked_query->fetchAll(PDO::FETCH_ASSOC);
 
@@ -96,7 +96,7 @@ class Home extends System {
 
         $iteration = 0;
         foreach ($who_liked_all as $who_liked) {
-            $return['user'][$iteration]['name'] = $this->user->getName($who_liked['user_id']);
+            $return['user'][$iteration]['name'] = Registry::get('user')->getName($who_liked['user_id']);
             $return['user'][$iteration]['id'] = $who_liked['user_id'];
             $iteration++;
         }
@@ -121,11 +121,11 @@ class Home extends System {
 
         $response['user']['id'] = $activity['user_id'];
         $response['user']['encrypted_id'] = urlencode(base64_encode($activity['user_id']));
-        $response['user']['name'] = $this->user->getName($activity['user_id']);
-        $response['user']['pic'] = $this->user->getProfilePicture("thumb", $activity['user_id']);
+        $response['user']['name'] = Registry::get('user')->getName($activity['user_id']);
+        $response['user']['pic'] = Registry::get('user')->getProfilePicture("thumb", $activity['user_id']);
 
         $response['stats'] = $this->getStats($activity);
-        $response['time'] = $this->format_dates($activity['time']);
+        $response['time'] = Registry::get('system')->format_dates($activity['time']);
         $response['media'] = $this->getPostMedia($activity);
 
         $response['comment'] = $this->get_comments($activity['id']);
@@ -136,10 +136,10 @@ class Home extends System {
     function getPostMedia($activity) {
         $assocFiles = $this->getAssocFiles($activity['id']);
         foreach ($assocFiles as $key => $file) {
-            $assocFiles[$key] = $this->files->format_file($assocFiles[$key]);
-            $assocFiles[$key]['activity']['id'] = $this->files->getActivity($assocFiles[$key]['id']);
+            $assocFiles[$key] = Registry::get('files')->format_file($assocFiles[$key]);
+            $assocFiles[$key]['activity']['id'] = Registry::get('files')->getActivity($assocFiles[$key]['id']);
             $assocFiles[$key]['activity']['comment'] = $this->get_comments($assocFiles[$key]['activity']['id']);
-            $assocFiles[$key]['share'] = $this->files->get_shared($assocFiles[$key]['id']);
+            $assocFiles[$key]['share'] = Registry::get('files')->get_shared($assocFiles[$key]['id']);
         }
         return $assocFiles;
     }
@@ -151,7 +151,7 @@ class Home extends System {
         $left = 0;
         $db_query_comments = "SELECT id FROM comment"
                 . " WHERE activity_id = :activity_id" . $between;
-        $db_query_comments = $this->database_connection->prepare($db_query_comments);
+        $db_query_comments = Registry::get('db')->prepare($db_query_comments);
         $db_query_comments->execute(array(
             ":activity_id" => $activity_id,
             ":min" => $min,
@@ -163,7 +163,7 @@ class Home extends System {
             $left = $numRows - Home::SHOW_COMMENT_NUM;
             $db_query_comments = "SELECT id, time, user_id, `comment` FROM comment"
                     . " WHERE activity_id = :activity_id " . $limit;
-            $db_query_comments = $this->database_connection->prepare($db_query_comments);
+            $db_query_comments = Registry::get('db')->prepare($db_query_comments);
             $db_query_comments->execute(array(
                 ":activity_id" => $activity_id,
                 ":min" => $min,
@@ -174,7 +174,7 @@ class Home extends System {
         else {
             $db_query_comments = "SELECT id, time, user_id, `comment` FROM comment"
                     . " WHERE activity_id = :activity_id" . $limit;
-            $db_query_comments = $this->database_connection->prepare($db_query_comments);
+            $db_query_comments = Registry::get('db')->prepare($db_query_comments);
             $db_query_comments->execute(array(
                 ":activity_id" => $activity_id,
                 ":min" => $min,
@@ -193,19 +193,19 @@ class Home extends System {
 
     function submit_comment($comment, $post_id) {
         if ($comment != '') {
-            $this->database_connection->beginTransaction();
-            $sql = "INSERT INTO comment (user_id, activity_id, comment, time) VALUES (" . $this->user->user_id . ", :post_id, :comment, " . time() . ");";
-            $sql = $this->database_connection->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+            Registry::get('db')->beginTransaction();
+            $sql = "INSERT INTO comment (user_id, activity_id, comment, time) VALUES (" . Registry::get('user')->user_id . ", :post_id, :comment, " . time() . ");";
+            $sql = Registry::get('db')->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $sql->execute(array(":post_id" => $post_id, ":comment" => $comment));
-            $last_id = $this->database_connection->lastInsertId();
-            $this->database_connection->commit();
+            $last_id = Registry::get('db')->lastInsertId();
+            Registry::get('db')->commit();
             return $last_id;
         }
     }
 
     function get_comment($id) {
         $sql = "SELECT id, time, user_id, `comment` FROM comment WHERE id = :comment_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":comment_id" => $id
         ));
@@ -214,14 +214,14 @@ class Home extends System {
 
     function format_comment($comment) {
         $comment['user']['id'] = $comment['user_id'];
-        $comment['user']['pic'] = $this->user->getProfilePicture('chat', $comment['user_id']);
-        $comment['user']['name'] = $this->user->getName($comment['user_id']);
+        $comment['user']['pic'] = Registry::get('user')->getProfilePicture('chat', $comment['user_id']);
+        $comment['user']['name'] = Registry::get('user')->getName($comment['user_id']);
         $comment['user']['encrypted_id'] = urlencode(base64_encode($comment['user_id']));
         $comment['text'] = $comment['comment'];
         $comment['like'] = array();
         $comment['like']['count'] = $this->comment_like_count($comment['id']);
         $comment['like']['has_liked'] = $this->has_liked_comment($comment['id']);
-        $comment['time'] = $this->format_dates($comment['time']);
+        $comment['time'] = Registry::get('system')->format_dates($comment['time']);
         return $comment;
     }
 
@@ -230,7 +230,7 @@ class Home extends System {
                 . "LEFT JOIN (SELECT file_id, URL, web_title, web_description, web_favicon FROM activity_media WHERE activity_id = :activity_id)"
                 . " AS act ON file.id = act.file_id "
                 . "WHERE file.id IN (SELECT file_id FROM activity_media WHERE activity_id = :activity_id AND visible=1);";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(
                 array(
                     ":activity_id" => $activity_id,
@@ -241,15 +241,15 @@ class Home extends System {
 
     function deletePost($post_id) {
         $school_query = "UPDATE activity SET visible = 0 WHERE id = :post_id; "; //DELETE FROM activity_share WHERE activity_id = :post_id;";
-        $school_query = $this->database_connection->prepare($school_query);
+        $school_query = Registry::get('db')->prepare($school_query);
         $school_query->execute(array(":post_id" => $post_id));
         echo "200";
     }
 
     private function hasLikedPost($post_id) {
         $query = "SELECT id FROM activity_vote WHERE user_id = :user_id AND activity_id = :post_id AND vote_value = 1;";
-        $query = $this->database_connection->prepare($query);
-        $query->execute(array(":user_id" => $this->user->getId(), ":post_id" => $post_id));
+        $query = Registry::get('db')->prepare($query);
+        $query->execute(array(":user_id" => Registry::get('user')->getId(), ":post_id" => $post_id));
         $num = $query->rowCount();
 
         if ($num == 1) {
@@ -262,8 +262,8 @@ class Home extends System {
 
     private function hasVotedPost($post_id) {
         $query = "SELECT id FROM activity_vote WHERE user_id = :user_id AND activity_id = :post_id;";
-        $query = $this->database_connection->prepare($query);
-        $query->execute(array(":user_id" => $this->user->getId(), ":post_id" => $post_id));
+        $query = Registry::get('db')->prepare($query);
+        $query->execute(array(":user_id" => Registry::get('user')->getId(), ":post_id" => $post_id));
         $num = $query->rowCount();
 
         if ($num == 1) {
@@ -279,28 +279,28 @@ class Home extends System {
         $has_voted = $this->hasVotedPost($activity_id);
         if ($has_voted === false) {
             $insert_query = "INSERT INTO `activity_vote` (activity_id, user_id, vote_value) VALUES( :activity_id, :user_id, 1);";
-            $insert_query = $this->database_connection->prepare($insert_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+            $insert_query = Registry::get('db')->prepare($insert_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $insert_query->execute(
                     array(":activity_id" => $activity_id,
-                        ":user_id" => $this->user->getId()
+                        ":user_id" => Registry::get('user')->getId()
             ));
             $this->notifyUserLike($activity_id);
         }
         else {
             if ($has_liked === false) {
                 $insert_query = "UPDATE activity_vote SET vote_value = 1 WHERE activity_id = :post_id AND user_id = :user_id;";
-                $insert_query = $this->database_connection->prepare($insert_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+                $insert_query = Registry::get('db')->prepare($insert_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
                 $insert_query->execute(
                         array(":post_id" => $activity_id,
-                            ":user_id" => $this->user->getId()
+                            ":user_id" => Registry::get('user')->getId()
                 ));
             }
             else {
                 $query = "UPDATE activity_vote SET vote_value = 0 WHERE activity_id = :post_id AND user_id = :user_id;";
-                $query = $this->database_connection->prepare($query);
+                $query = Registry::get('db')->prepare($query);
                 $query->execute(
                         array(":post_id" => $activity_id,
-                            ":user_id" => $this->user->getId()
+                            ":user_id" => Registry::get('user')->getId()
                 ));
             }
         }
@@ -309,15 +309,15 @@ class Home extends System {
 
     private function notifyUserLike($activity_id) {
         $sql = "SELECT user_id FROM activity WHERE id = :activity_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(":activity_id" => $activity_id));
         $receiver_id = $sql->fetchColumn();
-        $this->user->notify("like", $receiver_id, $activity_id, NULL);
+        Registry::get('user')->notify("like", $receiver_id, $activity_id, NULL);
     }
 
     function updatePost($activity_id, $text, $files) {
         $sql = "UPDATE activity SET status_text = :text WHERE id = :id";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":text" => $text,
             ":id" => $activity_id
@@ -326,7 +326,7 @@ class Home extends System {
 
     public function getLikeNumber($post_id) {
         $who_liked_query = "SELECT id FROM `activity_vote` WHERE vote_value = 1 AND activity_id = :activity_id;";
-        $who_liked_query = $this->database_connection->prepare($who_liked_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $who_liked_query = Registry::get('db')->prepare($who_liked_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $who_liked_query->execute(array(":activity_id" => $post_id));
         $like_count = $who_liked_query->rowCount();
         return $like_count;
@@ -334,7 +334,7 @@ class Home extends System {
 
     function comment_like_count($comment_id) {
         $sql = "SELECT id FROM comment_vote WHERE comment_id = :comment_id AND visible=1;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":comment_id" => $comment_id
         ));
@@ -344,9 +344,9 @@ class Home extends System {
 
     function has_liked_comment($comment_id) {
         $sql = "SELECT id FROM comment_vote WHERE user_id = :user_id AND comment_id = :comment_id AND visible=1;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
-            ":user_id" => $this->user->user_id,
+            ":user_id" => Registry::get('user')->user_id,
             ":comment_id" => $comment_id
         ));
         $num = $sql->rowCount();
@@ -360,9 +360,9 @@ class Home extends System {
 
     function has_voted_comment($comment_id) {
         $sql = "SELECT id FROM comment_vote WHERE user_id = :user_id AND comment_id = :comment_id";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
-            ":user_id" => $this->user->user_id,
+            ":user_id" => Registry::get('user')->user_id,
             ":comment_id" => $comment_id
         ));
         $num = $sql->rowCount();
@@ -377,24 +377,24 @@ class Home extends System {
     function comment_like($comment_id, $post_id) {
         if ($this->has_voted_comment($comment_id) == TRUE) {
             $sql = "UPDATE comment_vote SET visible = 1 WHERE user_id= :user_id AND comment_id = :element_id;";
-            $sql = $this->database_connection->prepare($sql);
+            $sql = Registry::get('db')->prepare($sql);
             $sql->execute(array(
-                ":user_id" => $this->user->user_id,
+                ":user_id" => Registry::get('user')->user_id,
                 ":element_id" => $comment_id
             ));
         }
         else {
             $sql = "INSERT INTO comment_vote (user_id, comment_id) VALUES (:user_id, :comment_id)";
             // $user_sql = "SELECT user_id FROM comment WHERE id = :comment_id;";
-            // $user_sql = $this->database_connection->prepare($user_sql);
+            // $user_sql = Registry::get('db')->prepare($user_sql);
             // $user_sql->execute(array(
             //     ":comment_id" => $comment_id
             // ));
             // $user_id = $user_sql->fetchColumn();
-            // $this->user->notify('comment_vote', $user_id, $post_id, $comment_id, 0, 0);
-            $sql = $this->database_connection->prepare($sql);
+            // Registry::get('user')->notify('comment_vote', $user_id, $post_id, $comment_id, 0, 0);
+            $sql = Registry::get('db')->prepare($sql);
             $sql->execute(array(
-                ":user_id" => $this->user->user_id,
+                ":user_id" => Registry::get('user')->user_id,
                 ":comment_id" => $comment_id
             ));
         }
@@ -402,41 +402,41 @@ class Home extends System {
 
     function remove_comment_like($comment_id) {
         $sql = "UPDATE comment_vote SET visible=0 WHERE user_id = :user_id AND comment_id = :comment_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
-            ":user_id" => $this->user->user_id,
+            ":user_id" => Registry::get('user')->user_id,
             ":comment_id" => $comment_id
         ));
 
         $sql = "UPDATE notification SET visible=0 WHERE type='comment_like' AND post_id=:comment_id AND sender_id=:user_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
-            ":user_id" => $this->user->user_id,
+            ":user_id" => Registry::get('user')->user_id,
             ":comment_id" => $comment_id
         ));
     }
 
     function delete_comment($comment_id) {
         $sql = "UPDATE comment SET visible = 0 WHERE id = :comment_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":comment_id" => $comment_id
         ));
     }
 
     function create_activity($status_text, $type) {
-        $this->database_connection->beginTransaction();
+        Registry::get('db')->beginTransaction();
         $school_query = "INSERT INTO activity (user_id, status_text, type, time) "
                 . "VALUES(:user_id, :status_text, '$type', :time);";
-        $school_query = $this->database_connection->prepare($school_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $school_query = Registry::get('db')->prepare($school_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $school_query->execute(array(
-            ":user_id" => $this->user->user_id,
+            ":user_id" => Registry::get('user')->user_id,
             ":status_text" => $status_text,
             ":time" => time(),
         ));
 
-        $lastInsertId = $this->database_connection->lastInsertId();
-        $this->database_connection->commit();
+        $lastInsertId = Registry::get('db')->lastInsertId();
+        Registry::get('db')->commit();
         return $lastInsertId;
     }
 
@@ -457,9 +457,9 @@ class Home extends System {
                 );
             }
             else {
-                $this->database_connection->beginTransaction();
+                Registry::get('db')->beginTransaction();
                 $file_query = "INSERT INTO files (user_id, type) VALUES (:user_id, :type);";
-                $file_query = $this->database_connection->prepare($file_query);
+                $file_query = Registry::get('db')->prepare($file_query);
                 $file_query->execute(array(
                     ":user_id" => $user->user_id,
                     ":type" => "Webpage"
@@ -476,9 +476,9 @@ class Home extends System {
                     ":description" => $file['info']['description'],
                     ":fav" => $file['info']['favicon'],
                 );
-                $this->database_connection->commit();
+                Registry::get('db')->commit();
             }
-            $media_query = $this->database_connection->prepare($media_query);
+            $media_query = Registry::get('db')->prepare($media_query);
             $media_query->execute($options);
         }
         return $activity_id;
@@ -491,21 +491,23 @@ class Home extends System {
             foreach ($this->group->getUserGroups() as $single_group) {
                 $school_query = "INSERT INTO activity_share (activity_id, group_id, direct) 
 			VALUES(" . $activity . ", :group_id, 0);";
-                $school_query = $this->database_connection->prepare($school_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+                $school_query = Registry::get('db')->prepare($school_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
                 $school_query->execute(array(":group_id" => $single_group));
             }
         }
         else {
             $school_query = "INSERT INTO activity_share (activity_id, group_id, direct) 
 		VALUES(" . $activity . ", :group_id, 1);";
-            $school_query = $this->database_connection->prepare($school_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+            $school_query = Registry::get('db')->prepare($school_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $school_query->execute(array(":group_id" => $group_id));
         }
     }
 
 }
 
-if ($_SERVER['REQUEST_METHOD'] == "POST") {
+if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
+	//if(!class_exists($home)) {
+    //}
     $home = Home::getInstance($args = array());
     if (isset($_POST['activity_id'])) {
         

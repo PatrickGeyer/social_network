@@ -21,7 +21,6 @@ print_header();
         sticky_receivers.user = new Array();
         sticky_receivers.group = new Array();
         var sticky_id = 0;
-        var USER_PIC = '<?php echo $user->getProfilePicture('THUMB'); ?>';
         var audio_volume = 1;
         function show_group() {
             Application.prototype.UI.dialog(
@@ -174,7 +173,7 @@ function print_header($PRINT = TRUE) {
                         }
                         ?>"></a>
                     </div>
-                    <a href="#" class="center fa fa-th fa-2x"></a>
+                    <a href="#" class="no-ajaxy center fa fa-th fa-2x"></a>
                 </div>
                 <div class='global_header_container'>
                     <div class='search_container' style='float:left;'>
@@ -183,7 +182,7 @@ function print_header($PRINT = TRUE) {
                     </div>
                     <div class='global_header_icon_container'>
                         <div class="message" id="message_click">
-                            <img id="message" class ="message" src='<?php echo System::INBOX_IMG; ?>'></img>
+                            <img id="message" class ="message" src='<?php $base = Registry::get('base'); echo $base::INBOX_IMG; ?>'></img>
                             <div id="messagediv" class="popup_div">
                                 <div class="popup_top">
                                     <span class='popup_header'>Messages</span>
@@ -196,7 +195,7 @@ function print_header($PRINT = TRUE) {
                             <span id='message_num' class="message_notification"></span>
                         </div>
                         <div class="notification" id="notification_click">
-                            <img style='height:18px;' id="notification" class ="message" src='<?php echo System::NOTIFICATION_IMG; ?>'></img><br>
+                            <img style='height:18px;' id="notification" class ="message" src='<?php echo $base::NOTIFICATION_IMG; ?>'></img><br>
                             <div id="notificationdiv" class="popup_div">
                                 <div class="popup_top">
                                     <span class='popup_header'>Notifications</span>
@@ -208,7 +207,7 @@ function print_header($PRINT = TRUE) {
                             <span id='notification_num' class="message_notification"></span>
                         </div>
                         <div class="network" id="network_click">
-                            <img id="network" class="message network" src='<?php echo System::NETWORK_IMG; ?>'></img><br>
+                            <img id="network" class="message network" src='<?php echo $base::NETWORK_IMG; ?>'></img><br>
                             <div id="networkdiv" class="popup_div">
                                 <div class="popup_top">
                                     <span class='popup_header'>Network</span>

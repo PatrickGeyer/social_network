@@ -1,20 +1,11 @@
 <?php
 
-require_once('system.class.php');
-require_once('user.class.php');
-require_once('files.class.php');
-
-class Calendar extends System {
+class Calendar {
 
     private static $calendar = NULL;
-    protected $user;
-    private $files;
     public $event_types = array();
 
     public function __construct() {
-        parent::__construct();
-        $this->user = User::getInstance($args = array());
-        $this->files = Files::getInstance($args = array());
         $this->event_types['Homework'] = array('color' => 'rgb(50, 150, 50)');
     	$this->event_types['Event']['color'] = 'rgb(0, 40, 180)';
     	$this->event_types['Meeting']['color'] = 'orange';
@@ -116,10 +107,10 @@ class Calendar extends System {
         $event['color'] = $this->event_types[$event['type']]['color'];
         $sql = "SELECT complete FROM event_status WHERE event_id=:event_id "
                 . "AND user_id=:user_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":event_id" => $event['id'],
-            ":user_id" => $this->user->user_id
+            ":user_id" => Registry::get('user')->user_id
         ));
         $event['complete'] = $sql->fetchColumn();
         if($event['complete'] == 1) {
@@ -136,15 +127,15 @@ class Calendar extends System {
         foreach ($event['files'] as $file) {
             $file_string .= '<tr><td>';
             $file_string .= "<div class='profile_picture_icon' style='vertical-align:top;display:inline-block;background-image: url(\""
-                    . $this->files->getFileTypeImage($file, 'ICON') . "\");'></div>";
+                    . Registry::get('files')->getFileTypeImage($file, 'ICON') . "\");'></div>";
             $file_string .= "</td><td><a href='" . $file['path']
                     . "' download><p style='margin:0px;padding:0px;max-width:120px;' class='ellipsis_overflow'>"
                     . $file['name'] . "</p></a><br /></td></tr>";
         }
         $file_string .= "</table>";
         $calendar .= '<div class="event '.$classes.'" style="background:' . $this->event_types[$event['type']]['color'] . '"><a href="event?e=' . $event['id'] . '"><b> '
-                . $this->system->trimStr($event['title'], 50) . ' </b></a><div class="calendar-event-info"><span>'
-                . $this->system->trimStr($event['description'], 100)
+                . Registry::get('system')->trimStr($event['title'], 50) . ' </b></a><div class="calendar-event-info"><span>'
+                . Registry::get('system')->trimStr($event['description'], 100)
                 . "</span>";
         if (count($event['files']) > 0) {
             $calendar.="<div class='calendar-event-info-files'>" . $file_string . "</div>";
@@ -166,9 +157,9 @@ class Calendar extends System {
                 . "AND `start` BETWEEN '" . $start . "' AND '" . $end . "' AND id NOT IN "
                 . "(SELECT event_id FROM event_status WHERE user_id = :user_id "
                 . "AND deleted = 1) " . $limit;
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
-            ":user_id" => $this->user->user_id
+            ":user_id" => Registry::get('user')->user_id
         ));
         $events = $sql->fetchAll(PDO::FETCH_ASSOC);
         foreach ($events as $key => $event){
@@ -179,13 +170,13 @@ class Calendar extends System {
     
     function getAssocFiles($event) {
         $sql = "SELECT * FROM `file` WHERE id IN(SELECT file_id FROM event_file WHERE event_id = :event_id AND visible=1);";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":event_id" => $event
             ));
         $files = $sql->fetchAll(PDO::FETCH_ASSOC);
         foreach($files as $file) {
-            $file = $this->files->format_file($file);
+            $file = Registry::get('files')->format_file($file);
         }
         return $files;
     }
@@ -198,28 +189,28 @@ class Calendar extends System {
 
         //$date = $datetime->format('g A'); 
 
-        $this->database_connection->beginTransaction();
+        Registry::get('db')->beginTransaction();
         $sql = "INSERT INTO event (title, description, user_id, start) "
             . "VALUES(:title, :description, :user_id, :start);";
-            $sql = $this->database_connection->prepare($sql);
+            $sql = Registry::get('db')->prepare($sql);
             $sql->execute(array(
                 ":title" => $title,
                 ":description" => $description,
-                ":user_id" => $this->user->user_id,
+                ":user_id" => Registry::get('user')->user_id,
                 ":start" => $date
                 ));
-        $event_id = $this->database_connection->lastInsertId();
-        $this->database_connection->commit();
+        $event_id = Registry::get('db')->lastInsertId();
+        Registry::get('db')->commit();
         return $event_id;
     }
 
     function edit_event($event_id, $date, $title, $description) {
         $sql = "UPDATE event SET title=:title, description=:description, start=:start WHERE id=:event_id;";
-            $sql = $this->database_connection->prepare($sql);
+            $sql = Registry::get('db')->prepare($sql);
             $sql->execute(array(
                 ":title" => $title,
                 ":description" => $description,
-//                ":user_id" => $this->user->user_id,
+//                ":user_id" => Registry::get('user')->user_id,
                 ":start" => $date,
                 ":event_id" => $event_id
                 ));
@@ -227,12 +218,12 @@ class Calendar extends System {
     }
 
     function share_event($event_id, $receivers) {
-        $receivers['user'][] = $this->user->user_id;
+        $receivers['user'][] = Registry::get('user')->user_id;
         foreach ($receivers as $key => $receiver) {
              foreach ($receiver as $single_id) {
                 $sql = "INSERT INTO event_share(event_id, ".$key."_id) "
                 . "VALUES(:event_id, :receiver_id);";
-                $sql = $this->database_connection->prepare($sql);
+                $sql = Registry::get('db')->prepare($sql);
                 $sql->execute(array(
                     ":event_id" => $event_id,
                     ":receiver_id" => $single_id
@@ -246,11 +237,11 @@ class Calendar extends System {
         foreach ($files as $file) {
             $sql = "INSERT INTO event_file(event_id, file_id, user_id) "
                     . "VALUES(:event_id, :file_id, :user_id);";
-            $sql = $this->database_connection->prepare($sql);
+            $sql = Registry::get('db')->prepare($sql);
             $sql->execute(array(
                 ":event_id" => $event_id,
                 ":file_id" => $file,
-                ":user_id" => $this->user->user_id
+                ":user_id" => Registry::get('user')->user_id
                 ));
         }
         return $event_id;
@@ -259,14 +250,14 @@ class Calendar extends System {
     function getEvent($event_id) {
         $event = NULL;
         $sql = "SELECT * FROM event WHERE id = :id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":id" => $event_id
             ));
         $event = $sql->fetch(PDO::FETCH_ASSOC);
         $sql = "SELECT DISTINCT * FROM `file` WHERE id IN"
                 . "(SELECT file_id FROM event_file WHERE event_id = :id AND visible=1);";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":id" => $event_id
             ));
@@ -276,7 +267,7 @@ class Calendar extends System {
         $event['receivers'] = array("user" => array(), "group" => array());
 
         $sql = "SELECT DISTINCT user_id, group_id, FROM event_share WHERE event_id = :event_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":event_id" => $event_id,
             ));
@@ -308,7 +299,7 @@ class Calendar extends System {
     
     function remove_file($event_id, $file_id) {
         $sql = "UPDATE event_file SET visible=0 WHERE event_id = :event_id AND file_Id = :file_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":event_id" => $event_id,
             ":file_id" => $file_id
@@ -318,26 +309,26 @@ class Calendar extends System {
 
     function delete($event_id) {
         $sql = "INSERT INTO event_status (event_id, user_id, deleted) VALUES (:event_id, :user_id, 1);";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":event_id" => $event_id,
-            ":user_id" => $this->user->user_id
+            ":user_id" => Registry::get('user')->user_id
             ));
     }
 
     function markDone($event_id) {
         $sql = "INSERT INTO event_status (complete, user_id, event_id)"
                 . "VALUES(1,:user_id, :event_id);";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":event_id" => $event_id,
-            ":user_id" => $this->user->user_id
+            ":user_id" => Registry::get('user')->user_id
         ));
     }
 
 }
 
-if ($_SERVER['REQUEST_METHOD'] == "POST") {
+if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
     if (isset($_POST['action'])) {
         $calendar = Calendar::getInstance($args = array());
         if($_POST['action'] == "createEvent") {

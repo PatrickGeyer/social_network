@@ -166,7 +166,7 @@ class PhpThumb
 	}
 	
 	/**
-	 * Registers a plugin in the registry
+	 * Registrys a plugin in the registry
 	 * 
 	 * Adds a plugin to the registry if it isn't already loaded, and if the provided 
 	 * implementation is valid.  Note that you can pass the following special keywords 
@@ -183,7 +183,7 @@ class PhpThumb
 	 * @param string $pluginName
 	 * @param string $implementation
 	 */
-	public function registerPlugin ($pluginName, $implementation)
+	public function RegistryPlugin ($pluginName, $implementation)
 	{
 		if (!array_key_exists($pluginName, $this->_registry) && $this->isValidImplementation($implementation))
 		{

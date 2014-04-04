@@ -1654,10 +1654,10 @@ div.global_container {
 .right_bar_container {
     /*position: absolute;
     right: 270px;*/
-    margin-top: 22px;
+    padding-top: 22px;
     margin-left: 15px;
     float: left;
-    width: 200px;
+    width: 274px; /* - 15 px fopr padding -- -1 for border*/
 }
 .right_bar_shift {
     position: relative;
@@ -2283,6 +2283,7 @@ div.comment_box{
 
 .activity_stats {
     float: right;
+    margin-top: -15px;
 }
 
 div.post_height_restrictor{
@@ -2681,15 +2682,17 @@ table.singleupdate{
     transition:all 0.3s;
     -webkit-transition:all 0.3s;
     display: none;
-    position: absolute;
     right:0px;
-    width:100%;
     top: 0px;
     bottom:45px;
     background-color: white;
 }
 #file_share:hover{
     /*max-height: 500px;*/
+}
+
+.home_feed_post_container #file_share {
+	max-height: 200px;
 }
 
 .post_more_options{

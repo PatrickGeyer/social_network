@@ -1,15 +1,8 @@
 <?php
 
-require_once('user.class.php');
-require_once('system.class.php');
-require_once('base.class.php');
-
-class Chat extends System {
+class Chat {
     private static $chat = NULL;
-    private $user;
     public function __construct() {
-        parent::__construct();
-        $this->user = User::getInstance($args = array());
     }
     public static function getInstance ( ) {
         if (self :: $chat) {
@@ -23,9 +16,9 @@ class Chat extends System {
         $sql = "SELECT name, id FROM chat_room WHERE id IN"
                 . "(SELECT chat_room FROM chat_member WHERE user_id = :user_id OR group_id IN "
                 . "(SELECT group_id FROM group_member WHERE user_id = :user_id));";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
-             ":user_id" => $this->user->user_id,
+             ":user_id" => Registry::get('user')->user_id,
         ));
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -39,20 +32,20 @@ class Chat extends System {
         if ($text == "" || $text == "<br>") {
             return;
         }
-        $this->database_connection->beginTransaction();
+        Registry::get('db')->beginTransaction();
         $sql = "INSERT INTO chat(user_id, `text`, chat_room, time) VALUES(:user_id, :text, :aimed, :time);";
         $variables = array(
-            ":user_id" => $this->user->getId(),
+            ":user_id" => Registry::get('user')->getId(),
             ":text" => $text,
             ":time" => time(),
             ":aimed" => $aimed,
         );
-        $sql = $this->database_connection->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $sql = Registry::get('db')->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $sql->execute($variables);
-        $last_chat_id = $this->database_connection->lastInsertId();
-        $this->database_connection->commit();
+        $last_chat_id = Registry::get('db')->lastInsertId();
+        Registry::get('db')->commit();
         $sql = "SELECT `user_id`, `text`, `time`, `id` FROM chat WHERE id = :id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(":id" => $last_chat_id));
         $chat_array = array();
         $chat = $sql->fetchAll(PDO::FETCH_ASSOC);
@@ -96,7 +89,7 @@ class Chat extends System {
         $chat_ids = array();
 
         if ($all == 'false') {
-            $chat_query = $this->database_connection->prepare($chat_query_string);
+            $chat_query = Registry::get('db')->prepare($chat_query_string);
             $chat_query->execute($options);
             $chat_number = $chat_query->rowCount();
             if ($chat_number > 0) {
@@ -109,7 +102,7 @@ class Chat extends System {
             }
         }
         else {
-            $chat_query = $this->database_connection->prepare($chat_query_string);
+            $chat_query = Registry::get('db')->prepare($chat_query_string);
             $chat_query->execute($options);
             $chat_number = $chat_query->rowCount();
             if ($chat_number > 0) {
@@ -136,7 +129,7 @@ class Chat extends System {
         }
         
         if($all == 'previous') {
-        	$chat_min = $this->database_connection->prepare($chat_query_string);
+        	$chat_min = Registry::get('db')->prepare($chat_query_string);
         	$chat_min->execute($options);
         	$chat_min = $chat_min->rowCount();
         	if($chat_min == 0) {
@@ -147,9 +140,9 @@ class Chat extends System {
     }
 
     function format_chat($chat) {
-        $chat['pic'] = $this->user->getProfilePicture('chat', $chat['user_id']);
-        $chat['time'] = $this->format_dates($chat['time']);
-        $chat['name'] = $this->user->getName($chat['user_id']);
+        $chat['pic'] = Registry::get('user')->getProfilePicture('chat', $chat['user_id']);
+        $chat['time'] = Registry::get('system')->format_dates($chat['time']);
+        $chat['name'] = Registry::get('user')->getName($chat['user_id']);
         return $chat;
     }
 
@@ -157,10 +150,10 @@ class Chat extends System {
         if ($id != NULL) {
             $sql = "DELETE FROM chat_read WHERE user_id = :user_id AND chat_id = :chat_id;"
                     . " INSERT INTO chat_read (user_id, chat_id) VALUES (:user_id, :chat_id);";
-            $sql = $this->database_connection->prepare($sql);
+            $sql = Registry::get('db')->prepare($sql);
             $sql->execute(
                     array(
-                        ":user_id" => $this->user->getId(),
+                        ":user_id" => Registry::get('user')->getId(),
                         ":chat_id" => $id,
             ));
         }
@@ -172,17 +165,17 @@ class Chat extends System {
            // $sql .= "aimed = :position AND ";
         }
         $sql .= 'id NOT IN (SELECT chat_id FROM chat_read WHERE user_id = :user_id);';
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":aimed_id" => $chat_room,
-            ":user_id" => $this->user->user_id
+            ":user_id" => Registry::get('user')->user_id
             ));
         return $sql->rowCount();
     }
 
 }
 
-if ($_SERVER['REQUEST_METHOD'] == "POST") {
+if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
     $chat = Chat::getInstance($args = array());
     if (isset($_POST['action']) && $_POST['action'] == "addchat") {
         die(json_encode($chat->submitChat($_POST['aimed'], $_POST['chat_text'])));

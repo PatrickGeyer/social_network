@@ -1,12 +1,8 @@
 <?php
 
-require_once('user.class.php');
-require_once('system.class.php');
-
 class Files extends System {
     private static $files = NULL;
     public static $PARENT_DIR = NULL;
-    protected $user;
     public $extension_to_mime = array(
         'acx' => 'application/internet-property-stream',
         'ai' => 'application/postscript',
@@ -209,8 +205,6 @@ class Files extends System {
     );
 
     public function __construct() {
-        parent::__construct();
-        $this->user = User::getInstance($args = array());
         foreach ($this->extension_to_mime as $ext => $mimetype) {
             $this->mime_to_extension[$mimetype] = $ext;
         }
@@ -227,22 +221,22 @@ class Files extends System {
 
     function getList_r($id = null, $dir = null) {
         $sql = "SELECT * FROM file WHERE user_id = :user_id AND type != 'Webpage' AND visible=1 ORDER BY name;";
-        $sql = $this->database_connection->prepare($sql);
-        $sql->execute(array(":user_id" => $this->user->user_id));
+        $sql = Registry::get('db')->prepare($sql);
+        $sql->execute(array(":user_id" => Registry::get('user')->user_id));
         $return_array = $sql->fetchAll(PDO::FETCH_ASSOC);
         return $return_array;
     }
 
     public function getSharedList($viewed_id = NULL, $id = null, $parent_folder = 0) {
         if ($id == null) {
-            $id = $this->user->user_id;
+            $id = Registry::get('user')->user_id;
         }
         $sql = "SELECT * FROM file WHERE type != 'Webpage' AND id IN (SELECT file_id FROM file_share WHERE user_id = :viewed_id "
                 . "AND (receiver_id = :user_id "
                 . "OR group_id IN(SELECT group_id FROM group_member WHERE member_id = :user_id)));";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
-            ":user_id" => $this->user->user_id,
+            ":user_id" => Registry::get('user')->user_id,
             ":viewed_id" => $viewed_id,
         ));
         $return_array = $sql->fetchAll();
@@ -252,7 +246,7 @@ class Files extends System {
     public function getActivity($file_id) {
         $sql = "SELECT activity_id FROM activity_media WHERE file_id = :file_id AND activity_id IN"
                 . " (SELECT id FROM activity WHERE type = 'File'); ";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id
         ));
@@ -261,17 +255,17 @@ class Files extends System {
 
     public function get_folder_file_id($folder_id) {
         $sql = "SELECT id FROM file WHERE user_id = :user_id AND folder_id = :folder_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":folder_id" => $folder_id,
-            ":user_id" => $this->user->user_id
+            ":user_id" => Registry::get('user')->user_id
         ));
         return $sql->fetchColumn();
     }
 
     public function getInfo($file_id) {
         $sql = "SELECT * FROM file WHERE id = :file_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id));
         return $sql->fetch(PDO::FETCH_ASSOC);
@@ -291,7 +285,7 @@ class Files extends System {
             $file['uid'] = str_replace('.', '', uniqid('', true));
         }
         $file['enc_parent_folder_id'] = $this->encrypt($file['parent_folder_id']);
-        $file['time'] = $this->format_dates($file['time']);
+        $file['time'] = Registry::get('system')->format_dates($file['time']);
         if (!isset($file['view']['count'])) {
             $file['view']['count'] = $this->getViewCount($file['id']);
         }
@@ -343,7 +337,7 @@ class Files extends System {
     function get_shared($file_id) {
         $sql = "SELECT group_id, user_id FROM activity_share WHERE activity_id IN "
                 . "(SELECT activity_id FROM activity_media WHERE file_id = :file_id);";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id
         ));
@@ -498,11 +492,11 @@ class Files extends System {
 
     function get_content($parent_folder = 0, $user_id = null) {
         if ($user_id == null) {
-            $user_id = $this->user->user_id;
+            $user_id = Registry::get('user')->user_id;
         }
         $sql = "SELECT * FROM file WHERE type != 'Webpage' AND user_id = :user_id "
                 . "AND parent_folder_id = :parent_folder AND visible=1 ORDER BY name;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(":user_id" => $user_id, ":parent_folder" => $parent_folder));
         $sql = $sql->fetchAll(PDO::FETCH_ASSOC);
         foreach ($sql as $key => $file) {
@@ -513,7 +507,7 @@ class Files extends System {
 
     public function getViewCount($file) {
         $sql = "SELECT COUNT(id) FROM file_view WHERE file_id = :file_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file
         ));
@@ -522,7 +516,7 @@ class Files extends System {
 
     private function printDirections($file, $viewed_id) {
         $sql = "SELECT id, file_id, user_id, position, group_id, receiver_id FROM file_share WHERE file_id = :file_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(":file_id" => $file['id']));
         $file_props = $sql->fetch(PDO::FETCH_ASSOC);
 
@@ -541,22 +535,22 @@ class Files extends System {
                 break;
 
             case isset($file_props['receiver_id']):
-                echo $receiver = $this->user->getName($file_props['receiver_id']);
+                echo $receiver = Registry::get('user')->getName($file_props['receiver_id']);
                 break;
         }
-        $sql = $this->database_connection->prepare($final_sql);
+        $sql = Registry::get('db')->prepare($final_sql);
         $sql->execute($options);
         $receiver = $sql->fetchColumn();
 
         if (!empty($final_sql)) {
             echo $receiver;
         }
-        echo "<p class='files ellipsis_overflow'>" . $this->user->getName($viewed_id) . " &#65515; &#10162; <em>" . $this->stripexts($file['name']) . "</em></p><br>";
+        echo "<p class='files ellipsis_overflow'>" . Registry::get('user')->getName($viewed_id) . " &#65515; &#10162; <em>" . $this->stripexts($file['name']) . "</em></p><br>";
     }
 
     public function getName($file_id) {
         $sql = "SELECT name FROM file WHERE id = :file_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id
         ));
@@ -565,7 +559,7 @@ class Files extends System {
 
     public function getDescription($file_id) {
         $sql = "SELECT description FROM file WHERE id = :file_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id
         ));
@@ -574,7 +568,7 @@ class Files extends System {
 
     public function getParentFolder($file_id) {
         $sql = "SELECT parent_folder_id FROM file WHERE id = :file_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id
         ));
@@ -607,7 +601,7 @@ class Files extends System {
             $size .= "_";
         }
         $sql = "SELECT " . $size . "path FROM file WHERE id = :file_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id
         ));
@@ -616,7 +610,7 @@ class Files extends System {
 
     public function getAttr($file_id, $attr) {
         $sql = "SELECT " . $attr . " FROM file WHERE id = :file_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id
         ));
@@ -689,8 +683,8 @@ class Files extends System {
 
     function createFolder($parent_folder = 1, $name) {
         $sql = "SELECT MAX(folder_id) FROM file WHERE user_id = :user_id;";
-        $sql = $this->database_connection->prepare($sql);
-        $sql->execute(array(":user_id" => $this->user->user_id));
+        $sql = Registry::get('db')->prepare($sql);
+        $sql->execute(array(":user_id" => Registry::get('user')->user_id));
         $new_folder_id = $sql->fetchColumn();
         if ($new_folder_id == "") {
             $new_folder_id = 1;
@@ -701,26 +695,26 @@ class Files extends System {
 
         $sql = "INSERT INTO file(user_id, name, path, type, folder_id, parent_folder_id, time, last_mod) "
                 . "VALUES (:user_id, :name, :path, :type, :folder_id, :parent_folder_id, :time, :time);";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
-            ":user_id" => $this->user->user_id,
+            ":user_id" => Registry::get('user')->user_id,
             ":name" => $name,
-            ":path" => "User/Files/" . $this->user->user_id . "/" . $name . ".zip",
+            ":path" => "User/Files/" . Registry::get('user')->user_id . "/" . $name . ".zip",
             ":type" => "Folder",
             ":folder_id" => $new_folder_id,
             ":parent_folder_id" => $parent_folder,
             ":time" => time(),
         ));
 
-        $this->create_zip($_SERVER['DOCUMENT_ROOT'] . "/User/Files/" . $this->user->user_id . "/" . $name . ".zip", array(), true);
+        $this->create_zip($_SERVER['DOCUMENT_ROOT'] . "/User/Files/" . Registry::get('user')->user_id . "/" . $name . ".zip", array(), true);
 
         return true;
     }
 
     function getParentId($folder_id) {
         $sql = "SELECT parent_folder_id FROM file WHERE user_id = :user_id AND folder_id = :folder_id;";
-        $sql = $this->database_connection->prepare($sql);
-        $sql->execute(array(":user_id" => $this->user->user_id, ":folder_id" => $folder_id));
+        $sql = Registry::get('db')->prepare($sql);
+        $sql->execute(array(":user_id" => Registry::get('user')->user_id, ":folder_id" => $folder_id));
         return $sql->fetchColumn();
     }
 
@@ -731,8 +725,8 @@ class Files extends System {
                 . "webm_path, ogg_path, "
                 . "thumbnail, type, folder_id "
                 . "FROM `file` WHERE user_id = :user_id AND id = :id";
-        $sql = $this->database_connection->prepare($sql);
-        $sql->execute(array(":user_id" => $this->user->user_id, ":id" => $id));
+        $sql = Registry::get('db')->prepare($sql);
+        $sql->execute(array(":user_id" => Registry::get('user')->user_id, ":id" => $id));
         $file = $sql->fetch(PDO::FETCH_ASSOC);
         echo $file['type'] . "/";
         if ($file['type'] != "Folder") {
@@ -745,9 +739,9 @@ class Files extends System {
         else {
             $sql = "SELECT id "
                     . "FROM `file` WHERE user_id = :user_id AND parent_folder_id = :parent_folder;";
-            $sql = $this->database_connection->prepare($sql);
+            $sql = Registry::get('db')->prepare($sql);
             $sql->execute(array(
-                ":user_id" => $this->user->user_id,
+                ":user_id" => Registry::get('user')->user_id,
                 ":parent_folder" => $file['folder_id']
             ));
             $sub_file = $sql->fetchAll();
@@ -758,9 +752,9 @@ class Files extends System {
             }
         }
         $sql = "UPDATE file SET visible=0 WHERE user_id = :user_id AND id = :id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
-            ":user_id" => $this->user->user_id,
+            ":user_id" => Registry::get('user')->user_id,
             ":id" => $id));
     }
 
@@ -791,24 +785,24 @@ class Files extends System {
                 break;
 
             case isset($file_props['receiver_id']):
-                echo $receiver = $this->user->getName($file_props['receiver_id']);
+                echo $receiver = Registry::get('user')->getName($file_props['receiver_id']);
                 break;
         }
     }
 
     function fileView($file_id) {
         $sql = "INSERT INTO `file_view` (file_id, user_id) VALUES (:file_id, :user_id);";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id,
-            ":user_id" => $this->user->user_id
+            ":user_id" => Registry::get('user')->user_id
         ));
         return "";
     }
 
     function rename($file_id, $name) {
         $sql = "UPDATE file SET name = :name WHERE id = :file_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":name" => $name,
             ":file_id" => $file_id
@@ -817,7 +811,7 @@ class Files extends System {
 
     function removeFromPost($file_id, $post_id) {
         $sql = "UPDATE activity_media SET visible = 0 WHERE file_id = :file_id AND activity_id = :post_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":post_id" => $post_id,
             ":file_id" => $file_id
@@ -826,9 +820,9 @@ class Files extends System {
 
     function getUsedSize() {
         $sql = "SELECT size FROM file WHERE user_id = :user_id AND visible=1;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
-            ":user_id" => $this->user->user_id
+            ":user_id" => Registry::get('user')->user_id
         ));
         $used_size = 0;
         foreach ($sql->fetchAll(PDO::FETCH_ASSOC) as $size) {
@@ -843,7 +837,7 @@ class Files extends System {
 
         $tmpFilePath = $file['file']['tmp_name'];
         $savename = preg_replace("/[^a-z0-9]+/i", '', $file['file']['name']);
-        $savepath = 'User/Files/' . $this->user->user_id . "/";
+        $savepath = 'User/Files/' . Registry::get('user')->user_id . "/";
         $base_path = $_SERVER['DOCUMENT_ROOT'] . "/";
         $dir = $base_path . $savepath;
         $parent_folder = $post['parent_folder'];
@@ -904,9 +898,14 @@ class Files extends System {
                     $type = $this->getType($mimetype);
                     if ($type == "Audio") {
                         $convert_path = $base_path . $savepath . $file_name;
-                        $iconsavepath = $mp3_path = $thumbsavepath = $savepath . $name . "_thumb.mp3";
+                        $iconsavepath = $mp3_path = $savepath . $name . "_thumb.mp3";
+                        $thumbsavepath = $savepath . $name . "_thumb.ogg";
                         $convert = $this->convert($convert_path, $base_path . $mp3_path, '-ab 64');
                         if ($convert != $base_path . $mp3_path) {
+                            echo ("Error: " . $convert);
+                        }
+						$convert = $this->convert($convert_path, $base_path . $thumbsavepath, '-acodec libvorbis');
+                        if ($convert != $base_path . $thumbsavepath) {
                             echo ("Error: " . $convert);
                         }
                     }
@@ -969,7 +968,7 @@ class Files extends System {
                         $resizeObj->resizeImage(50, 50, 'crop');
                         $resizeObj->saveImage("../" . $iconsavepath);
                     }
-                    $this->database_connection->beginTransaction();
+                    Registry::get('db')->beginTransaction();
                     $sql = "INSERT INTO `file` (user_id, "
                             . "size, path, thumb_path, icon_path, "
                             . "thumbnail, flv_path, mp4_path, ogg_path, webm_path, "
@@ -978,9 +977,9 @@ class Files extends System {
                             . ":thumbsavepath, :iconsavepath, :thumbnail, "
                             . ":flv_path, :mp4_path, :ogg_path, :webm_path, "
                             . ":name, :type, :mime_type, :parent_folder, :time, :time);";
-                    $sql = $this->database_connection->prepare($sql);
+                    $sql = Registry::get('db')->prepare($sql);
                     $sql->execute(array(
-                        ":user_id" => $this->user->user_id,
+                        ":user_id" => Registry::get('user')->user_id,
                         ":size" => $size,
                         ":file_path" => $savepath . $file_name,
                         ":thumbsavepath" => $thumbsavepath,
@@ -996,33 +995,33 @@ class Files extends System {
                         ":webm_path" => $webm_path,
                         ":time" => time(),
                     ));
-                    $lastInsertId = $this->database_connection->lastInsertId();
-                    $this->database_connection->commit();
+                    $lastInsertId = Registry::get('db')->lastInsertId();
+                    Registry::get('db')->commit();
 
-                    $this->database_connection->beginTransaction();
+                    Registry::get('db')->beginTransaction();
                     $sql = "INSERT INTO `activity` (user_id, type, visible, time) "
                             . "VALUES (:user_id, :type, 0, :time);";
-                    $sql = $this->database_connection->prepare($sql);
+                    $sql = Registry::get('db')->prepare($sql);
                     $sql->execute(array(
-                        ":user_id" => $this->user->user_id,
+                        ":user_id" => Registry::get('user')->user_id,
                         ":type" => 'File',
                         ":time" => time(),
                     ));
-                    $lastActivityInsertId = $this->database_connection->lastInsertId();
-                    $this->database_connection->commit();
+                    $lastActivityInsertId = Registry::get('db')->lastInsertId();
+                    Registry::get('db')->commit();
 
-                    $this->database_connection->beginTransaction();
+                    Registry::get('db')->beginTransaction();
                     $sql = "INSERT INTO `activity_media` (activity_id, file_id) "
                             . "VALUES (:activity_id, :file_id);";
-                    $sql = $this->database_connection->prepare($sql);
+                    $sql = Registry::get('db')->prepare($sql);
                     $sql->execute(array(
                         ":activity_id" => $lastActivityInsertId,
                         ":file_id" => $lastInsertId,
                     ));
-                    $lastActivityInsertId = $this->database_connection->lastInsertId();
-                    $this->database_connection->commit();
+                    $lastActivityInsertId = Registry::get('db')->lastInsertId();
+                    Registry::get('db')->commit();
                     if ($parent_folder == 0) {
-                        $path = "User/Files/" . $this->user->user_id . "/root.zip";
+                        $path = "User/Files/" . Registry::get('user')->user_id . "/root.zip";
                     }
                     else {
                         $path = $this->getAttr($this->get_folder_file_id($parent_folder), 'path');
@@ -1038,7 +1037,7 @@ class Files extends System {
     }
 
 }
-if ($_SERVER['REQUEST_METHOD'] == "POST") {
+if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
     require('home.class.php');
     $home = Home::getInstance($args = array());
     $files = Files::getInstance($args = array());

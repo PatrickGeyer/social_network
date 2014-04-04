@@ -7,13 +7,13 @@ $connected_users = array();
             <div class="group_list">
                 <ul style="width:100%;">
                     <?php
-                    $groups = $group->getUserGroups();
+                    $groups = Registry::get('group')->getUserGroups();
                     foreach ($groups as $group_id) {
                         $valid0 = "";
                         echo "<li class='friend_list_group' >"
                         . "<a class='friend_list ellipsis_overflow' "
-                        . "style='background-image:url(\"" . $group->getProfilePicture('chat', $group_id) . "\");'"
-                        . "href ='group?id=" . urlencode(base64_encode($group_id)) . "'>" . $group->getGroupName($group_id)
+                        . "style='background-image:url(\"" . Registry::get('group')->getProfilePicture('chat', $group_id) . "\");'"
+                        . "href ='group?id=" . urlencode(base64_encode($group_id)) . "'>" . Registry::get('group')->getGroupName($group_id)
                         . "</a></li>";
                     }
                     ?>
@@ -30,14 +30,14 @@ $connected_users = array();
             <div class="connection_list">
                 <ul style="width:100%;">
                     <?php
-                    foreach ($user->getConnections() as $connection) {
+                    foreach (Registry::get('user')->getConnections() as $connection) {
                         $connection = $connection[0];
                         if(!in_array($connection, $connected_users)) {
                             $valid = true;
                             echo "<li class='online_status user_preview' data-user_id='" . $connection . "'>"
-                            . "<a class='friend_list ellipsis_overflow' style='background-image:url(\"" . $user->getProfilePicture('chat', $connection) . "\");' 
+                            . "<a class='friend_list ellipsis_overflow' style='background-image:url(\"" . Registry::get('user')->getProfilePicture('chat', $connection) . "\");' 
                             href ='user?id=" . urlencode(base64_encode($connection)) . "'>"
-                            . $user->getName($connection) . "</a></li>";
+                            . Registry::get('user')->getName($connection) . "</a></li>";
                             $connected_users[] = $connection;
                         }
                     }
@@ -53,7 +53,7 @@ $connected_users = array();
 //                    while ($friends = $query->fetch(PDO::FETCH_ASSOC)) {
 //                        $valid = true;
 //                        echo "<li class='online_status user_preview' data-user_id='" . $friends['id'] . "'>"
-//                        . "<a class='friend_list ellipsis_overflow' style='background-image:url(\"" . $user->getProfilePicture('chat', $friends['id']) . "\");' 
+//                        . "<a class='friend_list ellipsis_overflow' style='background-image:url(\"" . Registry::get('user')->getProfilePicture('chat', $friends['id']) . "\");' 
 //                        href ='user?id=" . urlencode(base64_encode($friends['id'])) . "'>"
 //                        . $friends['name'] . "</a></li>";
 //                    }
@@ -66,16 +66,16 @@ $connected_users = array();
             <div class="group_list_user">
                 <ul style="width:100%;">
                     <?php
-                     $groups = $group->getUserGroups();
+                     $groups = Registry::get('group')->getUserGroups();
                      foreach ($groups as $group_id) {
-                         $members = $group->getMembers($group_id);
+                         $members = Registry::get('group')->getMembers($group_id);
                          foreach ($members as $member) {
                              $member = $member[0];
                              if(!in_array($member, $connected_users)) {
                                  $valid6 = true;
                                  echo "<li class='friend_list_on user_preview' user_id='" . $member . "'>"
-                                 . "<a class='friend_list ellipsis_overflow' style='background-image:url(\"" . $user->getProfilePicture('chat', $member) . "\");' "
-                                 . "href ='user?id=" . urlencode(base64_encode($member)) . "'>" . $user->getName($member) . "</a></li>";
+                                 . "<a class='friend_list ellipsis_overflow' style='background-image:url(\"" . Registry::get('user')->getProfilePicture('chat', $member) . "\");' "
+                                 . "href ='user?id=" . urlencode(base64_encode($member)) . "'>" . Registry::get('user')->getName($member) . "</a></li>";
                                  $connected_users[] = $member;
                              }
                          }

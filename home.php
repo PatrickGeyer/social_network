@@ -28,7 +28,7 @@ function print_body() {
                                     </tr>
                                 </table>
                             </td>
-                            <td style='width:00px;height:100%;position: relative;'>
+                            <td style='width:30%;height:100%;position: relative;'>
                                 <div id='file_share'>
                                     <table id='file_dialog' style='width:100%;' cellspacing="0" cellpadding="0">
                                         <?php
@@ -106,7 +106,7 @@ function print_body() {
 
                 $('#status_text').focus(function() {
                     $(this).css('min-height', '100px');
-                    $('#file_share').parent('td').css('width', '30%');
+//                     $('#file_share').parent('td').css('width', '100px');
                     $('#file_share').show();
                     $('#post_more_options').show();
                     $('.post_wrapper').css('padding-bottom', $('.post_more_options').height());

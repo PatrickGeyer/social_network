@@ -1,22 +1,17 @@
 <?php
-
+include_once 'Scripts/declare.php';
 function print_body() {
     global $used_width,
     $file_id,
-    $system,
-    $home,
-    $group,
-    $files,
-    $user,
     $files_user_id;
-    
-    Files::$PARENT_DIR = 0;
+    $files = Registry::get('files');
+    $files::$PARENT_DIR = 0;
     if (!isset($_GET['i'])) {
         $page_identifier = 'files';
     }
 
     if (isset($_GET['pd'])) {
-        Files::$PARENT_DIR = urldecode($system->decrypt($_GET['pd']));
+        Files::$PARENT_DIR = urldecode(Registry::get('system')->decrypt($_GET['pd']));
         if (empty(Files::$PARENT_DIR)) {
             Files::$PARENT_DIR = 0;
         }
@@ -28,23 +23,23 @@ function print_body() {
         $actions = true;
     }
     if (isset($_GET['u'])) {
-        $files_user_id = urldecode($system->decrypt($_GET['u']));
+        $files_user_id = urldecode(Registry::get('system')->decrypt($_GET['u']));
     }
     else {
-        $files_user_id = $user->user_id;
+        $files_user_id = Registry::get('user')->user_id;
     }
     if (isset($_GET['f'])) {
         $file_id = $_GET['f'];
-        $files->fileView($file_id);
+        Registry::get('files')->fileView($file_id);
     }
 
-    $used_width = $files->getUsedSize();
+    $used_width = Registry::get('files')->getUsedSize();
     if (TRUE) {
         ?>
         <script>
             document.title = "Files";
             var parent_folder = <?php echo Files::$PARENT_DIR; ?>;
-            var encrypted_folder = '<?php echo urlencode($system->encrypt(Files::$PARENT_DIR)); ?>';
+            var encrypted_folder = '<?php echo urlencode(Registry::get('system')->encrypt(Files::$PARENT_DIR)); ?>';
 
             function getInputFiles(element) {
                 var files1 = document.getElementById(element).files;
@@ -94,8 +89,8 @@ function print_body() {
                     <table>
                         <tr>
                             <?php
-                            foreach ($files->getSharedList() as $file) {
-                                echo $files->styleRecentlyShared($file);
+                            foreach (Registry::get('files')->getSharedList() as $file) {
+                                echo Registry::get('files')->styleRecentlyShared($file);
                             }
                             ?>
                         </tr>
@@ -146,22 +141,22 @@ function print_body() {
                     <?php
                     if (isset($file_id)) {
                         echo $file_id . " - ";
-                        echo $files->getActivity($file_id);
-                        echo "<script>$('.feed_container').prepend( Application.prototype.feed.homify(" . json_encode($home->homeify($home->getSingleActivity($files->getActivity($file_id)))) . "));</script>";
+                        echo Registry::get('files')->getActivity($file_id);
+                        echo "<script>$('.feed_container').prepend( Application.prototype.feed.homify(" . json_encode(Registry::get('home')->homeify(Registry::get('home')->getSingleActivity(Registry::get('files')->getActivity($file_id)))) . "));</script>";
                         echo "<script>$('.file_actions').hide();</script>";
                         echo "<script>$('#main_file').css('border', '0px');</script>";
                     }
                     else {
-                        $files_list = $files->get_content(Files::$PARENT_DIR, $files_user_id);
+                        $files_list = Registry::get('files')->get_content(Files::$PARENT_DIR, $files_user_id);
                         echo "<script>$('.feed_container').append(Application.prototype.file.print_folder(" . json_encode($files_list) . "));</script>";
                     }
                     ?>
                 </div>
             </div>
-
             <?php
-            if (Files::$PARENT_DIR != 0) {
-                echo "<button class='pure-button-neutral smallest' style='margin-top:20px;margin-left:20px;' onclick='window.location.assign(&quot;files?pd=" . urlencode($system->encrypt($files->getParentId($parent_folder))) . "&quot;)'>Back</button>";
+            if ($files::$PARENT_DIR != 0) {
+                echo "<button class='pure-button-neutral smallest' style='margin-top:20px;margin-left:20px;' "
+                . "onclick='window.location.assign(&quot;files?pd=" . urlencode(Registry::get('system')->encrypt(Registry::get('files')->getParentId($parent_folder))) . "&quot;)'>Back</button>";
             }
             ?>
             <div id="progress_bar_holder"></div>

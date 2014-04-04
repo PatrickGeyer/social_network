@@ -4,8 +4,7 @@ include_once('php_includes/simple_html_dom.php');
 include_once('database.class.php');
 include_once('base.class.php');
 
-class System extends Base {
-    public $database_connection = NULL;
+class System {
     private static $system = NULL;
     private $url;
     private $meta_tag = array(
@@ -22,7 +21,7 @@ class System extends Base {
     static $KEY = 'thisismykey';
 
     public function __construct() {
-        $this->database_connection = Database::getConnection();
+        
     }
 
     public static function getInstance() {
@@ -91,8 +90,12 @@ class System extends Base {
         }
         echo "<link rel='stylesheet' href='CSS/style.css' type='text/css'>"; //change to minified versions after development
 //      echo <link rel="stylesheet" media='screen and (min-width: 381px) and (max-width: 700px)' href="tablet.css"/>
-        echo "<link rel='shortcut icon' href='" . self::SHORTCUT_ICON . "'>";
+        $base = Registry::get('base');
+        echo "<link rel='shortcut icon' href='" . $base::SHORTCUT_ICON . "'>";
         echo "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>";
+        echo "<script>";
+        echo "var USER_PIC = '". Registry::get('user')->getProfilePicture('THUMB') . "';";
+        echo "</script>";
     }
 
     public function jsVars() {
@@ -452,7 +455,7 @@ class System extends Base {
 
 }
 
-if ($_SERVER['REQUEST_METHOD'] == "POST") {
+if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
     $system = new System;
     if (isset($_POST['action'])) {
         if ($_POST['action'] == "get_page_preview") {

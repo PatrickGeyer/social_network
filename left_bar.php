@@ -11,14 +11,14 @@ if (!isset($page_identifier)) {
                     <table cellspacing='0' cellpadding='0'>
                         <tr style='vertical-align:top;'>
                             <td>
-                                <div class='welcome_user_profile_picture' style='background-image:url("<?php echo $user->getProfilePicture("chat"); ?>");'></div>
+                                <div class='welcome_user_profile_picture' style='background-image:url("<?php echo Registry::get('user')->getProfilePicture("chat"); ?>");'></div>
                             </td>
                             <td>
                                 <div class='welcome_user_info'>
                                     <a href="user">
                                         <span style='font-size:13px;' class="user_preview_name">
                                             <?php
-                                            echo $system->trimStr($user->getName(), 20);
+                                            echo Registry::get('system')->trimStr(Registry::get('user')->getName(), 20);
                                             ?>
                                         </span>
                                     </a>

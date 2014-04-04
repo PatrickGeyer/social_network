@@ -1,6 +1,6 @@
 <?php
-$system->getGlobalMeta();
-$system->jsVars();
+Registry::get('system')->getGlobalMeta();
+Registry::get('system')->jsVars();
 ?>
 
 <script src="Scripts/external/jquery-1.10.2.js"></script>
@@ -20,7 +20,15 @@ $system->jsVars();
 <link href="Scripts/external/video-js/video-js.css" rel="stylesheet">
 <script src="Scripts/external/video-js/video.js"></script>
 
-<!--<script src="Scripts/external/jquery.scrollTo-1.4.3.1.js"></script>-->
+<!--ScrollTo plugin-->
+<!--<script defer src="http://balupton.github.com/jquery-scrollto/scripts/jquery.scrollto.min.js"></script>-->
+ 
+<!-- History.js --> 
+<script defer src="http://balupton.github.com/history.js/scripts/bundled/html4+html5/jquery.history.js"></script>
+ 
+<!-- Ajaxify -->
+<!--<script defer src="Scripts/external/ajaxify-html5.js"></script>-->
+
 
 <script type='text/javascript' src="Scripts/js.js"></script>
 

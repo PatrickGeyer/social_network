@@ -2,25 +2,19 @@
 
 require_once('system.class.php');
 
-class Notification extends System {
+class Notification {
     private static $notification = NULL;
-    private $user;
-    private $group;
-    private $phrase;
 
-    public function __construct($args) {
-        parent::__construct();
-        $this->user = $args['user'];
-        $this->group = $args['group'];
-        $this->phrase = $args['phrase'];
+    public function __construct() {
+
     }
 
-    public static function getInstance($args = array()) {
+    public static function getInstance() {
         if (self :: $notification) {
             return self :: $notification;
         }
 
-        self :: $notification = new Notification($args);
+        self :: $notification = new Notification();
         return self :: $notification;
     }
 
@@ -41,9 +35,9 @@ class Notification extends System {
         else {
             //$user_query = "SELECT user_id, message, thread, time, u_id, id FROM message WHERE id = " . $id . ";";
         }
-        $user_query = $this->database_connection->prepare($user_query);
+        $user_query = Registry::get('db')->prepare($user_query);
         $user_query->execute(array(
-            ":user_id" => $this->user->user_id,
+            ":user_id" => Registry::get('user')->user_id,
             ":oldest" => $oldest,
             ":newest" => $newest
             ));
@@ -51,13 +45,13 @@ class Notification extends System {
         
         foreach ($user1 as &$message) {
             $message_read_query = "SELECT `read`, seen, user_id FROM message_share WHERE `thread` = " . $message['thread'] . " AND user_id = " . base64_decode($_COOKIE['id']) . ";";
-            $message_read_query = $this->database_connection->prepare($message_read_query);
+            $message_read_query = Registry::get('db')->prepare($message_read_query);
             $message_read_query->execute();
             $read = $message_read_query->fetch(PDO::FETCH_ASSOC);
             $message['read'] = $read['read'];
             $message['seen'] = $read['seen'];
-            $message['user'] = $this->user->get_user_preview($message['user_id']);
-            $message['time'] = $this->format_dates($message['time']);
+            $message['user'] = Registry::get('user')->get_user_preview($message['user_id']);
+            $message['time'] = Registry::get('system')->format_dates($message['time']);
             //$message['user_id'] = $read['user_id'];
         }
         return $user1;
@@ -65,7 +59,7 @@ class Notification extends System {
     
     function getMessageNew($thread) {
         $sql = "SELECT * FROM message WHERE thread = :thread and time >= :time;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":thread" => $thread,
             ":time" => $time
@@ -75,7 +69,7 @@ class Notification extends System {
 
     function getMessageNum() {
         $user_query = "SELECT id FROM message_share WHERE user_id = :user_id AND `seen` = 0;";
-        $user_query = $this->database_connection->prepare($user_query);
+        $user_query = Registry::get('db')->prepare($user_query);
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
         $user = $user_query->rowCount();
         return $user;
@@ -87,7 +81,7 @@ class Notification extends System {
         $messages = $this->getMessage();
         foreach ($messages as $message) {
             $participants = $this->getReceivers($message['thread'], 'list');
-            $picture = $this->user->getProfilePicture('chat', $message['user_id']);
+            $picture = Registry::get('user')->getProfilePicture('chat', $message['user_id']);
             $names = '';//$this->styleReceiverList($participants, 'list');
             echo "<li class='";
             if ($message['read'] == 0) {
@@ -113,9 +107,9 @@ class Notification extends System {
 
     function deleteMessage($thread) {
         $sql = "UPDATE message_share SET visible=0 WHERE `thread` = :thread AND user_id = :user_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
-            ":user_id" => $this->user->user_id,
+            ":user_id" => Registry::get('user')->user_id,
             ":thread" => $thread
             ));
     }
@@ -125,13 +119,13 @@ class Notification extends System {
             $thread = $id;
         }
         $sql = "UPDATE message_share SET seen=1, `read`=1 WHERE `thread` = " . $id . " AND user_id=" . base64_decode($_COOKIE['id']) . ";";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute();
     }
 
     function markAllMessageSeen() {
         $sql = "UPDATE message_share SET seen=1 WHERE user_id=" . base64_decode($_COOKIE['id']) . ";";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute();
     }
 
@@ -139,7 +133,7 @@ class Notification extends System {
         $receivers = array();
         
         $sql = "SELECT id FROM user WHERE id IN(SELECT user_id FROM message_share WHERE `thread` = :thread);";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(
                 array(
                     ":thread" => $thread,
@@ -160,7 +154,7 @@ class Notification extends System {
         foreach ($all_receivers as $key => $receivers) {
             foreach ($receivers as $user_key => $single_id) {
                 if($key == "user") {
-                    if($single_id == $this->user->user_id) {
+                    if($single_id == Registry::get('user')->user_id) {
                         unset($receivers[$user_key]);
                     }
                 }
@@ -202,7 +196,7 @@ class Notification extends System {
         }
         foreach ($all_receivers['user'] as $key => $receiver) {
             if($key < 4) {
-                $return .= $this->img($this->user->getProfilePicture('chat', $receiver), $width[$key], $height[$key]);
+                $return .= $this->img(Registry::get('user')->getProfilePicture('chat', $receiver), $width[$key], $height[$key]);
             }
         }
         return $return;
@@ -223,19 +217,19 @@ class Notification extends System {
         foreach ($receivers as $key => $receiver) {
             foreach ($receiver as $single_id) {
                 if($key == 'user') {
-                    if ($this->user->user_id != $single_id) {
+                    if (Registry::get('user')->user_id != $single_id) {
                         if ($type == "header") {
                             $return .= "<a href='user?id=" . urlencode(base64_encode($single_id))
                                     . "'><span style='margin-right:5px;' "
                                     . " class='message_convo_receiver user_preview' user_id='" . $single_id . "'>";
-                            $return .= $this->user->getName($single_id, 1);
+                            $return .= Registry::get('user')->getName($single_id, 1);
                             if ($num - 1 != $current_num) {
                                 $return .= ",";
                             }
                             $return .= "</span></a>";
                         }
                         else if ($type == "list") {
-                            $name = $this->user->getName($single_id, 1);
+                            $name = Registry::get('user')->getName($single_id, 1);
                             if ($num - 1 != $current_num) {
                                 $name .= ",";
                             }
@@ -254,8 +248,8 @@ class Notification extends System {
             $receivers['group'] = array();
         }
         foreach ($receivers as $key => $receiver) {
-            if ($key == 'user' && !in_array($this->user->user_id, $receivers[$key])) {
-                array_push($receivers[$key], $this->user->user_id);
+            if ($key == 'user' && !in_array(Registry::get('user')->user_id, $receivers[$key])) {
+                array_push($receivers[$key], Registry::get('user')->user_id);
             }
             $receivers[$key] = array_unique($receivers[$key]);
             $receivers[$key] = array_values($receivers[$key]);
@@ -284,7 +278,7 @@ class Notification extends System {
         $info = $this->format_message($receivers, $thread);
         //var_dump($info);
        
-        $this->database_connection->beginTransaction();
+        Registry::get('db')->beginTransaction();
         
         foreach ($info['receivers'] as $key => $receiver) {
              foreach ($receiver as $single_id) {
@@ -293,12 +287,12 @@ class Notification extends System {
         }
         
         $this->insertMessage($message, $info['thread'], $info['uid']);
-        $this->database_connection->commit();
+        Registry::get('db')->commit();
     }
 
     private function insertMessage($message, $thread, $uid) {
         $message_query = "INSERT INTO message (user_id, message, thread, time, u_id) VALUES (:user_id, :message, :thread_id, :time, :u_id);";
-        $message_query = $this->database_connection->prepare($message_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $message_query = Registry::get('db')->prepare($message_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $message_query->execute(
                 array(
                     ":user_id" => base64_decode($_COOKIE['id']),
@@ -310,24 +304,24 @@ class Notification extends System {
 
     private function insertMessageShare($receiver, $key, $thread) {
         $message_query = "INSERT INTO  message_share(".$key."_id, `thread`, `seen`, `read`) VALUES (:receiver_id, :thread_id, :seen, :read)";
-        $message_query = $this->database_connection->prepare($message_query);
+        $message_query = Registry::get('db')->prepare($message_query);
         $message_query->execute(
                 array(
                     ":receiver_id" => $receiver,
                     ":thread_id" => $thread,
-                    ":seen" => ($receiver == $this->user->getId() && $key == 'user' ? 1 : 0),
-                    ":read" => ($receiver == $this->user->getId() && $key == 'user' ? 1 : 0),
+                    ":seen" => ($receiver == Registry::get('user')->getId() && $key == 'user' ? 1 : 0),
+                    ":read" => ($receiver == Registry::get('user')->getId() && $key == 'user' ? 1 : 0),
         ));
     }
 
     private function getThreadNum($uid) {
         $getthreadvalue = "SELECT MAX(thread) FROM message;";
-        $getthreadvalue = $this->database_connection->prepare($getthreadvalue);
+        $getthreadvalue = Registry::get('db')->prepare($getthreadvalue);
         $getthreadvalue->execute();
         $thread = $getthreadvalue->fetchColumn() + 1;
 
         $sql = "SELECT thread FROM message WHERE u_id = :u_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(
                 array(
                     ":u_id" => $uid,
@@ -345,10 +339,10 @@ class Notification extends System {
             $sql = "SELECT thread FROM message WHERE thread IN "
                     . "(SELECT `thread` FROM message_share WHERE visible=1 AND user_id = :user_id)"
                     . " ORDER BY time DESC LIMIT 1;";
-            $sql = $this->database_connection->prepare($sql);
+            $sql = Registry::get('db')->prepare($sql);
             $sql->execute(
                     array(
-                        ":user_id" => $this->user->user_id,
+                        ":user_id" => Registry::get('user')->user_id,
             ));
             $result = $sql->fetchColumn();
             if(!isset($result)) {
@@ -363,7 +357,7 @@ class Notification extends System {
 
     function getNotification() {
         $user_query = "SELECT * FROM notification WHERE receiver_id = :user_id AND sender_id != :user_id ORDER BY time DESC;";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
         $user = $user_query->fetchAll();
         return $user;
@@ -373,8 +367,8 @@ class Notification extends System {
         $notify_count = $this->getNotificationNum();
         $notifications = $this->getNotification();
         foreach ($notifications as $notify) {
-            $picture = $this->user->getProfilePicture("chat", $notify['user_id']);
-            $name = $this->user->getName($notify['user_id']);
+            $picture = Registry::get('user')->getProfilePicture("chat", $notify['user_id']);
+            $name = Registry::get('user')->getName($notify['user_id']);
             echo "<li onclick='markNotificationRead(" . $notify['id'] . ", \"post?a=" . $notify['post_id'] . "\");' class='";
             if ($notify['read'] == 0) {
                 echo "messageunread";
@@ -401,25 +395,25 @@ class Notification extends System {
     }
 
     function markAllNotificationsSeen() {
-        $this->database_connection->query("UPDATE notification SET seen = 1 WHERE receiver_id = " . base64_decode($_COOKIE['id']) . "");
+        Registry::get('db')->query("UPDATE notification SET seen = 1 WHERE receiver_id = " . base64_decode($_COOKIE['id']) . "");
     }
 
     function getNotificationNum() {
         $user_query = "SELECT user_id, time FROM connection_invite WHERE receiver_id = :user_id "
         . "UNION SELECT event_id, time FROM event_share WHERE user_id = :user_id ORDER BY time;";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
         $user = $user_query->rowCount();
         return 0;//$user;
     }
 
     function markNotificationRead($id) {
-        $this->database_connection->query("UPDATE notification SET `read`= 1 WHERE id = " . $id . "");
+        Registry::get('db')->query("UPDATE notification SET `read`= 1 WHERE id = " . $id . "");
     }
 
     function getNetwork() {
         $user_query = "SELECT * FROM group_invite WHERE user_id = :user_id ORDER BY time DESC;";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
         $user = $user_query->fetchAll();
         return $user;
@@ -427,21 +421,21 @@ class Notification extends System {
 
     function getConnection() {
         $user_query = "SELECT * FROM connection_invite WHERE receiver_id = :user_id ORDER BY time DESC;";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
         $user_1 = $user_query->fetchAll();
         return $user_1;
     }
     function getConnectionNum() {
         $user_query = "SELECT id FROM connection_invite WHERE user_id = :user_id AND `seen` = 0 AND invite_status = 1;";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
         $user = $user_query->rowCount();
         return $user;
     }
     function getNetworkNum() {
         $user_query = "SELECT id FROM group_invite WHERE user_id = :user_id AND `seen` = 0 AND invite_status = 1;";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
         $user = $user_query->rowCount();
         return $user;
@@ -455,7 +449,7 @@ class Notification extends System {
             echo "<div style='padding:5px;color:grey;'>No Network Notifications</div>";
         }
         foreach ($networks as $network) {
-            $picture = $this->user->getProfilePicture("chat", $network['sender_id']);
+            $picture = Registry::get('user')->getProfilePicture("chat", $network['sender_id']);
             $group_name = $this->group->getGroupName($network['group_id']);
             $group_id = $network['group_id'];
 
@@ -471,7 +465,7 @@ class Notification extends System {
             . "<img class='notification_user_image' src='" . $picture . "'></img>"
             . "</td><td>"
             . "<p style='margin:0;text-align:left;font-size:13px;'>"
-            . str_replace('$group', $group_name, str_replace('$user', $this->user->getName($network['sender_id']), $this->phrase->get('group_invite', 'en')))
+            . str_replace('$group', $group_name, str_replace('$user', Registry::get('user')->getName($network['sender_id']), $this->phrase->get('group_invite', 'en')))
             . "</p></td><td><table cellspacing='0' cellpadding='0'><tr><td>";
             if ($network['invite_status'] == 2) {
                 echo "<button style='margin:0;' onclick='rejectGroup("
@@ -504,7 +498,7 @@ class Notification extends System {
             echo "<div style='padding:5px;color:grey;'>No Network Notifications</div>";
         }
         foreach ($networks as $network) {
-            $picture = $this->user->getProfilePicture("chat", $network['user_id']);
+            $picture = Registry::get('user')->getProfilePicture("chat", $network['user_id']);
 
             echo "<li class='";
             if ($network['read'] == 0) {
@@ -518,7 +512,7 @@ class Notification extends System {
             . "<img class='notification_user_image' src='" . $picture . "'></img>"
             . "</td><td>"
             . "<p style='margin:0;text-align:left;font-size:13px;'>"
-            . str_replace('$user', $this->user->getName($network['user_id']), $this->phrase->get('connection_invite', 'en'))
+            . str_replace('$user', Registry::get('user')->getName($network['user_id']), $this->phrase->get('connection_invite', 'en'))
             . "</p></td><td><table cellspacing='0' cellpadding='0'><tr><td>";
             if ($network['status'] == 2) {
                 echo "<button style='margin:0;' data-invite_id='".$network['id']."' class='pure-button-primary connect_accept'>Connect</button>";
@@ -528,7 +522,7 @@ class Notification extends System {
     }
 
     function markAllNetworkSeen() {
-        $this->database_connection->query('UPDATE group_invite SET seen=1 WHERE receiver_id = ' . base64_decode($_COOKIE['id']) . ';');
+        Registry::get('db')->query('UPDATE group_invite SET seen=1 WHERE receiver_id = ' . base64_decode($_COOKIE['id']) . ';');
     }
 
 }

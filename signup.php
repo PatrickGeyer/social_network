@@ -3,13 +3,13 @@ include_once("Scripts/config.php");
 include_once("Scripts/system.class.php");
 //include_once("Scripts/js.php");
 $system = System::getInstance();
-$system->getGlobalMeta();
+Registry::get('system')->getGlobalMeta();
 ?>
 
 <html>
     <head>
         <?php
-        $system->jsVars();
+        Registry::get('system')->jsVars();
         ?>
         <script src='Scripts/external/jquery-1.10.2.min.js'></script>
         <script src='Scripts/js.js'></script>

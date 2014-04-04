@@ -1,10 +1,8 @@
 <?php
 
 class Phrase {
-    private $database_connection;
     private static $phrase = NULL;
     function __construct() {
-        $this->database_connection = Database::getConnection();
     }
     
     public static function getInstance() {
@@ -18,7 +16,7 @@ class Phrase {
     
     function get($identify, $lan) {
         $sql = "SELECT * FROM language WHERE phrase_identifier = :id AND language = :lan;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":id" => $identify,
             ":lan" => $lan

@@ -1,21 +1,13 @@
 <?php
 
-require_once('user.class.php');
 require_once('entity.class.php');
 
 class Group extends Entity{
 
     private static $group = NULL;
-    private $user_id;
-    private $user;
 
     public function __construct() {
         parent::__construct();
-        if (isset($_COOKIE['id'])) {
-            $this->user_id = base64_decode($_COOKIE['id']);
-            $this->user = User::getInstance($args = array());
-        }
-        return true;
     }
 
     public static function getInstance($args = array()) {
@@ -27,13 +19,9 @@ class Group extends Entity{
         return self :: $group;
     }
 
-    function getId() {
-        return base64_decode($_COOKIE['id']);
-    }
-
     function getGroupName($id) {
         $user_query = "SELECT name FROM `group` WHERE id = :id;";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":id" => $id));
         $user = $user_query->fetchColumn();
         return $user;
@@ -41,7 +29,7 @@ class Group extends Entity{
 
     function getAbout($id) {
         $user_query = "SELECT about FROM `group` WHERE id = :id;";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":id" => $id));
         $user = $user_query->fetchColumn();
         return $user;
@@ -49,7 +37,7 @@ class Group extends Entity{
 
     public function isMember($user_id, $group_id) {
         $sql = "SELECT id FROM group_member WHERE user_id = :user_id AND group_id = :group_id";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(":user_id" => $user_id, ":group_id" => $group_id));
         if ($sql->rowCount() == 0) {
             return false;
@@ -61,15 +49,15 @@ class Group extends Entity{
 
     function getMembers($group_id) {
         $friend_query = "SELECT user_id FROM group_member WHERE group_id = :group_id AND user_id != :user_id";
-        $friend_query = $this->database_connection->prepare($friend_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $friend_query->execute(array(":user_id" => $this->user->user_id, ":group_id" => $group_id));
-        return $this->array_values_r(array_values($friend_query->fetchAll(PDO::FETCH_ASSOC)));
+        $friend_query = Registry::get('db')->prepare($friend_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $friend_query->execute(array(":user_id" => Registry::get('user')->user_id, ":group_id" => $group_id));
+        return Registry::get('system')->array_values_r($friend_query->fetchAll(PDO::FETCH_ASSOC));
     }
 
     function getProfilePicture($size = "chat", $id) {
         $user_query = "SELECT profile_picture FROM `group` WHERE id = :id";
-        $user_query = $this->database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $user_query->execute(array(":id" => $this->user_id));
+        $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query->execute(array(":id" => Registry::get('user')->user_id));
         $user = $user_query->fetchColumn();
         if (!empty($user) || $user != "") {
             return $user;
@@ -81,17 +69,17 @@ class Group extends Entity{
 
     public function getFounderId($group_id) {
         $sql = "SELECT user_id FROM `group` WHERE id = :group_id;";
-        $sql = $this->database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(":group_id" => $group_id));
         return $sql->fetchColumn();
     }
 
     function getUserGroups($user_id = null) {
         if (!isset($user_id) || $user_id == "") {
-            $user_id = $this->user_id;
+            $user_id = Registry::get('user')->user_id;
         }
         $user_query = "SELECT DISTINCT group_id FROM group_member WHERE user_id = :user_id;";
-        $user_query = $this->database_connection->prepare($user_query);
+        $user_query = Registry::get('db')->prepare($user_query);
         $user_query->execute(array(":user_id" => $user_id));
         $usergroups = $user_query->fetchAll(PDO::FETCH_COLUMN);
         return $usergroups;
@@ -110,29 +98,29 @@ class Group extends Entity{
             $type = 2;
         }
 
-        $this->database_connection->beginTransaction();
+        Registry::get('db')->beginTransaction();
         $group_query = "INSERT INTO `group` (user_id, name, about, type) VALUES (:user_id, :group_name, :group_about, :group_type);";
-        $group_query = $this->database_connection->prepare($group_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $group_query->execute(array(":user_id" => $this->user->user_id, ":group_name" => $name, ":group_about" => $about, ":group_type" => $type));
-        $new_group_id = $this->database_connection->lastInsertId();
-        $this->database_connection->commit();
+        $group_query = Registry::get('db')->prepare($group_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $group_query->execute(array(":user_id" => Registry::get('user')->user_id, ":group_name" => $name, ":group_about" => $about, ":group_type" => $type));
+        $new_group_id = Registry::get('db')->lastInsertId();
+        Registry::get('db')->commit();
 
-        $this->database_connection->beginTransaction();
+        Registry::get('db')->beginTransaction();
         $chat_sql = "INSERT INTO chat_room(name, type) VALUES(:name, :type);";
-        $chat_sql = $this->database_connection->prepare($chat_sql);
+        $chat_sql = Registry::get('db')->prepare($chat_sql);
         $chat_sql->execute(array(
             ":name" => $name,
             ":type" => "group"
         ));
-        $new_chat_id = $this->database_connection->lastInsertId();
-        $this->database_connection->commit();
+        $new_chat_id = Registry::get('db')->lastInsertId();
+        Registry::get('db')->commit();
 
         $group_query = "INSERT INTO `group_member` (user_id, group_id) VALUES (:user_id, :new_group_id);";
-        $group_query = $this->database_connection->prepare($group_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $group_query->execute(array(":user_id" => $this->user->user_id, ":new_group_id" => $new_group_id));
+        $group_query = Registry::get('db')->prepare($group_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $group_query->execute(array(":user_id" => Registry::get('user')->user_id, ":new_group_id" => $new_group_id));
 
         $chat_query = "INSERT INTO chat_member(chat_room, group_id) VALUES (:chat, :group);";
-        $chat_query = $this->database_connection->prepare($chat_query);
+        $chat_query = Registry::get('db')->prepare($chat_query);
         $chat_query->execute(array(
             ":chat" => $new_chat_id,
             ":group" => $new_group_id
@@ -142,8 +130,8 @@ class Group extends Entity{
             foreach ($receivers as $type => $receiver) {
                 foreach ($receiver as $single_receiver) {
                     $group_query = "INSERT INTO `group_invite` (sender_id, " . $type . "_id, group_id) VALUES (:user_id, :member_id, :new_group_id);";
-                    $group_query = $this->database_connection->prepare($group_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-                    $group_query->execute(array(":user_id" => $this->user->user_id, ":member_id" => $single_receiver, ":new_group_id" => $new_group_id));
+                    $group_query = Registry::get('db')->prepare($group_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+                    $group_query->execute(array(":user_id" => Registry::get('user')->user_id, ":member_id" => $single_receiver, ":new_group_id" => $new_group_id));
                 }
             }
         }

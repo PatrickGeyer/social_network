@@ -9,9 +9,9 @@ function login($user_id) {
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_query = "SELECT id FROM user WHERE email = :email AND password = :password;";
     $user_query = $database_connection->prepare($user_query);
-    $user_query->execute(array(":email" => $_POST['email'], ":password" => $system->encrypt($_POST['password'])));
+    $user_query->execute(array(":email" => $_POST['email'], ":password" => Registry::get('system')->encrypt($_POST['password'])));
     $user_data = $user_query->fetchColumn();
-    //die("ID:".$user_data. "EMAIL:".$_POST['email'] ."ENCRYOT:".$system->encrypt($_POST['password']));
+    //die("ID:".$user_data. "EMAIL:".$_POST['email'] ."ENCRYOT:".Registry::get('system')->encrypt($_POST['password']));
 
     if (!empty($user_data)) {
         
@@ -28,13 +28,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user_query = $database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":email" => $_POST['email']));
         $user_data = $user_query->fetchColumn();
-        die('<p style="background-color:red;">' . $system->encrypt($_POST['password']) . ' <=> Your Email or Password is invalid</p>');
+        die('<p style="background-color:red;">' . Registry::get('system')->encrypt($_POST['password']) . ' <=> Your Email or Password is invalid</p>');
     }
 }
-include_once("Scripts/config.php");
-include_once("Scripts/system.class.php");
-$system = System::getInstance();
-$system->getGlobalMeta();
+Registry::get('system')->getGlobalMeta();
 if (isset($_COOKIE['id'])) {
     header("location: home");
 }
@@ -70,13 +67,13 @@ else {
 <html>
     <head>
         <?php
-        $system->jsVars();
+        Registry::get('system')->jsVars();
         // $sql = "SELECT * FROM user;";
 //         $sql = $database_connection->prepare($sql);
 //         $sql->execute();
 //         $users = $sql->fetchAll(PDO::FETCH_ASSOC);
 //         foreach($users as $user) {
-//         	echo $user['name']." => ".$system->encrypt($user['password']);
+//         	echo $user['name']." => ".Registry::get('system')->encrypt($user['password']);
 //         }
         ?>
         <script src='Scripts/external/jquery-1.10.2.min.js'></script>
@@ -124,7 +121,7 @@ else {
                     error = true;
                 }
                 if (error === false) {
-                    modal($('body'), properties = {text: "Signing up..."});
+                    Application.prototype.UI.modal($('body'), properties = {text: "Signing up..."});
                     $.post('Scripts/verifysignup.php', {
                         firstname: firstname,
                         lastname: lastname,
@@ -140,7 +137,7 @@ else {
                 }
             }
             function logIn() {
-                modal($('body'),
+                Application.prototype.UI.modal($('body'),
                         properties = {
                             centered: true,
                             type: "",
@@ -163,18 +160,18 @@ else {
                             window.location.replace('home');
                         }
                         else {
-                            modal($('body'),
+                            Application.prototype.UI.modal($('body'),
                                     properties = {
                                         centered: true,
                                         type: "error",
                                         text: "Incorrect Password or Email<br /><a style='font-weight:normal;' class='user_preview_name' href='accountrecovery'>Forgotten password?</a>"
                                     });
-                            setTimeout(removeModal, 2000);
+                            setTimeout(Application.prototype.UI.removeModal, 2000);
                         }
                     });
                 }
                 else {
-                    removeModal("force");
+                    Application.prototype.UI.removeModal("force");
                 }
             }
             $(function() {
@@ -287,7 +284,7 @@ else {
                     </table>
                 </div>
                 <?php
-                if (isset($_GET['action'])) { ?> <h1 class="signupheader">Register a School</h1>
+                if (isset($_GET['action'])) { ?> <h1 class="signupheader">Registry a School</h1>
                 <form id="school" action="Scripts/verifysignup.php" method="POST">
                  <div class="signupbox">
                      <table border="0">
@@ -312,10 +309,10 @@ else {
                              <td><div class="styled-select"><select style="width:100%;" name="gender"><option>Male</option><option>Female</option></select></div></td>
                          </tr>
                          <tr>
-                             <td colspan="2"><input type="submit" value="Register User and School"></input></td>
+                             <td colspan="2"><input type="submit" value="Registry User and School"></input></td>
                          </tr>
                          <tr>
-                             <td colspan="2"><label>*When you register a school <br>you will automatically be<br> appointed admin.</label></td>
+                             <td colspan="2"><label>*When you Registry a school <br>you will automatically be<br> appointed admin.</label></td>
                          </tr>
                      </table>
                  </div>
@@ -329,11 +326,11 @@ else {
                     <img src="http://stackoverflow.com/users/flair/2506225.png?theme=clean" width="208" height="58" alt="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers" title="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers">
                     </a>
                 </div>
-                <span>Warning: This site is in development. I will not be held liable for any damages you may incur on this site. By signing up, you agree to these terms. Although you are welcome to sign-up, register schools and store your files here for testing purposes, I cannot guarantee the safety/availability of any of your data yet. Release date: 2014, June 21. You can watch the site develop everyday.</span>
+                <span>Warning: This site is in development. I will not be held liable for any damages you may incur on this site. By signing up, you agree to these terms. Although you are welcome to sign-up, Registry schools and store your files here for testing purposes, I cannot guarantee the safety/availability of any of your data yet. Release date: 2014, June 21. You can watch the site develop everyday.</span>
             </div>
             <div class="links" style='display:none;'>
-                <a id="schoollink" href="login" style="text-decoration:none; font-size:0.8em;">Register a User</a>/
-                <a id="schoollink" href="login?action=school" style="text-decoration:none; font-size:0.8em;">Register a School + User</a>/
+                <a id="schoollink" href="login" style="text-decoration:none; font-size:0.8em;">Registry a User</a>/
+                <a id="schoollink" href="login?action=school" style="text-decoration:none; font-size:0.8em;">Registry a School + User</a>/
                 <a id="schoollink" href="about" style="text-decoration:none; font-size:0.8em;">About</a><br/>
                 <span>Suggestions/bugs? Email me at patrick.geyer1@gmail.com</span>
             </div>
