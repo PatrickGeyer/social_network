@@ -15,7 +15,7 @@ $calendar = new Calendar();
     // }
     if (strpos($_SERVER['HTTP_USER_AGENT'], 'Chrome') === false) {
         echo "<div class='event event_expanded event_white'>"
-        . "<a href='https://www.google.co.uk/chrome'><button class='pure-button-primary pure-button-round'>Get Chrome</button></a></div>";
+        . "<a href='https://www.google.co.uk/chrome'><button class='pure-button-blue pure-button-round'>Get Chrome</button></a></div>";
     }
     echo "</div>";
     ?>

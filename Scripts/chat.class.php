@@ -3,6 +3,9 @@
 class Chat {
     private static $chat = NULL;
     public function __construct() {
+        if(!class_exists('Registry')) {
+            include_once 'declare.php';
+        }
     }
     public static function getInstance ( ) {
         if (self :: $chat) {
@@ -175,13 +178,13 @@ class Chat {
 
 }
 
-if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
-    $chat = Chat::getInstance($args = array());
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
+    $chat = Chat::getInstance();
     if (isset($_POST['action']) && $_POST['action'] == "addchat") {
         die(json_encode($chat->submitChat($_POST['aimed'], $_POST['chat_text'])));
     }
 } else if ($_SERVER['REQUEST_METHOD'] == "GET"){    
-    $chat = Chat::getInstance($args = array());
+    $chat = Chat::getInstance();
     if (isset($_GET['chat'])) {
         $oldest = 0;
         $newest = null;

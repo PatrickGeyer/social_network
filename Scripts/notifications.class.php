@@ -1,12 +1,12 @@
 <?php
 
-require_once('system.class.php');
-
 class Notification {
     private static $notification = NULL;
 
     public function __construct() {
-
+        if(!class_exists('Registry')) {
+            require 'declare.php';
+        }
     }
 
     public static function getInstance() {
@@ -475,12 +475,12 @@ class Notification {
             else if ($network['invite_status'] == 0) {
                 echo "<button style='margin:0;' onclick='joinGroup("
                 . $group_id . ", " . $network['id'] . ");' "
-                . "class='pure-button-primary small' id='join_button_" . $network['id'] . "'>Join</button>";
+                . "class='pure-button-blue small' id='join_button_" . $network['id'] . "'>Join</button>";
             }
             else {
                 echo "<button style='margin:0;' onclick='joinGroup("
                 . $group_id . ", " . $network['id'] . ");' "
-                . "class='pure-button-success small' "
+                . "class='pure-button-green small' "
                 . "id='join_button_" . $network['id'] . "' >Join</button>"
                 . "</td></tr><tr><td><button onclick='rejectGroup(" . $group_id . ", " . $network['id'] . ");' "
                 . "class='pure-button-error small' id='reject_button_" . $network['id'] . "'>Reject</button>";
@@ -515,7 +515,7 @@ class Notification {
             . str_replace('$user', Registry::get('user')->getName($network['user_id']), $this->phrase->get('connection_invite', 'en'))
             . "</p></td><td><table cellspacing='0' cellpadding='0'><tr><td>";
             if ($network['status'] == 2) {
-                echo "<button style='margin:0;' data-invite_id='".$network['id']."' class='pure-button-primary connect_accept'>Connect</button>";
+                echo "<button style='margin:0;' data-invite_id='".$network['id']."' class='pure-button-blue connect_accept'>Connect</button>";
             }
             echo "</td></tr></table></td></tr></table></li>";
         }

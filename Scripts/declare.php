@@ -1,30 +1,39 @@
 <?php
-
-require_once('system.class.php');
-require_once('phrase.class.php');
-require_once('user.class.php');
-require_once('entity.class.php');
-require_once('files.class.php');
-require_once ('facebook.class.php');
-require_once('calendar.class.php');
-require_once('group.class.php');
-require_once('notifications.class.php');
-require_once('home.class.php');
-
-Registry::setup();
-
 class Registry {
 
     static $objects = array();
 
-    static function getInstance() {
-        if (is_null(self :: $registry)) {
-            self :: $registry = new Registry();
-        }
-        return self :: $registry;
-    }
-
     public static function setup() {
+        if (!class_exists('System')) {
+            require 'system.class.php';
+        }
+        if (!class_exists('Phrase')) {
+            require 'phrase.class.php';
+        }
+        if (!class_exists('User')) {
+            require 'user.class.php';
+        }
+        if (!class_exists('Entity')) {
+            require 'entity.class.php';
+        }
+        if (!class_exists('Files')) {
+            require 'files.class.php';
+        }
+        if (!class_exists('FB')) {
+            require 'facebook.class.php';
+        }
+        if (!class_exists('Calendar')) {
+            require 'calendar.class.php';
+        }
+        if (!class_exists('Group')) {
+            require 'group.class.php';
+        }
+        if (!class_exists('Notification')) {
+            require 'notifications.class.php';
+        }
+        if (!class_exists('Home')) {
+            require 'home.class.php';
+        }
         self :: $objects['user'] = User::getInstance();
         self :: $objects['entity'] = Entity::getInstance();
         self :: $objects['calendar'] = Calendar::getInstance();
@@ -47,7 +56,7 @@ class Registry {
     public function __set($key, $value) {
         self :: $objects[$key] = $value;
     }
-    
+
     public static function set($key, $value) {
         self :: $objects[$key] = $value;
     }
@@ -55,9 +64,11 @@ class Registry {
     public function __get($key) {
         return self :: $objects[$key];
     }
-    
+
     public static function get($key) {
+        Registry::setup();
         return self :: $objects[$key];
     }
 
 }
+Registry::setup();

@@ -1,6 +1,6 @@
 <?php
 function print_body() {
-	global $feed_id, $home, $files, $user, $userid, $group, $database_connection;
+	global $feed_id, Registry::get('home'), $files, $user, $userid, Registry::get('group'), Registry::get('db');
 
 if (isset($_GET['id'])) {
     $userid = urldecode(base64_decode($_GET['id']));
@@ -33,7 +33,7 @@ else {
                                 . "<table style='height:100%;width:100%;'>"
                                 . "<tr style='vertical-align:middle;'>"
                                 . "<td style='text-align:center;'>"
-                                . "<button onclick='show_photo_choose();' class='profile_picture_upload pure-button-primary small'>Upload</button>"
+                                . "<button onclick='show_photo_choose();' class='profile_picture_upload pure-button-blue small'>Upload</button>"
                                 . "</td>"
                                 . "</tr>"
                                 . "</table>"
@@ -65,26 +65,26 @@ else {
                         if ($userid == $user->getId()) {
                             echo "<button onclick='window.location.assign(&quot;settings&quot;);' "
                             . "style='float:right;' "
-                            . "class='pure-button-primary'>Manage</button><br />";
+                            . "class='pure-button-blue'>Manage</button><br />";
                             echo "<button onclick='window.location.assign(&quot;stats&quot;);' "
                             . "style='float:right;' "
-                            . "class='pure-button-primary'>Stats</button>";
+                            . "class='pure-button-blue'>Stats</button>";
                         }
 
                         if ($userid != $user->getId()) {
-                            echo "<button style='float:right;' class='pure-button-primary connect_button'>Connect</button><br />";
+                            echo "<button style='float:right;' class='pure-button-blue connect_button'>Connect</button><br />";
                             echo "<div style='background-image:none;padding-right:0px;float:right;' wrapper_id='invite_selector' class='default_dropdown_actions'>
-				<button class='pure-button-primary connect_button'>Invite</button>";
+				<button class='pure-button-blue connect_button'>Invite</button>";
                             echo "<div id='invite_selector' class='default_dropdown_wrapper' style='display:none;float:right;'>";
                             echo "<ul class='default_dropdown_menu'>";
-                            foreach ($group->getUserGroups() as $users_group) {
+                            foreach (Registry::get('group')->getUserGroups() as $users_group) {
                                 $query1 = "SELECT group_id FROM group_member WHERE user_id = :user_id AND group_id = :group_id;";
-                                $query1 = $database_connection->prepare($query1, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+                                $query1 = Registry::get('db')->prepare($query1, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
                                 $query1->execute(array(":user_id" => $userid, "group_id" => $users_group));
                                 $query1 = $query1->fetchColumn();
 
                                 if ($query1 == "") {
-                                    $name = $group->getGroupName($users_group);
+                                    $name = Registry::get('group')->getGroupName($users_group);
                                     echo "<script name='text_append'>$('#invite_text_holder').show();</script>";
                                     echo "<li class='default_dropdown_item' "
                                     . "onclick='showInvite(\"" . $name
@@ -136,8 +136,8 @@ else {
                     }
                     else {
                         echo "<div id='main_file' class='file post_height_restrictor' style='border-bottom:1px solid lightblue;'>";
-                        foreach ($files->getSharedList($userid, $user->getId()) as $file) {
-                            $files->tableSort($file, false, true, $userid);
+                        foreach (Registry::get('files')->getSharedList($userid, $user->getId()) as $file) {
+                            Registry::get('files')->tableSort($file, false, true, $userid);
                         }
                         echo "</div>";
                     }

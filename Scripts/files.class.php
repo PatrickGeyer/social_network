@@ -1,6 +1,6 @@
 <?php
 
-class Files extends System {
+class Files {
     private static $files = NULL;
     public static $PARENT_DIR = NULL;
     public $extension_to_mime = array(
@@ -284,7 +284,7 @@ class Files extends System {
         if (!isset($file['uid'])) {
             $file['uid'] = str_replace('.', '', uniqid('', true));
         }
-        $file['enc_parent_folder_id'] = $this->encrypt($file['parent_folder_id']);
+        $file['enc_parent_folder_id'] = Registry::get('system')->encrypt($file['parent_folder_id']);
         $file['time'] = Registry::get('system')->format_dates($file['time']);
         if (!isset($file['view']['count'])) {
             $file['view']['count'] = $this->getViewCount($file['id']);
@@ -884,8 +884,8 @@ class Files extends System {
             if ($file['file']['name'] != "" || ".") {
                 $return_info = array();
                 $lastInsertId;
-                $name = preg_replace("/[^A-Za-z0-9 ]/", '', $this->stripexts($file['file']['name']));
-                $ext = $this->findexts($file['file']['name']);
+                $name = preg_replace("/[^A-Za-z0-9 ]/", '', Registry::get('system')->stripexts($file['file']['name']));
+                $ext = pathinfo($file['file']['name'], PATHINFO_EXTENSION);
                 $file_name = $name . ($ext != null && $ext != "" ? "." : "" ) . $ext;
                 $thumbnail = $savepath . $name . ".jpg";
 
@@ -961,7 +961,7 @@ class Files extends System {
                     }
 
                     if ($type == 'Image') {
-                        
+                        require 'thumbnail.php';
                         $resizeObj = new resize("../" . $savepath . $file_name);
                         $resizeObj->resizeImage(300, 300, 'crop');
                         $resizeObj->saveImage("../" . $thumbsavepath);
@@ -1026,7 +1026,7 @@ class Files extends System {
                     else {
                         $path = $this->getAttr($this->get_folder_file_id($parent_folder), 'path');
                     }
-                    $this->add_to_zip($path, array($savepath . $file_name), TRUE);
+//                    $this->add_to_zip($path, array($savepath . $file_name), TRUE);
                     return $this->format_file($this->getInfo($lastInsertId));
                 }
                 else {
@@ -1037,10 +1037,10 @@ class Files extends System {
     }
 
 }
-if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
     require('home.class.php');
-    $home = Home::getInstance($args = array());
-    $files = Files::getInstance($args = array());
+    $home = Home::getInstance();
+    $files = Files::getInstance();
     if (isset($_POST['dir'])) {
         $pdir = $_POST['dir'] . "/";
     }

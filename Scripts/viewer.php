@@ -4,7 +4,7 @@ include 'lock.php';
 $file_id = $_GET['id'];
 
 $sql = "SELECT * FROM files WHERE id = :file_id;";
-$sql = $database_connection->prepare($sql);
+$sql = Registry::get('db')->prepare($sql);
 $sql->execute(array(
     ":file_id" => $file_id
 ));

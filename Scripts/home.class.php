@@ -3,13 +3,13 @@
 class Home {
 
     private static $home = NULL;
-    private $user;
-    private $files;
 
     const SHOW_COMMENT_NUM = 5;
 
     public function __construct() {
-        
+        if (!class_exists('Registry')) {
+            require 'declare.php';
+        }
     }
 
     public static function getInstance() {
@@ -20,11 +20,11 @@ class Home {
         self :: $home = new Home();
         return self :: $home;
     }
-    
+
     public static function set($args) {
-    	foreach($args as $key => $value) {
-    		self :: $key = $value;
-    	}
+        foreach ($args as $key => $value) {
+            self :: $key = $value;
+        }
     }
 
     function printFileList($type = NULL) {
@@ -53,7 +53,7 @@ class Home {
         echo "data-file='" . $data_file . "'";
         echo ">";
         echo Registry::get('files')->filePreview($file, 'icon');
-        echo "<span class='search_option_name'>" . $this->trimStr($file['name'], 15) . "</span>";
+        echo "<span class='search_option_name'>" . Registry::get('system')->trimStr($file['name'], 15) . "</span>";
         //echo "<span class='search_option_info'> - ".$file['type']."</span>";
         echo "</div>";
         echo "</td></tr>";
@@ -505,10 +505,8 @@ class Home {
 
 }
 
-if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
-	//if(!class_exists($home)) {
-    //}
-    $home = Home::getInstance($args = array());
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
+    $home = Home::getInstance();
     if (isset($_POST['activity_id'])) {
         
     }

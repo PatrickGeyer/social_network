@@ -92,7 +92,7 @@ Registry::get('system')->getGlobalMeta();
                     </div>
                 </div>
                 
-                <button id="signup" onclick="signUp();" class="pure-button-success small">Sign Up</button>
+                <button id="signup" onclick="signUp();" class="pure-button-green small">Sign Up</button>
             </div>
             <a href='login'><button class="pure-button-neutral small">Back to Login</button></a>
         </div>

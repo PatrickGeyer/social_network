@@ -8,7 +8,7 @@ function login($user_id) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_query = "SELECT id FROM user WHERE email = :email AND password = :password;";
-    $user_query = $database_connection->prepare($user_query);
+    $user_query = Registry::get('db')->prepare($user_query);
     $user_query->execute(array(":email" => $_POST['email'], ":password" => Registry::get('system')->encrypt($_POST['password'])));
     $user_data = $user_query->fetchColumn();
     //die("ID:".$user_data. "EMAIL:".$_POST['email'] ."ENCRYOT:".Registry::get('system')->encrypt($_POST['password']));
@@ -25,7 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     else {
         $user_query = "SELECT password FROM user WHERE email = :email;";
-        $user_query = $database_connection->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":email" => $_POST['email']));
         $user_data = $user_query->fetchColumn();
         die('<p style="background-color:red;">' . Registry::get('system')->encrypt($_POST['password']) . ' <=> Your Email or Password is invalid</p>');
@@ -52,7 +52,7 @@ if ($fb_id) {
         header("location: home");
     } else {
         $sql = "SELECT id FROM user WHERE fb_id=:fb_id;";
-        $sql = $database_connection->prepare($sql);
+        $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":fb_id" => $fb_id
         ));
@@ -69,7 +69,7 @@ else {
         <?php
         Registry::get('system')->jsVars();
         // $sql = "SELECT * FROM user;";
-//         $sql = $database_connection->prepare($sql);
+//         $sql = Registry::get('db')->prepare($sql);
 //         $sql->execute();
 //         $users = $sql->fetchAll(PDO::FETCH_ASSOC);
 //         foreach($users as $user) {
@@ -275,9 +275,9 @@ else {
                         </tr>
                         <tr>
                             <td colspan="2">
-                                <button id="signup" onclick="signUp();" class="pure-button-success small">Sign Up</button>
+                                <button id="signup" onclick="signUp();" class="pure-button-green small">Sign Up</button>
                                 <a href='<?php echo Base::$FB_LOGIN;?>'>
-                                    <button class="pure-button-success small">Facebook Sign Up</button>
+                                    <button class="pure-button-green small">Facebook Sign Up</button>
                                 </a>
                             </td>
                         </tr>

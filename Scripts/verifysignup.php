@@ -15,7 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
    
 
     $user_query = "SELECT id, name, position FROM user WHERE email = :email";
-    $user_query = $database_connection->prepare($user_query);
+    $user_query = Registry::get('db')->prepare($user_query);
     $user_query->execute(array(":email" => $email));
     $count = $user_query->rowCount();
     $user_info = $user_query->fetch(PDO::FETCH_ASSOC);

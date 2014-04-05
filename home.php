@@ -1,7 +1,7 @@
 <?php
 function print_body() {
     if (TRUE) { 
-        global $files, $home, $group, $feed_id;
+        global $feed_id;
         ?>
         <div class="container">
             <div class='home_feed_post_container'>
@@ -32,8 +32,8 @@ function print_body() {
                                 <div id='file_share'>
                                     <table id='file_dialog' style='width:100%;' cellspacing="0" cellpadding="0">
                                         <?php
-                                        foreach ($files->getList_r() as $file) {
-                                            $home->fileList($file);
+                                        foreach (Registry::get('files')->getList_r() as $file) {
+                                            Registry::get('home')->fileList($file);
                                         }
                                         ?>
                                     </table>
@@ -42,7 +42,7 @@ function print_body() {
                         </tr>
                     </table>
                     <div id='post_more_options' class='post_more_options'>
-                        <button onclick="submitPost();" class="pure-button-success small">Post</button>
+                        <button onclick="submitPost();" class="pure-button-green small">Post</button>
                         <button id='attach_file_button' class='pure-button-neutral smallest' style="cursor:pointer;" onclick="$('#post_file').trigger('click');">+</button>
                         <input type="file" name="file" id="post_file" multiple style='display:none;' />
                         <div class='default_dropdown_selector' style='display:inline-block;' wrapper_id='audience_selector'>
@@ -53,10 +53,10 @@ function print_body() {
                                         <span>Everyone</span>
                                     </li>
                                     <?php
-                                    foreach ($group->getUserGroups() as $single_group) {
+                                    foreach (Registry::get('group')->getUserGroups() as $single_group) {
                                         echo "<li class='default_dropdown_item' "
                                         . "controller_id='audience_selector' share_id='" . $single_group . "'>";
-                                        echo "<span>" . $group->getGroupName($single_group) . "</span>";
+                                        echo "<span>" . Registry::get('group')->getGroupName($single_group) . "</span>";
                                         echo "</li>";
                                     }
                                     ?>

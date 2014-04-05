@@ -102,7 +102,7 @@ if (isset($_GET['tab'])) {
                                         <div>
                                             <img style='display:inline-block;' src='https://graph.facebook.com/<?php echo Base::$FB->getUser(); ?>/picture'></img>
                                             <a style='display:inline-block;vertical-align:top;' href='<?php echo Base::$FB->getLogoutUrl();?>'>
-                                                <button class='pure-button-success'>Unlink Facebook</button>
+                                                <button class='pure-button-green'>Unlink Facebook</button>
                                             </a>
                                         </div>
                                     </li>
@@ -184,7 +184,7 @@ if (isset($_GET['tab'])) {
                                             </li>
                                         <?php else : ?>In development<?php endif; ?>
                                         <li class="section">
-                                            <button id='update_settings' class='pure-button-success small' style=''>Update</button>
+                                            <button id='update_settings' class='pure-button-green small' style=''>Update</button>
                                         </li>
 
                                     </ul>

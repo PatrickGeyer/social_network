@@ -7,7 +7,7 @@ $activity_id = $_GET['a'];
 <div class="container" id="home_container">
     <div class='home_feed_post_container' style="padding-top:0px;border: 0px;">
         <?php
-        $home->homeify($home->getSingleActivity($activity_id));
+        Registry::get('home')->homeify(Registry::get('home')->getSingleActivity($activity_id));
         ?>
     </div>
 </div>

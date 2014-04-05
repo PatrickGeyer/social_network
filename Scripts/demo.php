@@ -57,6 +57,6 @@ else {
 $query = "INSERT INTO tracker (country, city, ip, query_string, http_referer, http_user_agent, isbot)
 				VALUES ('$country','$city', '$ip', '$query_string', '$http_referer' ,'$http_user_agent' , $isbot)";
 
-$query = $database_connection->prepare($query);
+$query = Registry::get('db')->prepare($query);
 $query->execute();
 ?>

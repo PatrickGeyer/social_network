@@ -34,7 +34,7 @@ else if (isset($_GET['c'])) {
 else if (isset($_GET['thread'])) {
     $current_thread = $_GET['thread'];
     $notification->markMessageRead("thread", $current_thread);
-    //$database_connection->query("UPDATE message_share SET `read` = 1, seen = 1 WHERE receiver_id =" . $user->getId() . " AND thread_id = " . $current_thread . ";");
+    //Registry::get('db')->query("UPDATE message_share SET `read` = 1, seen = 1 WHERE receiver_id =" . $user->getId() . " AND thread_id = " . $current_thread . ";");
 }
 else {
     $current_thread = $notification->getRecentThread();
@@ -43,7 +43,7 @@ else {
 if (isset($_GET['id'])) {
     $messageid = $_GET['id'];
     $notification->markMessageRead("id", $messageid);
-    if (!$database_connection->query("UPDATE message_share SET `read` = 1, seen=1 WHERE id = " . $messageid . ";")) {
+    if (!Registry::get('db')->query("UPDATE message_share SET `read` = 1, seen=1 WHERE id = " . $messageid . ";")) {
         
     }
 }
@@ -209,7 +209,7 @@ var MESSAGE_SCROLL = SCROLL_OPTIONS;
                     . "<textarea placeholder='Write a Reply...' class='message_reply_box' id='reply_value'></textarea>"
                     . "<div class='textarea_clone'></div>"
                     . "<div class='message_reply_options'>"
-                    . "<button style='float:right;' class='pure-button-primary small' id='message_reply_button'>Reply</button>"
+                    . "<button style='float:right;' class='pure-button-blue small' id='message_reply_button'>Reply</button>"
                     . "</div></div>";
                 }
                 else {

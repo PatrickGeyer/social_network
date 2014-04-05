@@ -3,15 +3,18 @@
 class Calendar {
 
     private static $calendar = NULL;
-    public $event_types = array();
+    private $event_types = array();
 
     public function __construct() {
+        if(!class_exists('Registry')) {
+            require 'declare.php';
+        }
         $this->event_types['Homework'] = array('color' => 'rgb(50, 150, 50)');
     	$this->event_types['Event']['color'] = 'rgb(0, 40, 180)';
     	$this->event_types['Meeting']['color'] = 'orange';
     }
 
-    public static function getInstance($args = array()) {
+    public static function getInstance() {
         if (self :: $calendar) {
             return self :: $calendar;
         }
@@ -19,71 +22,6 @@ class Calendar {
         self :: $calendar = new Calendar();
         return self :: $calendar;
     }
-
-    // function draw_calendar($month, $year, $events = array()) {
-    //     $events = $this->getEvents(date('Y-m-d H:i:s', strtotime('-1 month')), date('Y-m-d H:i:s', strtotime('+1 month')));
-    //     $calendar = '<div class="box_container"><h3>'.date('F Y', strtotime($year."-".$month)).'<button class="pure-button-neutral" id="create_event">Create Event</button></h3><table cellpadding="0" cellspacing="0" class="calendar">';
-
-    //     /* table headings */
-    //     $headings = array('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
-    //     $calendar.= '<tr class="calendar-row"><td class="calendar-day-head">' . implode('</td><td class="calendar-day-head">', $headings) . '</td></tr>';
-
-    //     /* days and weeks vars now ... */
-    //     $running_day = date('w', mktime(0, 0, 0, $month, 1, $year));
-    //     $days_in_month = date('t', mktime(0, 0, 0, $month, 1, $year));
-    //     $days_in_this_week = 1;
-    //     $day_counter = 0;
-    //     $dates_array = array();
-
-    //     /* row for week one */
-    //     $calendar.= '<tr class="calendar-row calendar-events-row">';
-
-    //     /* print "blank" days until the first of the current week */
-    //     for ($x = 0; $x < $running_day; $x++):
-    //         $calendar.= '<td class="calendar-day-np">&nbsp;</td>';
-    //         $days_in_this_week++;
-    //     endfor;
-
-    //     /* keep going with days.... */
-    //     for ($list_day = 1; $list_day <= $days_in_month; $list_day++):
-    //         $event_day = $year . '-' . $month . '-' . $list_day;
-    //         $date = new DateTime($event_day);
-    //         $event_day = $date->format('Y-m-d');
-    //         $calendar.= '<td class="calendar-day'.($event_day == date_format(new DateTime(), 'Y-m-d') ? "-current" : ""). ' "><div>';
-    //         /* add in the day number */
-    //         $calendar.= '<div class="day-number">' . $list_day . '</div>';
-    //         foreach ($events as $event) {   
-    //             if(date_format(new DateTime($event['start']), 'Y-m-d') == $event_day) {
-    //                 $calendar .= $this->draw_event($event);
-    //             }
-    //         }
-    //         $calendar.= '</div></td>';
-    //         if ($running_day == 6):
-    //             $calendar.= '</tr>';
-    //             if (($day_counter + 1) != $days_in_month):
-    //                 $calendar.= '<tr class="calendar-row  calendar-events-row">';
-    //             endif;
-    //             $running_day = -1;
-    //             $days_in_this_week = 0;
-    //         endif;
-    //         $days_in_this_week++;
-    //         $running_day++;
-    //         $day_counter++;
-    //     endfor;
-
-    //     /* finish the rest of the days in the week */
-    //     if ($days_in_this_week < 8):
-    //         for ($x = 1; $x <= (8 - $days_in_this_week); $x++):
-    //             $calendar.= '<td class="calendar-day-np">&nbsp;';
-    //             $calendar .= "</td>";
-                
-    //         endfor;
-    //     endif;
-
-    //     $calendar.= '</tr>';
-    //     $calendar.= '</table></div>';
-    //     return $calendar;
-    // }
     
     function get_calendar($month, $year, $events = array()) {
         $calendar = array();
@@ -328,9 +266,9 @@ class Calendar {
 
 }
 
-if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
     if (isset($_POST['action'])) {
-        $calendar = Calendar::getInstance($args = array());
+        $calendar = Calendar::getInstance();
         if($_POST['action'] == "createEvent") {
             $receivers = array();
             if(isset($_POST['receivers'])) {
@@ -363,7 +301,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
     }
 } else if($_SERVER['REQUEST_METHOD'] == "GET") {
     if(isset($_GET['action'])) {
-        $calendar = Calendar::getInstance($args = array());
+        $calendar = Calendar::getInstance();
         if($_GET['action'] == 'get_events') {
             die(json_encode($calendar->get_events(date('Y:m:d 00:00:00'), date('Y:m:d H:i:s', strtotime("+1 year")), $_GET['limit'])));
         }

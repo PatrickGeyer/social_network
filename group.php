@@ -5,18 +5,18 @@ include_once('chat.php');
 
 $group_id = urldecode(base64_decode($_GET['id']));
 
-$leader_query = "SELECT id, name, position FROM user WHERE id = " . $group->getFounderId($group_id) . "";
-$leader_query = $database_connection->prepare($leader_query);
+$leader_query = "SELECT id, name, position FROM user WHERE id = " . Registry::get('group')->getFounderId($group_id) . "";
+$leader_query = Registry::get('db')->prepare($leader_query);
 $leader_query->execute();
 $leader = $leader_query->fetch();
 
 
-$is_member = $group->isMember($user->getId(), $group_id);
+$is_member = Registry::get('group')->isMember($user->getId(), $group_id);
 
 $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE 
 id IN (SELECT activity_id FROM activity_share WHERE group_id = :group_id  AND direct = true)
 ORDER BY time DESC";
-$activity_query = $database_connection->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+$activity_query = Registry::get('db')->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
 $activity_query->execute(array(":group_id" => $group_id));
 
 
@@ -30,7 +30,7 @@ else {
 <head>
     <link rel="stylesheet" type="text/css" href="CSS/home.css">
     <link rel="stylesheet" type="text/css" href="CSS/user.css">
-    <title>Group - <?php echo $group->getGroupName($group_id); ?></title>
+    <title>Group - <?php echo Registry::get('group')->getGroupName($group_id); ?></title>
     <script>
         var receivers = [];
         function sendMessage()
@@ -93,9 +93,9 @@ else {
         <table class='info_table_layout'>
             <tr>
                 <td style='width:220px;'>
-                    <div class='profilepicturediv' style='background-image:url("<?php echo $group->getProfilePicture('thumb', $group_id); ?>");'>
+                    <div class='profilepicturediv' style='background-image:url("<?php echo Registry::get('group')->getProfilePicture('thumb', $group_id); ?>");'>
 <?php
-//if($user->getId() == $group->getFounder())
+//if($user->getId() == Registry::get('group')->getFounder())
 // {
 // 	echo "
 // <div class='profile_picture_upload'>
@@ -113,9 +113,9 @@ else {
                 </td>
                 <td>
                     <div class="pseudonym">
-                        <p class='name_title'><?php echo $group->getGroupName($group_id); ?></p>
+                        <p class='name_title'><?php echo Registry::get('group')->getGroupName($group_id); ?></p>
                              <?php
-                             if ($group->getAbout($group_id) != "") {
+                             if (Registry::get('group')->getAbout($group_id) != "") {
                                  echo "<div style='margin-top:10px;'>
 							<img id='about_saved' style='display:none;' title='Saved' src='Images\Icons\icons/tick-circle.png'></img>
 							</div>";
@@ -124,7 +124,7 @@ else {
                                  //{
                                  //	echo "title='Click to Edit' contenteditable ";
                                  //}
-                                 echo " id='about_edit_show' style='font-size:13px;padding:3px;width:100%;'>" . $group->getAbout($group_id);
+                                 echo " id='about_edit_show' style='font-size:13px;padding:3px;width:100%;'>" . Registry::get('group')->getAbout($group_id);
                                  echo "</div>";
                              }
                              ?>
@@ -134,7 +134,7 @@ else {
                         <?php
                         // if($userid == $user->getId())
                         // {
-                        // 	echo "<button onclick='window.location.assign(&quot;settings&quot;);' style='position:absolute; right:10px; top:15px;' class='pure-button-success small'>Manage</button>";
+                        // 	echo "<button onclick='window.location.assign(&quot;settings&quot;);' style='position:absolute; right:10px; top:15px;' class='pure-button-green small'>Manage</button>";
                         // }
                         // if($userid != $user->getId())
                         // {
@@ -142,17 +142,17 @@ else {
                         // 	Invite to Group";
                         // 	echo "<div id='invite_selector' class='default_dropdown_wrapper' style='display:none;float:right;'>";
                         // 	echo "<ul class='default_dropdown_menu'>";
-                        // 	foreach($group->getUserGroups() as $users_group)
+                        // 	foreach(Registry::get('group')->getUserGroups() as $users_group)
                         // 	{
                         // 		$query1 = "SELECT group_id FROM group_member WHERE member_id = :user_id AND group_id = :group_id;";
-                        // 		$query1 = $database_connection->prepare($query1, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+                        // 		$query1 = Registry::get('db')->prepare($query1, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
                         // 		$query1->execute(array(":user_id" => $userid, "group_id" => $users_group));
                         // 		$query1 = $query1->fetchColumn();
                         // 		if($query1 == "")
                         // 		{
                         // 			echo "<script name='text_append'>$('#invite_text_holder').show();</script>";
                         // 			$query_group1 = "SELECT * FROM `group` WHERE id = :group_id AND allow_member_invite = 1;";
-                        // 			$query_group = $database_connection->prepare($query_group1, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+                        // 			$query_group = Registry::get('db')->prepare($query_group1, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
                         // 			$query_group->execute(array(":group_id" => $users_group));
                         // 			$group_info = $query_group->fetch(PDO::FETCH_ASSOC);
                         // 			echo "<li class='default_dropdown_item'
@@ -169,13 +169,13 @@ else {
         </table>
         <div style='float:right;'>
                     <?php
-                    if ($group->getFounderId($group_id) == $user->getId()) {
+                    if (Registry::get('group')->getFounderId($group_id) == $user->getId()) {
                         echo '<button class="pure-button-error action small" onclick="deleteGroup(' . $group_id . ');">Delete Group</button>';
-                        echo '<button class="pure-button-success action small" onclick="editGroup(' . $group_id . ');">Edit</button>';
+                        echo '<button class="pure-button-green action small" onclick="editGroup(' . $group_id . ');">Edit</button>';
                     }
 
                     if ($is_member == true) {
-                        echo '<button class="pure-button-primary action small" onclick="leaveGroup(' . $group_id . ');">Leave Group</button>';
+                        echo '<button class="pure-button-blue action small" onclick="leaveGroup(' . $group_id . ');">Leave Group</button>';
                     }
                     ?>
         </div>
@@ -202,13 +202,13 @@ if ($feed_id == "p") {
     $array = $activity_query->fetchAll(PDO::FETCH_ASSOC);
     $count = count($array);
     foreach ($array as $activity) {
-        $home->homeify($activity, $database_connection, $user);
+        Registry::get('home')->homeify($activity, Registry::get('db'), $user);
     }
 }
 else {
     echo "<div id='main_file' class='file' style='border-bottom:1px solid lightblue;'>";
-    foreach ($files->getSharedList($group_id, $user->getId(), "group") as $file) {
-        $files->tableSort($file, false, true, $userid);
+    foreach (Registry::get('files')->getSharedList($group_id, $user->getId(), "group") as $file) {
+        Registry::get('files')->tableSort($file, false, true, $userid);
     }
     echo "</div>";
 }

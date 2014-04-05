@@ -55,7 +55,7 @@ if (!isset($page_identifier)) {
             ?>"><a class="nav_option ellipsis_overflow" href="message">Inbox</a></li>
         </ul>
     </div>
-    <!--        <button style='float:right;margin-top:10px;' class='pure-button-primary smallest' onclick='' title='Create a Group'>+</button>-->
+    <!--        <button style='float:right;margin-top:10px;' class='pure-button-blue smallest' onclick='' title='Create a Group'>+</button>-->
     <?php
     if ($page_identifier != "inbox") :
         include_once ("friends_list.php");
@@ -63,7 +63,7 @@ if (!isset($page_identifier)) {
             <div class="messagecomplete">
             <div id="message" class="messagehi">
                 <div id= "messagetoolbox" class="messagetoolbox" style="border-left: 1px solid lightgrey;">
-                    <button onclick='composeMessage();' title="Compose a message" class="pure-button-primary smallest" id='message_compose'>Compose</button>
+                    <button onclick='composeMessage();' title="Compose a message" class="pure-button-blue smallest" id='message_compose'>Compose</button>
                 </div>
                 <div style='border:0;max-height:65%;overflow-x:hidden;' class="scroll_thin">
                     <ul class="message_list_container">

@@ -113,12 +113,12 @@ function print_body() {
                                             <input type="file" name="file" id="folder" directory="" webkitdirectory="" mozdirectory="" />
                                         </td>
                                         <td>
-                                            <button class='pure-button-success small files_upload_option' onclick='uploadFile("folder", "#folder");'>Upload Folder</button>
+                                            <button class='pure-button-green small files_upload_option' onclick='uploadFile("folder", "#folder");'>Upload Folder</button>
                                         </td>
                                     </tr>
                                 </table>
                             </div>
-                            <button style='float:right;' id="folder_upload_option" class="pure-button-success small files_upload_option" onclick="showUpload('folder');">
+                            <button style='float:right;' id="folder_upload_option" class="pure-button-green small files_upload_option" onclick="showUpload('folder');">
                                 <img style='height: 30px; width:30px' src='Images/Icons/Icon_Pacs/typicons.2.0/png-48px/folder-add-white.png'></img>
                             </button>
                         </td>-->

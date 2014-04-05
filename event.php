@@ -145,7 +145,7 @@ include_once('chat.php');
                         </div>
                     </li>
                     <li class='section'>
-                        <button id='create_event' class='pure-button-success'><?php echo ($event_action == 'edit' ? "Save Event" : "Create Event"); ?></button>
+                        <button id='create_event' class='pure-button-green'><?php echo ($event_action == 'edit' ? "Save Event" : "Create Event"); ?></button>
                         <span id='event_share_receiver_count' class='post_comment_time'></span>
                     </li>
                 </ul>
@@ -215,8 +215,8 @@ include_once('chat.php');
                         <?php if($event['user_id'] == $user->user_id) { ?>
                         <button id='delete_button' class='pure-button-warning'>Remove</button>
                         <?php } ?>
-                        <a style='display:inline-block;' href='event?e=<?php echo $event_id; ?>&action=edit'><button class='pure-button-success'>Edit Event</button></a>
-                        <button id='complete_button' class='pure-button-primary'>Complete</button>
+                        <a style='display:inline-block;' href='event?e=<?php echo $event_id; ?>&action=edit'><button class='pure-button-green'>Edit Event</button></a>
+                        <button id='complete_button' class='pure-button-blue'>Complete</button>
                     </li>
                 </ul>
 <?php endif; ?>
