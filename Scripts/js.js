@@ -660,16 +660,16 @@ Application.prototype.file.print_row = function(file) {
     var string = '';
 
     if (file.type != "Folder") {
-        string += "<div data-file_id='" + file.id + "' class='files'>";
+        string += "<div data-file_id='" + file.id + "' class='contentblock files'>";
     } else {
-        string += "<div data-file_id='" + file.id + "' class='folder'>"; // SAME
+        string += "<div data-file_id='" + file.id + "' class='contentblock folder'>"; // SAME
     }
     string += "<div class='files_icon_preview' style='background-image:url(\"" + file.type_preview + "\");'></div>";
     string += "<p class='files ellipsis_overflow'>" + file.name + "</p>";
 
     string += "<div class='files_actions'><table cellspacing='0' cellpadding='0'><tr style='vertical-align:middle;'><td>";
 
-    string += "<a href='" + file.path + "' download><div class='files_actions_item files_actions_download'></div></a></td><td>";
+    string += "<a href='download.php?id=" + file.id + "' download><div class='files_actions_item files_actions_download'></div></a></td><td>";
     string += "<hr class='files_actions_seperator'></td><td>";
 
     string += "<div class='files_actions_item files_actions_delete' "
@@ -768,7 +768,7 @@ Application.prototype.file.print = function(file, activity_type) {
     if (file.user_id == USER_ID && activity_type != 'File') {
         post_content += "<div style='background-image: url(\"" + DELETE + "\");' class='delete_cross delete_cross_top remove_event_post'></div>";
     }
-    post_content += "</div>";
+    post_content += "</div></div></div>";
 
     if (activity_type == "Text" && typeof file.activity != 'undefined') {
         post_content += '<div class="comment_box">';
@@ -778,7 +778,7 @@ Application.prototype.file.print = function(file, activity_type) {
         post_content += Application.prototype.feed.comment.printInput(file.activity.id);
         post_content += "</div>";
     }
-    post_content += "</div></div>"; //CLOSE file_activity_section AND POST_CONTENT;
+    post_content += ""; //CLOSE file_activity_section AND POST_CONTENT;
 
     if (activity_type == "File" && typeof file.share != 'undefined') {
         //WHO IS FILE SHARED WITH?
@@ -826,7 +826,7 @@ Application.prototype.file.printDoc = function(file) {
     string += path + "&quot;); " + preview_styles + "'>" + preview_content + "</div>";
     string += "<div class='file_activity_section'>";
     string += "<a class='user_preview_name' target='_blank' href='" + link + "'>";
-    string += "<p style='margin:0px;font-size:13px;'>";
+    string += "<p class='ellipsis_overflow' style='word-break:break-word; '>";
     string += file.name + "</p></a>";
     if (post_content_under_title != "") {
         string += post_content_under_title;

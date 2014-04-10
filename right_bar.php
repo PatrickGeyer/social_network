@@ -17,6 +17,7 @@ $calendar = new Calendar();
         echo "<div class='event contentblock'>"
         . "<a href='https://www.google.co.uk/chrome'><button class='pure-button-blue pure-button-round'>Get Chrome</button></a></div>";
     }
+    require 'chat.php';
     echo "</div>";
     ?>
 </div>

@@ -173,10 +173,10 @@ function print_header($PRINT = TRUE) {
                         }
                         ?>"></a>
                     </div>
-                    <a href="#" class="no-ajaxy center fa fa-th fa-2x"></a>
+                    <a href="#" class="no-ajaxy center"></a>
                 </div>
                 <div class='global_header_container'>
-                    <div class='search_container' style='float:left;'>
+                    <div class='search_container contentblock' style='float:left;'>
                         <input class="search_box search" autocomplete='off' mode='universal' type='text' id='names_input' placeholder='Search for people, groups and files' name='receiver'>
                         <div class="search_results" id='names_universal'></div>
                     </div>
@@ -222,12 +222,12 @@ function print_header($PRINT = TRUE) {
                 </div>
                 <div class='global_media_container'></div>
                 <div class="gear">
-                    <a style = "cursor:pointer;">
+                    <a style="cursor:pointer;">
                         <img id="gear_click" style="z-index:11; width:16px; height:16px; " class="logout_image_small message" src ="Images\Icons\Icon_Pacs\Batch-master\Batch-master\PNG\16x16\settings-2.png"></img>
                     </a>
                     <div style="display:none;" id="geardiv" class="geardiv">
                         <ul> 
-                            <li class=""><a title"Logout" href="Scripts/logout.php">Logout</a></li> 
+                            <li class=""><a class='no-ajax' title"Logout" href="Scripts/logout.php">Logout</a></li> 
                             <li class=""><a href="">Privacy</a></li> 
                         </ul> 
                     </div>

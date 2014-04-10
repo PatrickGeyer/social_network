@@ -22,8 +22,7 @@ a {
 }
 
 .circle {
-    position: absolute;
-    left: 0px;
+    float: left;
     margin: 0;
     top: -65px;
     -webkit-transition: all 0.4s ease-out;
@@ -84,6 +83,10 @@ a {
     -webkit-transform: rotate(0deg);
     -moz-transform: rotate(0deg);
     transform: rotate(0deg);
+    
+    background-image: url('../Images/Icons/logo/logo_white.png');
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .open .center {
@@ -121,9 +124,6 @@ a {
 }
 /*END STICKIES*/
 .box_container{
-    outline: 2px solid #EFEFEF;
-    border: 1px solid lightgrey;
-    margin: 10px;
 }
 
 .box_container > h3{
@@ -219,6 +219,9 @@ h3 > button{
 	box-sizing: border-box;
 	-moz-box-sizing:border-box;
 	color: rgb(136, 136, 136);
+}
+.contentblock:first-of-type{
+    margin-top: 0px;
 }
 .contentblock > h4 {
 	color: rgb(68, 68, 68) !important;
@@ -398,22 +401,13 @@ input[type="text"], input[type="password"] {
     background-color:white;
     font-size: 13px;
     padding:7px;
-    border-style:solid;
-    border-color:lightgrey;
-    border-width: 1px;
-    border-radius: 0px;
-    text-decoration:none;
-    border-radius: 2px;
-    transition: all 0.2s ease-in-out;
-    -webkit-transition: all 0.2s ease-in-out;
-    -moz-transition: all 0.2s ease-in-out;
-    -o-transition: all 0.2s ease-in-out;
+    border: 1px solid lightgrey;
 }
 
 input:focus, textarea:focus, div[contenteditable]:focus{  
     outline: none !important;
     border:1px solid rgb(0, 140, 250) !important;
-    box-shadow: 0 0 5px #EDEDED !important;
+    /*box-shadow: 0 0 5px #EDEDED !important;*/
 }
 .default_dropdown_selector:focus {
     outline: none !important;
@@ -777,7 +771,7 @@ input[type="file"] {
     border: 0px;
     margin-right: 5px;
     display: inline-block;
-    border-radius: 50%;
+    border-radius: 5%;
 }
 .profile_picture_icon:hover, 
 .profile_picture_medium:hover, 
@@ -1104,7 +1098,9 @@ span.message_delete_receiver:hover{
 
 .global_header_container .search_container {
     margin-right: 10px;
-    margin-left: -20px;
+    padding: 0px;
+    height: 35px;
+    /*border-bottom: 2px solid #e4e4e4;*/
 }
 .global_media_container {
     float: right;
@@ -1143,14 +1139,6 @@ background-image: -webkit-linear-gradient(#f9f9f9, #f3f3f3);
     /*border-bottom: 1px solid lightgrey;*/
 }
 
-div.navigation{
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-    float: left;
-    opacity: 0;
-}
-
 .global_header_icon_container{
     margin-top: 5px;
     margin-right: -15px;
@@ -1184,15 +1172,11 @@ div.search_results{
 }
 
 input[type="text"].search_box{
-    font-size:0.8em;
-    max-height: 28px;
     width: 350px;
     background-color:white;
     color:black;
-    padding:5px;
-    border:1px solid rgb(31, 85, 255);
-    text-decoration:none;
-    margin-top: 2px;
+    height: 100%;
+    border: 0px !important;
     background-position: 98% 50%; 
     padding-right:35px;
     background-repeat: no-repeat;
@@ -1401,13 +1385,6 @@ a.none:hover{
 
 #messagediv:before{
     left: 0px;
-}
-
-.logo{
-    cursor:pointer;
-    color:white;
-    font-weight: lighter;
-    font-size:1.6em;
 }
 
 div.popup_div{
@@ -1649,15 +1626,14 @@ div.global_container {
     z-index: 3;
     position: relative;
     top:35px;
-    height: 100%;
+    padding-top: 70px;
     text-align: middle;
 }
-
+.content{
+    min-height: 600px;
+}
 .left_bar_container{
-    position: absolute;
-    left: 0px;
-    top: 0px;
-    bottom: 0px;
+    float: left;
     width: 200px;
     z-index: 1;
     /* 
@@ -1666,23 +1642,22 @@ div.global_container {
 }
 
 .right_bar_container {
-    /*position: absolute;
-    right: 270px;*/
-    padding-top: 22px;
-    margin-left: 15px;
-    float: left;
-    width: 274px; /* - 15 px fopr padding -- -1 for border*/
+    float: right;
+    width: 250px; /* - 15 px fopr padding -- -1 for border*/
+    position: relative;
 }
-.right_bar_shift {
+/*.right_bar_shift {
     position: relative;
     float: left;
     margin-left: 5px;
     margin-top: 22px;
     margin-right: 5px;
     right: 0px;
-}
+}*/
 div.container{
-    float: left;
+    display: block;
+    margin-left: 200px;
+    margin-right: 270px;
     position: relative;
     padding-bottom: 10px;
     text-align: middle;	
@@ -1693,7 +1668,7 @@ div.container{
 .container, .global_header_container {
     margin: auto;
     min-width: 490px;
-    width:650px;
+    /*width:650px;*/
     padding-left: 20px;
     padding-right: 20px;
 }
@@ -1701,12 +1676,12 @@ div.container{
     display: inline-block !important;
     float: left;
 }
+
 .global_container, .global_header {
     min-width: 981px;
     max-width:981px;
     margin: auto;
     padding-right:200px;
-    padding-left: 210px;
     white-space: nowrap;
 }
 
@@ -1962,8 +1937,6 @@ div#friend_load .timestamp{
 .friends_bar li{
     background-repeat: no-repeat;
     border:0px;
-    width:200px;
-    border: 0px;
 }
 .friends_bar li:hover {
     background-color: white;
@@ -2447,7 +2420,7 @@ table.singleupdate{
     background-image: url('../Images/stripe.png');
 }
 .post_feed_item .comment_box{
-    margin-top: 10px !important;
+    margin: 10px !important;
 }
 .post_feed_media_wrapper .file_info{
     display: none;
@@ -2548,7 +2521,7 @@ table.singleupdate{
     background-position: center;
     background-size: cover;
     background-color: #EDEDED;
-    border: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;
     min-height: 130px;
     height: 150px;
     width: 150px;
@@ -2573,10 +2546,11 @@ table.singleupdate{
 
 .post_feed_item {
     white-space: nowrap;
+    background-color: rgb(250, 250, 250);
+    border: 1px solid lightgrey;
 }
 
-.post_feed_item > * {
-    display: inline-block;
+.post_feed_item > *:not(.comment_box) {
     vertical-align: top;
     white-space: normal;
 }
@@ -2585,8 +2559,8 @@ table.singleupdate{
     display: block;
     overflow: hidden;
     padding: 10px;
-    border: 1px solid lightgrey;
-    background-color: rgb(250, 250, 250);
+    border-left: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;
     position: relative;
     min-height: 130px;
 }
@@ -3147,8 +3121,8 @@ div.files, div.folder{
     padding-right: 0px;
     position:relative;
     min-height: 30px;
-    border-top:1px solid lightblue;
     background-color: white;
+    margin-top: 1px;
 }
 div.files:hover, div.folder:hover{
 
@@ -3161,11 +3135,11 @@ div.files:hover, div.folder:hover{
 }
 div.folder{
     cursor: pointer;
-    border-left: 1px solid limegreen;
+    border-color: 1px solid limegreen !important;
 
 }
 div.files{
-    border-left: 1px solid rgb(0, 140, 250);
+    border-color: 1px solid rgb(0, 140, 250) !important;
 }
 
 .file_folder_active{

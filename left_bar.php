@@ -4,57 +4,6 @@ if (!isset($page_identifier)) {
 }
 ?>
 <div class='left_bar_container'>
-    <div class="navigation">
-        <ul class="navigation_list">
-            <li style='margin-bottom: 10px;' class="nav_option ellipsis_overflow  <?php echo ($page_identifier == "user" ? "current_page current_page_user" : ""); ?>">
-                <div class="user_info">
-                    <table cellspacing='0' cellpadding='0'>
-                        <tr style='vertical-align:top;'>
-                            <td>
-                                <div class='welcome_user_profile_picture' style='background-image:url("<?php echo Registry::get('user')->getProfilePicture("chat"); ?>");'></div>
-                            </td>
-                            <td>
-                                <div class='welcome_user_info'>
-                                    <a href="user">
-                                        <span style='font-size:13px;' class="user_preview_name">
-                                            <?php
-                                            echo Registry::get('system')->trimStr(Registry::get('user')->getName(), 20);
-                                            ?>
-                                        </span>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </li> 
-           <li style='background-image:url("Images/Icons/icons/home.png");' class="nav_option ellipsis_overflow 
-            <?php
-            if ($page_identifier == "home") {
-                echo "current_page";
-            }
-            ?>
-                "><a class="nav_option ellipsis_overflow" href="home">Home</a></li> 
-            
-            <li style='background-image:url("Images/Icons/icons/paper-clip.png");' class="nav_option <?php
-            if ($page_identifier == "files") {
-                echo "current_page";
-            }
-            ?>"><a class="nav_option ellipsis_overflow" href="files">My Files</a></li> 
-
-            <li style='background-image:url("Images/Icons/icons/paper-clip.png");' class="nav_option <?php
-            if ($page_identifier == "calendar") {
-                echo "current_page";
-            }
-            ?>"><a class="nav_option ellipsis_overflow" href="calendar">Calendar</a></li> 
-
-            <li style='background-image:url("Images/Icons/icons/mail.png");' class="nav_option <?php
-            if ($page_identifier == "inbox") {
-                echo "current_page";
-            }
-            ?>"><a class="nav_option ellipsis_overflow" href="message">Inbox</a></li>
-        </ul>
-    </div>
     <!--        <button style='float:right;margin-top:10px;' class='pure-button-blue smallest' onclick='' title='Create a Group'>+</button>-->
     <?php
     if ($page_identifier != "inbox") :

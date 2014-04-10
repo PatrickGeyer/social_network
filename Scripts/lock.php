@@ -9,14 +9,15 @@ else {
     if ($REQUEST == "FIRST") {
         require_once 'js.php';
         require_once 'welcome.php';
-        require_once 'chat.php';
-        echo '<div class="global_container">';
+        echo '<div class="global_container"><div class="content">';
         require_once 'left_bar.php';
-        print_body();
         require_once 'right_bar.php';
-        echo "</div>";
-    } else {
-     print_body();
+
+        print_body();
+        echo "</div></div>";
+    }
+    else {
+        print_body();
     }
 }
 ?>

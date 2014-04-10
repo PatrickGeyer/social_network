@@ -37,7 +37,7 @@ $chat_rooms = $chat->get_chat_rooms();
 </head>
 
 <?php foreach ($chat_rooms as $single_group) { ?>
-    <div class="chatcomplete" data-chat_room="<?php echo $single_group['id']; ?>">
+    <div class="chatcomplete contentblock" data-chat_room="<?php echo $single_group['id']; ?>">
         <div id='feed_wrapper_scroller' class='chatheader'>
             <div class='chat_feed_selector <?php echo ($chat_feed == $single_group['id'] ? "active_feed" : "") ?>'>
                 <h3 class='chat_header_text ellipsis_overflow'><?php echo $single_group['name']; ?></h3>
