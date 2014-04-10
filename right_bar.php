@@ -14,7 +14,7 @@ $calendar = new Calendar();
     //     ."<div class='paste_pad' contenteditable></div></div>";
     // }
     if (strpos($_SERVER['HTTP_USER_AGENT'], 'Chrome') === false) {
-        echo "<div class='event event_expanded event_white'>"
+        echo "<div class='event contentblock'>"
         . "<a href='https://www.google.co.uk/chrome'><button class='pure-button-blue pure-button-round'>Get Chrome</button></a></div>";
     }
     echo "</div>";

@@ -421,7 +421,6 @@ class User {
         if ($id == null) {
             $id = $this->user_id;
         }
-        //Registry::get('db')->prepare("UPDATE user SET online = 1 WHERE id = " . $id . ";")->execute();
         Registry::get('db')->prepare("UPDATE user SET last_activity = NOW() WHERE id = " . $id . ";")->execute();
     }
 

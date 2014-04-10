@@ -4,7 +4,7 @@ function print_body() {
         global $feed_id;
         ?>
         <div class="container">
-            <div class='home_feed_post_container'>
+            <div class='contentblock home_feed_post_container'>
                 <div class='home_feed_post_container_arrow_border'>
                     <div class='home_feed_post_container_arrow'></div>
                 </div>
@@ -42,11 +42,12 @@ function print_body() {
                         </tr>
                     </table>
                     <div id='post_more_options' class='post_more_options'>
-                        <button onclick="submitPost();" class="pure-button-green small">Post</button>
+                        <button class="post-button pure-button-green small">Post</button>
                         <button id='attach_file_button' class='pure-button-neutral smallest' style="cursor:pointer;" onclick="$('#post_file').trigger('click');">+</button>
                         <input type="file" name="file" id="post_file" multiple style='display:none;' />
                         <div class='default_dropdown_selector' style='display:inline-block;' wrapper_id='audience_selector'>
                             <span class='default_dropdown_preview'>Everyone</span>
+                            <i class='fa fa-angle-down'></i>
                             <div class='default_dropdown_wrapper' style='display:none;' id='audience_selector'>
                                 <ul class='default_dropdown_menu'>
                                     <li class='default_dropdown_item' controller_id='audience_selector' share_id='a'>
@@ -97,11 +98,6 @@ function print_body() {
                         $(this).text(COMMENT_LIKE_TEXT);
                         $(this).attr('has_liked', 'false')
                     }
-                });
-
-                $("#post_file").change(function(e)
-                {
-                    uploadFile($(this), 'addToStatus');
                 });
 
                 $('#status_text').focus(function() {

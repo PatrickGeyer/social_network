@@ -33,15 +33,20 @@ Application.prototype.file = {
     files: new Array()
 };
 Application.prototype.chat = {
+    room : new Array()
 };
 Application.prototype.generic = {
 };
 Application.prototype.feed = {
     comment: {
         comments: new Array()
+    },
+    post: {
+    	files: new Array()
     }
 };
 Application.prototype.calendar = {
+	event : {}
 };
 Application.prototype.UI = {
     progress: {
@@ -309,7 +314,7 @@ String.prototype.replaceEmoticons = function() {
 
     return this.replace(new RegExp(patterns.join('|'), 'g'), function(match) {
         return typeof emoticons[match] != 'undefined' ?
-                '<img onload="scroll2Bottom(false, chat_room);" src="Images/' + emoticons[match] + '"/>' :
+                '<img onload="Application.prototype.chat.scroll2Bottom(false, chat_room);" src="Images/' + emoticons[match] + '"/>' :
                 match;
     });
 };
@@ -554,7 +559,7 @@ Application.prototype.notification.getNotificationNumber = function() {
 
 Application.prototype.file.upload.upload = function(files, onStart, onProgress, onComplete, properties) {
     if ($('.upload_file_container').length == 0) {
-        var file_container = $('<div class="event upload_file_container"></div>');
+        var file_container = $('<div class="event upload_file_container contentblock"></div>');
         file_container.append("<a>Upload</a>");
         var file_upload_container = $('<div class="calendar-event-info-files"></div>');
         file_container.append(file_upload_container);
@@ -832,12 +837,12 @@ Application.prototype.file.printDoc = function(file) {
     }
     string += "";
     string += "<div style='margin-top:5px;'>";
-    string += "<img class='heart_like_icon' src='" + HEART_ICON + "'></img><span class='post_comment_time post_like_count'>" + file.like.count + "</span>";
+    string += "<i class='heart_like_icon fa fa-heart'></i><span class='post_comment_time post_like_count'>" + file.like.count + "</span>";
     if (typeof file.activity.comment != 'undefined') {
-        string += "<img class='heart_like_icon' src='" + COMMENT_ICON + "'></img><span class='post_comment_time post_comment_count'>"
+        string += "<i class='fa fa-comment heart_like_icon'></i><span class='post_comment_time post_comment_count'>"
                 + (parseInt(file.activity.comment.comment.length) + parseInt(file.activity.comment.hidden)) + "</span>";
     }
-    string += "<img class='heart_like_icon' src='" + EYE_ICON + "'></img><span class='post_comment_time'>" + file.view.count + "</span><br />";
+    string += "<i class='fa fa-eye heart_like_icon'></i><span class='post_comment_time'>" + file.view.count + "</span><br />";
 //    string += "<div class='file_info'><span class='post_comment_time'>Uploaded: " + file.time + "</span><br />";
 //    string += "<span class='post_comment_time'>Size: " + file.size + " bits</span><br />";
 //    string += "<span class='post_comment_time'>Type: " + file.type + "</span></div>";
@@ -845,7 +850,7 @@ Application.prototype.file.printDoc = function(file) {
     string += "</div>";
 
     string += "<div style='margin-top:5px;'>";
-    string += "<a href='" + file.path + "' download>" + "<button class='pure-button-green'><i class='fa fa-cloud-download'></i><span></span></button></a>";
+    string += "<a class='no-ajax' href='download.php?id=" + file.id + "'>" + "<button class='pure-button-green'><i class='fa fa-cloud-download'></i><span></span></button></a>";
     string += "<button has_liked='" + (file.activity.stats.like.has_liked === true ? "true" : "false") + "' class='activity_like_text post_like_activity " 
             + "pure-button-neutral " + (file.activity.stats.like.has_liked === true ? " pure-button-blue" : "") + "'>";
     string += "<i class='fa fa-heart'></i>";
@@ -1492,7 +1497,7 @@ Application.prototype.feed.getContent = function(feed_id, min_activity_id, page,
         var container = $('.container').find('.feed_container');
 
 
-        var none = $("<div class='post_height_restrictor'>"
+        var none = $("<div class='post_height_restrictor contentblock'>"
                 + "<center><p style='color:grey;'>"
                 + "There are no notifications in this Live Feed! <br /> "
                 + "You can post up the in the box.</p></center></div>");
@@ -1545,6 +1550,167 @@ Application.prototype.feed.changeTheaterFeed = function(view) {
     }
 };
 
+Application.prototype.feed.post.submit = function() {
+        var text = $('#status_text').val();
+        if (text != "" || this.files.length != 0) {
+            $.post("Scripts/home.class.php", {action:"update_status", status_text: text, group_id: share_group_id, post_media_added_files: this.files}, function(data)
+            {
+                if (data == "") {
+                    removeModal('', function() {
+                        Application.prototype.feed.get(share_group_id, null, 0, min_activity_id, activity_id, function(response){
+                    		var string = '';
+                    		for (var i in response) {
+                                    string += Application.prototype.feed.homify(response[i]);
+                    		}
+                    		$('.feed_container').prepend(string);
+                		});
+                    });
+                    clearPostArea();
+                }
+                else
+                {
+                    alert(data);
+                }
+            });
+        }
+};
+
+Application.prototype.feed.post.addFile = function(object, activity_id) {
+        $('.post_media_wrapper_background').hide();
+        var post_media_classes = '';
+        var post_media_style = " style=' ";
+        var text_to_append = '';
+        var additional_close = '';
+        var extra_params = " post_file_id='" + object.file_id + "' ";
+        //text_to_append += ">"; 
+        text_to_append += Application.prototype.file.print(object, 'add_to_status');
+        if (object.type == "Image")
+        {
+            post_media_classes += "post_media_photo post_media_full";
+            additional_close += " post_media_single_close_file";
+        } else if (object.type == "Audio")
+        {
+             post_media_classes += " post_media_item post_media_full";
+             additional_close += " post_media_single_close_file";
+
+        } else if (object.type == "Video") {
+            post_media_classes += " post_media_video";
+            additional_close += " post_media_single_close_file";
+            //text_to_append += video_player(object, 'classes', 'styles', 'added_to_status_', true);
+
+        } else if (object.type == "Webpage") {
+            post_media_classes += " post_media_double";
+            post_media_style += "height:auto;";
+            additional_close += " post_media_single_close_webpage";
+            extra_params = " post_file_id='" + object.path + "' ";
+            text_to_append += "><table style='height:100%;'><tr><td rowspan='3'>" +
+                    "<div class='post_media_preview' style='background-image:url(&quot;" + object.info.favicon + "&quot;);'></div></td>" +
+                    "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>" +
+                    "<a class='user_preview_name' target='_blank' href='" + object.path + "'><span style='font-size:13px;'>" + object.info.title + "</span></a></div></td></tr>" +
+                    "<tr><td><span style='font-size:12px;' class='user_preview_community'>" + object.info.description + "</span></td></tr></table>";
+        } else if (object.type == "Folder") {
+//            text_to_append += documentStatus(object.path, object.name, object.description, FOLDER_THUMB);
+        } else if (object.type == "WORD Document") {
+        } else if (object.type == "PDF Document") {
+        } else if (object.type == "PPT Document") {
+        } else {
+        }
+        if (object.type == "WORD Document" 
+                || object.type == "PDF Document" 
+                || object.type == "PPT Document" 
+                || object.type == "ACCESS Document" 
+                || object.type == "EXCEL Document"
+                || object.type == "Folder") {
+            post_media_classes += " post_media_double";
+            post_media_style += "height:auto;";
+            additional_close += " post_media_single_close_file";
+            extra_params = " post_file_id='" + object.id + "' ";
+        }
+        var index;
+        for (var i = 0; i < this.files.length; i++)
+        {
+            if (this.files[i].id == object.id || this.files[i] == object.id)
+            {
+                index = "found";
+                Application.prototype.UI.dialog(
+                        content = {
+                            type: 'html',
+                            content: "Sorry, but you have already added this file to your post. Please choose another instead!"
+                        },
+                buttons = [{
+                        type: "error",
+                        text: "OK",
+                        onclick: function() {
+                            removeDialog();
+                        }
+                    }],
+                properties = {
+                    modal: false,
+                    title: "Whoops!"
+                });
+            }
+        }
+        if (index != "found")
+        {
+            if (object.type == "Webpage") {
+                this.files.push(object);
+            } else {
+                this.files.push(object.id);
+            }
+            $('.post_media_wrapper').append(text_to_append);
+            if(object.type == "Video") {
+                refreshVideoJs();
+            }
+        }
+
+        if (this.files.length > 1) {
+            $('#status_text').attr('placeholder', 'Write about these files...');
+        }
+        else {
+            $('#status_text').attr('placeholder', 'Write about this file...');
+        }
+        $('#status_text').focus();
+        $('#file_share').mCustomScrollbar("update");
+    };
+Application.prototype.feed.post.removeFile = function(object)
+    {
+        var id;
+        if (object.type == "Webpage") {
+            addedURLs = removeFromArray(addedURLs, object.value);
+            id = '#post_media_single_' + formatToID(object.value);
+            for (var i = 0; i < post_media_added_files.length; i++) {
+                if (object.value == post_media_added_files[i].path) {
+                    //console.log('Website detected in Post Attachements: '+object.value + " to " + post_media_added_files[i].path + " now REMOVED!");
+                    post_media_added_files.splice(i, 1);
+                } else {
+                    //console.log('No Website detected in Post Attachements: Submitted value of '+object.value + " to " + post_media_added_files[i].path);
+                }
+            }
+        } else {
+            var element = $('.post_media_wrapper [data-file_id="' + object.value + '"]');
+            element.remove();
+            for (var i = 0; i < post_media_added_files.length; i++) {
+                if (object.value == post_media_added_files[i]) {
+                    //console.log('File detected in Post Attachements: '+object.value + " to " + post_media_added_files[i] + " now REMOVED!");
+                    post_media_added_files.splice(i, 1);
+                } else {
+                    //console.log('No File detected in Post Attachements: Comparing submitted value of '+object.value + " to " + post_media_added_files[i] + " of " + post_media_added_files);
+                }
+            }
+
+        }
+        $(id).remove();
+
+        if (post_media_added_files.length == 0)
+        {
+            $('#status_text').attr('placeholder', 'Update Status or Share Files...');
+            $('.post_media_wrapper_background').show();
+        }
+        $('#status_text').focus();
+        resizeScrollers();
+        //console.log("Resulting media list: " + post_media_added_files + "/n Added URLS = " + addedURLs);
+    };
+
 Application.prototype.feed.createPost = function(text, files, activity_id) {
     var string = "<div class='home_feed_post_container'><div class='home_feed_post_container_arrow_border'>";
     string += "<div class='home_feed_post_container_arrow'></div>";
@@ -1570,7 +1736,7 @@ Application.prototype.feed.homify = function(activity) {
     activity.status_text = typeof activity.status_text !== 'undefined' && !isEmpty(activity.status_text) ? activity.status_text : '';
     var string = "";
     if (activity.view == 'home') {
-        string += "<div data-activity_id='" + activity.id + "' class='post_height_restrictor' id='post_height_restrictor_" + activity.id + "'>";
+        string += "<div data-activity_id='" + activity.id + "' class='post_height_restrictor contentblock' id='post_height_restrictor_" + activity.id + "'>";
         string += '<div id="single_post_' + activity.id + '" class="singlepostdiv">';
         string += "<div id='" + activity.id + "'>";
         string += "<div class='top_content'><a class='user_name_post' href='user?id=" + activity.user.encrypted_id + "'>";
@@ -1695,7 +1861,7 @@ Application.prototype.feed.comment.show = function(comment) {
     string += "</td></tr><tr><td colspan=2 style='vertical-align:bottom;' >"
     string += "<span class='post_comment_time'>" + comment.time + " -</span>"
     string += "<span class='post_comment_time post_comment_liked_num'>"
-    string += comment.like.count + "</span><img class='heart_like_icon' src='" + HEART_ICON + "'></img>";
+    string += comment.like.count + "</span><i class='fa fa-heart heart_like_icon'></i>";
     string += "<span data-has_liked='" + comment.like.has_liked + "' "
     string += "class='user_preview_name post_comment_time post_comment_vote'>"
     string += comment.like.like_text + "</span>";
@@ -1725,7 +1891,7 @@ Application.prototype.feed.printStats = function(activity) {
     var string = '';
     string += "<div class='activity_stats'>";
     string += print_likes(activity);
-    string += "<span class='post_comment_time'> " + activity.time + "</span>";
+    string += "<span class='post_comment_time'> " + activity.time + " |</span>";
     if (activity.type == "File") {
         activity.media[0] = (activity.media[0] || new Object());
         activity.media[0].view = new Object();
@@ -1734,16 +1900,16 @@ Application.prototype.feed.printStats = function(activity) {
     }
 
     if (activity.user.id == USER_ID) {
-        string += "<div class='default_dropdown_actions' style='display:inline-block;' wrapper_id='activity_options_" + activity.id + "'>"
-        string += "<span class='default_dropdown_preview'>|</span>"
-        string += "<div class='default_dropdown_wrapper' id='activity_options_" + activity.id + "'>"
-        string += "<ul class='default_dropdown_menu'>"
-        string += "<li class='default_dropdown_item delete_activity' controller_id='activity_options_"
-        string += activity.id + "'>Delete"
-        string += "</li>"
-        string += "<li class='default_dropdown_item edit_activity'>Edit</li>"
-        string += "</ul>"
-        string += "</div>"
+        string += "<div class='default_dropdown_actions' style='display:inline-block;' wrapper_id='activity_options_" + activity.id + "'>";
+        string += "<i class='fa fa-angle-down'></i>";
+        string += "<div class='default_dropdown_wrapper' id='activity_options_" + activity.id + "'>";
+        string += "<ul class='default_dropdown_menu'>";
+        string += "<li class='default_dropdown_item delete_activity' controller_id='activity_options_";
+        string += activity.id + "'>Delete";
+        string += "</li>";
+        string += "<li class='default_dropdown_item edit_activity'>Edit</li>";
+        string += "</ul>";
+        string += "</div>";
         string += "</div>";
     }
     string += "</div>";
@@ -1754,7 +1920,7 @@ Application.prototype.feed.printStats = function(activity) {
         string += '<div class="who_liked_hover" ';
         string += 'style="display:inline;"> ';
         string += '<span class="post_comment_time post_like_count">' + activity.stats.like.count + '</span>';
-        string += '<img class="heart_like_icon" src="' + HEART_ICON + '"></img>';
+        string += '<i class="fa fa-heart heart_like_icon"></i>';
         string += '<div style="display:inline;">';
         string += '<span has_liked="';
         string += (activity.stats.like.has_liked === true ? "true" : "false");
@@ -1831,66 +1997,70 @@ Application.prototype.feed.comment.submit = function(comment_text, post_id, call
         callback(data);
     });
 };
-function iniScrollChat() {
+Application.prototype.chat.iniScroll = function() {
+    var self = this;
     $('.chatoutput').on('scroll', function() {
-        bottom = false;
+        self.room[$(this).data('chat_room')].bottom = false;
         if ($(this).get(0).scrollTop + 20 >= $(this).get(0).scrollHeight - $(this).get(0).offsetHeight) {
-            bottom = true;
+            self.room[$(this).data('chat_room')].bottom = true;
         } else if ($(this).get(0).scrollTop == 0) {
-            getPreviousChat($(this).data('chat_room'));
+            self.getPrevious($(this).data('chat_room'));
         }
     });
-}
-function detectChange()
-{
+};
+
+Application.prototype.chat.detectChange = function() {
     var key_height = $('.chatinputtext').outerHeight(true);
     var bottom = key_height;
     $('.chatoutput').css('bottom', bottom + "px");
-    scroll2Bottom(false, chat_room); //USE EVEN IF NOT LOADED
-}
+    this.scroll2Bottom(false, chat_room); //USE EVEN IF NOT LOADED
+};
 
-function getPreviousChat(chat_index) {
-    if (getting_previous[chat_index] == false) {
-        getting_previous[chat_index] = true;
+Application.prototype.chat.getPrevious = function(chat_index) {
+    var self = this;
+    if (self.room[chat_index].getting_previous == false) {
+        self.room[chat_index].getting_previous = true;
 
-        var new_oldest = Array.min(chat_ids[chat_index]) - 20;
+        var new_oldest = Array.min(self.room[chat_index].entry) - 20;
         if (new_oldest < 0) {
             new_oldest = 0;
         }
 
-        if (last_chat[chat_index] != true) {
+        if (self.room[chat_index].last_chat != true) {
             var element = $('[data-chat_room="' + chat_index + '"] .single_chat:first');
             $('[data-chat_room="' + chat_index + '"] .chat_loader').slideDown('fast');
-            $.get("Scripts/chat.class.php", {chat: chat_index, all: "previous", oldest: new_oldest, newest: oldest[chat_index] - 1}, function(response)
-            {
+            var object = {chat: chat_index, all: "previous", oldest: new_oldest, newest: self.room[chat_index].oldest - 1};
+            $.get("Scripts/chat.class.php", object, function(response) {
                 response = $.parseJSON(response);
                 if (response.length == 0) {
-                    last_chat[chat_index] = true;
+                    self.room[chat_index].last_chat = true;
                     $('[data-chat_room="' + chat_index + '"] .chatreceive').prepend("<div class='timestamp'><span>Start of Conversation</span></div>");
                     $('[data-chat_room="' + chat_index + '"] .chat_loader').slideUp('fast');
                     return;
                 }
-                $('[data-chat_room="' + chat_index + '"] .chatreceive').prepend(styleChatResponse(response, chat_index));
+                $('[data-chat_room="' + chat_index + '"] .chatreceive').prepend(self.styleResponse(response, chat_index));
                 $('[data-chat_room="' + chat_index + '"] .chat_loader').slideUp('fast');
-                getting_previous[chat_index] = false;
+                self.room[chat_index].getting_previous = false;
                 element = element.offset().top;
                 $('[data-chat_room="' + chat_index + '"]').scrollTop(element);
             });
         }
     }
-}
-function sendChatRequest(all, chat_index) {
-    $.get("Scripts/chat.class.php", {chat: chat_index, all: all, oldest: 0, newest: newest[chat_index]}, function(response) {
+};
+
+Application.prototype.chat.sendRequest = function(all, chat_index) {
+    var self = this;
+    $.get("Scripts/chat.class.php", {chat: chat_index, all: all, oldest: 0, newest: this.room[chat_index].newest}, function(response) {
         $('[data-chat_room="' + chat_index + '"] .chat_loader').slideUp('fast');
         response = $.parseJSON(response);
 
         if (all == 'true') {
             $('.chatcomplete').fadeIn("fast");
-            $('[data-chat_room="' + chat_index + '"] .chatreceive').append(styleChatResponse(response, chat_index));
+            $('[data-chat_room="' + chat_index + '"] .chatreceive').append(self.styleResponse(response, chat_index));
             $('[data-chat_room="' + chat_index + '"] .chatoutput').scrollTop($('[data-chat_room="' + chat_index + '"] .chatoutput').get(0).scrollHeight);
 
         } else {
-            $('[data-chat_room="' + chat_index + '"] .chatreceive').append(styleChatResponse(response, chat_index));
+            $('[data-chat_room="' + chat_index + '"] .chatreceive').append(self.styleResponse(response, chat_index));
         }
         if (all == 'false' && response.length > 0) {
             for (var i = response.length - 1; i >= 0; i--) {
@@ -1900,7 +2070,7 @@ function sendChatRequest(all, chat_index) {
             }
             if (chat_index != chat_room) {
                 $('.chat_feed_selector[chat_feed="' + chat_index + '"] *').css('color', 'red');
-                //alert('unread in another chat');
+                alert('unread in another chat');
             }
         }
         var timeout = 3000;
@@ -1908,12 +2078,13 @@ function sendChatRequest(all, chat_index) {
             timeout = 10000;
         }
         setTimeout(function() {
-            sendChatRequest('false', chat_index);
+            self.sendRequest('false', chat_index);
         }, timeout);
-        detectChange();
+        self.detectChange();
     });
-}
-function styleChatResponse(response, chat_index) {
+};
+
+Application.prototype.chat.styleResponse = function(response, chat_index) {
     var string = '';
     if (response.length == 0) {
 
@@ -1926,53 +2097,46 @@ function styleChatResponse(response, chat_index) {
             string += "<div class='chatname'><span class='user_preview user_preview_name chatname' style='margin-right:5px;font-size:13px;' user_id='" + response[i]['user_id'] + "'>" + response[i]['name'] + "</span></div>";
             string += "<div class='chattext'>" + response[i]['text'].replaceLinks().replaceEmoticons() + "</div></td></tr><tr><td colspan='2' style='text-align:right;'>";
             string += "<span class='chat_time post_comment_time'>" + response[i]['time'] + "</span></td></tr></table></div></li>";
-            if ($.inArray(response[i]['id'], chat_ids[chat_index]) !== -1) {
-
+            if ($.inArray(response[i]['id'], this.room[chat_index].entry) !== -1) {
+                return;
             }
-            chat_ids[chat_index].push(response[i]['id']);
-            //console.log(chat_ids[chat_index]);
+            this.room[chat_index].entry.push(response[i]['id']);
         } else {
             if (response[i]['code'] == 0) {
-                //last_chat = true;
             } else {
                 string += "<li class='single_chat'><div class='chat_wrapper'><table cellspacing='0' cellpadding='0' style='width:100%;'><tr><td style='width:50px;padding-right:5px;'>";
                 string += "<div class='chattext'>" + response[i]['text'] + "</div></td></tr><tr><td colspan='2' style='text-align:right;'>";
             }
         }
-    }
-    ;
+    };
 
-    newest[chat_index] = Array.max(chat_ids[chat_index]);
-    oldest[chat_index] = Array.min(chat_ids[chat_index]);
-    scroll2Bottom(false, chat_index);
+    this.room[chat_index].newest = Array.max(this.room[chat_index].entry);
+    this.room[chat_index].oldest = Array.min(this.room[chat_index].entry);
     return string;
-}
+};
 
-function scroll2Bottom(force, chat_index)
-{
-    if (bottom === true || force === true)
-    {
-        $('[data-chat_room="' + chat_index + '"]').get(0).scrollTop = $('[data-chat_room="' + chat_index + '"]').get(0).scrollHeight;
+Application.prototype.chat.scroll2Bottom = function(force, chat_index) {
+    if (this.room[chat_index].bottom === true || force === true) {
+        $('.chatoutput[data-chat_room="' + chat_index + '"]').scrollTop($('.chatoutput[data-chat_room="' + chat_index + '"]')[0].scrollHeight);
+//         console.log("Scrolling to " + $('.chatoutput[data-chat_room="' + chat_index + '"]')[0].scrollHeight + "px");
     }
-}
+};
 
-function submitchat(chat_text, chat_index)
-{
+Application.prototype.chat.submit = function(chat_text, chat_index) {
+    var self = this;
     if (chat_text != "") {
         $('.chatinputtext').val('');
         $('.chatinputtext').attr('placeholder', "Sending...");
         $('.chatinputtext').attr('readonly', 'readonly');
-        $.post("Scripts/chat.class.php", {action: "addchat", aimed: chat_room, chat_text: chat_text}, function(response)
-        {
+        $.post("Scripts/chat.class.php", {action: "addchat", aimed: chat_index, chat_text: chat_text}, function(response) {
             response = $.parseJSON(response);
-            $('[data-chat_room="' + chat_index + '"] .chatreceive').append(styleChatResponse(response, chat_index));
+            $('[data-chat_room="' + chat_index + '"] .chatreceive').append(self.styleResponse(response, chat_index));
             $('.chatinputtext').removeAttr('readonly');
             $('.chatinputtext').attr('placeholder', "Press Enter to send...");
-            scroll2Bottom(true, chat_room);
-            bottom = true;
+            self.room[chat_index].bottom = true;
         });
     }
-}
+};
 
 //function change_chat_view(change_view) {
 //    $('.chat_feed_selector[chat_feed="' + change_view + '"] *').css('color', 'black');
@@ -1991,14 +2155,6 @@ function calculateDistance(elem, mouseX, mouseY)
     return Math.floor(Math.sqrt(Math.pow(mouseX - (elem.offset().left + (elem.width() / 2)), 2) + Math.pow(mouseY - (elem.offset().top + (elem.height() / 2)), 2)));
 }
 
-$(document).on('click', '.delete_message', function(event) {
-    event.stopPropagation();
-    event.preventDefault();
-    deleteMessage($(this).parents('[thread_id]').attr('thread_id'));
-});
-$(document).on('click', '.message_inbox_item', function() {
-    window.location.assign('message?thread=' + $(this).attr('thread_id') + '');
-});
 function deleteMessage(thread) {
     $.post('Scripts/notifications.class.php', {action: "deleteMessage", thread: thread}, function(response) {
     });
@@ -2031,16 +2187,16 @@ function implode(glue, pieces) {
  * 1.7 Calendar                                      *
  ****************************************************/
 
-function print_calendar(calendar) {
+Application.prototype.calendar.print = function(calendar) {
     var string = '';
-    string = '<div class="box_container"><h3><button  style="float:left !important; display:inline-block;" class="navigate_left">'
+    string = '<div class="contentblock box_container"><h3><button  style="float:left !important; display:inline-block;" class="navigate_left">'
             + '<i class="fa fa-angle-left"></i></button>'
             + calendar.date + '<button  style="float:left !important; display:inline-block;" class="navigate_right"><i class="fa fa-angle-right"></i></button>'
-            + '<button class="pure-button-neutral" id="create_event">Create Event</button></h3><table cellpadding="0" cellspacing="0" class="calendar">';
+            + '<a href="event"><button class="pure-button-neutral" id="create_event">Create Event</button></a></h3><table cellpadding="0" cellspacing="0" class="calendar">';
 
     var headings = new Array('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
     string += '<tr class="calendar-row"><td class="calendar-day-head">' + implode('</td><td class="calendar-day-head">', headings) + '</td></tr>';
-
+	
     var days_in_month = calendar.days_in_month;
     var days_in_this_week = 1;
     var day_counter = 0;
@@ -2065,7 +2221,7 @@ function print_calendar(calendar) {
         string += '<div class="day-number">' + list_day + '</div>';
         for (var event in calendar.event) {
             if (calendar.event[event].event_day == event_day) {
-                string += print_event(calendar.event[event]);
+                string += this.event.print(calendar.event[event]);
             }
         }
         string += '</div></td>';
@@ -2091,16 +2247,16 @@ function print_calendar(calendar) {
     string += '</tr>';
     string += '</table></div>';
     return string;
-}
+};
 
-function get_events(limit, callback) {
+Application.prototype.calendar.getEvents = function(limit, callback) {
     $.get('Scripts/calendar.class.php', {action: "get_events", limit: limit}, function(response) {
         response = $.parseJSON(response);
         callback(response);
     });
-}
+};
 
-function print_event(event, classes) {
+Application.prototype.calendar.event.print = function(event, classes) {
     var string = '';
     var file_string = '<table>';
 
@@ -2114,7 +2270,7 @@ function print_event(event, classes) {
                 + event.file[file].name + "</p></a><br /></td></tr>";
     }
     file_string += "</table>";
-    string += '<div class="event ' + classes + '" style="background-color:' + event.color + '"><a href="event?e=' + event.id + '"><b> '
+    string += '<div class="contentblock event ' + classes + '"><a href="event?e=' + event.id + '"><b> ' //style="background-color:' + event.color + '"
             + event.title + ' </b></a><div class="calendar-event-info"><span>'
             + event.description
             + "</span>";
@@ -2148,7 +2304,7 @@ $(function() {
      * 2.1.1 Startup - Generic                           *
      ****************************************************/
 
-    $(document).on('click', 'a[href!="#"][href]:not([download])', function(e) {
+    $(document).on('click', 'a[href!="#"][href]:not([download], .no-ajax)', function(e) {
         Application.prototype.generic.relocate(e, $(this));
     });
 
@@ -2197,38 +2353,28 @@ $(function() {
     /****************************************************
      * 2.1.1.1 Startup - Generic - Dropdown                *
      ****************************************************/
-    $(document).on('mousedown', ".default_dropdown_selector", function(event)
-    {
-        if (event.which == 1) {
+    $(document).on('click', ".default_dropdown_selector", function(event) {
             event.stopPropagation();
-//            $('.default_dropdown_wrapper').hide();
-//            var wrapper = '#' + $(this).attr('wrapper_id');
-//            $(wrapper).toggle();
-            //$(wrapper).mCustomScrollbar(SCROLL_OPTIONS);
+            $('.default_dropdown_wrapper').hide();
+            var wrapper = '#' + $(this).attr('wrapper_id');
+            $(wrapper).toggle();
+            $(wrapper).mCustomScrollbar(SCROLL_OPTIONS);
             $(this).toggleClass('default_dropdown_active');
-        }
     });
 
-    $(document).on('mousedown', "html", function(event)
-    {
-        if (event.which == 1) {
+    $(document).on('click', "html", function(event) {
             $('.default_dropdown_selector').removeClass('default_dropdown_active');
-//            $('.default_dropdown_wrapper').hide();
-        }
+            $('.default_dropdown_wrapper').hide();
     });
 
-    $(document).on('mousedown', ".default_dropdown_selector .default_dropdown_item", function(event)
-    {
-        if (event.which == 1) {
+    $(document).on('click', ".default_dropdown_selector .default_dropdown_item", function(event) {
             event.stopPropagation();
             var selection_value = $(this).attr('value');
             var wrapper = $(this).parents('.default_dropdown_wrapper');
-//            wrapper.hide();
             $(this).parents('.default_dropdown_selector').removeClass('default_dropdown_active');
             wrapper.find('.default_dropdown_item').removeClass('default_dropdown_active');
             $(this).addClass('default_dropdown_active');
             $(this).parents('.default_dropdown_selector').attr('value', selection_value).find('.default_dropdown_preview').text($(this).text());
-        }
     });
 
     $('.default_dropdown_selector').on({
@@ -2359,7 +2505,13 @@ $(function() {
     /****************************************************
      * 2.1.3 Startup - Feed                              *
      ****************************************************/
-
+		/****************************************************
+     	* 2.1.3 Startup - Feed - Post                        *
+     	****************************************************/
+     	
+     	$(document).on('click', '.post-button', function() {
+     		Application.prototype.feed.post.submit();
+     	});
     setInterval(function() {
 
     });
@@ -2394,7 +2546,7 @@ $(function() {
                 text: "Delete",
                 onclick: function() {
                     delete_post(activity_id);
-                    removeDialog();
+                    Application.prototype.UI.removeDialog();
                 }
             }],
         properties = {
@@ -2467,7 +2619,7 @@ $(function() {
 
     $(document).on('click', '.post_media_wrapper .delete_cross', function(event) {
         event.stopPropagation();
-        removeFromStatus(object = {type: "File", value: $(this).parents('[data-file_id]').data('file_id')});
+        Application.prototype.feed.post.removeFile(object = {type: "File", value: $(this).parents('[data-file_id]').data('file_id')});
     });
 
     $(document).on('click', '.post_feed_media_wrapper .remove_event_post', function() { //DELETE FILES FROM POSTED CONTENT
@@ -2527,7 +2679,7 @@ $(function() {
     $(document).on('click', '.post_like_activity', function(event) {
         var post_id = $(this).parents('[data-activity_id]').data('activity_id');
         var has_liked = $(this).attr('has_liked');
-        var like_count = parseInt($('[data-activity_id="' + post_id + '"] .post_like_count').text());
+        var like_count = parseInt($('[data-activity_id="' + post_id + '"] .post_like_count:first').text());
         
         if (has_liked === "false") {
             $(this).attr('has_liked', "true");
@@ -2545,11 +2697,11 @@ $(function() {
                 $(this).text(COMMENT_LIKE_TEXT);
             }
         }
-        $('[data-activity_id="' + post_id + '"] .post_like_count').text(like_count);
+        $('[data-activity_id="' + post_id + '"] .post_like_count:first').text(like_count);
 
         $.post("Scripts/home.class.php", {type: 1, activity_id: post_id, action: "like"}, function(data)
         {
-            $('[data-activity_id="' + post_id + '"] .post_like_count').text(data);
+            $('[data-activity_id="' + post_id + '"] .post_like_count:first').text(data);
         });
     });
     $(document).on('click', '.post_comment_vote', function(event) {
@@ -2585,7 +2737,7 @@ $(function() {
 
     $(document).on('click', '#file_share div.file_item', function() {
         var file = $(this).data('file');
-        addToStatus(file, 'create');
+        Application.prototype.feed.post.addFile(file, 'create');
     });
 
     $(document).on('click', '.audio_hidden_container, .files_actions, p.files, div.files input, .post_feed_item', function(event) {
@@ -2769,11 +2921,11 @@ $(function() {
 
     $(document).on('keydown', '.autoresize, .inputtext', function(e) {
         $(this).css('height', '0px');
-        $(this).css('height', $(this)[0].scrollHeight + "px");
+        $(this).css('height', $(this)[0].scrollHeight + 10 + "px");
     });
 
     $(window).resize(function() {
-        detectChange();
+        Application.prototype.chat.detectChange();
         if (Application.prototype.file.theater.active) {
             Application.prototype.file.theater.adjust();
         }
@@ -2783,9 +2935,9 @@ $(function() {
      * 2.1.3 Startup - Calendar                          *
      ****************************************************/
     if ($('.calendar-container').length > 0) {
-        get_events(5, function(events) {
+        Application.prototype.calendar.getEvents(5, function(events) {
             for (var i = 0; i < events.length; i++) {
-                $('.calendar-container').append(print_event(events[i]));
+                $('.calendar-container').append(Application.prototype.calendar.event.print(events[i]));
             }
         });
     }
@@ -2801,23 +2953,18 @@ $(function() {
      * 2.1.3 Startup - Chat                              *
      ****************************************************/
 
-    iniScrollChat();
+    Application.prototype.chat.iniScroll();
     var cookie = 0; //getCookie('chat_feed');
-    if (cookie == 0)
-    {
+    if (cookie == 0) {
         $('#chat').hide();
     }
-    $("#chat_toggle").click(function()
-    {
+    $("#chat_toggle").click(function() {
         var cookie = getCookie("chat_feed");
-        if (cookie > 0 || isNaN(cookie))
-        {
+        if (cookie > 0 || isNaN(cookie)) {
             setCookie('chat_feed', 0, 5);
             $('#chat_toggle').html("OFF");
             $('#chat').hide('slide', {direction: 'right'}, 500);
-        }
-        else
-        {
+        } else {
             $('#chat_toggle').html("ON");
             $('#chat').show('slide', {direction: 'right', duration: 0}, 500);
         }
@@ -2828,15 +2975,22 @@ $(function() {
     });
 
     $(document).on("propertychange keydown input change", '.chatinputtext', function(e) {
-        if (e.keyCode == 13)
-        {
-            if (e.shiftKey !== true)
-            {
+        if (e.keyCode == 13) {
+            if (e.shiftKey !== true) {
                 e.preventDefault();
-                submitchat($(this).val(), chat_room);
+                Application.prototype.chat.submit($(this).val(), chat_room);
             }
         }
-        detectChange();
+        Application.prototype.chat.detectChange();
+    });
+
+    $(document).on('click', '.delete_message', function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        deleteMessage($(this).parents('[thread_id]').attr('thread_id'));
+    });
+    $(document).on('click', '.message_inbox_item', function() {
+        window.location.assign('message?thread=' + $(this).attr('thread_id') + '');
     });
 
     /****************************************************

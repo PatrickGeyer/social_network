@@ -19,20 +19,18 @@ $chat_rooms = $chat->get_chat_rooms();
         setCookie("chat_feed", chat_room);
 
         var timer;
-        var bottom = true;
-        var getting_previous = new Array();
-        var last_chat = new Array();
-        var oldest = new Array();
-        var newest = new Array();
-        var chat_ids = new Array();
 <?php foreach ($chat_rooms as $single_group) { ?>
-            chat_ids[<?php echo $single_group['id']; ?>] = new Array();
-            oldest[<?php echo $single_group['id']; ?>] = 0;
-            newest[<?php echo $single_group['id']; ?>] = 99999999;
-            getting_previous[<?php echo $single_group['id']; ?>] = false;
-            last_chat[<?php echo $single_group['id']; ?>] = false;
+            var i = "<?php echo $single_group['id']; ?>";
+            Application.prototype.chat.room[i] = {};
+            Application.prototype.chat.room[i] = {
+                entry : new Array(),
+                oldest : 0,
+                newest : 998999999,
+                getting_previous : false,
+                last : false
+            };
             $(function() {
-                sendChatRequest('true', <?php echo $single_group['id']; ?>);
+                Application.prototype.chat.sendRequest('true', i);
             });
 <?php } ?>
     </script>

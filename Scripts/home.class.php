@@ -240,10 +240,9 @@ class Home {
     }
 
     function deletePost($post_id) {
-        $school_query = "UPDATE activity SET visible = 0 WHERE id = :post_id; "; //DELETE FROM activity_share WHERE activity_id = :post_id;";
+        $school_query = "UPDATE `activity` SET visible = 0 WHERE id = :post_id; "; //DELETE FROM activity_share WHERE activity_id = :post_id;";
         $school_query = Registry::get('db')->prepare($school_query);
         $school_query->execute(array(":post_id" => $post_id));
-        echo "200";
     }
 
     private function hasLikedPost($post_id) {
@@ -251,11 +250,9 @@ class Home {
         $query = Registry::get('db')->prepare($query);
         $query->execute(array(":user_id" => Registry::get('user')->getId(), ":post_id" => $post_id));
         $num = $query->rowCount();
-
-        if ($num == 1) {
+        if ($num === 1) {
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -277,25 +274,25 @@ class Home {
     public function like($activity_id) {
         $has_liked = $this->hasLikedPost($activity_id);
         $has_voted = $this->hasVotedPost($activity_id);
-        if ($has_voted === false) {
+//        $string = '';
+//        $string .= ("Voted:" . ($has_voted ? "true" : "false"). " / Liked: ". ($has_liked ? "true" : 'false'));
+        if ($has_voted == false) {
             $insert_query = "INSERT INTO `activity_vote` (activity_id, user_id, vote_value) VALUES( :activity_id, :user_id, 1);";
             $insert_query = Registry::get('db')->prepare($insert_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $insert_query->execute(
                     array(":activity_id" => $activity_id,
                         ":user_id" => Registry::get('user')->getId()
             ));
-            $this->notifyUserLike($activity_id);
-        }
-        else {
-            if ($has_liked === false) {
+        } else {
+//            $string .= " -- NOT FIRST TIME";
+            if ($has_liked == false) {
                 $insert_query = "UPDATE activity_vote SET vote_value = 1 WHERE activity_id = :post_id AND user_id = :user_id;";
                 $insert_query = Registry::get('db')->prepare($insert_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
                 $insert_query->execute(
                         array(":post_id" => $activity_id,
                             ":user_id" => Registry::get('user')->getId()
                 ));
-            }
-            else {
+            } else {
                 $query = "UPDATE activity_vote SET vote_value = 0 WHERE activity_id = :post_id AND user_id = :user_id;";
                 $query = Registry::get('db')->prepare($query);
                 $query->execute(
@@ -304,6 +301,7 @@ class Home {
                 ));
             }
         }
+//        return $string;
         return $this->getLikeNumber($activity_id);
     }
 
@@ -327,9 +325,11 @@ class Home {
     public function getLikeNumber($post_id) {
         $who_liked_query = "SELECT id FROM `activity_vote` WHERE vote_value = 1 AND activity_id = :activity_id;";
         $who_liked_query = Registry::get('db')->prepare($who_liked_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $who_liked_query->execute(array(":activity_id" => $post_id));
+        $who_liked_query->execute(array(
+            ":activity_id" => $post_id
+        ));
         $like_count = $who_liked_query->rowCount();
-        return $like_count;
+        return strval($like_count);
     }
 
     function comment_like_count($comment_id) {
@@ -425,6 +425,7 @@ class Home {
     }
 
     function create_activity($status_text, $type) {
+    	$status_text = strip_tags($status_text);
         Registry::get('db')->beginTransaction();
         $school_query = "INSERT INTO activity (user_id, status_text, type, time) "
                 . "VALUES(:user_id, :status_text, '$type', :time);";
@@ -507,15 +508,12 @@ class Home {
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $home = Home::getInstance();
-    if (isset($_POST['activity_id'])) {
-        
-    }
     if (isset($_POST['action'])) {
         if ($_POST['action'] == "deletePost") {
             $home->deletePost($_POST['post_id']);
         }
         if ($_POST['action'] == 'like') {
-            echo $home->like($_POST['activity_id']);
+            die($home->like($_POST['activity_id']));
         }
         if ($_POST['action'] == 'comment_vote') {
             if ($home->has_liked_comment($_POST['comment_id']) === true) {
@@ -572,16 +570,14 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         }
         else if ($_POST['action'] == "update_status") {
             $status_text = $_POST['status_text'];
-            $status_text = strip_tags($status_text);
-            $status_text = $home->system->linkReplace($status_text);
             $post_media_added_files = (isset($_POST['post_media_added_files']) ? $_POST['post_media_added_files'] : array());
-            $status_text = nl2br($status_text);
+			$group = (empty($_POST['group_id']) ? 'a' : $_POST['group_id']);
             $type = 'Text';
 
             $home->share_activity(
                     $home->add_files_to_activity(
-                            $home->create_activity($status_text, $type), $post_media_added_files
-                    ), $_POST['group_id']);
+                            $home->create_activity($status_text, $type), $post_media_added_files)
+                            , $group);
         }
         else if ($_POST['action'] == "add_files_to_activity") {
             die($home->add_files_to_activity($_POST['activity_id'], $_POST['media_added_files']));

@@ -211,7 +211,28 @@ h3 > button{
 .box_container .default_dropdown_menu{
     width: 200px;
 }
-
+.contentblock{
+	background-color: white;
+	border-left: 5px solid #85bdad;
+	padding: 10px;
+	margin-top: 20px;
+	box-sizing: border-box;
+	-moz-box-sizing:border-box;
+	color: rgb(136, 136, 136);
+}
+.contentblock > h4 {
+	color: rgb(68, 68, 68) !important;
+	margin:0px;
+	margin-bottom: 10px;
+	font-size: 16px;
+}
+.contentblock * {
+	color: inherit;
+	font-size: 13px;
+}
+.fa{
+	text-indent: 0px;
+}
 label{
     text-shadow: 0px 1px 0px #fff;
     color: grey;
@@ -408,34 +429,31 @@ input[type="file"] {
 .default_dropdown_selector, .default_dropdown_actions {
     position: relative;
     background-color:transparent;
-    background-image: url('../Images/down1.png');
     background-position: 95% 50%;
     background-repeat: no-repeat;
-    color: grey;
+    color: dimgrey;
     cursor: pointer;
-    transition: all 0.1s ease-in-out;
-    -webkit-transition: all 0.1s ease-in-out;
-    -moz-transition: all 0.1s ease-in-out;
-    -o-transition: all 0.1s ease-in-out;
 }
 .default_dropdown_selector{
     border:1px solid transparent;
     padding:2px;
     padding-left: 5px;
-    padding-right: 50px;
+    padding-right: 5px;
     font-size: 13px;
     max-width: 200px;
     min-width: 50px;
-    border:1px solid lightgrey;
     background-color: white;
-    background-image: url(../Images/down1.png), -webkit-linear-gradient(top, white, #EDEDED);
+}
+
+.default_dropdown_active > i {
+    color: white;
 }
 
 .default_dropdown_actions{
-    background-image: url('../Images/down1.png');
+    padding: 0px !important;
     border: 0px;
     min-width: 0px;
-    min-height: 12px;
+    max-height: 14px;
     padding: 0px;
     padding-right: 20px;
     background-size: 11px auto;
@@ -443,6 +461,8 @@ input[type="file"] {
 }
 
 .default_dropdown_selector:hover{
+    background-image: -webkit-linear-gradient(top, white, #EDEDED);
+    border:1px solid lightgrey;
 }
 
 .default_dropdown_actions .default_dropdown_preview{
@@ -452,8 +472,9 @@ input[type="file"] {
 }
 
 .default_dropdown_preview{
-    display: block;
+    display: inline-block;
     padding-left: 5px;
+    margin-right: 10px;
     max-width: 100%;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -513,7 +534,7 @@ input[type="file"] {
 }
 
 .default_dropdown_selector.default_dropdown_active{
-    background-image: url(../Images/down1.png), -webkit-linear-gradient(top, rgb(0,140,220),rgb(0,140,250)) !important;
+    background-image: -webkit-linear-gradient(top, rgb(0,140,220),rgb(0,140,250)) !important;
     border:1px solid rgb(0, 140, 250) !important;
 }
 
@@ -783,7 +804,7 @@ input[type="file"] {
 .pure-button-blue,
 .pure-button-yellow,
 .pure-button-neutral {
-    font-family: 'lucida grande', tahoma, sans-serif;
+    font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
     cursor: pointer;
     border-radius: 0px;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
@@ -928,9 +949,8 @@ input[type="file"] {
 }
 .user_preview_name{
     font-size: 14px;
-    color: rgb(0, 140, 250) !important;
+    color: rgb(0, 140, 240) !important;
     cursor: pointer;
-    font-weight: bold;
 }
 .user_preview_name:hover{
     text-decoration: underline;
@@ -1044,6 +1064,10 @@ input[type="file"] {
     position: relative;
     top: -8px;
 }
+
+.left_bar_container .timestamp span {
+	
+}
 /*END CONTROLS*/
 
 /* MESSAGE */
@@ -1086,10 +1110,10 @@ span.message_delete_receiver:hover{
     float: right;
     overflow: hidden;
     width: 290px;
-    background: blue ;
+/*     background: blue ; */
     height: 100%;
     padding: 3px 5px 0px 5px;
-    box-shadow: inset 0 0 15px rgba(0,0,0,.6)!important;
+/*     box-shadow: inset 0 0 15px rgba(0,0,0,.6)!important; */
     box-sizing:border-box;
     -moz-box-sizing:border-box;
     color: white !important;
@@ -1272,7 +1296,6 @@ ul{
     padding: 0px;
     list-style: none;
     text-align: center;
-    font-family: century gothic;
     font-size: 0.8em;
     width: 100%;
 }
@@ -1563,9 +1586,10 @@ tr{
 html, body { 
     margin: 0px; 
     padding: 0px;
+    background-color: #e4e4e4;
 }
 *{
-    font-family: 'lucida grande',tahoma,verdana,arial,sans-serif;
+    font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
 }
 p, h1, h2, h3 {
     font-family: century gothic, 'lucida grande',tahoma,verdana,arial,sans-serif !important;
@@ -1662,7 +1686,6 @@ div.container{
     position: relative;
     padding-bottom: 10px;
     text-align: middle;	
-    border:1px solid lightgrey;
     border-top: 0px;  
     padding-bottom: 50px;
 }
@@ -1892,11 +1915,9 @@ table td tr{
     font-size: 12px;
     border:1px solid rgb(0, 140, 250);
     z-index: 10;
-    width: 100px;
 }
 
-.who_liked:before 
-{
+.who_liked:before {
     content: '';
     position: absolute;
     border-style: solid;
@@ -1943,11 +1964,9 @@ div#friend_load .timestamp{
     border:0px;
     width:200px;
     border: 0px;
-    background-color: white;
-    color: black;
 }
 .friends_bar li:hover {
-    background-color: #EDEDED;
+    background-color: white;
 }
 li.filter:hover{
     border:0px;
@@ -1955,7 +1974,6 @@ li.filter:hover{
 a.friend_list{
     border-bottom-right-radius: 0px;
     color:grey;
-    font-size:12px;
     text-align:left;
     text-indent: 30px;
     padding:7px; 
@@ -1967,25 +1985,11 @@ a.friend_list{
 }
 
 .friends_bar p {
-    font-size: 12px;
-    color: grey;
     text-align: left;
-    border-bottom: 1px solid lightgrey;
 }
 
-.thin_blue_header{
-    font-size:400%;
-    color: #1f8dd6;
-    font-weight: 100;
-    display: block;
-    float:left;
-}
-
-.thin_subtitle{
-    color:#666;
-    font-size: 150%;
-    display: block;
-    float: left;
+.contentblock > ul{
+	margin-top: 20px;
 }
 
 /* SEARCH */
@@ -2125,7 +2129,6 @@ a.search_option{
     float: left;
     cursor: pointer;
     opacity: 1;
-    border-radius: 50%;
     overflow: hidden;
 }
 .audio_button > .audio_button_inside {
@@ -2188,14 +2191,10 @@ a.search_option{
 .home_comment_input_text {
     width: 100%;
     resize: none;
-    min-height: 20px;
+    min-height: 30px;
     height: 30px;
     font-size: 13px;
     padding: 5px;
-    -webkit-transition: all 0.2s ease-out;  
-    -moz-transition: all 0.2s ease-out;  
-    -o-transition: all 0.2s ease-out;  
-    transition: all 0.2s ease-out;  
 
 }
 .textarea_clone {
@@ -2253,6 +2252,10 @@ div.comment_box{
     padding-left: 10px;
 }
 
+.top_content {
+	position:relative;
+}
+
 .post_text{
     overflow: hidden;
     font-size:13px;
@@ -2272,18 +2275,24 @@ div.comment_box{
 }
 
 .activity_stats {
-    float: right;
+    position: absolute;
+    top: 0px;
+    right:0px;
 }
 
 div.post_height_restrictor{
-    padding-top: 20px;
-    padding-left: 20px;
-    padding-bottom: 20px;
-    margin-left: -20px;
-    overflow: hidden;
     text-align: left;
-    width: 90%;
-    border-bottom: 1px solid lightgrey;
+    background-color: white;
+    margin-top: 20px;
+    border-color: #832701 !important;
+    padding: 0px !important;
+    box-sizing: border-box;
+}
+.post_height_restrictor > div {
+	margin: 20px;
+	margin-right: 50px;
+	padding-top: 50px;
+	padding-bottom: 50px;
 }
 .post_height_restrictor:last-of-type {
     border-bottom: 0px !important;
@@ -2702,14 +2711,13 @@ div[data-placeholder]:not(:focus):not([data-div-placeholder-content]):before {
     color: grey;
 }
 div.home_feed_post_container{
-    border-bottom: 1px solid lightgrey;
+	position: relative;
+	border-color: rgb(0, 140, 280) !important;
     padding-top: 22px;
-    margin-left: -20px;
-    margin-right: -20px;
     padding-left: 20px;
     padding-right: 20px;
     padding-bottom: 22px;
-    /*background-color: rgb(206, 237, 248);*/
+    background-color: white;
 }
 .home_feed_post_container_arrow{
     content:"";
@@ -2738,10 +2746,9 @@ div.home_feed_post_container{
     left: 1px;
 }
 .heart_like_icon{
-    opacity: 0.5;
-    height: 12px;
-    width: auto;
     margin-right: 3px;
+    color: grey;
+    font-size: 80%;
 }
 a.userlink{
     text-decoration: none;
@@ -2803,7 +2810,6 @@ div.inputtext{
 
 .user_name_post{
     font-size: 14px;
-    font-weight: bolder;
 }
 .post_feed_link{
     color:rgb(0, 140, 250);
@@ -2867,7 +2873,6 @@ div.day-number{
 }
 /* shared */
 td.calendar-day, td.calendar-day-np, td.calendar-day-current { 
-    max-width: 10px; 
     padding:5px; 
     padding-top: 30px;
     border-bottom:1px solid lightgrey; 
@@ -2875,27 +2880,22 @@ td.calendar-day, td.calendar-day-np, td.calendar-day-current {
 }
 
 td.calendar-day-current{
-    background-color: #ffc;
+    
 }
 
 td.calendar-day .event, td.calendar-day-current .event, .calendar-container .event{
-    /*border: 1px solid lightgrey;*/
     padding: 5px;
     margin-bottom: 5px;
     overflow: hidden;
     font-size: 11px;
 }
 .calendar-container .event{
-    background-color: rgb(245, 245, 245) !important;
-    border: 1px solid lightgrey !important;
     color: dimgrey;
 }
 .event {
-    background-color: rgb(0, 140, 250);
     background-image: url('../Images/down1.png');
     background-repeat: no-repeat;
     background-position: 95% 10px;
-    color: white;
 }
 .event_expanded {
     background-image: url('../Images/up.png');
@@ -2906,13 +2906,8 @@ td.calendar-day .event, td.calendar-day-current .event, .calendar-container .eve
     font-size: 11px;
 }
 
-.event_white a{
-    color: #333 !important;
-}
-.event_white{
-    border: 1px solid lightgrey;
-    background-color: white !important;
-    color: grey;
+.calendar-day .event {
+	margin-top: 0px !important;
 }
 .event:hover {
     background-image: url('../Images/up.png');
@@ -3050,7 +3045,6 @@ img.download{
 
 div.newfile{
     padding: 20px;
-    font-family: Calibri, Tahoma, Geneva, sans-serif;
     top: 1em; 
     width: 50%;
     background-color: transparent;
@@ -3154,6 +3148,7 @@ div.files, div.folder{
     position:relative;
     min-height: 30px;
     border-top:1px solid lightblue;
+    background-color: white;
 }
 div.files:hover, div.folder:hover{
 

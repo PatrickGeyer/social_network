@@ -4,7 +4,7 @@ $connected_users = array();
 <div id='friends_container'>
     <div id="friends_bar" class="friends_bar">
         <div id="friend_load">
-            <div class="group_list">
+            <div class="contentblock group_list">
                 <ul style="width:100%;">
                     <?php
                     $groups = Registry::get('group')->getUserGroups();
@@ -17,17 +17,17 @@ $connected_users = array();
                         . "</a></li>";
                     }
                     ?>
-                    <li style='background-image:url("Images/Icons/icons/application-plus.png");' onclick="show_group();" class="nav_option">
-                        <a class="nav_option ellipsis_overflow">Create Group</a>
+                    <li onclick="show_group();" class="friend_list_group">
+                        <a class="friend_list ellipsis_overflow"><i class='fa fa-plus'></i>&nbsp;<span>Create Group</span></a>
                     </li>
                     <?php
                     //if (isset($valid0)) {
-                        echo "<script>$('.group_list').prepend('<div class=\"timestamp\"><span>Groups</span></div>');</script>";
+                        echo "<script>$('.group_list').prepend('<b>Groups</b>');</script>";
                     //}
                     ?>
                 </ul>
             </div>
-            <div class="connection_list">
+            <div class="contentblock connection_list">
                 <ul style="width:100%;">
                     <?php
                     foreach (Registry::get('user')->getConnections() as $connection) {
@@ -42,13 +42,13 @@ $connected_users = array();
                         }
                     }
                     if (isset($valid)) {
-                         echo "<script>$('.connection_list').prepend('<div class=\"timestamp\"><span>Connections</span></div>');</script>";
+                         echo "<script>$('.connection_list').prepend('<b>Connections</b>');</script>";
                     }
                     ?>
                 </ul>
             </div>
-            <div class='community_list'>
-                <ul style="width:100%;">
+<!--             <div class='contentblock community_list'> -->
+<!--                 <ul style="width:100%;"> -->
                     <?php
 //                    while ($friends = $query->fetch(PDO::FETCH_ASSOC)) {
 //                        $valid = true;
@@ -61,9 +61,9 @@ $connected_users = array();
 //                         echo "<script>$('.community_list').prepend('<div class=\"timestamp\"><span>Community</span></div>');</script>";
 //                    }
                     ?>
-                </ul>
-            </div>
-            <div class="group_list_user">
+<!--                 </ul> -->
+<!--             </div> -->
+            <div class="contentblock group_list_user">
                 <ul style="width:100%;">
                     <?php
                      $groups = Registry::get('group')->getUserGroups();
@@ -81,7 +81,7 @@ $connected_users = array();
                          }
                      }
                      if (isset($valid6)) {
-                          echo "<script>$('.group_list_user').prepend('<div class=\"timestamp\"><span>Group</span></div>');</script>";
+                          echo "<script>$('.group_list_user').prepend('<b>Group</b>');</script>";
                      }
                     ?>
                 </ul>

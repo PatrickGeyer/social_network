@@ -44,17 +44,9 @@ div.chatoutput{
     bottom:65px;
     background-color: white;
     padding-left: 10px;
-    -webkit-transition: all 0.1s;
-    -moz-transition: all 0.1s;
-    -ms-transition: all 0.1s;
-    -o-transition: all 0.1s;
-    transition: all 0.1s;
-    /*    -webkit-box-shadow: inset 0 20px 20px -20px lightgrey;
-        -moz-box-shadow: inset 0 20px 20px -20px lightgrey;
-        box-shadow: inset 0 20px 20px -20px lightgrey;*/
-    /*border-top: 1px solid lightgrey;*/
     border-right: 1px solid lightgrey;
-    overflow-y: auto;
+    overflow-y: scroll;
+    overflow-x: hidden;
 }
 
 .text_input_container{
@@ -64,16 +56,7 @@ div.chatoutput{
     right:2px;
     border-top: 1px solid lightgrey;
     background-color: white;
-    min-height: 35px;
     padding: 0px;
-}
-
-div.chatinputtext{
-    padding:5px;
-    min-height: 34px;
-    background-color: white;
-    font-size: 13px;
-    color:black;
 }
 
 div.chatheader{
@@ -188,11 +171,9 @@ span.chatname:hover{
     font-size:12px;
 }
 .chattext{
-    text-align: left;
-    color: #333;
     word-break: break-word;
-    font-weight: lighter;
-    font-size:12px;
+    font-weight: 300;
+    font-size:13px;
 }
 .mychattext img, .chattext img{
     margin-bottom: -3px;

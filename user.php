@@ -1,15 +1,14 @@
 <?php
 function print_body() {
-	global $feed_id, Registry::get('home'), $files, $user, $userid, Registry::get('group'), Registry::get('db');
 
 if (isset($_GET['id'])) {
     $userid = urldecode(base64_decode($_GET['id']));
-    if ($userid == $user->getId()) {
+    if ($userid == Registry::get('user')->getId()) {
         $page_identifier = 'user';
     }
 }
 else {
-    $userid = $user->user_id;
+    $userid = Registry::get('user')->user_id;
 }
 
 
@@ -20,15 +19,15 @@ else {
     $feed_id = 'p';
 }
     if(TRUE) { ?>
-            <script>document.title = "<?php echo $name = $user->getName($userid); ?>";</script>
+            <script>document.title = "<?php echo $name = Registry::get('user')->getName($userid); ?>";</script>
 <!--     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBtmd6SX8JrdtTWhuVqIA37XJPO2nwtM6g&sensor=true"></script> -->
-            <div class='container'>
+            <div class='contentblock container'>
             <table class='info_table_layout'>
                 <tr>
                     <td rowspan='2' style='width:220px;'>
-                        <div class='profilepicturediv' style='background-image:url("<?php echo $user->getProfilePicture('THUMB', $userid); ?>");'>
+                        <div class='profilepicturediv' style='background-image:url("<?php echo Registry::get('user')->getProfilePicture('THUMB', $userid); ?>");'>
                             <?php
-                            if ($user->getId() == $userid) {
+                            if (Registry::get('user')->getId() == $userid) {
                                 echo "<div class='profile_picture_upload'>"
                                 . "<table style='height:100%;width:100%;'>"
                                 . "<tr style='vertical-align:middle;'>"
@@ -44,17 +43,17 @@ else {
                     </td>
                     <td>
                         <div class="pseudonym" entity_type='user' entity_id='<?php echo $userid; ?>'>
-                            <p class='name_title'><?php echo $user->getName($userid); ?></p>
+                            <p class='name_title'><?php echo Registry::get('user')->getName($userid); ?></p>
                             <?php
-                            if ($user->getAbout($userid) != "") {
+                            if (Registry::get('user')->getAbout($userid) != "") {
                                 echo "<div style='margin-top:10px;'>"
                                 . "<img id='about_saved' style='display:none;' title='Saved' src='Images\Icons\icons/tick-circle.png'></img>"
                                 . "</div>";
                                 echo "<div ";
-                                if ($userid == $user->getId()) {
+                                if ($userid == Registry::get('user')->getId()) {
                                     echo "title='Click to Edit' contenteditable ";
                                 }
-                                echo " id='about_edit_show' style='font-size:13px;padding:3px;width:100%;'>" . $user->getAbout($userid);
+                                echo " id='about_edit_show' style='font-size:13px;padding:3px;width:100%;'>" . Registry::get('user')->getAbout($userid);
                                 echo "</div>";
                             }
                             ?>
@@ -62,7 +61,7 @@ else {
                     </td>
                     <td>
                         <?php
-                        if ($userid == $user->getId()) {
+                        if ($userid == Registry::get('user')->getId()) {
                             echo "<button onclick='window.location.assign(&quot;settings&quot;);' "
                             . "style='float:right;' "
                             . "class='pure-button-blue'>Manage</button><br />";
@@ -71,7 +70,7 @@ else {
                             . "class='pure-button-blue'>Stats</button>";
                         }
 
-                        if ($userid != $user->getId()) {
+                        if ($userid != Registry::get('user')->getId()) {
                             echo "<button style='float:right;' class='pure-button-blue connect_button'>Connect</button><br />";
                             echo "<div style='background-image:none;padding-right:0px;float:right;' wrapper_id='invite_selector' class='default_dropdown_actions'>
 				<button class='pure-button-blue connect_button'>Invite</button>";
@@ -101,10 +100,12 @@ else {
                 <tr>
                     <td style='position:relative;'>
                         <div style='display:none;' id='more_user'>
-                            <input type='text' value='<?php echo $user->getEmail($userid); ?>' />
+                            <input type='text' value='<?php echo Registry::get('user')->getEmail($userid); ?>' />
                         </div>
+<!-- 
                         <div id='map-canvas' class='map_container'>
                         </div>
+ -->
                     </td>
                 </tr>
             </table>
@@ -136,7 +137,7 @@ else {
                     }
                     else {
                         echo "<div id='main_file' class='file post_height_restrictor' style='border-bottom:1px solid lightblue;'>";
-                        foreach (Registry::get('files')->getSharedList($userid, $user->getId()) as $file) {
+                        foreach (Registry::get('files')->getSharedList($userid, Registry::get('user')->getId()) as $file) {
                             Registry::get('files')->tableSort($file, false, true, $userid);
                         }
                         echo "</div>";

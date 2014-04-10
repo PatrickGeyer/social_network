@@ -1,15 +1,12 @@
 <?php
-include_once('welcome.php');
-include_once('chat.php');
+function print_body() {
+
 $emailvalid = false;
-?>
-<?php
 $current_tab = 'profile';
 if (isset($_GET['tab'])) {
     $current_tab = $_GET['tab'];
 }
 ?>
-<head>
     <script src="Scripts/external/jquery-ui-1.10.3.js"></script>
     <title>Settings</title>
     <script>
@@ -37,7 +34,7 @@ if (isset($_GET['tab'])) {
         });
 
         function checkPassword() {
-            var previous = '<?php echo $user->getPassword(); ?>';
+            var previous = '<?php echo Registry::get("user")->getPassword(); ?>';
             var current = $('#current_password').val();
             var first = $('#password_first').val();
             var second = $('#password_second').val();
@@ -51,10 +48,8 @@ if (isset($_GET['tab'])) {
             }
         }
     </script>
-</head>
-<body>
     <?php
-    $personaldir = "User/Profilepictures/" . $user->getId();
+    $personaldir = "User/Profilepictures/" . Registry::get('user')->getId();
     if (is_file($personaldir)) {
         if ($handle = opendir($personaldir)) {
             while (false !== ($entry = readdir($handle))) {
@@ -65,14 +60,12 @@ if (isset($_GET['tab'])) {
         }
     }
     ?>
-    <div class='global_container'>
-        <?php            include_once 'left_bar.php'; ?>
-        <div class="container container_full">
+        <div class="container">
             <table>
                 <tr>
                     <td>
-                        <div class='box_container box_container_nav' style='width:300px;margin-top:23px;'>
-                            <h3><?php echo $user->getName(); ?></h3>
+                        <div class='box_container box_container_nav contentblock' style='width:300px;margin-top:23px;'>
+                            <h3><?php echo Registry::get('user')->getName(); ?></h3>
                             <ul>
                                 <li class="section <?php if ($current_tab == "profile") echo "current"; ?>">
                                     <a <?php if ($current_tab == "profile") echo "class='current'"; ?> href="settings?tab=profile">Profile</a>
@@ -93,7 +86,7 @@ if (isset($_GET['tab'])) {
                         </div>
                     </td>
                     <td>
-                        <div class='box_container' style='width:430px;margin-top:23px;'>
+                        <div class='box_container contentblock' style='width:430px;margin-top:23px;'>
                             <?php if ($current_tab == "profile") : ?>
                                 <h3>Profile</h3>
                                 <ul>
@@ -110,8 +103,8 @@ if (isset($_GET['tab'])) {
                                     <li class='section'>
                                         <label class='settings'>Email</label>
                                         <input type="text" placeholder="Email..." autocomplete="off" id="email_primary" value="<?php
-                                        if ($user->getEmail() != '') {
-                                            echo $user->getEmail();
+                                        if (Registry::get('user')->getEmail() != '') {
+                                            echo Registry::get('user')->getEmail();
                                         }
                                         ?>"/>                        
                                     </li>
@@ -145,7 +138,7 @@ if (isset($_GET['tab'])) {
                                     <li class='section'>
                                         <label class='settings'>Current Position</label>
                                         <div class='default_dropdown_selector' style='display:inline-block;' wrapper_id='position_selector'>
-                                            <span class='default_dropdown_preview'><?php echo $user->getPosition(); ?></span>
+                                            <span class='default_dropdown_preview'><?php echo Registry::get('user')->getPosition(); ?></span>
                                             <div class='default_dropdown_wrapper' id='position_selector'>
                                                 <ul class='default_dropdown_menu'>
                                                     <?php
@@ -195,5 +188,6 @@ if (isset($_GET['tab'])) {
 
 
                                     </div>
-                                    </div>
-                                    </body>
+<?php } 
+
+require 'Scripts/lock.php';

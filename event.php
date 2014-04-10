@@ -1,7 +1,7 @@
 <?php
+function print_body() {
 if (isset($_GET['e'])) {
-    include_once('Scripts/calendar.class.php');
-    $calendar = Calendar::getInstance();
+    $calendar = Registry::get('calendar');
     $event_id = $_GET['e'];
     if (isset($_GET['action'])) {
         $event_action = "edit";
@@ -20,11 +20,7 @@ else {
     echo "<title>Create Event</title>";
 }
 
-include_once('welcome.php');
-include_once('chat.php');
 ?>
-<script src='<?php echo Base::DATETIMEPICKER; ?>'></script>
-<link rel="stylesheet" href="<?php echo Base::DATETIMEPICKER_CSS; ?>" />
 <script>
     $(function() {
         var event_id = "<?php (isset($event['id']) ? $event['id'] : "''" ); ?>";
@@ -75,7 +71,7 @@ include_once('chat.php');
             if($event_action == 'edit') {
                 foreach ($event['receivers']['user'] as $id) {
                     if ($id != $event['user_id'])
-                        echo 'addreceiver("user", '.$id.', "' . $user->getName($id) . '", event_receivers, "event");';
+                        echo 'addreceiver("user", '.$id.', "' . Registry::get('user')->getName($id) . '", event_receivers, "event");';
                     }                
             }?>
         }
@@ -106,10 +102,8 @@ include_once('chat.php');
         });
     });
 </script>
-<div class="global_container">
-    <?php include_once 'left_bar.php'; ?>
     <div style='padding-top: 20px;' class='container'>
-        <div style='margin-top:0px;' class='box_container'>
+        <div style='margin-top:0px;' class='contentblock box_container'>
             <?php if ($event_action == "create" || $event_action == "edit"): ?>
                 <h3><?php echo ($event_action == "create" ? "Create Event" : "Edit Event"); ?><button id='back_to_cal' class='pure-button-neutral'>Back to Calendar</button></h3>
                 <ul>
@@ -174,7 +168,7 @@ include_once('chat.php');
                                         </tr>
                                         <tr>
                                             <td>
-                                                <?php echo $user->printTag($event['user_id']); ?>
+                                                <?php echo Registry::get('user')->printTag($event['user_id']); ?>
                                             </td>
                                         </tr>
                                     </table>
@@ -206,13 +200,13 @@ include_once('chat.php');
                             <?php
                             foreach ($event['receivers']['user'] as $id) {
                                 if ($id != $event['user_id'])
-                                    echo "<div style='display:inline-block;'>" . $user->printTag($id) . "</div>";
+                                    echo "<div style='display:inline-block;'>" . Registry::get('user')->printTag($id) . "</div>";
                             }
                             ?>
                         </li>
     <?php endif; ?>
                     <li class='section'>
-                        <?php if($event['user_id'] == $user->user_id) { ?>
+                        <?php if($event['user_id'] == Registry::get('user')->user_id) { ?>
                         <button id='delete_button' class='pure-button-warning'>Remove</button>
                         <?php } ?>
                         <a style='display:inline-block;' href='event?e=<?php echo $event_id; ?>&action=edit'><button class='pure-button-green'>Edit Event</button></a>
@@ -221,6 +215,8 @@ include_once('chat.php');
                 </ul>
 <?php endif; ?>
         </div>
-    </div>
-    <?php include_once 'right_bar.php';?>
-</div>
+        </div>
+    <?php 
+    } 
+	require 'Scripts/lock.php';
+    ?>

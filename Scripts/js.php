@@ -34,9 +34,12 @@ Registry::get('system')->jsVars();
 
 <!--<script src="Scripts/external/wavesurfer.js"></script>-->
 
+<script src='<?php echo Base::DATETIMEPICKER; ?>'></script>
+<link rel="stylesheet" href="<?php echo Base::DATETIMEPICKER_CSS; ?>" />
+
 
 <script>
-    _V_.options.techOrder = ["flash"];
+//     _V_.options.techOrder = ["flash"];
     _V_.options.flash.swf = "Scripts/external/video-js/video-js.swf";
 </script>
 
@@ -114,43 +117,6 @@ Registry::get('system')->jsVars();
 
     var currentPage = getCookie('current_feed');
 
-
-    setInterval(function() {
-        //resizeScrollers();
-    }, 25000);
-
-    function submitPost()
-    {
-        var text = $('#status_text').val();
-        if (text != "" || post_media_added_files.length != 0)
-        {
-            modal($('body'), properties = {type: "", text: "Posting content..."});
-            $.post("Scripts/home.class.php", {action:"update_status", status_text: text, group_id: share_group_id, post_media_added_files: post_media_added_files}, function(data)
-            {
-                if (data == "")
-                {
-                    removeModal('', function() {
-                        Application.prototype.feed.get(share_group_id, null, 0, min_activity_id, activity_id, function(response){
-                    		var string = '';
-                    		for (var i in response) {
-                                    string += Application.prototype.feed.homify(response[i]);
-                    		}
-                    		$('.feed_container').prepend(string);
-                		});
-                    });
-                    clearPostArea();
-                }
-                else
-                {
-                    alert(data);
-                }
-            });
-        }
-    }
-    function Feed(value)
-    {
-        scrollH("#" + value, "#feed_wrapper_scroller", 0);
-    }
 
 // #HOME
     $(function() {
@@ -278,160 +244,6 @@ Registry::get('system')->jsVars();
         }
     }
 
-    function addToStatus(object, activity_id)
-    {
-        $('.post_media_wrapper_background').hide();
-        var post_media_classes = '';
-        var post_media_style = " style=' ";
-        var text_to_append = '';
-        var additional_close = '';
-        var extra_params = " post_file_id='" + object.file_id + "' ";
-        //text_to_append += ">"; 
-        text_to_append += Application.prototype.file.print(object, 'add_to_status');
-        if (object.type == "Image")
-        {
-            post_media_classes += "post_media_photo post_media_full";
-            additional_close += " post_media_single_close_file";
-        } else if (object.type == "Audio")
-        {
-             post_media_classes += " post_media_item post_media_full";
-             additional_close += " post_media_single_close_file";
-
-        } else if (object.type == "Video") {
-            post_media_classes += " post_media_video";
-            additional_close += " post_media_single_close_file";
-            //text_to_append += video_player(object, 'classes', 'styles', 'added_to_status_', true);
-
-        } else if (object.type == "Webpage") {
-            post_media_classes += " post_media_double";
-            post_media_style += "height:auto;";
-            additional_close += " post_media_single_close_webpage";
-            extra_params = " post_file_id='" + object.path + "' ";
-            text_to_append += "><table style='height:100%;'><tr><td rowspan='3'>" +
-                    "<div class='post_media_preview' style='background-image:url(&quot;" + object.info.favicon + "&quot;);'></div></td>" +
-                    "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>" +
-                    "<a class='user_preview_name' target='_blank' href='" + object.path + "'><span style='font-size:13px;'>" + object.info.title + "</span></a></div></td></tr>" +
-                    "<tr><td><span style='font-size:12px;' class='user_preview_community'>" + object.info.description + "</span></td></tr></table>";
-        } else if (object.type == "Folder") {
-//            text_to_append += documentStatus(object.path, object.name, object.description, FOLDER_THUMB);
-        } else if (object.type == "WORD Document") {
-        } else if (object.type == "PDF Document") {
-        } else if (object.type == "PPT Document") {
-        } else {
-        }
-        if (object.type == "WORD Document" 
-                || object.type == "PDF Document" 
-                || object.type == "PPT Document" 
-                || object.type == "ACCESS Document" 
-                || object.type == "EXCEL Document"
-                || object.type == "Folder") {
-            post_media_classes += " post_media_double";
-            post_media_style += "height:auto;";
-            additional_close += " post_media_single_close_file";
-            extra_params = " post_file_id='" + object.id + "' ";
-        }
-        var index;
-        for (var i = 0; i < post_media_added_files.length; i++)
-        {
-            if (post_media_added_files[i].id == object.id || post_media_added_files[i] == object.id)
-            {
-                index = "found";
-                Application.prototype.UI.dialog(
-                        content = {
-                            type: 'html',
-                            content: "Sorry, but you have already added this file to your post. Please choose another instead!"
-                        },
-                buttons = [{
-                        type: "error",
-                        text: "OK",
-                        onclick: function() {
-                            removeDialog();
-                        }
-                    }],
-                properties = {
-                    modal: false,
-                    title: "Whoops!"
-                });
-            }
-        }
-        if (index != "found")
-        {
-            if (object.type == "Webpage") {
-                post_media_added_files.push(object);
-            } else {
-                post_media_added_files.push(object.id);
-            }
-            $('.post_media_wrapper').append(text_to_append);
-            if(object.type == "Video") {
-                refreshVideoJs();
-            }
-        }
-
-        if (post_media_added_files.length > 1) {
-            $('#status_text').attr('placeholder', 'Write about these files...');
-        }
-        else {
-            $('#status_text').attr('placeholder', 'Write about this file...');
-        }
-        $('#status_text').focus();
-        $('#file_share').mCustomScrollbar("update");
-    }
-    function documentStatus(path, name, description, image, type) {
-        var preview_classes = '';
-        var preview_styles = '';
-        var preview_content = '';
-        
-        if(type == "Image") {
-            preview_classes += "post_media_photo";
-            preview_styles += "background-size:cover;width:100px;height:100%;"
-            preview_content += "<div class='fade_right_shadow'></div>"; //Shadow
-        }
-        var thing = "><table style='height:100%;'><tr><td rowspan='3'>" +
-                "<div class='" + preview_classes + " post_media_preview' style='" + preview_styles + 
-                "background-image:url(&quot;" + image + "&quot;);'>" + preview_content + "</div></td>" +
-                "<td style='height:10px;'><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>" +
-                "<a class='user_preview_name' target='_blank' href=''><span style='font-size:13px;'>" + name + "</span></a></div></td></tr>" +
-                "<tr><td><span style='font-size:12px;' class='user_preview_community'>" + description + "</span></td></tr></table>";
-        return thing;
-    }
-    function removeFromStatus(object)
-    {
-        var id;
-        if (object.type == "Webpage") {
-            addedURLs = removeFromArray(addedURLs, object.value);
-            id = '#post_media_single_' + formatToID(object.value);
-            for (var i = 0; i < post_media_added_files.length; i++) {
-                if (object.value == post_media_added_files[i].path) {
-                    //console.log('Website detected in Post Attachements: '+object.value + " to " + post_media_added_files[i].path + " now REMOVED!");
-                    post_media_added_files.splice(i, 1);
-                } else {
-                    //console.log('No Website detected in Post Attachements: Submitted value of '+object.value + " to " + post_media_added_files[i].path);
-                }
-            }
-        } else {
-            var element = $('.post_media_wrapper [data-file_id="' + object.value + '"]');
-            element.remove();
-            for (var i = 0; i < post_media_added_files.length; i++) {
-                if (object.value == post_media_added_files[i]) {
-                    //console.log('File detected in Post Attachements: '+object.value + " to " + post_media_added_files[i] + " now REMOVED!");
-                    post_media_added_files.splice(i, 1);
-                } else {
-                    //console.log('No File detected in Post Attachements: Comparing submitted value of '+object.value + " to " + post_media_added_files[i] + " of " + post_media_added_files);
-                }
-            }
-
-        }
-        $(id).remove();
-
-        if (post_media_added_files.length == 0)
-        {
-            $('#status_text').attr('placeholder', 'Update Status or Share Files...');
-            $('.post_media_wrapper_background').show();
-        }
-        $('#status_text').focus();
-        resizeScrollers();
-        //console.log("Resulting media list: " + post_media_added_files + "/n Added URLS = " + addedURLs);
-    }
     function removeFromArray(array, match) {
         for (var i = 0; i < array.length; i++)
         {
