@@ -32,8 +32,6 @@ function print_body() {
         $file_id = $_GET['f'];
         Registry::get('files')->fileView($file_id);
     }
-
-    $used_width = Registry::get('files')->getUsedSize();
     if (TRUE) {
         ?>
         <script>
@@ -81,9 +79,6 @@ function print_body() {
             }
         </script>
         <div class='container'>
-            <div class='files_space_container'>
-                <div class='files_space_meter' style='width:<?php echo $used_width; ?>%;'></div>
-            </div>
             <div class="files_recently_shared_container">
                 <div class='files_recently_shared'>
                     <table>

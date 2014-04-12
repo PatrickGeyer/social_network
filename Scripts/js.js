@@ -2010,9 +2010,9 @@ Application.prototype.chat.iniScroll = function() {
 };
 
 Application.prototype.chat.detectChange = function() {
-    var key_height = $('.chatinputtext').outerHeight(true);
-    var bottom = key_height;
-    $('.chatoutput').css('bottom', bottom + "px");
+//    var key_height = $('.chatinputtext').outerHeight(true);
+//    var bottom = key_height;
+//    $('.chatoutput').css('bottom', bottom + "px");
     this.scroll2Bottom(false, chat_room); //USE EVEN IF NOT LOADED
 };
 
@@ -2085,34 +2085,49 @@ Application.prototype.chat.sendRequest = function(all, chat_index) {
 };
 
 Application.prototype.chat.styleResponse = function(response, chat_index) {
-    var string = '';
+    var final = $('<div></div>');
     if (response.length == 0) {
 
     }
     for (var i = response.length - 1; i >= 0; i--) {
         if (response[i]['type'] != 'event') {
-            string += "<li class='single_chat'><div class='chat_wrapper'><table cellspacing='0' cellpadding='0' style='width:100%;'><tr><td style='width:50px;padding-right:5px;'>";
-            string += "<div data-user_id='" + response[i]['user_id'] + "' class='profile_picture_medium online_status' style='float:left;";
-            string += "background-image:url(\"" + response[i]['pic'] + "\");'></div></td><td>";
-            string += "<div class='chatname'><span class='user_preview user_preview_name chatname' style='margin-right:5px;font-size:13px;' user_id='" + response[i]['user_id'] + "'>" + response[i]['name'] + "</span></div>";
-            string += "<div class='chattext'>" + response[i]['text'].replaceLinks().replaceEmoticons() + "</div></td></tr><tr><td colspan='2' style='text-align:right;'>";
-            string += "<span class='chat_time post_comment_time'>" + response[i]['time'] + "</span></td></tr></table></div></li>";
+            var string = $("<li class='single_chat'></li>")
+            var chat_wrapper = $("<div class='chat_wrapper " + (USER_ID == response[i]['user_id'] ? 'self-chat' : 'other-chat') + "'>");
+            var profile_picture = $("<div data-user_id='" + response[i]['user_id'] + "' class='profile_picture_medium online_status'>");
+            profile_picture.css('background-image', 'url("' + response[i]['pic'] + '")');
+            var chat_bubble = $("<div class='chat-content'></div>");
+            var chat_name = $("<div class='chatname'></div>").append("<span class='user_preview user_preview_name chatname' user_id='" + response[i]['user_id'] + "'>" + response[i]['name'] + "</span>");
+            var chat_text = $("<div class='chattext'>").append(response[i]['text'].replaceLinks().replaceEmoticons());
+            chat_bubble.append(chat_name);
+            chat_bubble.append(chat_text);
+            chat_bubble.append("<span class='chat_time post_comment_time'>" + response[i]['time'] + "</span>");
+            
             if ($.inArray(response[i]['id'], this.room[chat_index].entry) !== -1) {
                 return;
             }
+            if(i == 0) {
+                var preview = $('<span><img style="width:20px;" src="' + response[i]['pic'] + '"/> ' + response[i]['text'] + '</span>');
+                $('.chatcomplete[data-chat_room="' + chat_index + '"] .chat-preview').html(preview);
+            }
+            if(USER_ID == response[i]['user_id']) {
+                chat_wrapper.append(chat_bubble).append(profile_picture);
+            } else {
+                chat_wrapper.append(profile_picture).append(chat_bubble);
+            }
+            final.append(string.append(chat_wrapper));
             this.room[chat_index].entry.push(response[i]['id']);
         } else {
             if (response[i]['code'] == 0) {
             } else {
-                string += "<li class='single_chat'><div class='chat_wrapper'><table cellspacing='0' cellpadding='0' style='width:100%;'><tr><td style='width:50px;padding-right:5px;'>";
-                string += "<div class='chattext'>" + response[i]['text'] + "</div></td></tr><tr><td colspan='2' style='text-align:right;'>";
+                final += "<li class='single_chat'><div class='chat_wrapper'><table cellspacing='0' cellpadding='0' style='width:100%;'><tr><td style='width:50px;padding-right:5px;'>";
+                final += "<div class='chattext'>" + response[i]['text'] + "</div></td></tr><tr><td colspan='2' style='text-align:right;'>";
             }
         }
     };
 
     this.room[chat_index].newest = Array.max(this.room[chat_index].entry);
     this.room[chat_index].oldest = Array.min(this.room[chat_index].entry);
-    return string;
+    return final.html();
 };
 
 Application.prototype.chat.scroll2Bottom = function(force, chat_index) {
@@ -2134,21 +2149,10 @@ Application.prototype.chat.submit = function(chat_text, chat_index) {
             $('.chatinputtext').removeAttr('readonly');
             $('.chatinputtext').attr('placeholder', "Press Enter to send...");
             self.room[chat_index].bottom = true;
+            self.scroll2Bottom(true, chat_index);
         });
     }
 };
-
-//function change_chat_view(change_view) {
-//    $('.chat_feed_selector[chat_feed="' + change_view + '"] *').css('color', 'black');
-////            $('.chat_loader').slideDown('fast');
-//    $('.chatoutput').hide();
-//    $('[data-chat_room="' + change_view + '"]').show();
-////            clearTimeout(timer);
-//    chat_room = change_view;
-//    //current_view = change_view;
-//    scroll2Bottom(true, chat_room);
-//    setCookie('chat_feed', change_view, 5);
-//}
 
 function calculateDistance(elem, mouseX, mouseY)
 {
@@ -2918,10 +2922,13 @@ $(function() {
     /****************************************************
      * 2.1.3 Startup - Resize                            *
      ****************************************************/
-
+    $(document).on('ready', function() {
+        $('.autoresize').trigger('keydown');
+    });
+    
     $(document).on('keydown', '.autoresize, .inputtext', function(e) {
         $(this).css('height', '0px');
-        $(this).css('height', $(this)[0].scrollHeight + 10 + "px");
+        $(this).css('height', $(this)[0].scrollHeight + "px");
     });
 
     $(window).resize(function() {
@@ -2958,21 +2965,21 @@ $(function() {
     if (cookie == 0) {
         $('#chat').hide();
     }
-    $("#chat_toggle").click(function() {
-        var cookie = getCookie("chat_feed");
-        if (cookie > 0 || isNaN(cookie)) {
-            setCookie('chat_feed', 0, 5);
-            $('#chat_toggle').html("OFF");
-            $('#chat').hide('slide', {direction: 'right'}, 500);
-        } else {
-            $('#chat_toggle').html("ON");
-            $('#chat').show('slide', {direction: 'right', duration: 0}, 500);
-        }
-    });
+//    $("#chat_toggle").click(function() {
+//        var cookie = getCookie("chat_feed");
+//        if (cookie > 0 || isNaN(cookie)) {
+//            setCookie('chat_feed', 0, 5);
+//            $('#chat_toggle').html("OFF");
+//            $('#chat').hide('slide', {direction: 'right'}, 500);
+//        } else {
+//            $('#chat_toggle').html("ON");
+//            $('#chat').show('slide', {direction: 'right', duration: 0}, 500);
+//        }
+//    });
 
-    $(document).on('click', '.chat_feed_selector', function() {
-        //change_chat_view($(this).attr("chat_feed"));
-    });
+//    $(document).on('click', '.chat_feed_selector', function() {
+//        //change_chat_view($(this).attr("chat_feed"));
+//    });
 
     $(document).on("propertychange keydown input change", '.chatinputtext', function(e) {
         if (e.keyCode == 13) {
@@ -2983,7 +2990,9 @@ $(function() {
         }
         Application.prototype.chat.detectChange();
     });
-
+    $(document).on('click', '.chat-head, .chat_feed_selector', function() {
+        $(this).parents('.chatcomplete').toggleClass('active');
+    });
     $(document).on('click', '.delete_message', function(event) {
         event.stopPropagation();
         event.preventDefault();

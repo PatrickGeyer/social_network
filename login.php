@@ -224,14 +224,15 @@ else {
                         <tr>
                             <td colspan="2"><input class="email_signup" spellcheck="false" type="text" style="width:100%;" autocomplete="off" placeholder="Email"/></td>
                         </tr>
-                        <tr>
+                  <!-- 
+      <tr>
                             <td colspan="2">
                                 <div tabindex="0" wrapper_id='organization_choose' class='dropdown_login default_dropdown_selector'>
                                     <span class='default_dropdown_preview'>Choose School</span>
                                     <div id='organization_choose' class='scroll_thin default_dropdown_wrapper'>
                                         <ul class='default_dropdown_menu'>
                                             <?php
-                                            foreach ($allschools->fetchAll(PDO::FETCH_ASSOC) as $schools) {
+                                            foreach (array() as $schools) {
                                                 echo "<li value='" . $schools['id'] . "' class='default_dropdown_item'>";
                                                 echo $schools['name'];
                                                 echo "</li>";
@@ -260,6 +261,7 @@ else {
                                 </div>
                             </td>
                         </tr>
+ -->
                         <tr>
                             <td colspan="2">
                                 <div tabindex="0" wrapper_id='gender_choose' class='dropdown_login default_dropdown_selector'>
@@ -283,42 +285,6 @@ else {
                         </tr>
                     </table>
                 </div>
-                <?php
-                if (isset($_GET['action'])) { ?> <h1 class="signupheader">Registry a School</h1>
-                <form id="school" action="Scripts/verifysignup.php" method="POST">
-                 <div class="signupbox">
-                     <table border="0">
-                         <tr>
-                             <td colspan="2"><input type="text" style="width:100%;" autocomplete="off" placeholder="School Name (e.g. Clifford School)" name="school"/></td>
-                         </tr>
-                         <tr>
-                             <td><input type="text" placeholder="First Name"autocomplete="off" name="firstname"/></td><td><input type="text" placeholder="Last Name"autocomplete="off" name="lastname"/></td>
-                         </tr>
-                         <tr>
-                             <td colspan="2"><input type="password" style="width:100%;" placeholder="Password" autocomplete="off" name="newpassword"/></td>
-                         </tr>
-                         <tr>
-                             <td colspan="2"><input type="text" style="width:100%;" autocomplete="off" placeholder="Email" name="email"/></td>
-                         </tr>
-                         <tr>
-                             <td><label>Select Year:</label></td><td><div class="styled-select"><select style="width:100%;" name="year"> <option>1</option><option>2</option><option>3</option>
-                             <option>4</option><option>5</option><option>6</option><option>7</option><option>10</option><option>8</option><option>9</option><option>10</option>
-                             <option>11</option><option>12</option><option>13</option><option>14</option></select></div></td>
-                         </tr>
-                         <tr>
-                             <td><div class="styled-select"><select style="width:100%;" name="gender"><option>Male</option><option>Female</option></select></div></td>
-                         </tr>
-                         <tr>
-                             <td colspan="2"><input type="submit" value="Registry User and School"></input></td>
-                         </tr>
-                         <tr>
-                             <td colspan="2"><label>*When you Registry a school <br>you will automatically be<br> appointed admin.</label></td>
-                         </tr>
-                     </table>
-                 </div>
-             </form>';
-             <?php }
-             ?>
          </div>
          <div class='bottom_bar'>
             <div style='float:left;margin-right:20px;'>

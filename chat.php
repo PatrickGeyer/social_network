@@ -38,18 +38,27 @@ $chat_rooms = $chat->get_chat_rooms();
 
 <?php foreach ($chat_rooms as $single_group) { ?>
     <div class="chatcomplete contentblock" data-chat_room="<?php echo $single_group['id']; ?>">
-        <div id='feed_wrapper_scroller' class='chatheader'>
-            <div class='chat_feed_selector <?php echo ($chat_feed == $single_group['id'] ? "active_feed" : "") ?>'>
-                <h3 class='chat_header_text ellipsis_overflow'><?php echo $single_group['name']; ?></h3>
+        <div class='chatheader'>
+            <div class="chat-head"></div>
+            <div class='chat-info'>
+                <div class='chat_feed_selector <?php echo ($chat_feed == $single_group['id'] ? "active_feed" : "") ?>'>
+                    <strong>
+                        <p class='chat_header_text ellipsis_overflow'><?php echo $single_group['name']; ?></p>
+                    </strong>
+                </div><br />
+                <div class='chat-preview'></div>
             </div>
         </div>
-        <div class="chatoutput" data-chat_room="<?php echo $single_group['id']; ?>" <?php echo($chat_feed != $single_group['id'] ? "style='display:none'" : ""); ?>>
-            <div class='chat_loader' style='display:none;'><div class='loader_outside_small'></div><div class='loader_inside_small'></div></div>
-            <ul style='max-width:225px;' class='chatreceive'>
-            </ul>
-        </div>
-        <div class='text_input_container'>
-            <textarea id="text" class="chatinputtext autoresize"  placeholder="Press Enter to send..." style='font-size: 12px;border:0px;width:100%;resize:none;overflow:hidden;'></textarea>
+        <div class="chat-container">
+            <div></div>
+            <div class="chatoutput" data-chat_room="<?php echo $single_group['id']; ?>" <?php echo($chat_feed != $single_group['id'] ? "style='display:none'" : ""); ?>>
+                <div class='chat_loader' style='display:none;'><div class='loader_outside_small'></div><div class='loader_inside_small'></div></div>
+                <ul style='max-width:225px;' class='chatreceive'>
+                </ul>
+            </div>
+            <div class='text_input_container'>
+                <textarea id="text" class="chatinputtext autoresize"  placeholder="Press Enter to send..."></textarea>
+            </div>
         </div>
     </div>
 <?php } ?>

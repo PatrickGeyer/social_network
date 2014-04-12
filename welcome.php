@@ -182,7 +182,8 @@ function print_header($PRINT = TRUE) {
                     </div>
                     <div class='global_header_icon_container'>
                         <div class="message" id="message_click">
-                            <img id="message" class ="message" src='<?php $base = Registry::get('base'); echo $base::INBOX_IMG; ?>'></img>
+                            <img id="message" class ="message" src='<?php $base = Registry::get('base');
+                   echo $base::INBOX_IMG; ?>'></img>
                             <div id="messagediv" class="popup_div">
                                 <div class="popup_top">
                                     <span class='popup_header'>Messages</span>
@@ -220,7 +221,7 @@ function print_header($PRINT = TRUE) {
                         </div>
                     </div>
                 </div>
-                <div class='global_media_container'></div>
+                <div class='contentblock global_media_container'></div>
                 <div class="gear">
                     <a style="cursor:pointer;">
                         <img id="gear_click" style="z-index:11; width:16px; height:16px; " class="logout_image_small message" src ="Images\Icons\Icon_Pacs\Batch-master\Batch-master\PNG\16x16\settings-2.png"></img>
@@ -234,7 +235,10 @@ function print_header($PRINT = TRUE) {
                 </div>
             </div>
         </div>
-    <?php
+        <div class='files_space_container'>
+            <div class='files_space_meter' style='height:<?php echo Registry::get('files')->getUsedSize(); ?>%;'></div>
+        </div>
+        <?php
     }
 }
 ?>
