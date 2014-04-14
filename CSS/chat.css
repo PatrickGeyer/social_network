@@ -2,8 +2,7 @@ input[type="submit"].chatsend {
     display: none;
 }
 div.chatcomplete{
-    position:relative;
-    z-index:104;
+    position:absolute;
     width: 100%;
     font-size: 0.85em;
     display: none;

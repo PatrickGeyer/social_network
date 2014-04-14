@@ -1628,6 +1628,7 @@ div.global_container {
 }
 .content{
     min-height: 600px;
+    position: relative;
 }
 .left_bar_container{
     float: left;
@@ -1639,9 +1640,11 @@ div.global_container {
 }
 
 .right_bar_container {
-    float: right;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
     width: 250px; /* - 15 px fopr padding -- -1 for border*/
-    position: relative;
 }
 /*.right_bar_shift {
     position: relative;

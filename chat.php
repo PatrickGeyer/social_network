@@ -35,7 +35,6 @@ $chat_rooms = $chat->get_chat_rooms();
 <?php } ?>
     </script>
 </head>
-
 <?php foreach ($chat_rooms as $single_group) { ?>
     <div class="chatcomplete contentblock" data-chat_room="<?php echo $single_group['id']; ?>">
         <div class='chatheader'>
