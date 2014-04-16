@@ -23,11 +23,11 @@ $chat_rooms = $chat->get_chat_rooms();
             var i = "<?php echo $single_group['id']; ?>";
             Application.prototype.chat.room[i] = {};
             Application.prototype.chat.room[i] = {
-                entry : new Array(),
-                oldest : 0,
-                newest : 998999999,
-                getting_previous : false,
-                last : false
+                entry: new Array(),
+                oldest: 0,
+                newest: 998999999,
+                getting_previous: false,
+                last: false
             };
             $(function() {
                 Application.prototype.chat.sendRequest('true', i);
@@ -41,9 +41,7 @@ $chat_rooms = $chat->get_chat_rooms();
             <div class="chat-head"></div>
             <div class='chat-info'>
                 <div class='chat_feed_selector <?php echo ($chat_feed == $single_group['id'] ? "active_feed" : "") ?>'>
-                    <strong>
-                        <p class='chat_header_text ellipsis_overflow'><?php echo $single_group['name']; ?></p>
-                    </strong>
+                    <p class='chat_header_text ellipsis_overflow'><?php echo $single_group['name']; ?></p>
                 </div><br />
                 <div class='chat-preview'></div>
             </div>
