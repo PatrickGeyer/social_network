@@ -113,8 +113,8 @@ class Calendar {
             ":event_id" => $event
             ));
         $files = $sql->fetchAll(PDO::FETCH_ASSOC);
-        foreach($files as $file) {
-            $file = Registry::get('files')->format_file($file);
+        foreach($files as $key => $file) {
+            $files[$key] = Registry::get('files')->format_file($file);
         }
         return $files;
     }

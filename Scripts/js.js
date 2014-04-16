@@ -2255,12 +2255,12 @@ Application.prototype.calendar.getEvents = function(limit, callback) {
 Application.prototype.calendar.event.print = function(event, classes) {
     var string = '';
     var file_string = '<table>';
-
-    for (var file in event.file) {
+    console.log(event);
+    for (var file in event.file) {''
         file_string += '<tr><td>';
         file_string += "<div class='profile_picture_icon' style='vertical-align:top;display:inline-block;background-image: url(\""
-                + event.file[file].preview_thumb + "\");'></div>";
-        file_string += "</td><td><a href='" + event.file[file].path
+                + event.file[file].type_preview + "\");'></div>";
+        file_string += "</td><td><a href='download.php?id=" + event.file[file].id
                 + "' download><p style='margin:0px;padding:0px;max-width:120px;' class='ellipsis_overflow'>"
                 + event.file[file].name + "</p></a><br /></td></tr>";
     }
