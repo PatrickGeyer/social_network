@@ -37,6 +37,9 @@ Application.prototype.chat = {
 };
 Application.prototype.generic = {
 };
+Application.prototype.navigation = {
+    initial: true
+};
 Application.prototype.feed = {
     comment: {
         comments: new Array()
@@ -289,13 +292,14 @@ Application.prototype.search.styleSingle = function(item) {
     return div;
 };
 
-Application.prototype.generic.relocate = function(event, element) {
+Application.prototype.navigation.relocate = function(event, element) {
+    this.initial = false;
     event.preventDefault();
     $('.container').html("<div class='loader_outside'></div><div class='loader_inside'></div>");
     $.get($(element).attr('href'), {ajax: 'ajax'}, function(response) {
         var container = $(response);
 //        container.hide();
-        $('.content.container').replaceWith(container);
+        $('.container').replaceWith(container);
 //        container.fadeIn('fast');
         window.history.pushState({}, 'WhatTheHellDoesThisDo?!', '/' + $(element).attr('href'));
         $('body').scrollTop(0);
@@ -2255,7 +2259,6 @@ Application.prototype.calendar.getEvents = function(limit, callback) {
 Application.prototype.calendar.event.print = function(event, classes) {
     var string = '';
     var file_string = '<table>';
-    console.log(event);
     for (var file in event.file) {''
         file_string += '<tr><td>';
         file_string += "<div class='profile_picture_icon' style='vertical-align:top;display:inline-block;background-image: url(\""
@@ -2300,12 +2303,13 @@ $(function() {
      ****************************************************/
 
     $(document).on('click', 'a[href!="#"][href]:not([download], .no-ajax)', function(e) {
-        Application.prototype.generic.relocate(e, $(this));
+        Application.prototype.navigation.relocate(e, $(this));
     });
 
     window.onpopstate = function(event) {
-//        console.log(window.location.pathname + window.location.search);
-        Application.prototype.generic.relocate(event, $("<a></a>").attr('href', window.location.pathname + window.location.search));
+        if (Application.prototype.navigation.initial === false) {
+            Application.prototype.navigation.relocate(event, $("<a></a>").attr('href', window.location.pathname + window.location.search));
+        }
     };
 
     Application.prototype.UI.adjustSwitches();
