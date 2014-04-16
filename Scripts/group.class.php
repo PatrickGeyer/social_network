@@ -19,7 +19,7 @@ class Group extends Entity {
         return self :: $group;
     }
 
-    function getGroupName($id) {
+    function getName($id) {
         $user_query = "SELECT name FROM `group` WHERE id = :id;";
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":id" => $id));

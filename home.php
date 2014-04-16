@@ -57,7 +57,7 @@ function print_body() {
                                     foreach (Registry::get('group')->getUserGroups() as $single_group) {
                                         echo "<li class='default_dropdown_item' "
                                         . "controller_id='audience_selector' share_id='" . $single_group . "'>";
-                                        echo "<span>" . Registry::get('group')->getGroupName($single_group) . "</span>";
+                                        echo "<span>" . Registry::get('group')->getName($single_group) . "</span>";
                                         echo "</li>";
                                     }
                                     ?>
@@ -81,9 +81,9 @@ function print_body() {
             $(function($)
             {
                 Application.prototype.feed.get(share_group_id, 'home', min_activity_id, activity_id, function(response) {
-                    var string = '';
+                    var string = $('<div></div>');
                     for (var i in response) {
-                        string += Application.prototype.feed.homify(response[i]);
+                        string.append(Application.prototype.feed.homify(response[i]));
                     }
                     $('.feed_container').prepend(string);
                 });

@@ -102,7 +102,7 @@ else {
         });
     });
 </script>
-    <div style='padding-top: 20px;' class='container'>
+    <div class='container'>
         <div style='margin-top:0px;' class='contentblock box_container'>
             <?php if ($event_action == "create" || $event_action == "edit"): ?>
                 <h3><?php echo ($event_action == "create" ? "Create Event" : "Edit Event"); ?><button id='back_to_cal' class='pure-button-neutral'>Back to Calendar</button></h3>
@@ -114,17 +114,11 @@ else {
                         <label class='settings'>Notes</label><textarea class='autoresize' id='event_description'><?php echo $event['description']; ?></textarea><div class='textarea_clone'></div>
                     </li>
                     <li class='section'>
-                        <table cellspacing="0">
-                            <tr>
-                                <td>
-                                    <label class='settings'>Date & Time</label><input type="text" id="datepicker" />
-                                </td>
-                                <td>
-                                    <label class='settings'>Attach Files</label>
-                                    <div class="file_box" style="width: 300px;max-height: 200px;"></div>
-                                </td>
-                            </tr>
-                        </table>
+                        <label class='settings'>Date & Time</label><input type="text" id="datepicker" />
+                    </li>
+                    <li class="section">
+                         <label class='settings'>Attach Files</label>
+                         <div class="file_box" style="max-height: 200px;"></div>
                     </li>
                     <li class='section'>
                         <label class='settings'>Share</label>

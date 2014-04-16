@@ -466,11 +466,11 @@ class User {
 
     function printTag($id) {
         $return = "<table cellspacing='0'>"
-                . "<tr><td><a href='user?id=".base64_encode($id)."'><div class='profile_picture_medium' style='background-image: url(\"".$this->getProfilePicture("thumb", $id). "\");'></div></a>
+                . "<tr><td><a href='user?id=".$id."'><div class='profile_picture_medium' style='background-image: url(\"".$this->getProfilePicture("thumb", $id). "\");'></div></a>
                                         </td>
                                         <td>
                                             <p style='padding-left: 0px;' class='settings'>
-                                                <a href='user?id=".base64_encode($id)."'>
+                                                <a href='user?id=".$id."'>
                                                     <span class='user_preview_name'>". $this->getName($id) ."</span>
                                                 </a>
                                             </p>

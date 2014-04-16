@@ -125,7 +125,7 @@ class Home {
         $response['user']['pic'] = Registry::get('user')->getProfilePicture("thumb", $activity['user_id']);
 
         $response['stats'] = $this->getStats($activity);
-        $response['time'] = Registry::get('system')->format_dates($activity['time']);
+        $response['time'] = $activity['time'];
         $response['media'] = $this->getPostMedia($activity);
 
         $response['comment'] = $this->get_comments($activity['id']);
@@ -221,7 +221,6 @@ class Home {
         $comment['like'] = array();
         $comment['like']['count'] = $this->comment_like_count($comment['id']);
         $comment['like']['has_liked'] = $this->has_liked_comment($comment['id']);
-        $comment['time'] = Registry::get('system')->format_dates($comment['time']);
         return $comment;
     }
 

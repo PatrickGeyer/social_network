@@ -42,11 +42,14 @@ Application.prototype.feed = {
         comments: new Array()
     },
     post: {
-    	files: new Array()
+        files: new Array()
     }
 };
 Application.prototype.calendar = {
-	event : {}
+    event: {},
+    datetime: {
+        entry: new Array()
+    }
 };
 Application.prototype.UI = {
     progress: {
@@ -54,6 +57,8 @@ Application.prototype.UI = {
     }
 };
 Application.prototype.notification = {
+};
+Application.prototype.search = {
 };
 /****************************************************
  * 1. Functions (Network and Widgets)                *
@@ -224,20 +229,21 @@ Application.prototype.UI.removeDialog = function() {
  * 1.1 Generic Functions                             *
  ****************************************************/
 
-Application.prototype.search = function(text, mode, element, callback) {
+Application.prototype.search.get = function(text, mode, element, callback) {
     if (text == "") {
         $(element).hide();
     } else {
-        var loader = $("<img src='Images/ajax-loader.gif'></img>");
-        $(element).prepend(loader);
+//        var loader = $("<img src='Images/ajax-loader.gif'></img>");
+//        $(element).prepend(loader);
         $(element).show();
     }
     $.post("Scripts/searchbar.php", {search: mode, input_text: text}, function(response) {
+        response = Application.prototype.search.style($.parseJSON(response));
         $(element).find('.search_slider').remove();
         var slider = $("<div class='search_slider'></div>");
         slider.append(response);
         $(element).append(slider);
-        loader.remove();
+//        loader.remove();
         // var scrollElement = element.find('.search_slider').get(0);
         slider.show();
         //if (scrollElement.offsetHeight < scrollElement.scrollHeight || scrollElement.offsetWidth < scrollElement.scrollWidth) {
@@ -256,15 +262,42 @@ Application.prototype.search = function(text, mode, element, callback) {
     });
 }
 
+Application.prototype.search.style = function(items) {
+    var wrapper = $('<div></div>');
+    for(var i = 0; i < items.length; i++) {
+        var item = Application.prototype.search.styleSingle(items[i]);
+        if(i == 0) {
+            item.addClass('match');
+        }
+        wrapper.append(item);
+    }
+    return wrapper;
+};
+
+Application.prototype.search.styleSingle = function(item) {
+    var div = $("<div></div>").addClass('search_option').data('entity', item);
+    var string = "<table style='width:100%;'><tr><td rowspan='2' style='width:35px;'>"
+            + "<img height='40px' width='40px' src='" + item['img'] + "'/>"
+            + "</td><td>"
+            + "<p class='search_option_name ellipsis_overflow'>" + item['name'] + "</p></td>";
+            if(item['type'] == "user") {
+                string += "<td><div class='connect_button'></div></td>";
+            }
+            string += "</tr>"
+            + "<tr><td><span class='search_option_info'>" + item['info'] + "</span></td></tr></table>";
+    div.append(string);
+    return div;
+};
+
 Application.prototype.generic.relocate = function(event, element) {
     event.preventDefault();
     $('.container').html("<div class='loader_outside'></div><div class='loader_inside'></div>");
     $.get($(element).attr('href'), {ajax: 'ajax'}, function(response) {
         var container = $(response);
-        container.hide();
-        $('.container').replaceWith(container);
-        container.fadeIn('fast');
-        window.history.replaceState({}, 'WhatTheHellDoesThisDo?!', '/' + $(element).attr('href')); //pushState would be better
+//        container.hide();
+        $('.content.container').replaceWith(container);
+//        container.fadeIn('fast');
+        window.history.pushState({}, 'WhatTheHellDoesThisDo?!', '/' + $(element).attr('href'));
         $('body').scrollTop(0);
     });
 }
@@ -988,7 +1021,7 @@ Application.prototype.file.startAudioInfo = function(id, start, progress, end, u
 
 Application.prototype.file.audioVolume = function(vol) {
     $('audio').each(function() {
-        console.log($(this).attr('id'));
+//        console.log($(this).attr('id'));
         $(this).get(0).volume = vol;
     });
 };
@@ -1558,9 +1591,9 @@ Application.prototype.feed.post.submit = function() {
                 if (data == "") {
                     removeModal('', function() {
                         Application.prototype.feed.get(share_group_id, null, 0, min_activity_id, activity_id, function(response){
-                    		var string = '';
+                    		var string = $('');
                     		for (var i in response) {
-                                    string += Application.prototype.feed.homify(response[i]);
+                                    string.append(Application.prototype.feed.homify(response[i]));
                     		}
                     		$('.feed_container').prepend(string);
                 		});
@@ -1680,10 +1713,8 @@ Application.prototype.feed.post.removeFile = function(object)
             id = '#post_media_single_' + formatToID(object.value);
             for (var i = 0; i < post_media_added_files.length; i++) {
                 if (object.value == post_media_added_files[i].path) {
-                    //console.log('Website detected in Post Attachements: '+object.value + " to " + post_media_added_files[i].path + " now REMOVED!");
                     post_media_added_files.splice(i, 1);
                 } else {
-                    //console.log('No Website detected in Post Attachements: Submitted value of '+object.value + " to " + post_media_added_files[i].path);
                 }
             }
         } else {
@@ -1691,10 +1722,8 @@ Application.prototype.feed.post.removeFile = function(object)
             element.remove();
             for (var i = 0; i < post_media_added_files.length; i++) {
                 if (object.value == post_media_added_files[i]) {
-                    //console.log('File detected in Post Attachements: '+object.value + " to " + post_media_added_files[i] + " now REMOVED!");
                     post_media_added_files.splice(i, 1);
                 } else {
-                    //console.log('No File detected in Post Attachements: Comparing submitted value of '+object.value + " to " + post_media_added_files[i] + " of " + post_media_added_files);
                 }
             }
 
@@ -1708,7 +1737,6 @@ Application.prototype.feed.post.removeFile = function(object)
         }
         $('#status_text').focus();
         resizeScrollers();
-        //console.log("Resulting media list: " + post_media_added_files + "/n Added URLS = " + addedURLs);
     };
 
 Application.prototype.feed.createPost = function(text, files, activity_id) {
@@ -1734,85 +1762,45 @@ Application.prototype.feed.createPost = function(text, files, activity_id) {
 Application.prototype.feed.homify = function(activity) {
     activity.stats.like.count = parseInt(activity.stats.like.count);
     activity.status_text = typeof activity.status_text !== 'undefined' && !isEmpty(activity.status_text) ? activity.status_text : '';
-    var string = "";
+    var string = $("<div data-activity_id='" + activity.id + "' class='post_height_restrictor contentblock' id='post_height_restrictor_" + activity.id + "'></div>");
     if (activity.view == 'home') {
-        string += "<div data-activity_id='" + activity.id + "' class='post_height_restrictor contentblock' id='post_height_restrictor_" + activity.id + "'>";
-        string += '<div id="single_post_' + activity.id + '" class="singlepostdiv">';
-        string += "<div id='" + activity.id + "'>";
-        string += "<div class='top_content'><a class='user_name_post' href='user?id=" + activity.user.encrypted_id + "'>";
-        string += "<div class='profile_picture_medium' style='background-image:url(\"" + activity.user.pic + "\");'></div></a>";
-        string += "<a class='user_name_post user_preview user_preview_name' user_id='" + activity.user.id
-                + "' href='user?id=" + activity.user.encrypted_id + "'>";
-        string += activity.user.name + "</a>";
+        var user_link = $("<a class='user_name_post' href='user?id=" + activity.user.id + "'></a>");
+        user_link.append("<div class='profile_picture_medium' style='background-image:url(\"" + activity.user.pic + "\");'></div>");
+        var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + activity.user.id + "' href='user?id=" + activity.user.id + "'>" + activity.user.name + "</a>");
+        var top_content = $("<div class='top_content'>").append(user_link).append(user_name);
+        var single_post = $('<div id="single_post_' + activity.id + '" class="singlepostdiv"></div').append(top_content);
+        string.append(single_post);
         if (!Application.prototype.user.isMobile) {
-            string += this.printStats(activity);
+            top_content.append(this.printStats(activity));
         }
-        string += "</div>"; // CLOSE top_content
         if (activity.type == "Text" || activity.type == "File") {
             if (!Application.prototype.user.isMobile) {
-                string += "<hr class='post_user_name_underline'>";
+                single_post.append("<hr class='post_user_name_underline'>");
             }
         }
-        string += "<div class='post_content_wrapper'>";
-        string += "<p class='post_text'>" + activity.status_text + '</p>';
+        var content_wrapper = $("<div class='post_content_wrapper'></div>");
+        content_wrapper.append("<p class='post_text'>" + activity.status_text + '</p>');
 
         if (activity.media.length > 0) {
-            string += "<div class='post_feed_media_wrapper'>";
+            var media_wrapper = $("<div class='post_feed_media_wrapper'></div>");
+            content_wrapper.append(media_wrapper);
             for (var i in activity.media) {
-                string += Application.prototype.file.print(activity.media[i], activity.type);
+                media_wrapper.append(Application.prototype.file.print(activity.media[i], activity.type));
             }
-            string += "</div>";
         }
+        single_post.append(content_wrapper);
         if (Application.prototype.user.isMobile) {
-            string += "<div class='activity_stats_mobile'>";
-            string += this.printStats(activity);
-            string += "</div>";
+            var stats = $("<div class='activity_stats_mobile'></div>");
+            stats.append(this.printStats(activity));
+            top_content.append(stats);
         }
-        string += '<div class="comment_box">';
-        string += '<div class="comment_box_comment">';
-        string += this.comment.showComments(activity);
-        string += "</div>";
-        string += this.comment.printInput(activity.id);
-        string += "</div>";
-
-        string += "</div></div></div></div>";
+        var comments = $('<div class="comment_box"></div>');
+        var comment_comment = $('<div class="comment_box_comment"></div>');
+        comment_comment.append(this.comment.showComments(activity));
+        comments.append(comment_comment);
+        comments.append(this.comment.printInput(activity.id));
+        content_wrapper.append(comments);
     }
-//        else if($view == "preview") {
-//            string = '';
-//            string += "<table class='singleupdate'><tr>"
-//            + "<td class='updatepic' style='max-width:50px;'>";
-//            string += "<a class='user_name_post' href='user?id=" + urlencode(base64_encode(activity['user_id'])) + "'>";
-//            string += "<div class='imagewrap' style='background-image:url(\""
-//            + Registry::get('user')->getProfilePicture("thumb", activity['user_id'])
-//            + "\");'></div></a></td><td class='update'>";
-//            string += "<a class='user_name_post user_preview user_preview_name' user_id='" + activity['user_id']
-//            + "' href='user?id=" + urlencode(base64_encode(activity['user_id'])) + "'>";
-//            string += Registry::get('user')->getName(activity['user_id']) + "</a>";
-//
-//            string += $this->getStats(activity, 'none');
-//
-//            string += "</tr><tr><td colspan='2'><hr class='post_user_name_underline'></td></tr>";
-//            string += "<tr><td colspan='2'><div class='switch_container'><div class='switch_option switch_selected' onclick='changePostFeed(\"File\")'>File<div class='switch_corner'></div></div>
-//                        <div class='switch_option' onclick='changePostFeed(\"Post\")'>Post<div class='switch_corner'></div></div></div></td></tr>";
-//            string += "<tr><td><p class='post_text'>" + activity['status_text'] + '</p></td>';
-//
-//            string += "</tr><tr><td colspan='2'>";
-//            
-//            string += '<div activity_id="'.activity['id'].'" id= comment_div_' + activity['id'] + ' class="comment_box comment_box_original">';
-//            string += $this->getComments(activity['id']);
-//            string += $this->commentInput(activity);
-//            string += "</div>";
-//            
-//            string += "<div activity_id='".activity_id."' class='activity_comment_div comment_box' style='display:none;'>";
-//            string += $this->getComments(activity_id);
-//            string += $this->commentInput(activity_id);
-//            string += "</div>";
-//            
-//
-//            string += "</td></tr></table></div></div>";
-//            string += "</div></td></tr></table>";
-//            return string;
-//        }
     return string;
 }
 
@@ -1854,7 +1842,7 @@ Application.prototype.feed.comment.show = function(comment) {
     string += "<div class='single_comment_container' data-comment_id='" + comment.id + "'>";
     string += "<table style='font-size: 0.9em;'><tr><td style='vertical-align:top;' rowspan='2'>";
     string += "<div class='profile_picture_medium' style='background-image:url(\"" + comment.user.pic + "\");'></div></td><td style='vertical-align:top;'>";
-    string += "<a class='userdatabase_connection' href='user?id=" + comment.user.encrypted_id + "'>";
+    string += "<a class='userdatabase_connection' href='user?id=" + comment.user.id + "'>";
     string += "<span class='user_preview user_preview_name post_comment_user_name' user_id='" + comment.user.id + "'>" + comment.user.name + " </span></a>";
     string += "";
     string += "<span class='post_comment_text'>" + comment.text + "</span>"
@@ -1878,25 +1866,25 @@ Application.prototype.feed.comment.append = function(post_id, comment) {
         var comment_container = $('[data-activity_id="' + post_id + '"]').find('.comment_box_comment').last();
         comment_container.append(this.show(comment));
     }
-//    console.log('POST ID:' + post_id + " COMMENT: " + comment);
     // $("[data-activity_id='" + post_id + "'] [data-comment_id]").sort(function(left, right) {
     //     return parseInt($(right).data("comment_id")) - parseInt($(left).data("comment_id"));
     // }).each(function() {
     //     $("[data-activity_id='" + post_id + "']").find('.comment_box_comment').last().append($(this));
-    //     //console.log('fe');
     // });
 };
 
 Application.prototype.feed.printStats = function(activity) {
-    var string = '';
-    string += "<div class='activity_stats'>";
-    string += print_likes(activity);
-    string += "<span class='post_comment_time'> " + activity.time + " |</span>";
+    var string = $("<div class='activity_stats'>");
+    string.append(print_likes(activity));
+    var time = $("<span class='post_comment_time'></span>").text(Application.prototype.calendar.datetime.format(activity.time) + " |");
+    string.append(time);
+    var subarray = [{'element' : time, 'time': activity.time}];
+    Application.prototype.calendar.datetime.entry.push(subarray);
     if (activity.type == "File") {
         activity.media[0] = (activity.media[0] || new Object());
         activity.media[0].view = new Object();
         activity.media[0].view.count = (activity.media[0].view.count || 0);
-        string += "<span class='post_comment_time'>| <span class='post_view_count'>" + activity.media[0].view.count + "</span> views</span>";
+//        string += "<span class='post_comment_time'>| <span class='post_view_count'>" + activity.media[0].view.count + "</span> views</span>";
     }
 
     if (activity.user.id == USER_ID) {
@@ -2133,7 +2121,6 @@ Application.prototype.chat.styleResponse = function(response, chat_index) {
 Application.prototype.chat.scroll2Bottom = function(force, chat_index) {
     if (this.room[chat_index].bottom === true || force === true) {
         $('.chatoutput[data-chat_room="' + chat_index + '"]').scrollTop($('.chatoutput[data-chat_room="' + chat_index + '"]')[0].scrollHeight);
-//         console.log("Scrolling to " + $('.chatoutput[data-chat_room="' + chat_index + '"]')[0].scrollHeight + "px");
     }
 };
 
@@ -2253,6 +2240,11 @@ Application.prototype.calendar.print = function(calendar) {
     return string;
 };
 
+Application.prototype.calendar.datetime.format = function(time) {
+    time *= 1000;
+    return 'time';
+};
+
 Application.prototype.calendar.getEvents = function(limit, callback) {
     $.get('Scripts/calendar.class.php', {action: "get_events", limit: limit}, function(response) {
         response = $.parseJSON(response);
@@ -2265,7 +2257,6 @@ Application.prototype.calendar.event.print = function(event, classes) {
     var file_string = '<table>';
 
     for (var file in event.file) {
-//        console.log(event.file[file]);
         file_string += '<tr><td>';
         file_string += "<div class='profile_picture_icon' style='vertical-align:top;display:inline-block;background-image: url(\""
                 + event.file[file].preview_thumb + "\");'></div>";
@@ -2313,10 +2304,8 @@ $(function() {
     });
 
     window.onpopstate = function(event) {
-        var state = event.state;
-        if (state) {
-            console.log(event);
-        }
+//        console.log(window.location.pathname + window.location.search);
+        Application.prototype.generic.relocate(event, $("<a></a>").attr('href', window.location.pathname + window.location.search));
     };
 
     Application.prototype.UI.adjustSwitches();
@@ -2432,7 +2421,7 @@ $(function() {
 
     $(document).on('keyup', '.search', function(e) {
         e.stopPropagation();
-        Application.prototype.search($(this).val(), $(this).attr('mode'), $(this).parents('div').children('.search_results'), function() {
+        Application.prototype.search.get($(this).val(), $(this).attr('mode'), $(this).parents('div').children('.search_results'), function() {
         });
     });
 
@@ -2468,24 +2457,27 @@ $(function() {
         }
     });
 
-    $(document).on('click', '.search_results, .search_input', function(e) {
+    $(document).on('mouseup', '.search_results, .search_input', function(e) {
         e.stopPropagation();
     });
 
-    $(document).on('click', function() {
+    $(document).on('mouseup', function() {
         $('.search_results').slideUp();
     });
 
-    $(document).on('click', '#names_universal .search_option', function() {
-        var entity = $(this).data('entity');
-        if (entity.type == 'user') {
-            window.location.assign('user?id=' + entity.eid);
-        } else if (entity.type == 'group') {
-            window.location.assign('group?id=' + entity.eid);
+    $(document).on('mouseup', '.global_header_container .search_option', function(e) {
+        var entity = $(this).data('entity');        
+        if (entity.entity_type == 'user') {
+            $('<a></a>').attr('href', 'user?id=' + entity.id).trigger('click');
+        } else if (entity.entity_type == 'group') {
+            $('<a></a>').attr('href', 'group?id=' + entity.id).trigger('click');
+        } else {
+            $('<a></a>').attr('href', 'files?f=' + entity.id).trigger('click');
         }
+         e.stopPropagation();
     });
-    $(document).on('click', '.search_option', function() { // Hide the search results when the user selects an option.
-        alert('e');
+    
+    $(document).on('mouseup', '.search_option', function() { // Hide the search results when the user selects an option.
         $(this).parents('.search_results').hide();
         $(this).closest('input.search').val('');
     });
@@ -2950,10 +2942,10 @@ $(function() {
     }
 
     $(document).on('click', '.box_container .navigate_right', function() {
-        console.log('naviagte cal');
+        
     });
     $(document).on('click', '.box_container .navigate_left', function() {
-        console.log('naviagte cal');
+        
     });
 
     /****************************************************

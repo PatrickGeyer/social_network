@@ -475,9 +475,9 @@ class Files {
 
     function mime_content_type($path) {
         $path = $_SERVER['DOCUMENT_ROOT']."/".$path;
-        $file_info = new finfo(FILEINFO_MIME);  // object oriented approach!
-        $mime_type = $file_info->buffer(file_get_contents($path));  // e.g. gives "image/jpeg"
-        $mime_type = explode(';', $mime_type);
+        @$file_info = new finfo(FILEINFO_MIME);  // object oriented approach!
+        @$mime_type = $file_info->buffer(file_get_contents($path));  // e.g. gives "image/jpeg"
+        @$mime_type = explode(';', $mime_type);
         return $this->alias_mime_type($mime_type[0]);
     }
     

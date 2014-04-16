@@ -102,7 +102,7 @@ if (isset($_GET['id'])) {
         var table = "";
         table += ("<div class='message_convo_message'>");
         table += "<div class='timestamp'><span>" + message.time + "</span></div><div class='profile_picture_medium' style='background-image: url(\"" + message.user.pic + "\");'></div>";
-        table += ("<a href='user?id=" + message.user.encrypted_id + "'><span class='user_preview user_preview_name' user_id='" + message.id + "'>" + message.user.name + "</span></a>");
+        table += ("<a href='user?id=" + message.user.id + "'><span class='user_preview user_preview_name' user_id='" + message.id + "'>" + message.user.name + "</span></a>");
         table += ("<div class='message_convo_message_text'><span class='message_convo_text'>" + message.message + "</span></div>");
         table += ("</div>");
         return table;

@@ -219,7 +219,7 @@ class Notification {
                 if($key == 'user') {
                     if (Registry::get('user')->user_id != $single_id) {
                         if ($type == "header") {
-                            $return .= "<a href='user?id=" . urlencode(base64_encode($single_id))
+                            $return .= "<a href='user?id=" . $single_id
                                     . "'><span style='margin-right:5px;' "
                                     . " class='message_convo_receiver user_preview' user_id='" . $single_id . "'>";
                             $return .= Registry::get('user')->getName($single_id, 1);
@@ -450,7 +450,7 @@ class Notification {
         }
         foreach ($networks as $network) {
             $picture = Registry::get('user')->getProfilePicture("chat", $network['sender_id']);
-            $group_name = $this->group->getGroupName($network['group_id']);
+            $group_name = $this->group->getName($network['group_id']);
             $group_id = $network['group_id'];
 
             echo "<li class='";

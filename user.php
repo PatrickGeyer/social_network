@@ -3,7 +3,7 @@
 function print_body() {
 
     if (isset($_GET['id'])) {
-        $userid = urldecode(base64_decode($_GET['id']));
+        $userid = $_GET['id'];
         if ($userid == Registry::get('user')->getId()) {
             $page_identifier = 'user';
         }
@@ -86,7 +86,7 @@ function print_body() {
                                     $query1 = $query1->fetchColumn();
 
                                     if ($query1 == "") {
-                                        $name = Registry::get('group')->getGroupName($users_group);
+                                        $name = Registry::get('group')->getName($users_group);
                                         echo "<script name='text_append'>$('#invite_text_holder').show();</script>";
                                         echo "<li class='default_dropdown_item' "
                                         . "onclick='showInvite(\"" . $name
