@@ -542,10 +542,13 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         else if ($_POST['action'] == "get_feed") {
             require_once 'entity.class.php';
             $entity = Entity::getInstance($args = array());
-            $min_activity_id = $user_id = $group_id = $filter = $activity_id = NULL;
+            $max = $min_activity_id = $user_id = $group_id = $filter = $activity_id = NULL;
 
-            if (isset($_POST['min_activity_id'])) {
-                $min_activity_id = $_POST['min_activity_id'];
+            if (isset($_POST['min'])) {
+                $min_activity_id = $_POST['min'];
+            }
+            if (isset($_POST['max'])) {
+                $max = $_POST['max'];
             }
 
             if (isset($_POST['entity_type'])) {
@@ -562,7 +565,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             if (isset($_POST['activity_id']) && !empty($_POST['activity_id'])) {
                 $activity_id = $_POST['activity_id'];
             }
-            die(json_encode($home->getActivity($entity->getActivityQuery($filter, $group_id, $user_id, $min_activity_id, $activity_id)), JSON_HEX_APOS));
+            die(json_encode($home->getActivity($entity->getActivityQuery($filter, $group_id, $user_id, $min_activity_id, $max, $activity_id)), JSON_HEX_APOS));
         }
         else if ($_POST['action'] == 'submitComment') {
             die(json_encode($home->get_comment($home->submit_comment($_POST['comment_text'], $_POST['post_id']))));

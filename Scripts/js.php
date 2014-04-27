@@ -1,4 +1,4 @@
-<?php
+ <?php
 Registry::get('system')->getGlobalMeta();
 Registry::get('system')->jsVars();
 ?>
@@ -20,6 +20,16 @@ Registry::get('system')->jsVars();
 <link href="Scripts/external/video-js/video-js.css" rel="stylesheet">
 <script src="Scripts/external/video-js/video.js"></script>
 
+<script src="Scripts/external/swfobject/swfobject.js"></script>
+
+<script>
+if(swfobject.hasFlashPlayerVersion("3")) {
+    _V_.options.techOrder = ["flash", "html5", "links"];
+} else {
+	_V_.options.techOrder = ["html5", "links"];
+    console.log('noflash');
+}</script>
+
 <!--ScrollTo plugin-->
 <!--<script defer src="http://balupton.github.com/jquery-scrollto/scripts/jquery.scrollto.min.js"></script>-->
  
@@ -39,7 +49,7 @@ Registry::get('system')->jsVars();
 
 
 <script>
-//     _V_.options.techOrder = ["flash"];
+//     
     _V_.options.flash.swf = "Scripts/external/video-js/video-js.swf";
 </script>
 
@@ -103,20 +113,9 @@ Registry::get('system')->jsVars();
 
     $(function() {
         var id;
-
-        $(document).on('click', '.search_box', function(e) {
-            //e.stopPropagation();
-        });
-
-        $(document).on('click', function()
-        {
-            $('#names_universal').hide();
-        });
-
     });
 
     var currentPage = getCookie('current_feed');
-
 
 // #HOME
     $(function() {

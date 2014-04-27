@@ -28,10 +28,10 @@ class Entity {
       /* 3. $user_id
       /* 4. $min_activity_id (default = 0)
      */
-    function getActivityQuery($filter = NULL, $group_id = NULL, $user_id = NULL, $min_activity_id = 0, $activity_id = NULL) {
+    function getActivityQuery($filter = NULL, $group_id = NULL, $user_id = NULL, $min = 0, $max = 482734279, $activity_id = NULL) {
         Registry::setup();
 
-        $min_activity_id_query = "AND id >" . ($min_activity_id == 0 ? "=" . $min_activity_id : $min_activity_id);
+        $min_activity_id_query = "AND id BETWEEN " . $min . " AND " . $max;
         if (isset($activity_id)) {
             $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id = :activity_id AND visible = 1 ORDER BY time DESC";
             $activity_query = Registry::get('db')->prepare($activity_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
@@ -60,7 +60,7 @@ class Entity {
                     . "(SELECT activity_id FROM activity_share WHERE "
                     . "group_id in (SELECT group_id FROM group_member WHERE user_id = :user_id) "
                     . "OR user_id = :user_id)"
-                    . " AND visible = 1 " . $min_activity_id_query . " ORDER BY time DESC";
+                    . " AND visible = 1 " . $min_activity_id_query . " ORDER BY time DESC LIMIT 2";
             $activity_query = Registry::get('db')->prepare($activity_query);
             $activity_query->execute(array(
                 ":user_id" => Registry::get('user')->user_id,

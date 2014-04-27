@@ -75,19 +75,17 @@ function print_body() {
             </div>
         </div>
         <script>
-            min_activity_id = <?php echo (isset($max) ? $max : '0'); ?>;
             var share_group_id = <?php echo (is_int($feed_id) ? $feed_id : "'$feed_id'"); ?>;
             var activity_id = null;
-            $(function($)
-            {
-                Application.prototype.feed.get(share_group_id, 'home', min_activity_id, activity_id, function(response) {
-                    var string = $('<div></div>');
-                    for (var i in response) {
-                        string.append(Application.prototype.feed.homify(response[i]));
-                    }
-                    $('.feed_container').prepend(string);
+            var Feed = new Application.prototype.Feed(share_group_id, 'home');
+            Feed.min = <?php echo (isset($max) ? $max : '0'); ?>;
+            Feed.get();
+            Feed.onfetch = function() {
+                $(function() {
+                    $('.feed_container').prepend(Feed.print());
                 });
-
+            }
+            $(function($) {
                 $(document).on('click', '.home_like_icon', function() {
                     var has_liked = $(this).attr('has_liked');
                     if (has_liked == "false") {
@@ -102,7 +100,6 @@ function print_body() {
 
                 $('#status_text').focus(function() {
                     $(this).css('min-height', '100px');
-//                     $('#file_share').parent('td').css('width', '100px');
                     $('#file_share').show();
                     $('#post_more_options').show();
                     $('.post_wrapper').css('padding-bottom', $('.post_more_options').height());
@@ -143,8 +140,6 @@ function print_body() {
         <?php
     }
 }
-
-require_once('Scripts/lock.php');
 $min_activity_id = $user_id = $group_id = $filter = NULL;
 if (isset($_GET['min_activity_id'])) {
     $min_activity_id = $_GET['min_activity_id'];
@@ -164,4 +159,5 @@ if (isset($_GET['fg'])) {
     $filter = $feed_id = 'a';
 }
 $page_identifier = "home";
+require_once('Scripts/lock.php');
 ?>

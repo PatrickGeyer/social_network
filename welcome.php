@@ -178,7 +178,7 @@ function print_header($PRINT = TRUE) {
                 <div class='global_header_container'>
                     <div class='search_container contentblock' style='float:left;'>
                         <input class="search_box search" autocomplete='off' mode='universal' type='text' id='names_input' placeholder='Search for people, groups and files' name='receiver'>
-                        <div class="search_results" id='names_universal'></div>
+                        <div class="search_results"></div>
                     </div>
                     <div class='global_header_icon_container'>
                         <div class="message" id="message_click">

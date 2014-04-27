@@ -11,43 +11,1125 @@
  ****************************************************/
 
 function Application() {
+
 }
 ;
-
 Application.prototype.user = {
     preview: {
         showing: false
     },
     isMobile: navigator.userAgent.match(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/)
 };
-Application.prototype.file = {
-    theater: {
-        active: false,
-        removeTime: 0,
-        previousUrl: ''
-    },
-    upload: {
-        instance: new Array(),
-        session: 0
-    },
-    files: new Array()
+
+/****************************************************
+ * 0. Upload                                        *
+ ****************************************************/
+
+Application.prototype.upload = function(files) {
+    this.files = files;
+
+    this.start = function() {
+    };
+    this.progress = function() {
+    };
+    this.end = function() {
+    };
+
+    this.push = function() {
+        if ($('.upload_file_container').length == 0) {
+            var file_container = $('<div class="event upload_file_container contentblock"></div>');
+            file_container.append("<a>Upload</a>");
+            var file_upload_container = $('<div class="calendar-event-info-files"></div>');
+            file_container.append(file_upload_container);
+            $('.calendar-container').append(file_container);
+        } else {
+            var file_upload_container = $('.upload_file_container .calendar-event-info-files');
+        }
+        var session = this.session++;
+        this.start();
+
+        for (var i = 0; i < length; i++) {
+            (function(count, session) {
+                var file = this.files[count].file;
+                var formdata = new FormData();
+                formdata.append("file", file);
+                formdata.append("action", 'upload');
+                formdata.append("parent_folder", parent_folder);
+                var xhr = new XMLHttpRequest();
+                xhr.upload.onprogress = function(event) {
+                    Application.prototype.upload.progressHandler(event, "" + session + count, this.progress());
+                };
+                xhr.onload = function() {
+                    Application.prototype.upload.completeHandler(this, "" + session + count, this.end(), name);
+                };
+                xhr.addEventListener("error", Application.prototype.upload.errorHandler, false);
+                xhr.addEventListener("abort", Application.prototype.upload.abortHandler, false);
+                xhr.open("post", "Scripts/files.class.php");
+                xhr.send(formdata);
+                var file_container = $("<div class='upload_preview'>");
+                file_container.attr('id', "" + session + count + "_upload_preview");
+                file_container.append(file.name);
+                file_container.append("<br />");
+                file_upload_container.append(file_container);
+                Application.prototype.UI.progress.create(file_container, "" + session + count);
+            })(i, session);
+        }
+    };
+
+    this.prototype.progress = function(event, id, callback) {
+        $('#loading_icon').show();
+        var percent = (event.loaded / event.total) * 100;
+        percent = Math.round(percent);
+        Application.prototype.UI.progress.update(id, percent);
+        callback(percent);
+    };
+
+    this.prototype.complete = function(event, id, callback) {
+        $('#' + id + '_upload_preview').slideUp();
+        Application.prototype.UI.progress.remove(id);
+        if (this.session > 0) {
+            this.session--;
+            if (this.session === 0) {
+                $('#loading_icon').fadeOut();
+                $('.upload_file_container').slideUp(function() {
+                    $(this).remove();
+                });
+            }
+        }
+        if (onComplete == "addToStatus") {
+            alert('not adding file to statuc');
+        } else {
+            if (this.session === 0) {
+            }
+        }
+        callback($.parseJSON(event.responseText));
+    };
+
+    this.prototype.error = function(event) {
+        if (this.session > 0) {
+            this.session--;
+        }
+        alert('upload failed');
+        $('#loading_icon').fadeOut();
+    };
+
+    this.prototype.abort = function(event) {
+        if (this.session > 0) {
+            this.session--;
+        }
+    };
 };
+
+/****************************************************
+ * 1.3 Files                                         *
+ ****************************************************/
+Application.prototype.file = function(file) {
+    this.file = file;
+    /****************************************************
+     * 1.3.1 Files - Print                               *
+     ****************************************************/
+
+    this.print_folder = function(folder) {
+        var string = '';
+        for (var file in folder) {
+            string += this.print_row(folder[file]);
+        }
+        return string;
+    };
+
+    this.print_row = function() {
+        var string = '';
+
+        if (this.file.type != "Folder") {
+            string += "<div data-file_id='" + this.file.id + "' class='contentblock files'>";
+        } else {
+            string += "<div data-file_id='" + this.file.id + "' class='contentblock folder'>"; // SAME
+        }
+        string += "<div class='files_icon_preview' style='background-image:url(\"" + this.file.type_preview + "\");'></div>";
+        string += "<p class='files ellipsis_overflow'>" + this.file.name + "</p>";
+
+        string += "<div class='files_actions'><table cellspacing='0' cellpadding='0'><tr style='vertical-align:middle;'><td>";
+
+        string += "<a href='download.php?id=" + this.file.id + "' download><div class='files_actions_item files_actions_download'></div></a></td><td>";
+        string += "<hr class='files_actions_seperator'></td><td>";
+
+        string += "<div class='files_actions_item files_actions_delete' "
+                + "onclick='deleteFile(this, " + this.file.id + ");if(event.stopPropagation){event.stopPropagation();}"
+                + "event.cancelBubble=true;'></div></td><td>"
+                + "<hr class='files_actions_seperator'></td><td>"
+                + "<div class='files_actions_item files_actions_share' data-file_id='" + this.file.id + "'></div></td>";
+        string += "</tr></table></div>";
+
+        string += "<div class='file_hidden_container'>";
+        string += this.print("File");
+        string += "</div>";
+
+        string += "</div>";
+        return string;
+    };
+
+    this.view = function() {
+        $.post("Scripts/files.class.php", {file_id: this.file.id, action: "view"}, function() {
+        });
+    };
+
+    this.list = function(element, type, callback) {
+        callback = typeof callback !== 'undefined' ? callback : function() {
+        };
+        $.post('Scripts/home.class.php', {type: type, action: "file_list"}, function(response) {
+            $(element).html(response);
+            $(element).mCustomScrollbar(SCROLL_OPTIONS);
+            callback();
+        });
+    };
+
+    this.initializeWaveForm = function() {
+        $('[uid]').each(function() {
+            createWaveForm($(this).attr('uid'), function() {
+            });
+        });
+    };
+
+    this.rename = function(id, text) {
+        $.post('Scripts/files.class.php', {action: "rename", file_id: this.file.id, name: text}, function() {
+        });
+    };
+    this.print = function(activity_type) {
+        this.file.name = typeof this.file.name !== 'undefined' && !isEmpty(this.file.name) ? this.file.name : 'Untitled';
+        this.file.description = typeof this.file.description !== 'undefined' && !isEmpty(this.file.description) ? this.file.description : '';
+        this.file.time = typeof this.file.time !== 'undefined' && !isEmpty(this.file.time) ? this.file.time : 'No Date';
+        this.file.type_preview = typeof this.file.type_preview !== 'undefined' && !isEmpty(this.file.type_preview) ? this.file.type_preview : file.thumb_path;
+
+        var string = '';
+        var post_classes = " class='post_feed_item ";
+        var post_styles = " style='";
+        var post_content = "";
+        var classes = '';
+        if (this.file.type == "Audio") {
+            post_classes += "post_media_double";
+            post_content += this.printDoc();
+        } else if (this.file.type == "Image") {
+            post_classes += "post_media_photo";
+            post_content += this.printDoc();
+        } else if (this.file.type == "Video") {
+            post_content += this.printDoc();
+            post_classes += "post_media_video";
+//        post_content += video_player(file, classes, "height:100%;", "home_feed_video_", true);
+        } else if (this.file.type == "WORD Document"
+                || this.file.type == "PDF Document"
+                || this.file.type == "EXCEL Document"
+                || this.file.type == "PPT Document"
+                || this.file.type == "Folder") {
+            post_styles += "height:auto;";
+            post_classes += "post_media_double";
+            post_content += this.printDoc();
+        } else if (this.file.type == "Folder") {
+            post_styles += "height:auto;";
+            post_classes += "post_media_double";
+            post_content += this.printDoc();
+        } else if (this.file.type == "Webpage") {
+            post_classes += "post_media_full";
+            post_styles += "height:auto;";
+            post_content += "<table style='height:100%;'><tr><td rowspan='3'>";
+            post_content += "<div class='post_media_webpage_favicon' style='background-image:url(&quot;";
+            post_content += this.file.web_favicon + "&quot;);'></div></td>" + "<td>";
+            post_content += "<a class='user_preview_name' target='_blank' href='";
+            post_content += this.file.URL + "'><span style='font-size:13px;'>";
+            post_content += this.file.web_title + "</span></a></div></td></tr>";
+            post_content += "<tr><td><span style='font-size:12px;' class='user_preview_community'>";
+            post_content += this.file.web_description + "</span></td></tr>";
+            post_content += "</table>";
+        } else {
+            post_classes += "post_media_full";
+            post_content += this.printDoc();
+        }
+
+        post_content += "<div class='top_right_actions'>";
+        if (this.file.user_id == USER_ID && activity_type != 'File') {
+            post_content += "<div style='background-image: url(\"" + DELETE + "\");' class='delete_cross delete_cross_top remove_event_post'></div>";
+        }
+        post_content += "</div></div></div>";
+
+        if (activity_type == "Text" && typeof this.file.activity != 'undefined') {
+//            var Comment = new Application.prototype.Feed.Item.Comment(this.file.activity);
+//            post_content += '<div class="comment_box">';
+//            post_content += '<div class="comment_box_comment">';
+//            post_content += Application.prototype.Feed.Item.comment.showComments(file.activity);
+            post_content += "</div>"
+//            post_content += Application.prototype.Feed.Item.comment.printInput(file.activity.id);
+            post_content += "</div>";
+        }
+        post_content += ""; //CLOSE file_activity_section AND POST_CONTENT;
+
+        if (activity_type == "File" && typeof file.share != 'undefined') {
+            //WHO IS FILE SHARED WITH?
+        }
+
+        string += "<div data-activity_id='" + file.activity.id + "' data-file_id='" + file.id + "' " + post_classes + "' " + post_styles + "'>";
+        string += post_content + "</div>";
+
+        return string;
+    };
+
+    this.printDoc = function() {
+        var preview_classes = '';
+        var preview_styles = '';
+        var preview_content = '';
+        var post_content = '<tr><td>';
+        var post_content_under_title = '<tr><td>';
+        var string = '';
+        var link = "files?f=" + this.file.id;
+        var path = this.file.type_preview;
+        if (this.file.type == "Folder") {
+            path = FOLDER_THUMB;
+            link = "files?pd=" + this.file.enc_parent_folder_id;
+        } else if (this.file.type == "Image") {
+            path = this.file.thumb_path;
+            preview_classes += " post_media_photo ";
+            preview_styles += " width:auto;height:auto; ";
+            preview_content += "<img style='opacity:0;max-width:150px;max-height:150px;' src='" + path + "'></img>";
+        } else if (this.file.type == "Video") {
+            path = this.file.thumbnail;
+            preview_classes += " post_media_photo ";
+            preview_content += "<img style='position:absolute;top:40%;left:40%;' src='" + VIDEO_BUTTON + "'></img>";
+        } else if (this.file.type == "Audio") {
+            preview_styles = 'background-image: none !important;';
+            preview_content += "<i class='fa fa-music'></i>";
+            preview_content += this.audioPlayer(this.file, 'button', false);
+            post_content_under_title += this.audioPlayer(this.file, 'timeline');
+        } else {
+            preview_classes += "";
+            preview_styles += "background-image: url(\"" + path + "\")";
+            preview_content += "<img style='opacity:0;max-width:150px;max-height:150px;' src='" + path + "'></img>";
+        }
+
+        string += "<div class='post_media_preview " + preview_classes + "' style='background-image:url(&quot;";
+        string += path + "&quot;); " + preview_styles + "'>" + preview_content + "</div>";
+        string += "<div class='file_activity_section'>";
+        string += "<a class='user_preview_name' target='_blank' href='" + link + "'>";
+        string += "<p class='ellipsis_overflow' style='word-break:break-word; '>";
+        string += this.file.name + "</p></a>";
+        if (post_content_under_title != "") {
+            string += post_content_under_title;
+        }
+        if (this.file.description != "") {
+            string += "<span style='font-size:12px;' class='post_comment_time'>";
+            string += this.file.description + "</span>";
+        }
+        string += "";
+        string += "<div style='margin-top:5px;'>";
+        string += "<i class='heart_like_icon fa fa-heart'></i><span class='post_comment_time post_like_count'>" + this.file.like.count + "</span>";
+        if (typeof this.file.activity.comment != 'undefined') {
+            string += "<i class='fa fa-comment heart_like_icon'></i><span class='post_comment_time post_comment_count'>"
+                    + (parseInt(this.file.activity.comment.comment.length) + parseInt(this.file.activity.comment.hidden)) + "</span>";
+        }
+        string += "<i class='fa fa-eye heart_like_icon'></i><span class='post_comment_time'>" + this.file.view.count + "</span><br />";
+//    string += "<div class='file_info'><span class='post_comment_time'>Uploaded: " + this.file.time + "</span><br />";
+//    string += "<span class='post_comment_time'>Size: " + this.file.size + " bits</span><br />";
+//    string += "<span class='post_comment_time'>Type: " + this.file.type + "</span></div>";
+
+        string += "</div>";
+
+        string += "<div style='margin-top:5px;'>";
+        string += "<a class='no-ajax' href='download.php?id=" + this.file.id + "'>" + "<button class='pure-button-green'><i class='fa fa-cloud-download'></i><span></span></button></a>";
+        string += "<button has_liked='" + (this.file.activity.stats.like.has_liked === true ? "true" : "false") + "' class='activity_like_text post_like_activity "
+                + "pure-button-neutral " + (this.file.activity.stats.like.has_liked === true ? " pure-button-blue" : "") + "'>";
+        string += "<i class='fa fa-heart'></i>";
+//    string += "<span>" + (this.file.activity.stats.like.has_liked === true ? COMMENT_UNLIKE_TEXT : COMMENT_LIKE_TEXT) + "</span>";
+        string += "</button>";
+        string += ""; //LEAVING this.file_activity_section OPEN!!
+
+        string += post_content;
+        return string;
+    };
+
+    this.audioPlayer = function(file, part, source) {
+        var string = '';
+        string += '<div data-path="' + file.thumb_path + '" uid="' + file.uid + '" data-file_id="' + file.id + '">';
+        if (part == 'all') {
+            string += '<div class="audio_container">';
+            string += this.audioButton(file, source);
+            string += this.audioInfo(file);
+            string += '</div>';
+        } else if (part == "button") {
+            string += this.audioButton(file, source);
+        } else if (part == "info") {
+            string += this.audioInfo(file);
+        } else if (part == 'timeline') {
+            string += this.audioTimeline();
+        }
+        string += "</div>";
+        return string;
+    };
+
+    this.audioButton = function(file, source) {
+        var string = '<div class="audio_button">';
+        if (source === true) {
+            string += '<audio style="display:none;"><source src="' + file.path + '"></source><source src="'
+                    + file.thumb_path + '"></source></audio>';
+        }
+        string += '<div class="audio_button_inside"></div><div class="audio_loader"><div class="loader_outside"></div><div class="loader_inside">'
+                + '</div><span class="audio_loader_text loader_text"></span></div></div>';
+        return string;
+    };
+
+    this.audioInfo = function(file) {
+        return '<div class="audio_info"><div class="ellipsis_overflow audio_title">' + file.name + '</div>'
+                + this.audioTimeline() + '<div class="audio_time">0:00</div></div>';
+    };
+
+    this.audioTimeline = function() {
+        return '<div class="audio_progress_container"><div class="audio_progress"></div><div class="audio_buffered">'
+                + '</div><div class="audio_line"></div></div>';
+    };
+
+    this.audioPlay = function(id, start, progress, end, uid) {
+        if (!$('[uid="' + uid + '"] .audio_button').hasClass('audio_playing')) {
+            this.startAudioInfo(id, start, progress, end, uid);
+            $('[uid="' + uid + '"] .audio_button').addClass('audio_playing');
+        } else {
+            this.files[uid]['element'].pause();
+            $('[uid="' + uid + '"] .audio_button').removeClass('audio_playing');
+        }
+    };
+
+    this.startAudioInfo = function(id, start, progress, end, uid) {
+        if (uid in this.files) {
+            if (typeof this.files[uid]['element'] != 'undefined') {
+                this.files[uid]['element'].play();
+                return;
+            }
+        }
+
+        this.view(id);
+
+        var headerControl = $("<div uid='" + uid + "'></div>");
+        headerControl.append(this.audioPlayer(this.files[uid], 'all', true));
+        $('.global_media_container').html(headerControl);
+
+        $("[uid='" + uid + "'] .audio_loader").fadeIn();
+        var audio = headerControl.find('audio');
+        this.files[uid]['element'] = audio.get(0);
+        this.files[uid]['element'].volume = 1;
+        this.files[uid]['element'].play();
+        audio.bind('loadedmetadata', function() {
+            audio.bind('progress', function() {
+                var track_length = audio.get(0).duration;
+                var secs = audio.get(0).buffered.end(0);
+                var progress = 0;
+                if (secs > 0 && track_length > 0) {
+                    progress = (secs / track_length) * 100;
+                }
+                $('[uid="' + uid + '"] .audio_buffered').css('width', progress + "%");
+            });
+
+            audio.bind('timeupdate', function() {
+                var track_length = audio.get(0).duration;
+                var secs = audio.get(0).currentTime;
+                var progress = (secs / track_length) * 100;
+                $('[uid="' + uid + '"] .audio_progress').css('width', progress + "%");
+                var minutes = Math.floor(track_length / 60);
+                var seconds = Math.floor(track_length - minutes * 60);
+                var done_secs = audio.get(0).currentTime;
+                var done_minutes = Math.floor(done_secs / 60);
+                var done_remaining_secons = Math.floor(done_secs - done_minutes * 60);
+                $('[uid="' + uid + '"] .audio_time').html(done_minutes + ":" + pad(done_remaining_secons) + " - " + minutes + ":" + seconds);
+                $("[uid='" + uid + "'] .audio_loader").fadeOut();
+            });
+
+            audio.bind('canplaythrough', function() {
+                $('[uid="' + uid + '"] .audio_buffered').css('background-color', 'grey');
+            });
+
+            audio.bind('ended', function() {
+                audio.get(0).currentTime = 0;
+                $('[uid="' + uid + '"] .audio_button').removeClass('audio_playing');
+            });
+
+            $('[uid="' + uid + '"] .audio_progress_container').click(function(e) {
+                var x = $(this).offset().left;
+                var width_click = e.pageX - x;
+                var width = $(this).width();
+                var percent_width = (width_click / width) * 100;
+                $('[uid="' + uid + '"] .audio_progress').css('width', percent_width + "%");
+                var secs = audio.get(0).duration;
+                var new_secs = secs * (percent_width / 100);
+                audio.get(0).currentTime = new_secs;
+            });
+        });
+
+        start = typeof start !== 'undefined' ? start : function() {
+        };
+        progress = typeof progress !== 'undefined' ? progress : function() {
+        };
+        end = typeof end !== 'undefined' ? end : function() {
+        };
+        start();
+    };
+
+    this.audioVolume = function(vol) {
+        $('audio').each(function() {
+//        console.log($(this).attr('id'));
+            $(this).get(0).volume = vol;
+        });
+    };
+
+    this.createWaveForm = function(uid, progress) {
+        if (uid in audio_items === false) {
+            $("[uid='" + uid + "'] .audio_loader").fadeIn();
+            var wavesurfer = Object.create(WaveSurfer);
+            wavesurfer.init({
+                container: '[uid="' + uid + '"] .audio_progress_container',
+                waveColor: 'lightblue',
+                progressColor: 'rgb(0, 140, 250)',
+                height: 30,
+                loopSelection: false,
+                dragSelection: false,
+                cursorColor: 'grey',
+                normalize: true,
+                minPxPerSec: 20
+            });
+            wavesurfer.on('ready', function() {
+                $("[uid='" + uid + "'] .audio_loader").fadeOut();
+            });
+            wavesurfer.on('progress', function(percent) {
+                percent = percent * 100;
+                progress(percent);
+            });
+            wavesurfer.on('loading', function(percent) {
+                $("[uid='" + uid + "'] .audio_loader_text").html(percent + "%");
+            });
+            wavesurfer.load($("[uid='" + uid + "']").data('path'));
+            audio_items[uid] = wavesurfer;
+        }
+    };
+
+    this.removeAudio = function(id) {
+        $('#audio_container_' + id).remove();
+    };
+
+    this.videoFrame = function(uid) {
+        return "<div class='video_box'><video id='vid" + uid + "'></video></div>";
+    };
+
+    this.videoPlayer = function(file, onload, onplay, onend) {
+        var string = '';
+        var attributes = {
+            'id': 'vid' + file.uid,
+            'class': 'video-js vjs-default-skin',
+            'controls': ' ',
+            'preload': 'auto',
+        };
+        var video = $("#vid" + file.uid);
+        string += "<source src='" + file.mp4_path + "' type='video/mp4'></source>"
+                + "<source src='" + file.flv_path + "' type='video/x-flv'></source>"
+                + "<source src='" + file.webm_path + "' type='video/webm'></source>";
+        //. "<source src='" + $original_path + "' type='video/avi'></source>";
+        string += "<object data='" + file.mp4_path + "'>"
+                + "<embed src='" + file.flv_path + "'>"
+                + "</object>";
+        video.append(string);
+        video.attr(attributes);
+        var player = videojs('vid' + file.uid);
+        player.ready(function() {
+            onload(player);
+        });
+
+        return video;
+    };
+
+    this.videoPlay = function(id) {
+        var file_id = id.replace(/[A-Za-z_$-]/g, "");
+        this.view(file_id);
+        if ($("#" + id).parents('#file_container').length !== 0) {
+            id = file_id;
+            $('#audio_play_icon_' + id).css('visibility', 'visible');
+            $('#audio_play_icon_' + id).animate({opacity: "1"}, 200);
+        } else if ($("#" + id).parents('.files_recently_shared').length !== 0) {
+            $('.files_recently_shared').find(".files_feed_active").not(":has(#" + id + ")").removeClass("files_feed_active").find('video').each(function() {
+                if (videojs("#" + $(this).attr('id')).paused() === false) {
+                    videojs("#" + $(this).attr('id')).player().pause();
+                }
+            });
+            $('.files_recently_shared_container').mCustomScrollbar("scrollTo", "#" + id, {
+                scrollInertia: 600,
+                scrollOffset: "200px"
+            });
+            $("#" + id).parents('.files_feed_item').not(".files_feed_active").addClass("files_feed_active");
+        }
+        else {
+        }
+    };
+};
+
+Application.prototype.theater = function() {
+    this.active = false;
+    this.removeTime = 0;
+    this.previousUrl = '';
+
+    this.initiate = function() {
+        var self = this;
+        Application.prototype.file.view(file_id);
+        if (self.active) {
+            self.remove();
+        }
+        self.active = true;
+        self.previousUrl = window.location;
+        window.history.pushState('File', {}, 'files?f=' + file_id);
+        self.background = $("<div class='background-overlay'></div>").click(function() {
+            self.remove();
+        });
+        self.close_theater = $("<div class='close-theater'></div>").click(function() {
+            self.remove();
+        });
+        self.theater_picture_container = $("<div class='theater-picture-container'></div>").click(function(e) {
+            e.stopPropagation();
+        });
+        self.theater_info_container = $("<div class='theater-info-container'></div>");
+        self.theater_info_padding = $("<div class='theater-info-padding'></div>");
+        self.theater_info_container.append(self.theater_info_padding);
+        self.theater_picture = $("<div class='theater-picture'></div>").click(function() {
+            self.remove();
+        });
+        self.toggle_view = $("<div class='theater-info-toggle'></div>").click(function() {
+            self.theater_picture.toggleClass('theater-info-container_active');
+            self.theater_info_container.slideToggle("fast");
+        });
+        self.theater_wrapper = $("<div style='position:relative;text-align:center;'></div>").click(function(e) {
+            e.stopPropagation();
+        });
+
+        self.theater_wrapper.append(self.toggle_view);
+        self.theater_wrapper.append(self.close_theater);
+        self.theater_wrapper.append(self.theater_picture_container);
+        self.theater_wrapper.hover(function() {
+            self.toggle_view.fadeIn();
+            self.close_theater.fadeIn();
+        }, function() {
+            self.toggle_view.fadeOut();
+            self.close_theater.fadeOut();
+        });
+
+        self.theater_picture.append(self.theater_wrapper);
+        self.theater_picture_container.append(self.theater_info_container);
+
+        $('body').append(self.background);
+        $('body').append(self.theater_picture);
+        $("body").css("overflow", "hidden");
+
+        self.loader = $("<table id='load_popup' style='height:100%;width:100%;padding:200px;'><tr style='vertical-align:middle;'><td style='text-align:center;'><div class='loader_outside'></div><div class='loader_inside'></div></td></tr></table>");
+        self.theater_picture_container.append(self.loader);
+
+        self.adjust();
+
+        $.post('Scripts/files.class.php', {action: "preview", file_id: file_id, activity_id: activity_id}, function(response) {
+            response = $.parseJSON(response);
+            var string = Application.prototype.feed.item.homify(response);
+            self.theater_info_padding.append("<div>" + string + "</div>");
+            var image = $('<img class="image" />');
+
+            if (response.media[0].type == "Image") {
+                $('<img/>').attr('src', response.media[0].path).load(function() {
+                    var picture_width = $(this).width();
+                    self.theater_picture_container.css('display', "block");
+                    self.theater_picture_container.css('background-image', "url('" + response.media[0].path + "')");
+                    image.attr('src', response.media[0].path);
+                    image.css('visibility', "hidden");
+                    self.loaded();
+                    self.theater_wrapper.css('display', 'inline-block');
+                });
+            }
+            else {
+                self.theater_picture_container.append(Application.prototype.file.videoFrame(response.media[0].uid));
+                image = Application.prototype.file.videoPlayer(response.media[0], function(video) {
+                    video.play();
+                    setTimeout(function() {
+                        self.adjust();
+                    }, 100);
+                    self.loaded();
+                }, function() {
+                }, function() {
+                });
+                self.theater_picture_container.addClass('theater_video');
+            }
+            self.theater_picture_container.append(image);
+            // theater_info_container.mCustomScrollbar(SCROLL_OPTIONS);
+        });
+    };
+    this.adjust = function() {
+        //adjustSwitches();
+
+        this.theater_picture.css('margin-top', "-" + this.theater_picture.height() / 2);
+        Application.prototype.UI.resizeToMax(this.theater_picture_container.children('img:first'), 690, 85);
+
+        // $('#theater-info-container').mCustomScrollbar("update");
+    };
+    this.loaded = function() {
+        this.adjust();
+        this.loader.remove();
+    };
+    this.remove = function() {
+        if (this.active) {
+            this.background.fadeOut(function() {
+                $(this).remove();
+            });
+            this.theater_picture.animate({height: '0'}, this.removeTime, function() {
+                $(this).remove();
+            });
+            $('body').css('overflow', 'auto');
+            this.active = false;
+            window.history.pushState('Close Theater', {}, this.previousUrl);
+        }
+    };
+};
+
 Application.prototype.chat = {
-    room : new Array()
+    room: new Array()
 };
 Application.prototype.generic = {
 };
 Application.prototype.navigation = {
     initial: true
 };
-Application.prototype.feed = {
-    comment: {
-        comments: new Array()
-    },
-    post: {
-        files: new Array()
-    }
+Application.prototype.Feed = function(entity_id, entity_type) {
+    this.entity_id = entity_id;
+    this.entity_type = entity_type;
+    this.items = new Array();
+    this.min = 0;
+    this.max = 9999999999;
+    this.onfetch = function() {};
+
+    this.get = function() {
+        this.active = true;
+        var data = {
+            action: "get_feed",
+            min: this.min,
+            max: this.max,
+            entity_id: this.entity_id,
+            entity_type: this.entity_type,
+        };
+        var self = this;
+        $.post('Scripts/home.class.php', data, function(response) {
+            response = $.parseJSON(response);
+            for (var i = 0; i < response.length; i++) {
+                self.items.push(new Feed.Item(response[i]));
+            }
+            self.onfetch();
+        });
+    };
+
+    this.print = function() {
+        var object = $('<div></div>');
+        for (var i = 0; i < this.items.length; i++) {
+            console.log(this.items[i]);
+            object.append(this.items[i].print());
+        }
+        console.log(object);
+        return object;
+    };
+
+    this.Item = function(item) {
+        this.item = item;
+        this.print = function() {
+            return this.homify();
+        };
+        this.homify = function() {
+            this.item.stats.like.count = parseInt(this.item.stats.like.count);
+            this.item.status_text = typeof this.item.status_text !== 'undefined' && !isEmpty(this.item.status_text) ? this.item.status_text : '';
+            var string = $("<div data-this.item_id='" + this.item.id + "' class='post_height_restrictor contentblock' id='post_height_restrictor_" + this.item.id + "'></div>");
+            if (this.item.view == 'home') {
+                var user_link = $("<a class='user_name_post' href='user?id=" + this.item.user.id + "'></a>");
+                user_link.append("<div class='profile_picture_medium' style='background-image:url(\"" + this.item.user.pic + "\");'></div>");
+                var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.id + "' href='user?id=" + this.item.user.id + "'>" + this.item.user.name + "</a>");
+                var top_content = $("<div class='top_content'>").append(user_link).append(user_name);
+                var single_post = $('<div id="single_post_' + this.item.id + '" class="singlepostdiv"></div').append(top_content);
+                string.append(single_post);
+                if (!Application.prototype.user.isMobile) {
+                    top_content.append(this.printStats(this.item));
+                }
+                if (this.item.type == "Text" || this.item.type == "File") {
+                    if (!Application.prototype.user.isMobile) {
+                        single_post.append("<hr class='post_user_name_underline'>");
+                    }
+                }
+                var content_wrapper = $("<div class='post_content_wrapper'></div>");
+                content_wrapper.append("<p class='post_text'>" + this.item.status_text + '</p>');
+
+                if (this.item.media.length > 0) {
+                    var media_wrapper = $("<div class='post_feed_media_wrapper'></div>");
+                    content_wrapper.append(media_wrapper);
+                    for (var i in this.item.media) {
+                        var File = new Application.prototype.file(this.item.media[i]);
+                        media_wrapper.append(File.print(this.item.type));
+                    }
+                }
+                single_post.append(content_wrapper);
+                if (Application.prototype.user.isMobile) {
+                    var stats = $("<div class='this.item_stats_mobile'></div>");
+                    stats.append(this.printStats(this.item));
+                    top_content.append(stats);
+                }
+//                var comments = $('<div class="comment_box"></div>');
+//                var comment_comment = $('<div class="comment_box_comment"></div>');
+//                comment_comment.append(this.comment.showComments(this.item));
+//                comments.append(comment_comment);
+//                comments.append(this.comment.printInput(this.item.id));
+                content_wrapper.append(new this.Comment(this).print());
+            }
+            return string;
+        };
+
+        this.printStats = function(activity) {
+            var string = $("<div class='activity_stats'>");
+            string.append(print_likes(activity));
+            var time = $("<span class='post_comment_time'></span>").text(Application.prototype.calendar.datetime.format(activity.time) + " |");
+            string.append(time);
+            var subarray = [{'element': time, 'time': activity.time}];
+            Application.prototype.calendar.datetime.entry.push(subarray);
+            if (activity.type == "File") {
+                activity.media[0] = (activity.media[0] || new Object());
+                activity.media[0].view = new Object();
+                activity.media[0].view.count = (activity.media[0].view.count || 0);
+                //        string += "<span class='post_comment_time'>| <span class='post_view_count'>" + activity.media[0].view.count + "</span> views</span>";
+            }
+
+            if (activity.user.id == USER_ID) {
+                string += "<div class='default_dropdown_actions' style='display:inline-block;' wrapper_id='activity_options_" + activity.id + "'>";
+                string += "<i class='fa fa-angle-down'></i>";
+                string += "<div class='default_dropdown_wrapper' id='activity_options_" + activity.id + "'>";
+                string += "<ul class='default_dropdown_menu'>";
+                string += "<li class='default_dropdown_item delete_activity' controller_id='activity_options_";
+                string += activity.id + "'>Delete";
+                string += "</li>";
+                string += "<li class='default_dropdown_item edit_activity'>Edit</li>";
+                string += "</ul>";
+                string += "</div>";
+                string += "</div>";
+            }
+            string += "</div>";
+            return string;
+
+            function print_likes(activity) {
+                var string = '';
+                string += '<div class="who_liked_hover" ';
+                string += 'style="display:inline;"> ';
+                string += '<span class="post_comment_time post_like_count">' + activity.stats.like.count + '</span>';
+                string += '<i class="fa fa-heart heart_like_icon"></i>';
+                string += '<div style="display:inline;">';
+                string += '<span has_liked="';
+                string += (activity.stats.like.has_liked === true ? "true" : "false");
+                string += '" class="post_comment_time user_preview_name activity_like_text post_like_activity">';
+                string += (activity.stats.like.has_liked === true ? COMMENT_UNLIKE_TEXT : COMMENT_LIKE_TEXT) + '</span><span class="post_comment_time">|</span></div>';
+                string += "</span>";
+                string += '<div class="who_liked" id="who_liked_' + activity.id + '">';
+                for (var i = 0; i < activity.stats.like.count; i++) {
+                    name = activity.stats.like.user[i].name;
+                    if (i == 1) {
+                        string += name;
+                    }
+                    else {
+                        string += ",<br>" + name;
+                    }
+                }
+                if (activity.stats.like.count == 0) {
+                    string += "No one has liked this post yet.";
+                }
+                string += "</div></div>";
+                return string;
+            }
+        };
+
+        this.refreshContent = function(id) {
+            Application.prototype.feed.get(null, null, id, function(response) {
+                var activity_container = $('[data-activity_id="' + id + '"]');
+                var comment_container = activity_container.find('.comment_box_comment');
+                for (var i in response) { // FOR THAT ONE ACTIVITY
+                    for (var key in response[i].comment.comment) {
+                        append_comment(response[i].id, response[i].comment.comment[key]);
+                    }
+                    for (var media_id in response[i].media) {
+                        for (var key in response[i].media[media_id].activity.comment) {
+                            append_comment(response[i].media[media_id].activity.id, response[i].media[media_id].activity.comment.comment[key]);
+                        }
+                    }
+                }
+            });
+        };
+
+
+        this.Comment = function(item) {
+            this.item = item;
+            this.comments = new Array();
+            this.print = function() {
+                var object = $('<div></div>');
+                object.append(this.showComments());
+                object.append(this.printInput());
+            };
+            this.printInput = function() {
+                var string = '';
+                string += "<div class='comment_input' style='padding-left:2px;padding-top:2px;'>";
+                string += "<table style='width:100%;'>";
+                string += "<tr><td style='vertical-align:top;width:40px;'>";
+                string += "<div class='profile_picture_medium' style='background-image:url(\"" + USER_PIC + "\");'>";
+                string += "</div></td><td cellspacing='0' style='vertical-align:top;'>";
+                string += '<textarea placeholder="Write a comment..." ';
+                string += 'class="home_comment_input_text inputtext" id="comment_' + this.item.item.id;
+                string += '"></textarea>';
+                string += "</td></tr></table>";
+                string += "</td></tr></table></div>";
+                return string;
+            };
+            this.submit = function(comment_text, post_id, callback) {
+                comment_text = comment_text.replace(/^\s+|\s+$/g, "");
+                if (comment_text == "") {
+                    comment_text = $('div[actual_id="comment_' + post_id + '"]').val();
+                    comment_text = comment_text.replace(/^\s+|\s+$/g, "");
+                    if (comment_text == "") {
+                        return;
+                    }
+                }
+
+                $.post("Scripts/home.class.php", {comment_text: comment_text, post_id: post_id, action: 'submitComment'}, function(data) {
+                    $('[data-activity_id="' + post_id + '"] .inputtext').each(function() {
+                        if ($(this).parents('[data-activity_id]').data('activity_id') == post_id) {
+                            $(this).val("").blur();
+                        }
+                    });
+                    data = $.parseJSON(data);
+                    callback(data);
+                });
+            };
+            this.showComments = function() {
+                this.comments[this.item.item.id] = new Array();
+                var string = '';
+
+                if (this.item.item.comment.format == 'top') {
+                    string += "<div class='activity_actions user_preview_name post_comment_user_name' style='font-weight:100;'>Show <span class='num_comments'>" + this.item.item.comment.hidden + "</span> more comments...</div>";
+                }
+                for (var i in this.item.item.comment.comment) {
+                    this.comments[this.item.item.id].push(this.item.item.comment.comment[i].id);
+                    string += this.show(this.item.item.comment.comment[i]);
+                }
+
+                this.comments[this.item.item.id]['max'] = Array.max(this.comments[this.item.item.id]);
+                this.comments[this.item.item.id]['min'] = Array.min(this.comments[this.item.item.id]);
+                return string;
+            };
+            this.show = function(comment) {
+                var string = '';
+                comment.like.like_text = (comment.like.has_liked ? "Unlike" : "Like");
+                string += "<div class='single_comment_container' data-comment_id='" + comment.id + "'>";
+                string += "<table style='font-size: 0.9em;'><tr><td style='vertical-align:top;' rowspan='2'>";
+                string += "<div class='profile_picture_medium' style='background-image:url(\"" + comment.user.pic + "\");'></div></td><td style='vertical-align:top;'>";
+                string += "<a class='userdatabase_connection' href='user?id=" + comment.user.id + "'>";
+                string += "<span class='user_preview user_preview_name post_comment_user_name' user_id='" + comment.user.id + "'>" + comment.user.name + " </span></a>";
+                string += "";
+                string += "<span class='post_comment_text'>" + comment.text + "</span>"
+                string += "</td></tr><tr><td colspan=2 style='vertical-align:bottom;' >"
+                string += "<span class='post_comment_time'>" + comment.time + " -</span>"
+                string += "<span class='post_comment_time post_comment_liked_num'>"
+                string += comment.like.count + "</span><i class='fa fa-heart heart_like_icon'></i>";
+                string += "<span data-has_liked='" + comment.like.has_liked + "' "
+                string += "class='user_preview_name post_comment_time post_comment_vote'>"
+                string += comment.like.like_text + "</span>";
+                string += "</tr></table>";
+                if (comment.user.id == USER_ID) {
+                    string += "<img height='15px'src='../Images/Icons/Icon_Pacs/typicons.2.0/png-48px/delete-outline.png' class='comment_delete'></img>";
+                }
+                string += "</div>";
+                return string;
+            };
+            this.append = function(post_id, comment) {
+                if ($('[data-comment_id="' + comment.id + '"]').length == 0) {
+                    var comment_container = $('[data-activity_id="' + post_id + '"]').find('.comment_box_comment').last();
+                    comment_container.append(this.show(comment));
+                }
+                // $("[data-activity_id='" + post_id + "'] [data-comment_id]").sort(function(left, right) {
+                //     return parseInt($(right).data("comment_id")) - parseInt($(left).data("comment_id"));
+                // }).each(function() {
+                //     $("[data-activity_id='" + post_id + "']").find('.comment_box_comment').last().append($(this));
+                // });
+            };
+        };
+        this.post = {
+            files: new Array(),
+            submit: function() {
+                var text = $('#status_text').val();
+                if (text != "" || this.files.length != 0) {
+                    $.post("Scripts/home.class.php", {action: "update_status", status_text: text, group_id: share_group_id, post_media_added_files: this.files}, function(data)
+                    {
+                        if (data == "") {
+                            removeModal('', function() {
+                                Application.prototype.feed.prototype.get(share_group_id, null, 0, activity_id, function(response) {
+                                    var string = $('');
+                                    for (var i in response) {
+                                        string.append(Application.prototype.feed.prototype.homify(response[i]));
+                                    }
+                                    $('.feed_container').prepend(string);
+                                });
+                            });
+                            clearPostArea();
+                        }
+                        else
+                        {
+                            alert(data);
+                        }
+                    });
+                }
+            },
+            addFile: function(object, activity_id) {
+                $('.post_media_wrapper_background').hide();
+                var post_media_classes = '';
+                var post_media_style = " style=' ";
+                var text_to_append = '';
+                var additional_close = '';
+                var extra_params = " post_file_id='" + object.file_id + "' ";
+                //text_to_append += ">"; 
+                text_to_append += Application.prototype.file.print(object, 'add_to_status');
+                if (object.type == "Image")
+                {
+                    post_media_classes += "post_media_photo post_media_full";
+                    additional_close += " post_media_single_close_file";
+                } else if (object.type == "Audio")
+                {
+                    post_media_classes += " post_media_item post_media_full";
+                    additional_close += " post_media_single_close_file";
+
+                } else if (object.type == "Video") {
+                    post_media_classes += " post_media_video";
+                    additional_close += " post_media_single_close_file";
+                    //text_to_append += video_player(object, 'classes', 'styles', 'added_to_status_', true);
+
+                } else if (object.type == "Webpage") {
+                    post_media_classes += " post_media_double";
+                    post_media_style += "height:auto;";
+                    additional_close += " post_media_single_close_webpage";
+                    extra_params = " post_file_id='" + object.path + "' ";
+                    text_to_append += "><table style='height:100%;'><tr><td rowspan='3'>" +
+                            "<div class='post_media_preview' style='background-image:url(&quot;" + object.info.favicon + "&quot;);'></div></td>" +
+                            "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>" +
+                            "<a class='user_preview_name' target='_blank' href='" + object.path + "'><span style='font-size:13px;'>" + object.info.title + "</span></a></div></td></tr>" +
+                            "<tr><td><span style='font-size:12px;' class='user_preview_community'>" + object.info.description + "</span></td></tr></table>";
+                } else if (object.type == "Folder") {
+                    //            text_to_append += documentStatus(object.path, object.name, object.description, FOLDER_THUMB);
+                } else if (object.type == "WORD Document") {
+                } else if (object.type == "PDF Document") {
+                } else if (object.type == "PPT Document") {
+                } else {
+                }
+                if (object.type == "WORD Document"
+                        || object.type == "PDF Document"
+                        || object.type == "PPT Document"
+                        || object.type == "ACCESS Document"
+                        || object.type == "EXCEL Document"
+                        || object.type == "Folder") {
+                    post_media_classes += " post_media_double";
+                    post_media_style += "height:auto;";
+                    additional_close += " post_media_single_close_file";
+                    extra_params = " post_file_id='" + object.id + "' ";
+                }
+                var index;
+                for (var i = 0; i < this.files.length; i++)
+                {
+                    if (this.files[i].id == object.id || this.files[i] == object.id)
+                    {
+                        index = "found";
+                        Application.prototype.UI.dialog(
+                                content = {
+                                    type: 'html',
+                                    content: "Sorry, but you have already added this file to your post. Please choose another instead!"
+                                },
+                        buttons = [{
+                                type: "error",
+                                text: "OK",
+                                onclick: function() {
+                                    removeDialog();
+                                }
+                            }],
+                        properties = {
+                            modal: false,
+                            title: "Whoops!"
+                        });
+                    }
+                }
+                if (index != "found")
+                {
+                    if (object.type == "Webpage") {
+                        this.files.push(object);
+                    } else {
+                        this.files.push(object.id);
+                    }
+                    $('.post_media_wrapper').append(text_to_append);
+                    if (object.type == "Video") {
+                        refreshVideoJs();
+                    }
+                }
+
+                if (this.files.length > 1) {
+                    $('#status_text').attr('placeholder', 'Write about these files...');
+                }
+                else {
+                    $('#status_text').attr('placeholder', 'Write about this file...');
+                }
+                $('#status_text').focus();
+                $('#file_share').mCustomScrollbar("update");
+            },
+            removeFile: function(object) {
+                var id;
+                if (object.type == "Webpage") {
+                    addedURLs = removeFromArray(addedURLs, object.value);
+                    id = '#post_media_single_' + formatToID(object.value);
+                    for (var i = 0; i < post_media_added_files.length; i++) {
+                        if (object.value == post_media_added_files[i].path) {
+                            post_media_added_files.splice(i, 1);
+                        } else {
+                        }
+                    }
+                } else {
+                    var element = $('.post_media_wrapper [data-file_id="' + object.value + '"]');
+                    element.remove();
+                    for (var i = 0; i < post_media_added_files.length; i++) {
+                        if (object.value == post_media_added_files[i]) {
+                            post_media_added_files.splice(i, 1);
+                        } else {
+                        }
+                    }
+                }
+                $(id).remove();
+
+                if (post_media_added_files.length == 0) {
+                    $('#status_text').attr('placeholder', 'Update Status or Share Files...');
+                    $('.post_media_wrapper_background').show();
+                }
+                $('#status_text').focus();
+                resizeScrollers();
+            },
+        };
+    };
 };
+
+this.createPost = function(text, files, activity_id) {
+    var string = "<div class='home_feed_post_container'><div class='home_feed_post_container_arrow_border'>";
+    string += "<div class='home_feed_post_container_arrow'></div>";
+    string += "</div>";
+    string += "<div class='post_wrapper'>";
+    string += "<table style='width:100%;' cellspacing='0' cellpadding='0'>";
+    string += "<tr><td><table style='width:100%;' cellspacing='0' cellpadding='0'>";
+    string += "<tr style='height:100%;'><td><textarea tabindex='1' placeholder= 'Update Status or Share Files...' class='status_text scroll_thin'>" + text + "</textarea>";
+    string += "</td></tr><tr><td class='post_content_wrapper'>";
+    string += "<div class='post_media_wrapper'>";
+    string += "<div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div>";
+    string += "<img class='post_media_loader' src='Images/ajax-loader.gif'></img> </div></td></tr></table></td>";
+    string += "<td style='width:00px;height:100%;position: relative;'><div id='file_share'>";
+    string += "<table id='file_dialog' style='width:100%;' cellspacing='0' cellpadding='0'>";
+    string += "<div class='home_feed_post_container'></table></div>";
+    string += "</td></tr></table><div id='post_more_options' class='post_more_options'>";
+    string += "<button class='pure-button-green small submit_post'><span>Post</span></button>";
+    string += "</div></div></div></div></div>";
+};
+
+
+
 Application.prototype.calendar = {
     event: {},
     datetime: {
@@ -63,6 +1145,15 @@ Application.prototype.notification = {
 };
 Application.prototype.search = {
 };
+
+function isEmpty(input) {
+    if (input == "null" || input == "" || input == null) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 /****************************************************
  * 1. Functions (Network and Widgets)                *
  ****************************************************/
@@ -258,18 +1349,13 @@ Application.prototype.search.get = function(text, mode, element, callback) {
         callback();
 
     });
-    $(element).off('click');
-    $(element).on('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    });
-}
+};
 
 Application.prototype.search.style = function(items) {
     var wrapper = $('<div></div>');
-    for(var i = 0; i < items.length; i++) {
+    for (var i = 0; i < items.length; i++) {
         var item = Application.prototype.search.styleSingle(items[i]);
-        if(i == 0) {
+        if (i == 0) {
             item.addClass('match');
         }
         wrapper.append(item);
@@ -283,10 +1369,10 @@ Application.prototype.search.styleSingle = function(item) {
             + "<img height='40px' width='40px' src='" + item['img'] + "'/>"
             + "</td><td>"
             + "<p class='search_option_name ellipsis_overflow'>" + item['name'] + "</p></td>";
-            if(item['type'] == "user") {
-                string += "<td><div class='connect_button'></div></td>";
-            }
-            string += "</tr>"
+    if (item['type'] == "user") {
+        string += "<td><div class='connect_button'></div></td>";
+    }
+    string += "</tr>"
             + "<tr><td><span class='search_option_info'>" + item['info'] + "</span></td></tr></table>";
     div.append(string);
     return div;
@@ -587,670 +1673,6 @@ Application.prototype.notification.getNotificationNumber = function() {
 };
 
 /****************************************************
- * 1.3 Files                                         *
- ****************************************************/
-
-/****************************************************
- * 1.3.0 Files - Upload                              *
- ****************************************************/
-
-Application.prototype.file.upload.upload = function(files, onStart, onProgress, onComplete, properties) {
-    if ($('.upload_file_container').length == 0) {
-        var file_container = $('<div class="event upload_file_container contentblock"></div>');
-        file_container.append("<a>Upload</a>");
-        var file_upload_container = $('<div class="calendar-event-info-files"></div>');
-        file_container.append(file_upload_container);
-        $('.calendar-container').append(file_container);
-    } else {
-        var file_upload_container = $('.upload_file_container .calendar-event-info-files');
-    }
-    var session = this.session++;
-    onStart();
-    var length = files.length;
-    var files_left = length;
-
-    properties = typeof properties !== 'undefined' ? properties : {type: 'File'};
-    properties.type = typeof properties.type !== 'undefined' ? properties.type : 'File';
-
-    for (var i = 0; i < length; i++) {
-        (function(count, session) {
-            var file = files[count].file;
-            var formdata = new FormData();
-            formdata.append("file", file);
-            formdata.append("action", 'upload');
-            formdata.append("parent_folder", parent_folder);
-            var xhr = new XMLHttpRequest();
-            xhr.upload.onprogress = function(event) {
-                Application.prototype.file.upload.progressHandler(event, "" + session + count, onProgress);
-            };
-            xhr.onload = function() {
-                Application.prototype.file.upload.completeHandler(this, "" + session + count, onComplete, name);
-            };
-            xhr.addEventListener("error", Application.prototype.file.upload.errorHandler, false);
-            xhr.addEventListener("abort", Application.prototype.file.upload.abortHandler, false);
-            xhr.open("post", "Scripts/files.class.php");
-            xhr.send(formdata);
-            var file_container = $("<div class='upload_preview'>");
-            file_container.attr('id', "" + session + count + "_upload_preview");
-            file_container.append(file.name);
-            file_container.append("<br />");
-            file_upload_container.append(file_container);
-            Application.prototype.UI.progress.create(file_container, "" + session + count);
-        })(i, session);
-    }
-};
-
-Application.prototype.file.upload.progressHandler = function(event, id, callback) {
-    $('#loading_icon').show();
-    var percent = (event.loaded / event.total) * 100;
-    percent = Math.round(percent);
-    Application.prototype.UI.progress.update(id, percent);
-    callback(percent);
-};
-
-Application.prototype.file.upload.completeHandler = function(event, id, onComplete) {
-    $('#' + id + '_upload_preview').slideUp();
-    Application.prototype.UI.progress.remove(id);
-    if (this.session > 0) {
-        this.session--;
-        if (this.session === 0) {
-            $('#loading_icon').fadeOut();
-            $('.upload_file_container').slideUp(function() {
-                $(this).remove();
-            });
-        }
-    }
-    if (onComplete == "addToStatus") {
-        alert('not adding file to statuc');
-    } else {
-        if (this.session === 0) {
-        }
-    }
-    onComplete($.parseJSON(event.responseText));
-}
-Application.prototype.file.upload.errorHandler = function(event) {
-    if (this.session > 0) {
-        this.session--;
-    }
-    alert('upload failed');
-    $('#loading_icon').fadeOut();
-};
-Application.prototype.file.upload.abortHandler = function(event) {
-    if (this.session > 0) {
-        this.session--;
-    }
-};
-
-/****************************************************
- * 1.3.1 Files - Print                               *
- ****************************************************/
-
-Application.prototype.file.print_folder = function(folder) {
-    var string = '';
-    for (var file in folder) {
-        string += this.print_row(folder[file]);
-    }
-    return string;
-};
-
-Application.prototype.file.print_row = function(file) {
-    var string = '';
-
-    if (file.type != "Folder") {
-        string += "<div data-file_id='" + file.id + "' class='contentblock files'>";
-    } else {
-        string += "<div data-file_id='" + file.id + "' class='contentblock folder'>"; // SAME
-    }
-    string += "<div class='files_icon_preview' style='background-image:url(\"" + file.type_preview + "\");'></div>";
-    string += "<p class='files ellipsis_overflow'>" + file.name + "</p>";
-
-    string += "<div class='files_actions'><table cellspacing='0' cellpadding='0'><tr style='vertical-align:middle;'><td>";
-
-    string += "<a href='download.php?id=" + file.id + "' download><div class='files_actions_item files_actions_download'></div></a></td><td>";
-    string += "<hr class='files_actions_seperator'></td><td>";
-
-    string += "<div class='files_actions_item files_actions_delete' "
-            + "onclick='deleteFile(this, " + file.id + ");if(event.stopPropagation){event.stopPropagation();}"
-            + "event.cancelBubble=true;'></div></td><td>"
-            + "<hr class='files_actions_seperator'></td><td>"
-            + "<div class='files_actions_item files_actions_share' data-file_id='" + file.id + "'></div></td>";
-    string += "</tr></table></div>";
-
-    string += "<div class='file_hidden_container'>";
-    string += Application.prototype.file.print(file, "File");
-    string += "</div>";
-
-    string += "</div>";
-    return string;
-};
-
-Application.prototype.file.view = function(id) {
-    $.post("Scripts/files.class.php", {file_id: id, action: "view"}, function() {
-    });
-};
-
-Application.prototype.file.list = function(element, type, callback) {
-    callback = typeof callback !== 'undefined' ? callback : function() {
-    };
-    $.post('Scripts/home.class.php', {type: type, action: "file_list"}, function(response) {
-        $(element).html(response);
-        $(element).mCustomScrollbar(SCROLL_OPTIONS);
-        callback();
-    });
-};
-
-Application.prototype.file.initializeWaveForm = function() {
-    $('[uid]').each(function() {
-        createWaveForm($(this).attr('uid'), function() {
-        });
-    });
-};
-
-Application.prototype.file.rename = function(id, text) {
-    $.post('Scripts/files.class.php', {action: "rename", file_id: id, name: text}, function() {
-    });
-};
-Application.prototype.file.print = function(file, activity_type) {
-
-    file.name = typeof file.name !== 'undefined' && !isEmpty(file.name) ? file.name : 'Untitled';
-    file.description = typeof file.description !== 'undefined' && !isEmpty(file.description) ? file.description : '';
-    file.time = typeof file.time !== 'undefined' && !isEmpty(file.time) ? file.time : 'No Date';
-    file.type_preview = typeof file.type_preview !== 'undefined' && !isEmpty(file.type_preview) ? file.type_preview : file.thumb_path;
-    this.files[file.uid] = file;
-    var string = '';
-    var post_classes = " class='post_feed_item ";
-    var post_styles = " style='";
-    var post_content = "";
-    var classes = '';
-    if (file.type == "Audio") {
-        post_classes += "post_media_double";
-        post_content += this.printDoc(file);
-    } else if (file.type == "Image") {
-        post_classes += "post_media_photo";
-        post_content += this.printDoc(file);
-    } else if (file.type == "Video") {
-        post_content += this.printDoc(file);
-        post_classes += "post_media_video";
-//        post_content += video_player(file, classes, "height:100%;", "home_feed_video_", true);
-    } else if (file.type == "WORD Document"
-            || file.type == "PDF Document"
-            || file.type == "EXCEL Document"
-            || file.type == "PPT Document"
-            || file.type == "Folder") {
-        post_styles += "height:auto;";
-        post_classes += "post_media_double";
-        post_content += this.printDoc(file);
-    } else if (file.type == "Folder") {
-        post_styles += "height:auto;";
-        post_classes += "post_media_double";
-        post_content += this.printDoc(file);
-    } else if (file.type == "Webpage") {
-        post_classes += "post_media_full";
-        post_styles += "height:auto;";
-        post_content += "<table style='height:100%;'><tr><td rowspan='3'>";
-        post_content += "<div class='post_media_webpage_favicon' style='background-image:url(&quot;";
-        post_content += file.web_favicon + "&quot;);'></div></td>" + "<td>";
-        post_content += "<a class='user_preview_name' target='_blank' href='";
-        post_content += file.URL + "'><span style='font-size:13px;'>";
-        post_content += file.web_title + "</span></a></div></td></tr>";
-        post_content += "<tr><td><span style='font-size:12px;' class='user_preview_community'>";
-        post_content += file.web_description + "</span></td></tr>";
-        post_content += "</table>";
-    } else {
-        post_classes += "post_media_full";
-        post_content += this.printDoc(file);
-    }
-
-    post_content += "<div class='top_right_actions'>";
-    if (file.user_id == USER_ID && activity_type != 'File') {
-        post_content += "<div style='background-image: url(\"" + DELETE + "\");' class='delete_cross delete_cross_top remove_event_post'></div>";
-    }
-    post_content += "</div></div></div>";
-
-    if (activity_type == "Text" && typeof file.activity != 'undefined') {
-        post_content += '<div class="comment_box">';
-        post_content += '<div class="comment_box_comment">';
-        post_content += Application.prototype.feed.comment.showComments(file.activity);
-        post_content += "</div>"
-        post_content += Application.prototype.feed.comment.printInput(file.activity.id);
-        post_content += "</div>";
-    }
-    post_content += ""; //CLOSE file_activity_section AND POST_CONTENT;
-
-    if (activity_type == "File" && typeof file.share != 'undefined') {
-        //WHO IS FILE SHARED WITH?
-    }
-
-    string += "<div data-activity_id='" + file.activity.id + "' data-file_id='" + file.id + "' " + post_classes + "' " + post_styles + "'>";
-    string += post_content + "</div>";
-
-    return string;
-};
-
-Application.prototype.file.printDoc = function(file) {
-    var preview_classes = '';
-    var preview_styles = '';
-    var preview_content = '';
-    var post_content = '<tr><td>';
-    var post_content_under_title = '<tr><td>';
-    var string = '';
-    var link = "files?f=" + file.id;
-    var path = file.type_preview;
-    if (file.type == "Folder") {
-        path = FOLDER_THUMB;
-        link = "files?pd=" + file.enc_parent_folder_id;
-    } else if (file.type == "Image") {
-        path = file.thumb_path;
-        preview_classes += " post_media_photo ";
-        preview_styles += " width:auto;height:auto; ";
-        preview_content += "<img style='opacity:0;max-width:150px;max-height:150px;' src='" + path + "'></img>";
-    } else if (file.type == "Video") {
-        path = file.thumbnail;
-        preview_classes += " post_media_photo ";
-        preview_content += "<img style='position:absolute;top:40%;left:40%;' src='" + VIDEO_BUTTON + "'></img>";
-    } else if (file.type == "Audio") {
-        preview_styles = 'background-image: none !important;';
-        preview_content += "<i class='fa fa-music'></i>";
-        preview_content += this.audioPlayer(file, 'button', false);
-        post_content_under_title += this.audioPlayer(file, 'timeline');
-    } else {
-        preview_classes += "";
-        preview_styles += "background-image: url(\"" + path + "\")";
-        preview_content += "<img style='opacity:0;max-width:150px;max-height:150px;' src='" + path + "'></img>";
-    }
-
-    string += "<div class='post_media_preview " + preview_classes + "' style='background-image:url(&quot;";
-    string += path + "&quot;); " + preview_styles + "'>" + preview_content + "</div>";
-    string += "<div class='file_activity_section'>";
-    string += "<a class='user_preview_name' target='_blank' href='" + link + "'>";
-    string += "<p class='ellipsis_overflow' style='word-break:break-word; '>";
-    string += file.name + "</p></a>";
-    if (post_content_under_title != "") {
-        string += post_content_under_title;
-    }
-    if (file.description != "") {
-        string += "<span style='font-size:12px;' class='post_comment_time'>";
-        string += file.description + "</span>";
-    }
-    string += "";
-    string += "<div style='margin-top:5px;'>";
-    string += "<i class='heart_like_icon fa fa-heart'></i><span class='post_comment_time post_like_count'>" + file.like.count + "</span>";
-    if (typeof file.activity.comment != 'undefined') {
-        string += "<i class='fa fa-comment heart_like_icon'></i><span class='post_comment_time post_comment_count'>"
-                + (parseInt(file.activity.comment.comment.length) + parseInt(file.activity.comment.hidden)) + "</span>";
-    }
-    string += "<i class='fa fa-eye heart_like_icon'></i><span class='post_comment_time'>" + file.view.count + "</span><br />";
-//    string += "<div class='file_info'><span class='post_comment_time'>Uploaded: " + file.time + "</span><br />";
-//    string += "<span class='post_comment_time'>Size: " + file.size + " bits</span><br />";
-//    string += "<span class='post_comment_time'>Type: " + file.type + "</span></div>";
-
-    string += "</div>";
-
-    string += "<div style='margin-top:5px;'>";
-    string += "<a class='no-ajax' href='download.php?id=" + file.id + "'>" + "<button class='pure-button-green'><i class='fa fa-cloud-download'></i><span></span></button></a>";
-    string += "<button has_liked='" + (file.activity.stats.like.has_liked === true ? "true" : "false") + "' class='activity_like_text post_like_activity " 
-            + "pure-button-neutral " + (file.activity.stats.like.has_liked === true ? " pure-button-blue" : "") + "'>";
-    string += "<i class='fa fa-heart'></i>";
-//    string += "<span>" + (file.activity.stats.like.has_liked === true ? COMMENT_UNLIKE_TEXT : COMMENT_LIKE_TEXT) + "</span>";
-    string += "</button>";
-    string += ""; //LEAVING file_activity_section OPEN!!
-
-    string += post_content;
-    return string;
-};
-
-Application.prototype.file.audioPlayer = function(file, part, source) {
-    var string = '';
-    string += '<div data-path="' + file.thumb_path + '" uid="' + file.uid + '" data-file_id="' + file.id + '">';
-    if (part == 'all') {
-        string += '<div class="audio_container">';
-        string += this.audioButton(file, source);
-        string += this.audioInfo(file);
-        string += '</div>';
-    } else if (part == "button") {
-        string += this.audioButton(file, source);
-    } else if (part == "info") {
-        string += this.audioInfo(file);
-    } else if (part == 'timeline') {
-        string += this.audioTimeline();
-    }
-    string += "</div>";
-    return string;
-};
-
-Application.prototype.file.audioButton = function(file, source) {
-    var string = '<div class="audio_button">';
-    if (source === true) {
-        string += '<audio style="display:none;"><source src="' + file.path + '"></source><source src="'
-                + file.thumb_path + '"></source></audio>';
-    }
-    string += '<div class="audio_button_inside"></div><div class="audio_loader"><div class="loader_outside"></div><div class="loader_inside">'
-            + '</div><span class="audio_loader_text loader_text"></span></div></div>';
-    return string;
-};
-
-Application.prototype.file.audioInfo = function(file) {
-    return '<div class="audio_info"><div class="ellipsis_overflow audio_title">' + file.name + '</div>'
-            + this.audioTimeline() + '<div class="audio_time">0:00</div></div>';
-};
-
-Application.prototype.file.audioTimeline = function() {
-    return '<div class="audio_progress_container"><div class="audio_progress"></div><div class="audio_buffered">'
-            + '</div><div class="audio_line"></div></div>';
-};
-
-Application.prototype.file.audioPlay = function(id, start, progress, end, uid) {
-    if (!$('[uid="' + uid + '"] .audio_button').hasClass('audio_playing')) {
-        this.startAudioInfo(id, start, progress, end, uid);
-        $('[uid="' + uid + '"] .audio_button').addClass('audio_playing');
-    } else {
-        this.files[uid]['element'].pause();
-        $('[uid="' + uid + '"] .audio_button').removeClass('audio_playing');
-    }
-};
-
-Application.prototype.file.startAudioInfo = function(id, start, progress, end, uid) {
-    if (uid in this.files) {
-        if (typeof this.files[uid]['element'] != 'undefined') {
-            this.files[uid]['element'].play();
-            return;
-        }
-    }
-
-    this.view(id);
-
-    var headerControl = $("<div uid='" + uid + "'></div>");
-    headerControl.append(this.audioPlayer(this.files[uid], 'all', true));
-    $('.global_media_container').html(headerControl);
-
-    $("[uid='" + uid + "'] .audio_loader").fadeIn();
-    var audio = headerControl.find('audio');
-    this.files[uid]['element'] = audio.get(0);
-    this.files[uid]['element'].volume = 1;
-    this.files[uid]['element'].play();
-    audio.bind('loadedmetadata', function() {
-        audio.bind('progress', function() {
-            var track_length = audio.get(0).duration;
-            var secs = audio.get(0).buffered.end(0);
-            var progress = 0;
-            if (secs > 0 && track_length > 0) {
-                progress = (secs / track_length) * 100;
-            }
-            $('[uid="' + uid + '"] .audio_buffered').css('width', progress + "%");
-        });
-
-        audio.bind('timeupdate', function() {
-            var track_length = audio.get(0).duration;
-            var secs = audio.get(0).currentTime;
-            var progress = (secs / track_length) * 100;
-            $('[uid="' + uid + '"] .audio_progress').css('width', progress + "%");
-            var minutes = Math.floor(track_length / 60);
-            var seconds = Math.floor(track_length - minutes * 60);
-            var done_secs = audio.get(0).currentTime;
-            var done_minutes = Math.floor(done_secs / 60);
-            var done_remaining_secons = Math.floor(done_secs - done_minutes * 60);
-            $('[uid="' + uid + '"] .audio_time').html(done_minutes + ":" + pad(done_remaining_secons) + " - " + minutes + ":" + seconds);
-            $("[uid='" + uid + "'] .audio_loader").fadeOut();
-        });
-
-        audio.bind('canplaythrough', function() {
-            $('[uid="' + uid + '"] .audio_buffered').css('background-color', 'grey');
-        });
-
-        audio.bind('ended', function() {
-            audio.get(0).currentTime = 0;
-            $('[uid="' + uid + '"] .audio_button').removeClass('audio_playing');
-        });
-
-        $('[uid="' + uid + '"] .audio_progress_container').click(function(e) {
-            var x = $(this).offset().left;
-            var width_click = e.pageX - x;
-            var width = $(this).width();
-            var percent_width = (width_click / width) * 100;
-            $('[uid="' + uid + '"] .audio_progress').css('width', percent_width + "%");
-            var secs = audio.get(0).duration;
-            var new_secs = secs * (percent_width / 100);
-            audio.get(0).currentTime = new_secs;
-        });
-    });
-
-    start = typeof start !== 'undefined' ? start : function() {
-    };
-    progress = typeof progress !== 'undefined' ? progress : function() {
-    };
-    end = typeof end !== 'undefined' ? end : function() {
-    };
-    start();
-};
-
-Application.prototype.file.audioVolume = function(vol) {
-    $('audio').each(function() {
-//        console.log($(this).attr('id'));
-        $(this).get(0).volume = vol;
-    });
-};
-
-Application.prototype.file.createWaveForm = function(uid, progress) {
-    if (uid in audio_items === false) {
-        $("[uid='" + uid + "'] .audio_loader").fadeIn();
-        var wavesurfer = Object.create(WaveSurfer);
-        wavesurfer.init({
-            container: '[uid="' + uid + '"] .audio_progress_container',
-            waveColor: 'lightblue',
-            progressColor: 'rgb(0, 140, 250)',
-            height: 30,
-            loopSelection: false,
-            dragSelection: false,
-            cursorColor: 'grey',
-            normalize: true,
-            minPxPerSec: 20
-        });
-        wavesurfer.on('ready', function() {
-            $("[uid='" + uid + "'] .audio_loader").fadeOut();
-        });
-        wavesurfer.on('progress', function(percent) {
-            percent = percent * 100;
-            progress(percent);
-        });
-        wavesurfer.on('loading', function(percent) {
-            $("[uid='" + uid + "'] .audio_loader_text").html(percent + "%");
-        });
-        wavesurfer.load($("[uid='" + uid + "']").data('path'));
-        audio_items[uid] = wavesurfer;
-    }
-};
-
-Application.prototype.file.removeAudio = function(id) {
-    $('#audio_container_' + id).remove();
-};
-
-Application.prototype.file.videoFrame = function(uid) {
-    return "<div class='video_box'><video id='vid" + uid + "'></video></div>";
-};
-
-Application.prototype.file.videoPlayer = function(file, onload, onplay, onend) {
-    var string = '';
-    var attributes = {
-        'id': 'vid' + file.uid,
-        'class': 'video-js vjs-default-skin',
-        'controls': ' ',
-        'preload': 'auto',
-    };
-    var video = $("#vid" + file.uid);
-    string += "<source src='" + file.mp4_path + "' type='video/mp4'></source>"
-            + "<source src='" + file.flv_path + "' type='video/x-flv'></source>"
-            + "<source src='" + file.webm_path + "' type='video/webm'></source>";
-    //. "<source src='" + $original_path + "' type='video/avi'></source>";
-    string += "<object data='" + file.mp4_path + "'>"
-            + "<embed src='" + file.flv_path + "'>"
-            + "</object>";
-    video.append(string);
-    video.attr(attributes);
-    var player = videojs('vid' + file.uid);
-    player.ready(function() {
-        onload(player);
-    });
-
-    return video;
-};
-
-Application.prototype.file.videoPlay = function(id) {
-    var file_id = id.replace(/[A-Za-z_$-]/g, "");
-    this.view(file_id);
-    if ($("#" + id).parents('#file_container').length !== 0) {
-        id = file_id;
-        $('#audio_play_icon_' + id).css('visibility', 'visible');
-        $('#audio_play_icon_' + id).animate({opacity: "1"}, 200);
-    } else if ($("#" + id).parents('.files_recently_shared').length !== 0) {
-        $('.files_recently_shared').find(".files_feed_active").not(":has(#" + id + ")").removeClass("files_feed_active").find('video').each(function() {
-            if (videojs("#" + $(this).attr('id')).paused() === false) {
-                videojs("#" + $(this).attr('id')).player().pause();
-            }
-        });
-        $('.files_recently_shared_container').mCustomScrollbar("scrollTo", "#" + id, {
-            scrollInertia: 600,
-            scrollOffset: "200px"
-        });
-        $("#" + id).parents('.files_feed_item').not(".files_feed_active").addClass("files_feed_active");
-    }
-    else {
-    }
-}
-
-Application.prototype.file.upload.drag = function(element, files) {
-    var number = Math.floor(Math.random() * 10);
-    element = $(element);
-    Application.prototype.UI.progress.create(element, number);
-    this.upload(files, function() {
-    }, function(pgs) {
-        Application.prototype.UI.progress.update(number, pgs);
-    }, function(file) {
-        removeProgress(number);
-        element.css('background', "url('" + file.path + "')");
-        element.addClass('upload_done');
-    });
-}
-
-Application.prototype.file.theater.initiate = function(activity_id, file_id, properties) {
-    var self = this;
-    Application.prototype.file.view(file_id);
-    if (self.active) {
-        self.remove();
-    }
-    self.active = true;
-    self.previousUrl = window.location;
-    window.history.pushState('File', {}, 'files?f=' + file_id);
-    self.background = $("<div class='background-overlay'></div>").click(function() {
-        self.remove();
-    });
-    self.close_theater = $("<div class='close-theater'></div>").click(function() {
-        self.remove();
-    });
-    self.theater_picture_container = $("<div class='theater-picture-container'></div>").click(function(e) {
-        e.stopPropagation();
-    });
-    self.theater_info_container = $("<div class='theater-info-container'></div>");
-    self.theater_info_padding = $("<div class='theater-info-padding'></div>");
-    self.theater_info_container.append(self.theater_info_padding);
-    self.theater_picture = $("<div class='theater-picture'></div>").click(function() {
-        self.remove();
-    });
-    self.toggle_view = $("<div class='theater-info-toggle'></div>").click(function() {
-        self.theater_picture.toggleClass('theater-info-container_active');
-        self.theater_info_container.slideToggle("fast");
-    });
-    self.theater_wrapper = $("<div style='position:relative;text-align:center;'></div>").click(function(e) {
-        e.stopPropagation();
-    });
-
-    self.theater_wrapper.append(self.toggle_view);
-    self.theater_wrapper.append(self.close_theater);
-    self.theater_wrapper.append(self.theater_picture_container);
-    self.theater_wrapper.hover(function() {
-        self.toggle_view.fadeIn();
-        self.close_theater.fadeIn();
-    }, function() {
-        self.toggle_view.fadeOut();
-        self.close_theater.fadeOut();
-    });
-
-    self.theater_picture.append(self.theater_wrapper);
-    self.theater_picture_container.append(self.theater_info_container);
-
-    $('body').append(self.background);
-    $('body').append(self.theater_picture);
-    $("body").css("overflow", "hidden");
-
-    self.loader = $("<table id='load_popup' style='height:100%;width:100%;padding:200px;'><tr style='vertical-align:middle;'><td style='text-align:center;'><div class='loader_outside'></div><div class='loader_inside'></div></td></tr></table>");
-    self.theater_picture_container.append(self.loader);
-
-    self.adjust();
-
-    $.post('Scripts/files.class.php', {action: "preview", file_id: file_id, activity_id: activity_id}, function(response) {
-        response = $.parseJSON(response);
-        var string = Application.prototype.feed.homify(response);
-        self.theater_info_padding.append("<div>" + string + "</div>");
-        var image = $('<img class="image" />');
-
-        if (response.media[0].type == "Image") {
-            $('<img/>').attr('src', response.media[0].path).load(function() {
-                var picture_width = $(this).width();
-                self.theater_picture_container.css('display', "block");
-                self.theater_picture_container.css('background-image', "url('" + response.media[0].path + "')");
-                image.attr('src', response.media[0].path);
-                image.css('visibility', "hidden");
-                self.loaded();
-                self.theater_wrapper.css('display', 'inline-block');
-            });
-        }
-        else {
-            self.theater_picture_container.append(Application.prototype.file.videoFrame(response.media[0].uid));
-            image = Application.prototype.file.videoPlayer(response.media[0], function(video) {
-                video.play();
-                setTimeout(function() {
-                    self.adjust();
-                }, 100);
-                self.loaded();
-            }, function() {
-            }, function() {
-            });
-            self.theater_picture_container.addClass('theater_video');
-        }
-        self.theater_picture_container.append(image);
-        // theater_info_container.mCustomScrollbar(SCROLL_OPTIONS);
-    });
-};
-
-Application.prototype.file.theater.loaded = function() {
-    this.adjust();
-    this.loader.remove();
-};
-
-Application.prototype.file.theater.adjust = function() {
-    //adjustSwitches();
-
-    this.theater_picture.css('margin-top', "-" + this.theater_picture.height() / 2);
-    Application.prototype.UI.resizeToMax(this.theater_picture_container.children('img:first'), 690, 85);
-
-    // $('#theater-info-container').mCustomScrollbar("update");
-};
-
-Application.prototype.file.theater.remove = function() {
-    if (this.active) {
-        this.background.fadeOut(function() {
-            $(this).remove();
-        });
-        this.theater_picture.animate({height: '0'}, this.removeTime, function() {
-            $(this).remove();
-        });
-        $('body').css('overflow', 'auto');
-        this.active = false;
-        window.history.pushState('Close Theater', {}, this.previousUrl);
-    }
-};
-
-
-/****************************************************
  * 1.4 User                                          *
  ****************************************************/
 
@@ -1505,490 +1927,11 @@ Application.prototype.user.submitData = function() {
  * 1.5 Feeds                                         *
  ****************************************************/
 
-Application.prototype.feed.get = function(entity_id, entity_type, min_activity_id, activity_id, callback) {
-    var data = {
-        action: "get_feed",
-        min_activity_id: min_activity_id,
-        entity_id: entity_id,
-        entity_type: entity_type,
-        activity_id: activity_id,
-    };
-    $.post('Scripts/home.class.php', data, function(response) {
-        response = $.parseJSON(response);
-        callback(response);
-    });
-};
-
-Application.prototype.feed.getContent = function(feed_id, min_activity_id, page, callback) {
-    var link = page;
-    if (page == "user") {
-        link = "home"
-    }
-
-    else if (page == "user_files") {
-        link = 'user';
-        page = 'f';
-    }
-
-    if (typeof feed_id !== "undefined") {
-        var container = $('.container').find('.feed_container');
-
-
-        var none = $("<div class='post_height_restrictor contentblock'>"
-                + "<center><p style='color:grey;'>"
-                + "There are no notifications in this Live Feed! <br /> "
-                + "You can post up the in the box.</p></center></div>");
-
-        var prev_feed_id = getCookie(page + '_feed');
-        if (feed_id != prev_feed_id) {
-            min_activity_id = 0;
-            container.find('.post_height_restrictor').remove();
-        } else {
-            none = "";
-        }
-        setCookie(page + '_feed', feed_id);
-        modal(container, properties = {text: "Loading content..."})
-        var callbak = function(data) {
-            container.prepend(data);
-            if (data.length < 100) {
-                container.append(none);
-            }
-            removeModal();
-
-            callback();
-            refreshVideoJs();
-        }
-
-        if (isNaN(feed_id)) {
-            if (feed_id == 'a' || feed_id == 's' || feed_id == 'y') {
-                refreshElement('#feed_refresh', link, "f=" + feed_id + "&min_activity_id=" + min_activity_id, "#feed_refresh", callbak);
-            }
-            else {
-                feed_id = feed_id.replace('u_', '');
-                refreshElement('#feed_refresh', link, "u=" + feed_id + "&min_activity_id=" + min_activity_id, "#feed_refresh", callbak);
-            }
-        } else {
-            refreshElement('#feed_refresh', link, "fg=" + feed_id + "&min_activity_id=" + min_activity_id, "#feed_refresh", callbak);
-        }
-    }
-};
-
-Application.prototype.feed.changeTheaterFeed = function(view) {
-    if (view == "File") {
-        $(".activity_comment_div").hide();
-        $('.comment_box_original').show();
-    }
-    else if (view == "Post") {
-        $(".activity_comment_div").show();
-        $('.comment_box_original').hide();
-    }
-    else {
-
-    }
-};
-
-Application.prototype.feed.post.submit = function() {
-        var text = $('#status_text').val();
-        if (text != "" || this.files.length != 0) {
-            $.post("Scripts/home.class.php", {action:"update_status", status_text: text, group_id: share_group_id, post_media_added_files: this.files}, function(data)
-            {
-                if (data == "") {
-                    removeModal('', function() {
-                        Application.prototype.feed.get(share_group_id, null, 0, min_activity_id, activity_id, function(response){
-                    		var string = $('');
-                    		for (var i in response) {
-                                    string.append(Application.prototype.feed.homify(response[i]));
-                    		}
-                    		$('.feed_container').prepend(string);
-                		});
-                    });
-                    clearPostArea();
-                }
-                else
-                {
-                    alert(data);
-                }
-            });
-        }
-};
-
-Application.prototype.feed.post.addFile = function(object, activity_id) {
-        $('.post_media_wrapper_background').hide();
-        var post_media_classes = '';
-        var post_media_style = " style=' ";
-        var text_to_append = '';
-        var additional_close = '';
-        var extra_params = " post_file_id='" + object.file_id + "' ";
-        //text_to_append += ">"; 
-        text_to_append += Application.prototype.file.print(object, 'add_to_status');
-        if (object.type == "Image")
-        {
-            post_media_classes += "post_media_photo post_media_full";
-            additional_close += " post_media_single_close_file";
-        } else if (object.type == "Audio")
-        {
-             post_media_classes += " post_media_item post_media_full";
-             additional_close += " post_media_single_close_file";
-
-        } else if (object.type == "Video") {
-            post_media_classes += " post_media_video";
-            additional_close += " post_media_single_close_file";
-            //text_to_append += video_player(object, 'classes', 'styles', 'added_to_status_', true);
-
-        } else if (object.type == "Webpage") {
-            post_media_classes += " post_media_double";
-            post_media_style += "height:auto;";
-            additional_close += " post_media_single_close_webpage";
-            extra_params = " post_file_id='" + object.path + "' ";
-            text_to_append += "><table style='height:100%;'><tr><td rowspan='3'>" +
-                    "<div class='post_media_preview' style='background-image:url(&quot;" + object.info.favicon + "&quot;);'></div></td>" +
-                    "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>" +
-                    "<a class='user_preview_name' target='_blank' href='" + object.path + "'><span style='font-size:13px;'>" + object.info.title + "</span></a></div></td></tr>" +
-                    "<tr><td><span style='font-size:12px;' class='user_preview_community'>" + object.info.description + "</span></td></tr></table>";
-        } else if (object.type == "Folder") {
-//            text_to_append += documentStatus(object.path, object.name, object.description, FOLDER_THUMB);
-        } else if (object.type == "WORD Document") {
-        } else if (object.type == "PDF Document") {
-        } else if (object.type == "PPT Document") {
-        } else {
-        }
-        if (object.type == "WORD Document" 
-                || object.type == "PDF Document" 
-                || object.type == "PPT Document" 
-                || object.type == "ACCESS Document" 
-                || object.type == "EXCEL Document"
-                || object.type == "Folder") {
-            post_media_classes += " post_media_double";
-            post_media_style += "height:auto;";
-            additional_close += " post_media_single_close_file";
-            extra_params = " post_file_id='" + object.id + "' ";
-        }
-        var index;
-        for (var i = 0; i < this.files.length; i++)
-        {
-            if (this.files[i].id == object.id || this.files[i] == object.id)
-            {
-                index = "found";
-                Application.prototype.UI.dialog(
-                        content = {
-                            type: 'html',
-                            content: "Sorry, but you have already added this file to your post. Please choose another instead!"
-                        },
-                buttons = [{
-                        type: "error",
-                        text: "OK",
-                        onclick: function() {
-                            removeDialog();
-                        }
-                    }],
-                properties = {
-                    modal: false,
-                    title: "Whoops!"
-                });
-            }
-        }
-        if (index != "found")
-        {
-            if (object.type == "Webpage") {
-                this.files.push(object);
-            } else {
-                this.files.push(object.id);
-            }
-            $('.post_media_wrapper').append(text_to_append);
-            if(object.type == "Video") {
-                refreshVideoJs();
-            }
-        }
-
-        if (this.files.length > 1) {
-            $('#status_text').attr('placeholder', 'Write about these files...');
-        }
-        else {
-            $('#status_text').attr('placeholder', 'Write about this file...');
-        }
-        $('#status_text').focus();
-        $('#file_share').mCustomScrollbar("update");
-    };
-Application.prototype.feed.post.removeFile = function(object)
-    {
-        var id;
-        if (object.type == "Webpage") {
-            addedURLs = removeFromArray(addedURLs, object.value);
-            id = '#post_media_single_' + formatToID(object.value);
-            for (var i = 0; i < post_media_added_files.length; i++) {
-                if (object.value == post_media_added_files[i].path) {
-                    post_media_added_files.splice(i, 1);
-                } else {
-                }
-            }
-        } else {
-            var element = $('.post_media_wrapper [data-file_id="' + object.value + '"]');
-            element.remove();
-            for (var i = 0; i < post_media_added_files.length; i++) {
-                if (object.value == post_media_added_files[i]) {
-                    post_media_added_files.splice(i, 1);
-                } else {
-                }
-            }
-
-        }
-        $(id).remove();
-
-        if (post_media_added_files.length == 0)
-        {
-            $('#status_text').attr('placeholder', 'Update Status or Share Files...');
-            $('.post_media_wrapper_background').show();
-        }
-        $('#status_text').focus();
-        resizeScrollers();
-    };
-
-Application.prototype.feed.createPost = function(text, files, activity_id) {
-    var string = "<div class='home_feed_post_container'><div class='home_feed_post_container_arrow_border'>";
-    string += "<div class='home_feed_post_container_arrow'></div>";
-    string += "</div>";
-    string += "<div class='post_wrapper'>";
-    string += "<table style='width:100%;' cellspacing='0' cellpadding='0'>";
-    string += "<tr><td><table style='width:100%;' cellspacing='0' cellpadding='0'>";
-    string += "<tr style='height:100%;'><td><textarea tabindex='1' placeholder= 'Update Status or Share Files...' class='status_text scroll_thin'>" + text + "</textarea>";
-    string += "</td></tr><tr><td class='post_content_wrapper'>";
-    string += "<div class='post_media_wrapper'>";
-    string += "<div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div>";
-    string += "<img class='post_media_loader' src='Images/ajax-loader.gif'></img> </div></td></tr></table></td>";
-    string += "<td style='width:00px;height:100%;position: relative;'><div id='file_share'>";
-    string += "<table id='file_dialog' style='width:100%;' cellspacing='0' cellpadding='0'>";
-    string += "<div class='home_feed_post_container'></table></div>";
-    string += "</td></tr></table><div id='post_more_options' class='post_more_options'>";
-    string += "<button class='pure-button-green small submit_post'><span>Post</span></button>";
-    string += "</div></div></div></div></div>";
-};
-
-Application.prototype.feed.homify = function(activity) {
-    activity.stats.like.count = parseInt(activity.stats.like.count);
-    activity.status_text = typeof activity.status_text !== 'undefined' && !isEmpty(activity.status_text) ? activity.status_text : '';
-    var string = $("<div data-activity_id='" + activity.id + "' class='post_height_restrictor contentblock' id='post_height_restrictor_" + activity.id + "'></div>");
-    if (activity.view == 'home') {
-        var user_link = $("<a class='user_name_post' href='user?id=" + activity.user.id + "'></a>");
-        user_link.append("<div class='profile_picture_medium' style='background-image:url(\"" + activity.user.pic + "\");'></div>");
-        var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + activity.user.id + "' href='user?id=" + activity.user.id + "'>" + activity.user.name + "</a>");
-        var top_content = $("<div class='top_content'>").append(user_link).append(user_name);
-        var single_post = $('<div id="single_post_' + activity.id + '" class="singlepostdiv"></div').append(top_content);
-        string.append(single_post);
-        if (!Application.prototype.user.isMobile) {
-            top_content.append(this.printStats(activity));
-        }
-        if (activity.type == "Text" || activity.type == "File") {
-            if (!Application.prototype.user.isMobile) {
-                single_post.append("<hr class='post_user_name_underline'>");
-            }
-        }
-        var content_wrapper = $("<div class='post_content_wrapper'></div>");
-        content_wrapper.append("<p class='post_text'>" + activity.status_text + '</p>');
-
-        if (activity.media.length > 0) {
-            var media_wrapper = $("<div class='post_feed_media_wrapper'></div>");
-            content_wrapper.append(media_wrapper);
-            for (var i in activity.media) {
-                media_wrapper.append(Application.prototype.file.print(activity.media[i], activity.type));
-            }
-        }
-        single_post.append(content_wrapper);
-        if (Application.prototype.user.isMobile) {
-            var stats = $("<div class='activity_stats_mobile'></div>");
-            stats.append(this.printStats(activity));
-            top_content.append(stats);
-        }
-        var comments = $('<div class="comment_box"></div>');
-        var comment_comment = $('<div class="comment_box_comment"></div>');
-        comment_comment.append(this.comment.showComments(activity));
-        comments.append(comment_comment);
-        comments.append(this.comment.printInput(activity.id));
-        content_wrapper.append(comments);
-    }
-    return string;
-}
-
-Application.prototype.feed.comment.printInput = function(activity_id) {
-    var string = '';
-    string += "<div class='comment_input' style='padding-left:2px;padding-top:2px;'>";
-    string += "<table style='width:100%;'>";
-    string += "<tr><td style='vertical-align:top;width:40px;'>";
-    string += "<div class='profile_picture_medium' style='background-image:url(\"" + USER_PIC + "\");'>";
-    string += "</div></td><td cellspacing='0' style='vertical-align:top;'>";
-    string += '<textarea placeholder="Write a comment..." ';
-    string += 'class="home_comment_input_text inputtext" id="comment_' + activity_id;
-    string += '"></textarea>';
-    string += "</td></tr></table>";
-    string += "</td></tr></table></div>";
-    return string;
-};
-
-Application.prototype.feed.comment.showComments = function(activity) {
-    this.comments[activity.id] = new Array();
-    var string = '';
-
-    if (activity.comment.format == 'top') {
-        string += "<div class='activity_actions user_preview_name post_comment_user_name' style='font-weight:100;'>Show <span class='num_comments'>" + activity.comment.hidden + "</span> more comments...</div>";
-    }
-    for (var i in activity.comment.comment) {
-        this.comments[activity.id].push(activity.comment.comment[i].id);
-        string += this.show(activity.comment.comment[i]);
-    }
-
-    this.comments[activity.id]['max'] = Array.max(this.comments[activity.id]);
-    this.comments[activity.id]['min'] = Array.min(this.comments[activity.id]);
-    return string;
-};
-
-Application.prototype.feed.comment.show = function(comment) {
-    var string = '';
-    comment.like.like_text = (comment.like.has_liked ? "Unlike" : "Like");
-    string += "<div class='single_comment_container' data-comment_id='" + comment.id + "'>";
-    string += "<table style='font-size: 0.9em;'><tr><td style='vertical-align:top;' rowspan='2'>";
-    string += "<div class='profile_picture_medium' style='background-image:url(\"" + comment.user.pic + "\");'></div></td><td style='vertical-align:top;'>";
-    string += "<a class='userdatabase_connection' href='user?id=" + comment.user.id + "'>";
-    string += "<span class='user_preview user_preview_name post_comment_user_name' user_id='" + comment.user.id + "'>" + comment.user.name + " </span></a>";
-    string += "";
-    string += "<span class='post_comment_text'>" + comment.text + "</span>"
-    string += "</td></tr><tr><td colspan=2 style='vertical-align:bottom;' >"
-    string += "<span class='post_comment_time'>" + comment.time + " -</span>"
-    string += "<span class='post_comment_time post_comment_liked_num'>"
-    string += comment.like.count + "</span><i class='fa fa-heart heart_like_icon'></i>";
-    string += "<span data-has_liked='" + comment.like.has_liked + "' "
-    string += "class='user_preview_name post_comment_time post_comment_vote'>"
-    string += comment.like.like_text + "</span>";
-    string += "</tr></table>";
-    if (comment.user.id == USER_ID) {
-        string += "<img height='15px'src='../Images/Icons/Icon_Pacs/typicons.2.0/png-48px/delete-outline.png' class='comment_delete'></img>";
-    }
-    string += "</div>";
-    return string;
-};
-
-Application.prototype.feed.comment.append = function(post_id, comment) {
-    if ($('[data-comment_id="' + comment.id + '"]').length == 0) {
-        var comment_container = $('[data-activity_id="' + post_id + '"]').find('.comment_box_comment').last();
-        comment_container.append(this.show(comment));
-    }
-    // $("[data-activity_id='" + post_id + "'] [data-comment_id]").sort(function(left, right) {
-    //     return parseInt($(right).data("comment_id")) - parseInt($(left).data("comment_id"));
-    // }).each(function() {
-    //     $("[data-activity_id='" + post_id + "']").find('.comment_box_comment').last().append($(this));
-    // });
-};
-
-Application.prototype.feed.printStats = function(activity) {
-    var string = $("<div class='activity_stats'>");
-    string.append(print_likes(activity));
-    var time = $("<span class='post_comment_time'></span>").text(Application.prototype.calendar.datetime.format(activity.time) + " |");
-    string.append(time);
-    var subarray = [{'element' : time, 'time': activity.time}];
-    Application.prototype.calendar.datetime.entry.push(subarray);
-    if (activity.type == "File") {
-        activity.media[0] = (activity.media[0] || new Object());
-        activity.media[0].view = new Object();
-        activity.media[0].view.count = (activity.media[0].view.count || 0);
-//        string += "<span class='post_comment_time'>| <span class='post_view_count'>" + activity.media[0].view.count + "</span> views</span>";
-    }
-
-    if (activity.user.id == USER_ID) {
-        string += "<div class='default_dropdown_actions' style='display:inline-block;' wrapper_id='activity_options_" + activity.id + "'>";
-        string += "<i class='fa fa-angle-down'></i>";
-        string += "<div class='default_dropdown_wrapper' id='activity_options_" + activity.id + "'>";
-        string += "<ul class='default_dropdown_menu'>";
-        string += "<li class='default_dropdown_item delete_activity' controller_id='activity_options_";
-        string += activity.id + "'>Delete";
-        string += "</li>";
-        string += "<li class='default_dropdown_item edit_activity'>Edit</li>";
-        string += "</ul>";
-        string += "</div>";
-        string += "</div>";
-    }
-    string += "</div>";
-    return string;
-
-    function print_likes(activity) {
-        var string = '';
-        string += '<div class="who_liked_hover" ';
-        string += 'style="display:inline;"> ';
-        string += '<span class="post_comment_time post_like_count">' + activity.stats.like.count + '</span>';
-        string += '<i class="fa fa-heart heart_like_icon"></i>';
-        string += '<div style="display:inline;">';
-        string += '<span has_liked="';
-        string += (activity.stats.like.has_liked === true ? "true" : "false");
-        string += '" class="post_comment_time user_preview_name activity_like_text post_like_activity">';
-        string += (activity.stats.like.has_liked === true ? COMMENT_UNLIKE_TEXT : COMMENT_LIKE_TEXT) + '</span><span class="post_comment_time">|</span></div>';
-        string += "</span>";
-        string += '<div class="who_liked" id="who_liked_' + activity.id + '">';
-        for (var i = 0; i < activity.stats.like.count; i++) {
-            name = activity.stats.like.user[i].name;
-            if (i == 1) {
-                string += name;
-            }
-            else {
-                string += ",<br>" + name;
-            }
-        }
-        if (activity.stats.like.count == 0) {
-            string += "No one has liked this post yet.";
-        }
-        string += "</div></div>";
-        return string;
-    }
-}
-
-Application.prototype.feed.refreshContent = function(id) {
-    return;
-    Application.prototype.feed.get(null, null, null, id, function(response) {
-        var activity_container = $('[data-activity_id="' + id + '"]');
-        var comment_container = activity_container.find('.comment_box_comment');
-        for (var i in response) { // FOR THAT ONE ACTIVITY
-
-            for (var key in response[i].comment.comment) {
-                append_comment(response[i].id, response[i].comment.comment[key]);
-            }
-
-            for (var media_id in response[i].media) {
-                for (var key in response[i].media[media_id].activity.comment) {
-                    append_comment(response[i].media[media_id].activity.id, response[i].media[media_id].activity.comment.comment[key]);
-                }
-
-            }
-        }
-    });
-}
-
-function isEmpty(input) {
-    if (input == "null" || input == "" || input == null) {
-        return true;
-    } else {
-        return false;
-    }
-}
 
 /****************************************************
  * 1.8 Chat                                         *
  ****************************************************/
-Application.prototype.feed.comment.submit = function(comment_text, post_id, callback) {
-    comment_text = comment_text.replace(/^\s+|\s+$/g, "");
-    if (comment_text == "") {
-        comment_text = $('div[actual_id="comment_' + post_id + '"]').val();
-        comment_text = comment_text.replace(/^\s+|\s+$/g, "");
-        if (comment_text == "") {
-            return;
-        }
-    }
 
-    $.post("Scripts/home.class.php", {comment_text: comment_text, post_id: post_id, action: 'submitComment'}, function(data) {
-        $('[data-activity_id="' + post_id + '"] .inputtext').each(function() {
-            if ($(this).parents('[data-activity_id]').data('activity_id') == post_id) {
-                $(this).val("").blur();
-            }
-        });
-        data = $.parseJSON(data);
-        callback(data);
-    });
-};
 Application.prototype.chat.iniScroll = function() {
     var self = this;
     $('.chatoutput').on('scroll', function() {
@@ -2093,15 +2036,15 @@ Application.prototype.chat.styleResponse = function(response, chat_index) {
             chat_bubble.append(chat_name);
             chat_bubble.append(chat_text);
             chat_bubble.append("<span class='chat_time post_comment_time'>" + response[i]['time'] + "</span>");
-            
+
             if ($.inArray(response[i]['id'], this.room[chat_index].entry) !== -1) {
                 return;
             }
-            if(i == 0) {
+            if (i == 0) {
                 var preview = $('<span><img style="width:20px;" src="' + response[i]['pic'] + '"/> ' + response[i]['text'] + '</span>');
                 $('.chatcomplete[data-chat_room="' + chat_index + '"] .chat-preview').html(preview);
             }
-            if(USER_ID == response[i]['user_id']) {
+            if (USER_ID == response[i]['user_id']) {
                 chat_wrapper.append(chat_bubble).append(profile_picture);
             } else {
                 chat_wrapper.append(profile_picture).append(chat_bubble);
@@ -2115,7 +2058,8 @@ Application.prototype.chat.styleResponse = function(response, chat_index) {
                 final += "<div class='chattext'>" + response[i]['text'] + "</div></td></tr><tr><td colspan='2' style='text-align:right;'>";
             }
         }
-    };
+    }
+    ;
 
     this.room[chat_index].newest = Array.max(this.room[chat_index].entry);
     this.room[chat_index].oldest = Array.min(this.room[chat_index].entry);
@@ -2191,7 +2135,7 @@ Application.prototype.calendar.print = function(calendar) {
 
     var headings = new Array('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
     string += '<tr class="calendar-row"><td class="calendar-day-head">' + implode('</td><td class="calendar-day-head">', headings) + '</td></tr>';
-	
+
     var days_in_month = calendar.days_in_month;
     var days_in_this_week = 1;
     var day_counter = 0;
@@ -2259,7 +2203,8 @@ Application.prototype.calendar.getEvents = function(limit, callback) {
 Application.prototype.calendar.event.print = function(event, classes) {
     var string = '';
     var file_string = '<table>';
-    for (var file in event.file) {''
+    for (var file in event.file) {
+        ''
         file_string += '<tr><td>';
         file_string += "<div class='profile_picture_icon' style='vertical-align:top;display:inline-block;background-image: url(\""
                 + event.file[file].type_preview + "\");'></div>";
@@ -2351,27 +2296,27 @@ $(function() {
      * 2.1.1.1 Startup - Generic - Dropdown                *
      ****************************************************/
     $(document).on('click', ".default_dropdown_selector", function(event) {
-            event.stopPropagation();
-            $('.default_dropdown_wrapper').hide();
-            var wrapper = '#' + $(this).attr('wrapper_id');
-            $(wrapper).toggle();
-            $(wrapper).mCustomScrollbar(SCROLL_OPTIONS);
-            $(this).toggleClass('default_dropdown_active');
+        event.stopPropagation();
+        $('.default_dropdown_wrapper').hide();
+        var wrapper = '#' + $(this).attr('wrapper_id');
+        $(wrapper).toggle();
+        $(wrapper).mCustomScrollbar(SCROLL_OPTIONS);
+        $(this).toggleClass('default_dropdown_active');
     });
 
     $(document).on('click', "html", function(event) {
-            $('.default_dropdown_selector').removeClass('default_dropdown_active');
-            $('.default_dropdown_wrapper').hide();
+        $('.default_dropdown_selector').removeClass('default_dropdown_active');
+        $('.default_dropdown_wrapper').hide();
     });
 
     $(document).on('click', ".default_dropdown_selector .default_dropdown_item", function(event) {
-            event.stopPropagation();
-            var selection_value = $(this).attr('value');
-            var wrapper = $(this).parents('.default_dropdown_wrapper');
-            $(this).parents('.default_dropdown_selector').removeClass('default_dropdown_active');
-            wrapper.find('.default_dropdown_item').removeClass('default_dropdown_active');
-            $(this).addClass('default_dropdown_active');
-            $(this).parents('.default_dropdown_selector').attr('value', selection_value).find('.default_dropdown_preview').text($(this).text());
+        event.stopPropagation();
+        var selection_value = $(this).attr('value');
+        var wrapper = $(this).parents('.default_dropdown_wrapper');
+        $(this).parents('.default_dropdown_selector').removeClass('default_dropdown_active');
+        wrapper.find('.default_dropdown_item').removeClass('default_dropdown_active');
+        $(this).addClass('default_dropdown_active');
+        $(this).parents('.default_dropdown_selector').attr('value', selection_value).find('.default_dropdown_preview').text($(this).text());
     });
 
     $('.default_dropdown_selector').on({
@@ -2385,8 +2330,7 @@ $(function() {
         }
     });
 
-    $(document).on('click', ".default_dropdown_actions", function(event)
-    {
+    $(document).on('click', ".default_dropdown_actions", function(event) {
         event.stopPropagation();
         $('.default_dropdown_wrapper').hide();
         var wrapper = '#' + $(this).attr('wrapper_id');
@@ -2410,13 +2354,12 @@ $(function() {
     });
 
     $(document).on('mouseover', '.user_preview', function(event) {
-        event.stopPropagation();
         var user_id = $(this).data('user_id');
         Application.prototype.user.preview.show($(this), user_id);
     });
 
-    $(document).on('mouseover', "html", function(event) {
-        Application.prototype.user.preview.remove('check mouse', event);
+    $(document).on('mouseleave', ".user_preview", function(event) {
+        Application.prototype.user.preview.remove('force', event);
     });
 
     /****************************************************
@@ -2424,7 +2367,7 @@ $(function() {
      ****************************************************/
 
     $(document).on('keyup', '.search', function(e) {
-        e.stopPropagation();
+//         e.stopPropagation();
         Application.prototype.search.get($(this).val(), $(this).attr('mode'), $(this).parents('div').children('.search_results'), function() {
         });
     });
@@ -2434,24 +2377,24 @@ $(function() {
         $(this).addClass('match');
     });
 
-    $(document).on('mouseup', '#share_event_results .search_option', function(event) {
+    $(document).on('click', '#share_event_results .search_option', function(event) {
         var entity = $(this).data('entity');
         event_receivers = addreceiver(entity.type, entity.id, entity.name, event_receivers, "event");
-        event.stopPropagation();
+//         event.stopPropagation();
     });
 
-    $(document).on('mouseup', '.message_search_results .search_option', function(event) {
+    $(document).on('click', '.message_search_results .search_option', function(event) {
         var entity = $(this).data('entity');
         message_receivers = addreceiver(entity.type, entity.id, entity.name, message_receivers, "message");
-        event.stopPropagation();
+//         event.stopPropagation();
     });
 
-    $(document).on('mouseup', '.group_search_results .search_option', function(event) {
+    $(document).on('click', '.group_search_results .search_option', function(event) {
         group_receivers = addreceiver(entity.type, entity.id, entity.name, group_receivers, "group");
-        event.stopPropagation();
+//         event.stopPropagation();
     });
 
-    $(document).on('mouseup', '.search_input', function() {
+    $(document).on('click', '.search_input', function() {
         var box = $(this).next('.search_results');
         if (box.find('.search_result, .match').length == 0) {
 
@@ -2461,30 +2404,32 @@ $(function() {
         }
     });
 
-    $(document).on('mouseup', '.search_results, .search_input', function(e) {
-        e.stopPropagation();
+    $(document).on('click', '.search_input', function(e) {
+//         e.stopPropagation();
     });
 
-    $(document).on('mouseup', function() {
-        $('.search_results').slideUp();
-    });
+    // $(document).on('click', function() {
+//         $('.search_results').slideUp();
+//     });
 
-    $(document).on('mouseup', '.global_header_container .search_option', function(e) {
-        var entity = $(this).data('entity');        
+    $(document).on('click', '.global_header_container .search_option', function(e) {
+        var entity = $(this).data('entity');
+        var link;
         if (entity.entity_type == 'user') {
-            $('<a></a>').attr('href', 'user?id=' + entity.id).trigger('click');
+            link = $('<a></a>').attr('href', 'user?id=' + entity.id);
         } else if (entity.entity_type == 'group') {
-            $('<a></a>').attr('href', 'group?id=' + entity.id).trigger('click');
+            link = $('<a></a>').attr('href', 'group?id=' + entity.id);
         } else {
-            $('<a></a>').attr('href', 'files?f=' + entity.id).trigger('click');
+            link = $('<a></a>').attr('href', 'files?f=' + entity.id);
         }
-         e.stopPropagation();
+        Application.prototype.navigation.relocate(e, link);
     });
-    
-    $(document).on('mouseup', '.search_option', function() { // Hide the search results when the user selects an option.
+
+    $(document).on('click', '.search_option', function() { // Hide the search results when the user selects an option.
         $(this).parents('.search_results').hide();
         $(this).closest('input.search').val('');
     });
+
     $('.name_selector').hover(function() {
         $('.match').css('background-color', 'transparent');
     }, function()
@@ -2505,15 +2450,18 @@ $(function() {
     /****************************************************
      * 2.1.3 Startup - Feed                              *
      ****************************************************/
-		/****************************************************
-     	* 2.1.3 Startup - Feed - Post                        *
-     	****************************************************/
-     	
-     	$(document).on('click', '.post-button', function() {
-     		Application.prototype.feed.post.submit();
-     	});
-    setInterval(function() {
+    /****************************************************
+     * 2.1.3 Startup - Feed - Post                        *
+     ****************************************************/
 
+    $(document).on('click', '.post-button', function() {
+        Application.prototype.feed.post.submit();
+    });
+
+    $(window).on('scroll', function() {
+        if ($(document).height() == $(window).scrollTop() + Application.prototype.UI.getViewPortHeight()) {
+            Application.prototype.feed.get();
+        }
     });
 
     $(document).on('click', '.feed_selector', function() {
@@ -2675,12 +2623,13 @@ $(function() {
         $(this).parents('.single_comment_container').hide();
         $.post('Scripts/home.class.php', {action: "deleteComment", comment_id: comment_id}, function(response) {
         });
-    })
+    });
+
     $(document).on('click', '.post_like_activity', function(event) {
         var post_id = $(this).parents('[data-activity_id]').data('activity_id');
         var has_liked = $(this).attr('has_liked');
         var like_count = parseInt($('[data-activity_id="' + post_id + '"] .post_like_count:first').text());
-        
+
         if (has_liked === "false") {
             $(this).attr('has_liked', "true");
             like_count++;
@@ -2688,7 +2637,7 @@ $(function() {
             $(this).attr('has_liked', "false");
             like_count--;
         }
-        if($(this).is('button')) {
+        if ($(this).is('button')) {
             $(this).toggleClass('pure-button-blue');
         } else {
             if (has_liked === "false") {
@@ -2838,16 +2787,11 @@ $(function() {
         var index = 0;
         var files = getInputFiles('file');
         var uploadCount = 0;
-        Application.prototype.file.upload.upload(files,
-                function() {
-                },
-                function(percent) {
-                }, function() {
+        var Upload = new Application.prototype.upload(files);
+        Upload.end = function() {
             refreshFileContainer(encrypted_folder);
-        },
-                properties = {
-                    type: "File",
-                });
+        };
+        Upload.push();
     });
     $('#loading_icon').fadeOut();
 
@@ -2921,7 +2865,7 @@ $(function() {
     $(document).on('ready', function() {
         $('.autoresize').trigger('keydown');
     });
-    
+
     $(document).on('keydown', '.autoresize, .inputtext', function(e) {
         $(this).css('height', '0px');
         $(this).css('height', $(this)[0].scrollHeight + "px");
@@ -2946,10 +2890,11 @@ $(function() {
     }
 
     $(document).on('click', '.box_container .navigate_right', function() {
-        
+
     });
+
     $(document).on('click', '.box_container .navigate_left', function() {
-        
+
     });
 
     /****************************************************
@@ -2961,21 +2906,6 @@ $(function() {
     if (cookie == 0) {
         $('#chat').hide();
     }
-//    $("#chat_toggle").click(function() {
-//        var cookie = getCookie("chat_feed");
-//        if (cookie > 0 || isNaN(cookie)) {
-//            setCookie('chat_feed', 0, 5);
-//            $('#chat_toggle').html("OFF");
-//            $('#chat').hide('slide', {direction: 'right'}, 500);
-//        } else {
-//            $('#chat_toggle').html("ON");
-//            $('#chat').show('slide', {direction: 'right', duration: 0}, 500);
-//        }
-//    });
-
-//    $(document).on('click', '.chat_feed_selector', function() {
-//        //change_chat_view($(this).attr("chat_feed"));
-//    });
 
     $(document).on("propertychange keydown input change", '.chatinputtext', function(e) {
         if (e.keyCode == 13) {
@@ -2986,14 +2916,17 @@ $(function() {
         }
         Application.prototype.chat.detectChange();
     });
+
     $(document).on('click', '.chat-head, .chat_feed_selector', function() {
         $(this).parents('.chatcomplete').toggleClass('active');
     });
+
     $(document).on('click', '.delete_message', function(event) {
         event.stopPropagation();
         event.preventDefault();
         deleteMessage($(this).parents('[thread_id]').attr('thread_id'));
     });
+
     $(document).on('click', '.message_inbox_item', function() {
         window.location.assign('message?thread=' + $(this).attr('thread_id') + '');
     });
@@ -3011,21 +2944,18 @@ $(function() {
     $('#popup_network').mCustomScrollbar(SCROLL_OPTIONS);
     $('#popup_notify').mCustomScrollbar(SCROLL_OPTIONS);
 
-    $(document).on('click', "img.message", function(event)
-    {
+    $(document).on('click', "img.message", function(event) {
         $('img.message').removeClass('message_active');
         $(this).addClass('message_active');
     });
-    $(document).on('click', "#home_icon", function(event)
-    {
+    $(document).on('click', "#home_icon", function(event) {
         event.stopPropagation();
         window.location.replace("home");
         $("#notificationdiv").hide();
         $("#networkdiv").hide();
         $("#geardiv").hide();
     });
-    $(document).on('click', "#personal", function(event)
-    {
+    $(document).on('click', "#personal", function(event) {
         event.stopPropagation();
         $(".personal").show();
         $(".general").hide();
@@ -3034,8 +2964,7 @@ $(function() {
         $("#networkdiv").hide();
         $("#geardiv").hide();
     });
-    $(document).on('click', "#message_click", function(event)
-    {
+    $(document).on('click', "#message_click", function(event) {
         Application.prototype.notification.getMessageBox();
         markAllSeen('message');
         event.stopPropagation();
@@ -3047,8 +2976,7 @@ $(function() {
         $("#geardiv").hide();
         $('.message_notification').hide();
     });
-    $(document).on('click', "#notification_click", function(event)
-    {
+    $(document).on('click', "#notification_click", function(event) {
         Application.prototype.notification.getNotificationBox();
         markAllSeen('notification');
         event.stopPropagation();
@@ -3060,8 +2988,7 @@ $(function() {
         $("#geardiv").hide();
         $('#notification_counter').hide();
     });
-    $(document).on('click', "#network_click", function(event)
-    {
+    $(document).on('click', "#network_click", function(event) {
         Application.prototype.notification.getNetworkBox();
         markAllSeen('network');
         event.stopPropagation();
@@ -3073,8 +3000,7 @@ $(function() {
         $("#geardiv").hide();
         $('#network_counter').hide();
     });
-    $(document).on('click', "#gear_click", function(event)
-    {
+    $(document).on('click', "#gear_click", function(event) {
         event.stopPropagation();
         $("#notificationdiv").hide();
         $(".personal").hide();
@@ -3082,8 +3008,7 @@ $(function() {
         $("#messagediv").hide();
         $("#geardiv").show();
     });
-    $(document).on('click', "html", function()
-    {
+    $(document).on('click', "html", function() {
         $(".general").hide();
         $(".personal").hide();
         $("#messagediv").hide();

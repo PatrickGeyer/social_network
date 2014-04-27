@@ -346,11 +346,13 @@ class Files {
     }
 
     public function convert($from, $to, $args = NULL, $before_args = NULL) {
-        $report = "-report"; //" -report ";
+//     	$from = urlencode($from);
+//         $to = urlencode($to);
+        $report = "-report"; //" -report ";/
         $progress = $to . '.txt';
 
         chdir('C:/inetpub/wwwroot/Global_Tools/ffmpeg/bin/');
-        $cmd = 'ffmpeg ' . $report . $before_args . ' -i "' . $from . '" ' . $args . ' "' . $to . '" 1> ' . $progress . ' 2>&1';
+        $cmd = 'ffmpeg ' . $report . $before_args . ' -i "' . $from . '" ' . $args . ' "' . $to . '" -y 1> ' . $progress . ' 2>&1';
         $result = shell_exec($cmd);
 
         return $to;
@@ -884,7 +886,7 @@ class Files {
             if ($file['file']['name'] != "" || ".") {
                 $return_info = array();
                 $lastInsertId;
-                $name = preg_replace("/[^A-Za-z0-9 ]/", '', Registry::get('system')->stripexts($file['file']['name']));
+                $name = preg_replace("/[^A-Za-z0-9]/", '', Registry::get('system')->stripexts($file['file']['name']));
                 $ext = pathinfo($file['file']['name'], PATHINFO_EXTENSION);
                 $file_name = $name . ($ext != null && $ext != "" ? "." : "" ) . $ext;
                 $thumbnail = $savepath . $name . ".jpg";
