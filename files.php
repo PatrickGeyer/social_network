@@ -143,7 +143,7 @@ function print_body() {
                     }
                     else {
                         $files_list = Registry::get('files')->get_content(Files::$PARENT_DIR, $files_user_id);
-                        echo "<script>$('.feed_container').append(Application.prototype.file.print_folder(" . json_encode($files_list) . "));</script>";
+                        echo "<script>$('.feed_container').append(new Application.prototype.Folder(" . json_encode($files_list) . ").print());</script>";
                     }
                     ?>
                 </div>

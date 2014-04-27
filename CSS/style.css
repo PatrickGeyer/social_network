@@ -208,13 +208,17 @@ h3 > button{
     width: 200px;
 }
 .contentblock{
-	background-color: white;
-	border-left: 5px solid #85bdad;
-	padding: 10px;
-	margin-top: 20px;
-	box-sizing: border-box;
-	-moz-box-sizing:border-box;
-	color: rgb(136, 136, 136);
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    background-color: white;
+    border: 1px;
+    border-color: #e5e6e9 #dfe0e4 #d0d1d5 !important;
+    border-left: 5px solid #85bdad !important;
+    padding: 10px;
+    margin-top: 20px;
+    box-sizing: border-box;
+    -moz-box-sizing:border-box;
+    color: rgb(136, 136, 136);
 }
 .contentblock:first-of-type{
     margin-top: 0px;
@@ -943,6 +947,7 @@ input[type="file"] {
     font-size: 14px;
     color: rgb(0, 140, 240) !important;
     cursor: pointer;
+    font-weight: 900;
 }
 .user_preview_name:hover{
     text-decoration: underline;
@@ -1017,20 +1022,7 @@ input[type="file"] {
 
 
 .delete_cross{
-    height: 15px;
-    width: 15px;
-    background-size: contain;
-    background-repeat:no-repeat;
-}
-
-.post_feed_item .delete_cross{
-    border: 1px solid grey;
-    background-color: lightgrey;
-    margin-left: 1px;
-}
-
-.post_feed_item .delete_cross:hover{
-    background-color: white;
+    color: black;
 }
 
 .delete_cross_top{
@@ -1577,14 +1569,16 @@ tr{
 html, body { 
     margin: 0px; 
     padding: 0px;
-    background-color: #e4e4e4;
+    background-color: #e9eaed;
 }
-*{
-    font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+* {
+    font-family: Helvetica, Arial, 'lucida grande',tahoma,verdana,arial,sans-serif;
     vertical-align: top;
+    line-height: 1.38;
+    font-size: 14px;
 }
 p, h1, h2, h3 {
-    font-family: century gothic, 'lucida grande',tahoma,verdana,arial,sans-serif !important;
+    /*font-family: century gothic, 'lucida grande',tahoma,verdana,arial,sans-serif !important;*/
 }
 img{
 
@@ -2212,10 +2206,6 @@ div.comment_box{
     text-align: left;
 }
 
-.post_content_wrapper {
-    margin-left: 60px;
-}
-
 .comments {
     width: 80%;
 }
@@ -2248,7 +2238,8 @@ div.comment_box{
 
 .post_text{
     overflow: hidden;
-    font-size:13px;
+    font-size: 14px;
+    color: #141823;
 }
 
 .post_text_editor{
@@ -2273,16 +2264,11 @@ div.comment_box{
 div.post_height_restrictor{
     text-align: left;
     background-color: white;
-    margin-top: 20px;
-    border-color: #832701 !important;
-    padding: 0px !important;
+    margin-top: 20px !important;
     box-sizing: border-box;
 }
 .post_height_restrictor > div {
-	margin: 20px;
-	margin-right: 50px;
-	padding-top: 50px;
-	padding-bottom: 50px;
+	padding: 2px;
 }
 .post_height_restrictor:last-of-type {
     border-bottom: 0px !important;
@@ -2291,13 +2277,8 @@ div.post_height_restrictor{
     position:absolute;
     right:0px;
     top:0px;
-    opacity:0.5;
     cursor: pointer;
     display: none;
-}
-
-.comment_delete:hover{
-    opacity:0.5;
 }
 
 .single_comment_container:hover .comment_delete{
@@ -2310,7 +2291,8 @@ div.post_height_restrictor{
     border-bottom: 1px solid white;
 }
 .post_comment_text{
-    font-size:80%;
+    color: #141823;
+    font-weight: normal;
 }
 .post_comment_profile_picture{
     width:40px;
@@ -2699,8 +2681,8 @@ div[data-placeholder]:not(:focus):not([data-div-placeholder-content]):before {
     color: grey;
 }
 div.home_feed_post_container{
-	position: relative;
-	border-color: rgb(0, 140, 280) !important;
+    position: relative;
+    border-color: rgb(0, 140, 280) !important;
     padding-top: 22px;
     padding-left: 20px;
     padding-right: 20px;
@@ -2760,8 +2742,7 @@ a.user_name_post .profile_picture_medium {
     background-size: cover;
     overflow: hidden;
     left: 0;
-    float: left;
-    margin-right: 10px;
+    margin-right: 8px;
 }
 td.update{
     vertical-align: top;

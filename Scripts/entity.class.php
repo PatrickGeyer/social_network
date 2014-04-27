@@ -60,7 +60,7 @@ class Entity {
                     . "(SELECT activity_id FROM activity_share WHERE "
                     . "group_id in (SELECT group_id FROM group_member WHERE user_id = :user_id) "
                     . "OR user_id = :user_id)"
-                    . " AND visible = 1 " . $min_activity_id_query . " ORDER BY time DESC LIMIT 2";
+                    . " AND visible = 1 " . $min_activity_id_query . " ORDER BY time DESC LIMIT 4";
             $activity_query = Registry::get('db')->prepare($activity_query);
             $activity_query->execute(array(
                 ":user_id" => Registry::get('user')->user_id,
