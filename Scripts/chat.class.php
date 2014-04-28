@@ -87,8 +87,7 @@ class Chat {
                     ":min" => $min, 
                     ":max" => $max,
                         );
-        }        
-        
+        }
 
         $chat_array = array();
         $chat_ids = array();
@@ -102,7 +101,6 @@ class Chat {
                 foreach ($chat_entries as $record) {
                     array_push($chat_ids, $record['id']);
                     $chat_array[] = $this->format_chat($record);
-                    //$this->markChatRead($record['id']);
                 }
             }
         }
@@ -117,7 +115,6 @@ class Chat {
                     if ($i < 20) {
                         array_push($chat_ids, $record['id']);
                         $chat_array[] = $this->format_chat($record);
-                        //$this->markChatRead($record['id']);
                     }
                     $i--;
                 }
@@ -146,7 +143,6 @@ class Chat {
 
     function format_chat($chat) {
         $chat['pic'] = Registry::get('user')->getProfilePicture('chat', $chat['user_id']);
-        $chat['time'] = Registry::get('system')->format_dates($chat['time']);
         $chat['name'] = Registry::get('user')->getName($chat['user_id']);
         return $chat;
     }

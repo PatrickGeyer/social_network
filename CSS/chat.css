@@ -26,7 +26,7 @@ div.chatoff{
 }
 
 div.chat_text{
-
+    
 }
 
 .chatheader{
@@ -163,6 +163,7 @@ span.chatname:hover{
     word-break: break-word;
     font-weight: 300;
     font-size:13px;
+    color: #141823 !important;
 }
 .chattext img{
     margin-bottom: -3px;

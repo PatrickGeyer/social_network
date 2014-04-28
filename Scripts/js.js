@@ -20,6 +20,61 @@ Application.prototype.user = {
     },
     isMobile: navigator.userAgent.match(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/)
 };
+Application.prototype.date = function(time) {
+    this.time = time;
+    this.date = new Date(this.time * 1000);
+    this.tokens = [
+        {time: 1, unit: 'second'},
+        {time: 60, unit: 'minute'},
+        {time: 3600, unit: 'hour'},
+        {time: 86400, unit: 'day'},
+        {time: 604000, unit: 'week'},
+        {time: 2592000, unit: 'month'},
+        {time: 31536000, unit: 'year'},
+    ];
+    this.short = {
+        'second': 'sec',
+        'minute': 'min',
+        'hour': 'hr',
+        'day': 'd',
+        'week': 'wk',
+        'month': 'mo',
+        'year': 'yr',
+    };
+
+    this.timeAgo = function(length) {
+        this.timeAgo = Math.floor((new Date().getTime() / 1000 - this.time));
+        var string = '';
+
+        for (var i = this.tokens.length - 1; i > 0; i--) {
+            if (this.timeAgo < this.tokens[i].time) {
+                continue;
+            }
+            var numberOfUnits = Math.floor(this.timeAgo / this.tokens[i].time);
+            
+            if (numberOfUnits < 5 && this.tokens[i].unit == "second") {
+                string = "Just Now";
+            } else {
+                if (numberOfUnits == 1) {
+                    string += 'a ' + this.tokens[i].unit + ((numberOfUnits > 1) ? 's' : '');
+                } else {
+                    string += numberOfUnits + ' ' + this.tokens[i].unit + ((numberOfUnits > 1) ? 's' : '');
+                }
+            }
+            if (this.tokens[i].unit === "week") {
+                return string + " ago";
+            }
+            this.timeAgo -= numberOfUnits * this.tokens[i].time;
+//            console.log("Num:" + numberOfUnits + " time: " + this.timeAgo + " unit:" + this.tokens[i].unit);
+            if (length === "short") {
+//            console.log(this.tokens[i].unit);
+                return numberOfUnits + " " + this.short[this.tokens[i].unit];
+            }
+        }
+        
+        return string + " ago";
+    };
+};
 
 /****************************************************
  * 0. Upload                                        *
@@ -48,19 +103,19 @@ Application.prototype.upload = function(files) {
         var session = this.session++;
         this.start();
 
-        for (var i = 0; i < length; i++) {
-            (function(count, session) {
-                var file = this.files[count].file;
+        for (var i = 0; i < this.files.length; i++) {
+            (function(count, session, Upload) {
+                var file = Upload.files[count].file;
                 var formdata = new FormData();
                 formdata.append("file", file);
                 formdata.append("action", 'upload');
                 formdata.append("parent_folder", parent_folder);
                 var xhr = new XMLHttpRequest();
                 xhr.upload.onprogress = function(event) {
-                    Application.prototype.upload.progressHandler(event, "" + session + count, this.progress());
+                    Application.prototype.upload.progressHandler(event, "" + session + count, Upload.progress());
                 };
                 xhr.onload = function() {
-                    Application.prototype.upload.completeHandler(this, "" + session + count, this.end(), name);
+                    Application.prototype.upload.completeHandler(Upload, "" + session + count, Upload.end(), name);
                 };
                 xhr.addEventListener("error", Application.prototype.upload.errorHandler, false);
                 xhr.addEventListener("abort", Application.prototype.upload.abortHandler, false);
@@ -72,19 +127,19 @@ Application.prototype.upload = function(files) {
                 file_container.append("<br />");
                 file_upload_container.append(file_container);
                 Application.prototype.UI.progress.create(file_container, "" + session + count);
-            })(i, session);
+            })(i, session, this);
         }
     };
 
-    this.prototype.progress = function(event, id, callback) {
+    this.progress = function(event, id, callback) {
         $('#loading_icon').show();
         var percent = (event.loaded / event.total) * 100;
         percent = Math.round(percent);
         Application.prototype.UI.progress.update(id, percent);
-        callback(percent);
+        callback(percent); 
     };
 
-    this.prototype.complete = function(event, id, callback) {
+    this.complete = function(event, id, callback) {
         $('#' + id + '_upload_preview').slideUp();
         Application.prototype.UI.progress.remove(id);
         if (this.session > 0) {
@@ -105,7 +160,7 @@ Application.prototype.upload = function(files) {
         callback($.parseJSON(event.responseText));
     };
 
-    this.prototype.error = function(event) {
+    this.error = function(event) {
         if (this.session > 0) {
             this.session--;
         }
@@ -113,7 +168,7 @@ Application.prototype.upload = function(files) {
         $('#loading_icon').fadeOut();
     };
 
-    this.prototype.abort = function(event) {
+    this.abort = function(event) {
         if (this.session > 0) {
             this.session--;
         }
@@ -293,33 +348,30 @@ Application.prototype.file = function(file) {
     };
 
     this.print_row = function() {
-        var string = '';
+        var string = $("<div data-file_id='" + this.file.id + "' class='contentblock'></div>");
 
         if (this.file.type != "Folder") {
-            string += "<div data-file_id='" + this.file.id + "' class='contentblock files'>";
+            string.addClass('files');
         } else {
-            string += "<div data-file_id='" + this.file.id + "' class='contentblock folder'>"; // SAME
+            string.addClass('folder');
         }
-        string += "<div class='files_icon_preview' style='background-image:url(\"" + this.file.type_preview + "\");'></div>";
-        string += "<p class='files ellipsis_overflow'>" + this.file.name + "</p>";
+        
+        string.append("<div class='files_icon_preview' style='background-image:url(\"" + this.file.type_preview + "\");'></div>");
+        string.append("<p class='files ellipsis_overflow'>" + this.file.name + "</p>");
+		var actions = $("<div class='files_actions'></div>");
+		
+        actions.append("<a href='download.php?id=" + this.file.id + "' download><div class='files_actions_item files_actions_download'></div></a>");
+        actions.append("<hr class='files_actions_seperator'>");
 
-        string += "<div class='files_actions'><table cellspacing='0' cellpadding='0'><tr style='vertical-align:middle;'><td>";
-
-        string += "<a href='download.php?id=" + this.file.id + "' download><div class='files_actions_item files_actions_download'></div></a></td><td>";
-        string += "<hr class='files_actions_seperator'></td><td>";
-
-        string += "<div class='files_actions_item files_actions_delete' "
+        actions.append("<div class='files_actions_item files_actions_delete' "
                 + "onclick='deleteFile(this, " + this.file.id + ");if(event.stopPropagation){event.stopPropagation();}"
                 + "event.cancelBubble=true;'></div></td><td>"
                 + "<hr class='files_actions_seperator'></td><td>"
-                + "<div class='files_actions_item files_actions_share' data-file_id='" + this.file.id + "'></div></td>";
-        string += "</tr></table></div>";
-
-        string += "<div class='file_hidden_container'>";
-        string += this.print("File");
-        string += "</div>";
-
-        string += "</div>";
+                + "<div class='files_actions_item files_actions_share' data-file_id='" + this.file.id + "'></div></td>");
+                
+		var file = $("<div class='file_hidden_container'></div>");
+		file.append(this.print("File"));
+        string.append(file);
         return string;
     };
 
@@ -546,9 +598,9 @@ Application.prototype.Folder = function(list) {
     this.files = list;
 
     this.print = function() {
-        var string = '';
+        var string = $('<div></div>');
         for (var file in this.files) {
-            string += new Application.prototype.file(this.files[file]).print_row();
+            string.append(new Application.prototype.file(this.files[file]).print_row());
         }
         return string;
     };
@@ -674,10 +726,223 @@ Application.prototype.theater = function() {
         }
     };
 };
+//    <div class="chatcomplete contentblock" data-chat_room="<?php echo $single_group['id']; ?>">
+//        <div class='chatheader'>
+//            <div class="chat-head"></div>
+//            <div class='chat-info'>
+//                <div class='chat_feed_selector <?php echo ($chat_feed == $single_group['id'] ? "active_feed" : "") ?>'>
+//                    <p class='chat_header_text ellipsis_overflow'><?php echo $single_group['name']; ?></p>
+//                </div><br />
+//                <div class='chat-preview'></div>
+//            </div>
+//        </div>
+//        <div class="chat-container">
+//            <div></div>
+//            <div class="chatoutput" data-chat_room="<?php echo $single_group['id']; ?>" <?php echo($chat_feed != $single_group['id'] ? "style='display:none'" : ""); ?>>
+//                <div class='chat_loader' style='display:none;'><div class='loader_outside_small'></div><div class='loader_inside_small'></div></div>
+//                <ul style='max-width:225px;' class='chatreceive'>
+//                </ul>
+//            </div>
+//            <div class='text_input_container'>
+//                <textarea id="text" class="chatinputtext autoresize"  placeholder="Press Enter to send..."></textarea>
+//            </div>
+//        </div>
+//    </div>
+Application.prototype.Chat = function(chat_id, name) {
+    this.id = chat_id;
+    this.entry = new Array();
+    this.oldest = 0;
+    this.newest = 998999999;
+    this.getting_previous = false;
+    this.last = false;
+    this.name = name;
+    this.items = new Array();
+    
+    this.all.push(this);
 
-Application.prototype.chat = {
-    room: new Array()
+
+    this.container = $("<div class='chatcomplete contentblock'></div>")
+            .append(this.header = $("<div class='chatheader'></div>")
+                    .append(this.chathead = $("<div class='chat-head'></div>"))
+                    .append(this.chatinfo = $("<div class='chat-info'></div>")
+                            .append(this.chat_feed_selector = $("<div class='chat_feed_selector'></div>")
+                                    .append(this.chat_header_text = $("<p class='chat_header_text ellipsis_overflow'></p>"))
+                                    .append(this.name))
+                            .append(this.preview = $("<div class='chat-preview'></div>"))))
+            .append(this.chatcontainer = $("<div class='chat-container'></div")
+                    .append("<div></div>")
+                    .append(this.chatoutput = $("<div class='chatoutput'></div>")
+                            .append(this.loader = $("<div class='chat_loader'></div>")
+                                    .append("<div class='loader_inside_small'></div>"))
+                            .append(this.list = $("<ul class='chatreceive'></ul>")))
+                    .append($("<div class='text_input_container'></div>")
+                            .append(this.input = $("<textarea class='chatinputtext autoresize' placeholder='Press Enter to send...'></textarea>"))));
+
+
+    $('.right_bar_container').append(this.container);
+    this.sendRequest('true');
+    
+    var self = this;
+    this.input.on("propertychange keydown input change", function(e) {
+        if (e.keyCode == 13) {
+            if (e.shiftKey !== true) {
+                e.preventDefault();
+                self.submit($(this).val());
+            }
+        }
+//        self.detectChange();
+    });
 };
+Application.prototype.Chat.prototype.all = new Array();
+Application.prototype.Chat.prototype.get = function() {
+    return this.all;
+};
+
+Application.prototype.Chat.prototype.getPrevious = function() {
+    var self = this;
+    if (self.getting_previous == false) {
+        self.getting_previous = true;
+
+        var new_oldest = Array.min(self.entry) - 20;
+        if (new_oldest < 0) {
+            new_oldest = 0;
+        }
+
+        if (self.last_chat != true) {
+            var element = $('[data-chat_room="' + self.id + '"] .single_chat:first');
+            $('[data-chat_room="' + self.id + '"] .chat_loader').slideDown('fast');
+            var object = {chat: self.id, all: "previous", oldest: new_oldest, newest: self.oldest - 1};
+            $.get("Scripts/chat.class.php", object, function(response) {
+                response = $.parseJSON(response);
+                if (response.length == 0) {
+                    self.last_chat = true;
+                    $('[data-chat_room="' + self.id + '"] .chatreceive').prepend("<div class='timestamp'><span>Start of Conversation</span></div>");
+                    $('[data-chat_room="' + self.id + '"] .chat_loader').slideUp('fast');
+                    return;
+                }
+                $('[data-chat_room="' + self.id + '"] .chatreceive').prepend(self.styleResponse(response, self.id));
+                $('[data-chat_room="' + self.id + '"] .chat_loader').slideUp('fast');
+                self.getting_previous = false;
+                element = element.offset().top;
+                $('[data-chat_room="' + self.id + '"]').scrollTop(element);
+            });
+        }
+    }
+};
+
+Application.prototype.Chat.prototype.sendRequest = function(all) {
+    var self = this;
+    $.get("Scripts/chat.class.php", {chat: self.id, all: all, oldest: 0, newest: self.newest}, function(response) {
+        $('[data-chat_room="' + self.id + '"] .chat_loader').slideUp('fast');
+        response = $.parseJSON(response);
+       
+        if (all == 'true') {
+            $('.chatcomplete').fadeIn("fast");
+            $(self.list).append(self.styleResponse(response));
+            $(self.chatoutput).scrollTop(self.chatoutput.get(0).scrollHeight);
+
+        } else {
+            $(self.list).append(self.styleResponse(response));
+        }
+        if (all == 'false' && response.length > 0) {
+            for (var i = response.length - 1; i >= 0; i--) {
+                if (response[i]['user_id'] != USER_ID) {
+                    $('#chat_new_message_sound').get(0).play();
+                }
+            }
+            if (self.id != chat_room) {
+                $('.chat_feed_selector[chat_feed="' + self.id + '"] *').css('color', 'red');
+                alert('unread in another chat');
+            }
+        }
+        var timeout = 3000;
+        if (self.id != chat_room) {
+            timeout = 10000;
+        }
+        setTimeout(function() {
+            self.sendRequest('false');
+        }, timeout);
+        self.detectChange();
+    });
+};
+
+Application.prototype.Chat.prototype.detectChange = function(self) {
+    this.scroll2Bottom(false);
+};
+
+Application.prototype.Chat.prototype.styleResponse = function(response) {
+    var final = $('<div></div>');
+    if (response.length == 0) {
+
+    }
+    for (var i = response.length - 1; i >= 0; i--) {
+        if (response[i]['type'] != 'event') {
+            var ChatItem = new Application.prototype.Chat.prototype.ChatItem(response[i]);
+            this.preview = ChatItem.preview;
+            final.append(ChatItem.print());
+            this.entry.push(response[i]['id']);
+            this.items.push(ChatItem);
+        }
+    };
+
+    this.newest = Array.max(this.entry);
+    this.oldest = Array.min(this.entry);
+    return final.html();
+};
+
+Application.prototype.Chat.prototype.ChatItem = function(item) {
+    this.time = {};
+    this.time.time = item['time'];
+    this.pic = item['pic'];
+    this.preview = $('<span><img style="width:20px;" src="' + this.pic + '"/> ' + item['text'] + '</span>');
+    
+    this.print = function() {
+        var final = $('<div></div>');
+
+        var string = $("<li class='single_chat'></li>")
+        var chat_wrapper = $("<div class='chat_wrapper " + (USER_ID == item['user_id'] ? 'self-chat' : 'other-chat') + "'>");
+        var profile_picture = $("<div data-user_id='" + item['user_id'] + "' class='profile_picture_medium online_status'>");
+        profile_picture.css('background-image', 'url("' + item['pic'] + '")');
+        var chat_bubble = $("<div class='chat-content'></div>");
+        var chat_name = $("<div class='chatname'></div>").append("<span class='user_preview user_preview_name chatname' user_id='" + item['user_id'] + "'>" + item['name'] + "</span>");
+        var chat_text = $("<div class='chattext'>").append(item['text'].replaceLinks().replaceEmoticons());
+        chat_bubble.append(chat_name);
+        chat_bubble.append(chat_text);
+        chat_bubble.append(this.time.element = $("<span class='chat_time post_comment_time'>" + new Application.prototype.date(item['time']).timeAgo('short') + "</span>"));
+        
+        if (USER_ID == item['user_id']) {
+            chat_wrapper.append(chat_bubble).append(profile_picture);
+        } else {
+            chat_wrapper.append(profile_picture).append(chat_bubble);
+        }
+        final.append(string.append(chat_wrapper));
+        return final.html();
+    }
+};
+
+Application.prototype.Chat.prototype.scroll2Bottom = function(force) {
+    if (this.bottom === true || force === true) {
+        this.chatoutput.scrollTop(this.chatoutput[0].scrollHeight);
+    }
+};
+
+Application.prototype.Chat.prototype.submit = function(chat_text) {
+    var self = this;
+    if (chat_text != "") {
+        $('.chatinputtext').val('');
+        $('.chatinputtext').attr('placeholder', "Sending...");
+        $('.chatinputtext').attr('readonly', 'readonly');
+        $.post("Scripts/chat.class.php", {action: "addchat", aimed: self.id, chat_text: chat_text}, function(response) {
+            response = $.parseJSON(response);
+            self.list.append(self.styleResponse(response));
+            $('.chatinputtext').removeAttr('readonly');
+            $('.chatinputtext').attr('placeholder', "Press Enter to send...");
+            self.bottom = true;
+            self.scroll2Bottom(true);
+        });
+    }
+};
+
 Application.prototype.generic = {
 };
 Application.prototype.navigation = {
@@ -822,6 +1087,7 @@ Application.prototype.Feed = function(entity_id, entity_type) {
         };
 
         this.refreshContent = function(id) {
+        	return;
             Application.prototype.feed.get(null, null, id, function(response) {
                 var activity_container = $('[data-activity_id="' + id + '"]');
                 var comment_container = activity_container.find('.comment_box_comment');
@@ -846,6 +1112,7 @@ Application.prototype.Feed = function(entity_id, entity_type) {
             if (text != "" || this.files.length != 0) {
                 $.post("Scripts/home.class.php", {action: "update_status", status_text: text, group_id: share_group_id, post_media_added_files: this.files}, function(data)
                 {
+                	return;
                     if (data == "") {
                         removeModal('', function() {
                             Application.prototype.feed.prototype.get(share_group_id, null, 0, activity_id, function(response) {
@@ -1085,7 +1352,7 @@ Application.prototype.Comment = function(item) {
         string += "";
         string += "<span class='post_comment_text'>" + comment.text + "</span>"
         string += "</td></tr><tr><td colspan=2 style='vertical-align:bottom;' >"
-        string += "<span class='post_comment_time'>" + comment.time + " -</span>"
+        string += "<span class='post_comment_time'>" + new Application.prototype.date(comment.time).timeAgo() + " -</span>"
         string += "<span class='post_comment_time post_comment_liked_num'>"
         string += comment.like.count + "</span><i class='fa fa-heart heart_like_icon'></i>";
         string += "<span data-has_liked='" + comment.like.has_liked + "' "
@@ -1438,8 +1705,8 @@ String.prototype.replaceEmoticons = function() {
 
     return this.replace(new RegExp(patterns.join('|'), 'g'), function(match) {
         return typeof emoticons[match] != 'undefined' ?
-                '<img onload="Application.prototype.chat.scroll2Bottom(false, chat_room);" src="Images/' + emoticons[match] + '"/>' :
-                match;
+                '<img src="Images/' + emoticons[match] + '"/>' : //removed onload
+                match; 
     });
 };
 
@@ -1924,172 +2191,6 @@ Application.prototype.user.submitData = function() {
     });
 };
 
-/****************************************************
- * 1.5 Feeds                                         *
- ****************************************************/
-
-
-/****************************************************
- * 1.8 Chat                                         *
- ****************************************************/
-
-Application.prototype.chat.iniScroll = function() {
-    var self = this;
-    $('.chatoutput').on('scroll', function() {
-        self.room[$(this).data('chat_room')].bottom = false;
-        if ($(this).get(0).scrollTop + 20 >= $(this).get(0).scrollHeight - $(this).get(0).offsetHeight) {
-            self.room[$(this).data('chat_room')].bottom = true;
-        } else if ($(this).get(0).scrollTop == 0) {
-            self.getPrevious($(this).data('chat_room'));
-        }
-    });
-};
-
-Application.prototype.chat.detectChange = function() {
-//    var key_height = $('.chatinputtext').outerHeight(true);
-//    var bottom = key_height;
-//    $('.chatoutput').css('bottom', bottom + "px");
-    this.scroll2Bottom(false, chat_room); //USE EVEN IF NOT LOADED
-};
-
-Application.prototype.chat.getPrevious = function(chat_index) {
-    var self = this;
-    if (self.room[chat_index].getting_previous == false) {
-        self.room[chat_index].getting_previous = true;
-
-        var new_oldest = Array.min(self.room[chat_index].entry) - 20;
-        if (new_oldest < 0) {
-            new_oldest = 0;
-        }
-
-        if (self.room[chat_index].last_chat != true) {
-            var element = $('[data-chat_room="' + chat_index + '"] .single_chat:first');
-            $('[data-chat_room="' + chat_index + '"] .chat_loader').slideDown('fast');
-            var object = {chat: chat_index, all: "previous", oldest: new_oldest, newest: self.room[chat_index].oldest - 1};
-            $.get("Scripts/chat.class.php", object, function(response) {
-                response = $.parseJSON(response);
-                if (response.length == 0) {
-                    self.room[chat_index].last_chat = true;
-                    $('[data-chat_room="' + chat_index + '"] .chatreceive').prepend("<div class='timestamp'><span>Start of Conversation</span></div>");
-                    $('[data-chat_room="' + chat_index + '"] .chat_loader').slideUp('fast');
-                    return;
-                }
-                $('[data-chat_room="' + chat_index + '"] .chatreceive').prepend(self.styleResponse(response, chat_index));
-                $('[data-chat_room="' + chat_index + '"] .chat_loader').slideUp('fast');
-                self.room[chat_index].getting_previous = false;
-                element = element.offset().top;
-                $('[data-chat_room="' + chat_index + '"]').scrollTop(element);
-            });
-        }
-    }
-};
-
-Application.prototype.chat.sendRequest = function(all, chat_index) {
-    var self = this;
-    $.get("Scripts/chat.class.php", {chat: chat_index, all: all, oldest: 0, newest: this.room[chat_index].newest}, function(response) {
-        $('[data-chat_room="' + chat_index + '"] .chat_loader').slideUp('fast');
-        response = $.parseJSON(response);
-
-        if (all == 'true') {
-            $('.chatcomplete').fadeIn("fast");
-            $('[data-chat_room="' + chat_index + '"] .chatreceive').append(self.styleResponse(response, chat_index));
-            $('[data-chat_room="' + chat_index + '"] .chatoutput').scrollTop($('[data-chat_room="' + chat_index + '"] .chatoutput').get(0).scrollHeight);
-
-        } else {
-            $('[data-chat_room="' + chat_index + '"] .chatreceive').append(self.styleResponse(response, chat_index));
-        }
-        if (all == 'false' && response.length > 0) {
-            for (var i = response.length - 1; i >= 0; i--) {
-                if (response[i]['user_id'] != USER_ID) {
-                    $('#chat_new_message_sound').get(0).play();
-                }
-            }
-            if (chat_index != chat_room) {
-                $('.chat_feed_selector[chat_feed="' + chat_index + '"] *').css('color', 'red');
-                alert('unread in another chat');
-            }
-        }
-        var timeout = 3000;
-        if (chat_index != chat_room) {
-            timeout = 10000;
-        }
-        setTimeout(function() {
-            self.sendRequest('false', chat_index);
-        }, timeout);
-        self.detectChange();
-    });
-};
-
-Application.prototype.chat.styleResponse = function(response, chat_index) {
-    var final = $('<div></div>');
-    if (response.length == 0) {
-
-    }
-    for (var i = response.length - 1; i >= 0; i--) {
-        if (response[i]['type'] != 'event') {
-            var string = $("<li class='single_chat'></li>")
-            var chat_wrapper = $("<div class='chat_wrapper " + (USER_ID == response[i]['user_id'] ? 'self-chat' : 'other-chat') + "'>");
-            var profile_picture = $("<div data-user_id='" + response[i]['user_id'] + "' class='profile_picture_medium online_status'>");
-            profile_picture.css('background-image', 'url("' + response[i]['pic'] + '")');
-            var chat_bubble = $("<div class='chat-content'></div>");
-            var chat_name = $("<div class='chatname'></div>").append("<span class='user_preview user_preview_name chatname' user_id='" + response[i]['user_id'] + "'>" + response[i]['name'] + "</span>");
-            var chat_text = $("<div class='chattext'>").append(response[i]['text'].replaceLinks().replaceEmoticons());
-            chat_bubble.append(chat_name);
-            chat_bubble.append(chat_text);
-            chat_bubble.append("<span class='chat_time post_comment_time'>" + response[i]['time'] + "</span>");
-
-            if ($.inArray(response[i]['id'], this.room[chat_index].entry) !== -1) {
-                return;
-            }
-            if (i == 0) {
-                var preview = $('<span><img style="width:20px;" src="' + response[i]['pic'] + '"/> ' + response[i]['text'] + '</span>');
-                $('.chatcomplete[data-chat_room="' + chat_index + '"] .chat-preview').html(preview);
-            }
-            if (USER_ID == response[i]['user_id']) {
-                chat_wrapper.append(chat_bubble).append(profile_picture);
-            } else {
-                chat_wrapper.append(profile_picture).append(chat_bubble);
-            }
-            final.append(string.append(chat_wrapper));
-            this.room[chat_index].entry.push(response[i]['id']);
-        } else {
-            if (response[i]['code'] == 0) {
-            } else {
-                final += "<li class='single_chat'><div class='chat_wrapper'><table cellspacing='0' cellpadding='0' style='width:100%;'><tr><td style='width:50px;padding-right:5px;'>";
-                final += "<div class='chattext'>" + response[i]['text'] + "</div></td></tr><tr><td colspan='2' style='text-align:right;'>";
-            }
-        }
-    }
-    ;
-
-    this.room[chat_index].newest = Array.max(this.room[chat_index].entry);
-    this.room[chat_index].oldest = Array.min(this.room[chat_index].entry);
-    return final.html();
-};
-
-Application.prototype.chat.scroll2Bottom = function(force, chat_index) {
-    if (this.room[chat_index].bottom === true || force === true) {
-        $('.chatoutput[data-chat_room="' + chat_index + '"]').scrollTop($('.chatoutput[data-chat_room="' + chat_index + '"]')[0].scrollHeight);
-    }
-};
-
-Application.prototype.chat.submit = function(chat_text, chat_index) {
-    var self = this;
-    if (chat_text != "") {
-        $('.chatinputtext').val('');
-        $('.chatinputtext').attr('placeholder', "Sending...");
-        $('.chatinputtext').attr('readonly', 'readonly');
-        $.post("Scripts/chat.class.php", {action: "addchat", aimed: chat_index, chat_text: chat_text}, function(response) {
-            response = $.parseJSON(response);
-            $('[data-chat_room="' + chat_index + '"] .chatreceive').append(self.styleResponse(response, chat_index));
-            $('.chatinputtext').removeAttr('readonly');
-            $('.chatinputtext').attr('placeholder', "Press Enter to send...");
-            self.room[chat_index].bottom = true;
-            self.scroll2Bottom(true, chat_index);
-        });
-    }
-};
-
 function calculateDistance(elem, mouseX, mouseY)
 {
     return Math.floor(Math.sqrt(Math.pow(mouseX - (elem.offset().left + (elem.width() / 2)), 2) + Math.pow(mouseY - (elem.offset().top + (elem.height() / 2)), 2)));
@@ -2462,7 +2563,7 @@ $(function() {
 
     $(window).on('scroll', function() {
         if ($(document).height() == $(window).scrollTop() + Application.prototype.UI.getViewPortHeight()) {
-            Application.prototype.feed.get();
+//             Application.prototype.feed.get();
         }
     });
 
@@ -2874,10 +2975,12 @@ $(function() {
     });
 
     $(window).resize(function() {
-        Application.prototype.chat.detectChange();
-        if (Application.prototype.file.theater.active) {
-            Application.prototype.file.theater.adjust();
+        for(var chat in Application.prototype.Chat.prototype.get()) {
+//            chat.detectChange();
         }
+//         if (Application.prototype.file.theater.active) {
+//             Application.prototype.file.theater.adjust();
+//         }
     });
 
     /****************************************************
@@ -2902,22 +3005,11 @@ $(function() {
     /****************************************************
      * 2.1.3 Startup - Chat                              *
      ****************************************************/
-
-    Application.prototype.chat.iniScroll();
+//    Application.prototype.Chat.prototype.iniScroll();
     var cookie = 0; //getCookie('chat_feed');
     if (cookie == 0) {
         $('#chat').hide();
     }
-
-    $(document).on("propertychange keydown input change", '.chatinputtext', function(e) {
-        if (e.keyCode == 13) {
-            if (e.shiftKey !== true) {
-                e.preventDefault();
-                Application.prototype.chat.submit($(this).val(), chat_room);
-            }
-        }
-        Application.prototype.chat.detectChange();
-    });
 
     $(document).on('click', '.chat-head, .chat_feed_selector', function() {
         $(this).parents('.chatcomplete').toggleClass('active');
