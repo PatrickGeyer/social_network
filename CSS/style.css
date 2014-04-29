@@ -1,14 +1,151 @@
-/* SPINNY WHEEL */
-
 @import "http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css";
 
-/*   background: white url("http://i.imgur.com/xu0zS7g.jpg") no-repeat fixed; */
-
-a {
-    font-size: 14px;
-    text-decoration: none;
-    outline: 0;
+/* CLEAN SECTION*/
+#header-featured {
+	position:relative;
+        height: 30em;
+        background-image: url(../images/banner.jpg);
+        background-position: center;
+        background-size: cover;
 }
+section {
+    position: relative;
+    font-size: 11pt;
+    font-weight: 300;
+}
+section:after {
+    position: absolute;
+    content: "";
+    width: 0px;
+    height: 0px;
+    border-left: 25px solid transparent !important;
+    border-right: 25px solid transparent !important;
+    border-top: 25px solid;
+    border-color: inherit;
+    bottom: -25px;
+    right: 50%;
+    margin-left: 70px;
+    z-index: 1;
+}
+section:nth-of-type(1) {
+    background: #383838;
+    border-color: #383838;
+    color: #6c6c6c;
+    margin-top: 50px;
+}
+section:nth-of-type(2) {
+    background: rgb(0, 140, 280);
+    border-color: rgb(0, 140, 280);
+    color: white;
+}
+section:nth-of-type(3) {
+    border-color: orange;
+    background: orange;
+    color: #6c6c6c;
+}
+section:nth-of-type(4) {
+    border-color: white;
+    background: white;
+    color: black;
+}
+section.layer > div {
+    padding: 6em 0em;
+
+    text-align: center;
+    font-family: 'Source Sans Pro', sans-serif !important;
+}
+
+section.layer > div > div{
+    margin: 0px auto;
+}
+
+.column {
+    margin-right: 24px;
+    width: 248px;
+    display: inline-block;
+}
+
+.double_column {
+    width: 496px !important;
+}
+
+h2 {
+    font-size: 1.5em;
+    -webkit-margin-before: 0.83em;
+    -webkit-margin-after: 0.83em;
+    -webkit-margin-start: 0px;
+    -webkit-margin-end: 0px;
+    font-weight: bold;
+}
+section .fa {
+    position: relative;
+    display: inline-block;
+    width: 100px;
+    height: 100px;
+    margin: 0px auto 20px auto;
+    line-height:  100px;
+    font-size: 3em;
+    text-align: center;
+    color: #FFF;
+}
+section .major
+{
+    overflow: hidden;
+    margin-bottom: 3em;
+    padding-bottom: 2em;
+    border-bottom: 1px solid #E8E8E8;
+}
+
+section .major h2
+{
+    font-size: 3em;
+}
+
+section .major .byline
+{
+    font-size: 1.3em;
+}
+
+section .title
+{
+    margin-bottom: 1.5em;
+    padding-bottom: 1.5em;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+}
+
+section .title h2
+{
+    font-size: 1.2em;
+    font-weight: 400;
+}
+
+section h2
+{
+    text-align: center;
+    color: #FFF;
+}
+
+section .icon
+{
+    position: relative;
+    display: inline-block;
+    width: 100px;
+    height: 100px;
+    margin: 0px auto 20px auto;
+    line-height:  100px;
+    font-size: 3em;
+    text-align: center;
+    color: #FFF;
+}
+/* END */
+
+
+
+
+/* SPINNY WHEEL */
+
+
+/*   background: white url("http://i.imgur.com/xu0zS7g.jpg") no-repeat fixed; */
 
 .circle,
 .ring {
@@ -401,7 +538,9 @@ input[type="text"], input[type="password"] {
     background-color:white;
     font-size: 13px;
     padding:7px;
-    border: 1px solid lightgrey;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    box-shadow: inset 3px 3px #eee,#fff 0 1px 0;
 }
 
 input:focus, textarea:focus, div[contenteditable]:focus{  
@@ -744,8 +883,13 @@ input[type="file"] {
     padding: 2px;
     font-size: 15px;
 }
-.large{
-    padding:5px;
+button.large{
+    padding:15px;
+    width: 100%;
+    border: 1px solid white;
+    border-radius: 5px;
+    background-color: rgba(0,0,0,0.2);
+    text-shadow: none;
 }
 
 .info_error,
@@ -1086,14 +1230,33 @@ span.message_delete_receiver:hover{
 
 /*WELCOME*/
 
+.global_header_container {
+	overflow: hidden;
+	position: relative;
+}
+@media only screen 
+and (min-width : 320px) 
+and (max-width : 900px) {
+    .global_header_container .global_header_icon_container{
+        opacity: 0;
+        z-index: -1;
+    }
+}
+
+
 .global_header_container .search_container {
     margin-right: 10px;
     padding: 0px;
-    height: 35px;
-    /*border-bottom: 2px solid #e4e4e4;*/
+    height: 100%;
+    position: relative;
+    width: 50%;
+}
+.search_container input {
+    width: 100% !important;
 }
 .global_media_container {
-    float: right !important;
+    position: absolute;
+    right:0px;
     overflow: hidden;
     width: 250px;
     margin-top: 0px;
@@ -1129,27 +1292,43 @@ span.message_delete_receiver:hover{
 
 div.headerbar{
     width: 100%;
-    /* 
-background-image: -webkit-linear-gradient(#f9f9f9, #f3f3f3);
-    background-image: -moz-linear-gradient(#f9f9f9, #f3f3f3);
-    background-image: -ms-linear-gradient(#f9f9f9, #f3f3f3);
-    background-image: linear-gradient(#f9f9f9, #f3f3f3);
-    */
     margin: 0px;
-    height: 35px;
+    height: 55px;
     position: fixed;
     top: 0px;
     z-index: 5;
     display: block;
     background: rgb(0, 140, 250);
-    /*box-shadow: 0px 0px 5px 5px white;*/
-    /*border-bottom: 1px solid lightgrey;*/
+}
+
+div.headerbar .logo {
+	position: relative;
+	top: 10px;
+	display: inline;
+}
+.logo h2 {
+	color: white;
+	font-size: 2em;
+	display: inline;
+}
+div.headerbar .logo > div {
+	background-image: url('../Images/Icons/logo/logo_white.png');
+	background-repeat: no-repeat;
+	background-size: contain;
+	width: 40px;
+	height: 40px;
+	display: inline-block;
 }
 
 .global_header_icon_container{
-    margin-top: 5px;
-    margin-right: -15px;
-    float: right;
+    margin-top: 15px;
+    float: left;
+    opacity: 1;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    -ms-transition: all 0.2s ease;
+    -o-transition: all 0.2s ease;
+    transition: all 0.2s ease;
 }
 div.message, div.notification, div.network{
     float: left;
@@ -1685,15 +1864,23 @@ div.container{
     padding-right: 20px;
 }
 .global_header > div {
-    display: inline-block !important;
-    float: left;
-}
 
+}
+@media only screen 
+and (min-width : 320px) 
+and (max-width : 950px) {
+    .global_header {
+        max-width: 100% !important;
+        min-width: 0px !important;
+    }
+    .global_header_media_container {
+        
+    }
+}
 .global_container, .global_header {
     min-width: 981px;
     max-width:981px;
     margin: auto;
-    padding-right:200px;
 }
 
 .container_small, .global_header_container_small {
@@ -1705,6 +1892,7 @@ div.container{
 div.global_header{
     position: relative;
     top: 0px;
+    height: 100%;
 }
 
 div.links{
@@ -3440,8 +3628,8 @@ div.signup{
     padding-right: 75px;
 }
 
-div.signupbox{
-
+div.signupbox input{
+	width:100% !important;
 }
 h1.signupheader{
     font-size: 2em;

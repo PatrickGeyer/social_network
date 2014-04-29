@@ -4,7 +4,10 @@ include_once('Scripts/chat.class.php');
 $chat = new Chat();
 $chat_rooms = $chat->get_chat_rooms();
 if (!isset($_COOKIE['chat_feed'])) {
-    $chat_feed = $chat_rooms[0]['id'];
+	$chat_feed = "";
+	if(isset($chat_rooms[0]['id'])) {
+    	$chat_feed = $chat_rooms[0]['id'];
+    }
 }
 else {
     $chat_feed = $_COOKIE['chat_feed'];
@@ -14,7 +17,7 @@ $chat_rooms = $chat->get_chat_rooms();
 <head>
     <link rel="stylesheet" type="text/css" href="CSS/chat.css">
     <script id="chat_loader">
-        var chat_room = <?php echo $chat_feed ?>;
+        var chat_room = '<?php echo $chat_feed ?>';
         var loaded_chat_room = <?php echo $chat_feed ?>;
         setCookie("chat_feed", chat_room);
 

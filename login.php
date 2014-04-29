@@ -48,7 +48,7 @@ if ($fb_id) {
             'dob' => date("Y-m-d H:i:s", strtotime($user_profile['birthday'])),
             'fb_id' => $fb_id
         );
-        login($user->create($user_info));
+        login(Registry::get('user')->create($user_info));
         header("location: home");
     } else {
         $sql = "SELECT id FROM user WHERE fb_id=:fb_id;";
@@ -193,113 +193,152 @@ else {
         </script>
     </head>
     <body class="login">
-        <div class="login_container">
-            <div class="loginbox">
-                <input type="text" spellcheck="false" placeholder="Email" autocomplete="off" tabindex="1" class='email_login'/>
-                <input type="password" spellcheck="false" tabindex="2" placeholder="Password" autocomplete="off" class='password_login'/>
-                <button onclick='logIn();' class='pure-button-secondary small'>Login</button>
-                <a href='signup?m'><button class='pure-button-neutral small signup_button'>Signup</button><a/>
-            </div>
-        </div>
-        <div class='login_background'>
-            <p class=''><span class='blue_thick'>DO IT</span><span class='grey_thin'>WITH COLLABORATOR</span></p>
-            <hr style="border:0px;border-bottom: 1px dotted lightgrey;">
-            <p class=''><span class='blue_thick'>5GB+</span><span class='grey_thin'>FREE SPACE</span></p>
-            <p class=''><span class='blue_thick'>SHARE</span><span class='grey_thin'>YOUR FILES</span></p>
-            <p class=''><span class='blue_thick'>COLLABORATE</span><span class='grey_thin'></span></p>
-            <p class=''><span class='blue_thick'>INSTANT</span><span class='grey_thin'>TEAMWORK</span></p>
-        </div>
-        <div class="signup">
-            <div class="signup_container">
-                <h1 class="signupheader">Join</h1>
-                <div class="signupbox">
-                    <table border="0">
-                        <tr>
-                            <td><input type="text" class="first_name_signup" spellcheck="false" placeholder="First Name"autocomplete="off"/>
-                            </td><td><input type="text" class="last_name_signup" placeholder="Last Name"autocomplete="off"/></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2"><input class="password_signup" spellcheck="false" type="password" style="width:100%;" placeholder="Password" autocomplete="off"/></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2"><input class="email_signup" spellcheck="false" type="text" style="width:100%;" autocomplete="off" placeholder="Email"/></td>
-                        </tr>
-                  <!-- 
-      <tr>
-                            <td colspan="2">
-                                <div tabindex="0" wrapper_id='organization_choose' class='dropdown_login default_dropdown_selector'>
-                                    <span class='default_dropdown_preview'>Choose School</span>
-                                    <div id='organization_choose' class='scroll_thin default_dropdown_wrapper'>
-                                        <ul class='default_dropdown_menu'>
-                                            <?php
-                                            foreach (array() as $schools) {
-                                                echo "<li value='" . $schools['id'] . "' class='default_dropdown_item'>";
-                                                echo $schools['name'];
-                                                echo "</li>";
-                                            }
-                                            ?>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">
-                                <div tabindex="0" wrapper_id='position_choose' class='dropdown_login default_dropdown_selector'>
-                                    <span class='default_dropdown_preview'>Select Year</span>
-                                    <div id='position_choose' class='scroll_thin default_dropdown_wrapper'>
-                                        <ul class='default_dropdown_menu'>
-                                            <?php
-                                            $i = 7;
-                                            while ($i < 15) {
-                                                echo "<li value='" . $i . "' class='default_dropdown_item'>Year " . $i . "</li>";
-                                                $i++;
-                                            }
-                                            ?>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
+		<?php include_once('welcome.php'); ?>
+<!--         <div id="header-featured"></div> -->
+
+         <section class='layer'>
+        	<div>
+        		<div>
+        			<div class="column"> <span class="fa fa-cogs"></span>
+					<div class="title">
+					  <h2>Maecenas lectus sapien</h2>
+					</div>
+					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+				  </div>
+				  <div class="column"> <span class="fa fa-legal"></span>
+					<div class="title">
+					  <h2>Praesent scelerisque</h2>
+					</div>
+					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+				  </div>
+				  <div class="column double_column"> <span class="fa fa-cogs"></span>
+						<div class="signup_container">
+							<div class='title'><h2>Signup</h2></div>
+							<div class="signupbox">
+								<table border="0" style='width:100%'>
+									<tr>
+										<td><input type="text" class="first_name_signup" spellcheck="false" placeholder="First Name"autocomplete="off"/>
+										</td><td><input type="text" class="last_name_signup" placeholder="Last Name"autocomplete="off"/></td>
+									</tr>
+									<tr>
+										<td colspan="2"><input class="password_signup" spellcheck="false" type="password" style="width:100%;" placeholder="Password" autocomplete="off"/></td>
+									</tr>
+									<tr>
+										<td colspan="2"><input class="email_signup" spellcheck="false" type="text" style="width:100%;" autocomplete="off" placeholder="Email"/></td>
+									</tr>
+
+									<!-- 
+<tr>
+										<td colspan="2">
+											<select class='dropdown' data-wrapper_id='gender_choose'>
+												<option selected>
+													Gender
+												</option>
+												<option value='male'>
+													Male
+												</option>
+												<option value='female'>
+													Female
+												</option>
+											</select>
+										</td>
+									</tr>
  -->
-                        <tr>
-                            <td colspan="2">
-                                <div tabindex="0" wrapper_id='gender_choose' class='dropdown_login default_dropdown_selector'>
-                                    <span class='default_dropdown_preview'>Gender</span>
-                                    <div id='gender_choose' class='scroll_thin default_dropdown_wrapper'>
-                                        <ul class='default_dropdown_menu'>
-                                            <li value='Male' class='default_dropdown_item'>Male</li>
-                                            <li value='Female' class='default_dropdown_item'>Female</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">
-                                <button id="signup" onclick="signUp();" class="pure-button-green small">Sign Up</button>
-                                <a href='<?php echo Base::$FB_LOGIN;?>'>
-                                    <button class="pure-button-green small">Facebook Sign Up</button>
-                                </a>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-         </div>
-         <div class='bottom_bar'>
-            <div style='float:left;margin-right:20px;'>
-                <a href="http://stackoverflow.com/users/2506225/patrick-geyer">
-                    <img src="http://stackoverflow.com/users/flair/2506225.png?theme=clean" width="208" height="58" alt="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers" title="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers">
-                    </a>
-                </div>
-                <span>Warning: This site is in development. I will not be held liable for any damages you may incur on this site. By signing up, you agree to these terms. Although you are welcome to sign-up, Registry schools and store your files here for testing purposes, I cannot guarantee the safety/availability of any of your data yet. Release date: 2014, June 21. You can watch the site develop everyday.</span>
-            </div>
-            <div class="links" style='display:none;'>
-                <a id="schoollink" href="login" style="text-decoration:none; font-size:0.8em;">Registry a User</a>/
-                <a id="schoollink" href="login?action=school" style="text-decoration:none; font-size:0.8em;">Registry a School + User</a>/
-                <a id="schoollink" href="about" style="text-decoration:none; font-size:0.8em;">About</a><br/>
-                <span>Suggestions/bugs? Email me at patrick.geyer1@gmail.com</span>
-            </div>
-        </div>
+									<tr>
+										<td colspan="2">
+											<button id="signup" onclick="signUp();" class="pure-button-green large">Sign Up</button>
+											<a class='no-ajax' href='<?php echo Base::$FB_LOGIN;?>'>
+												<button class="pure-button-green large">Facebook Sign Up</button>
+											</a>
+										</td>
+									</tr>
+								</table>
+							</div>
+					 </div>
+
+					</div>
+        	</div>
+        </section>
+        <section class='layer'>
+        	<div>
+        		<div>
+        			<div class="column"> <span class="fa fa-cogs"></span>
+					<div class="title">
+					  <h2>Maecenas lectus sapien</h2>
+					</div>
+					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+				  </div>
+				  <div class="column"> <span class="fa fa-legal"></span>
+					<div class="title">
+					  <h2>Praesent scelerisque</h2>
+					</div>
+					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+				  </div>
+				  <div class="column"> <span class="fa fa-unlock"></span>
+					<div class="title">
+					  <h2>Fusce ultrices fringilla</h2>
+					</div>
+					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+				  </div>
+				  <div class="column"> <span class="fa fa-wrench"></span>
+					<div class="title">
+					  <h2>Etiam posuere augue</h2>
+					</div>
+					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+				  </div>
+					</div>
+        	</div>
+        </section>
+        <section class='layer'>
+        	<div>
+        		<div>
+        			<div class="column"> <span class="fa fa-cogs"></span>
+					<div class="title">
+					  <h2>Maecenas lectus sapien</h2>
+					</div>
+					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+				  </div>
+				  <div class="column"> <span class="fa fa-legal"></span>
+					<div class="title">
+					  <h2>Praesent scelerisque</h2>
+					</div>
+					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+				  </div>
+				  <div class="column"> <span class="fa fa-unlock"></span>
+					<div class="title">
+					  <h2>Fusce ultrices fringilla</h2>
+					</div>
+					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+				  </div>
+				  <div class="column"> <span class="fa fa-wrench"></span>
+					<div class="title">
+					  <h2>Etiam posuere augue</h2>
+					</div>
+					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+				  </div>
+					</div>
+        	</div>
+        </section>
+        <section class='layer'>
+        	<div>
+        		<div>
+        		<div>
+					<div style='float:left;margin-right:20px;'>
+						<a href="http://stackoverflow.com/users/2506225/patrick-geyer">
+							<img src="http://stackoverflow.com/users/flair/2506225.png?theme=clean" width="208" height="58" alt="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers" title="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers">
+							</a>
+						</div>
+						<span>Warning: This site is in development. I will not be held liable for any damages you may incur on this site. By signing up, you agree to these terms. Although you are welcome to sign-up, Registry schools and store your files here for testing purposes, I cannot guarantee the safety/availability of any of your data yet. Release date: 2014, June 21. You can watch the site develop everyday.</span>
+					</div>
+					<div class="links" style='display:none;'>
+						<a id="schoollink" href="login" style="text-decoration:none; font-size:0.8em;">Registry a User</a>/
+						<a id="schoollink" href="login?action=school" style="text-decoration:none; font-size:0.8em;">Registry a School + User</a>/
+						<a id="schoollink" href="about" style="text-decoration:none; font-size:0.8em;">About</a><br/>
+						<span>Suggestions/bugs? Email me at patrick.geyer1@gmail.com</span>
+					</div>
+				</div>
+        		</div>
+        	</div>
+         
     </body>
 </html>

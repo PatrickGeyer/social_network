@@ -145,6 +145,7 @@ function print_header($PRINT = TRUE) {
         ?>
         <div class="headerbar">
             <div class="global_header">
+            <?php if(isset($_COOKIE['id'])) { ?>
                 <div class="circle">
                     <div class="ring">
                         <a href="home" class="menuItem fa fa-home fa-2x <?php
@@ -172,6 +173,7 @@ function print_header($PRINT = TRUE) {
                             echo "current_page";
                         }
                         ?>"></a>
+                        <a href="Scripts/logout.php" class="menuItem fa fa-sign-out fa-2x no-ajax"></a>
                     </div>
                     <a href="#" class="no-ajaxy center"></a>
                 </div>
@@ -220,24 +222,32 @@ function print_header($PRINT = TRUE) {
                             <span id='network_num' class="message_notification"></span>
                         </div>
                     </div>
-                </div>
                 <div class='contentblock global_media_container'></div>
-                <div class="gear">
-                    <a style="cursor:pointer;">
-                        <img id="gear_click" style="z-index:11; width:16px; height:16px; " class="logout_image_small message" src ="Images\Icons\Icon_Pacs\Batch-master\Batch-master\PNG\16x16\settings-2.png"></img>
-                    </a>
-                    <div style="display:none;" id="geardiv" class="geardiv">
-                        <ul> 
-                            <li class=""><a class='no-ajax' title"Logout" href="Scripts/logout.php">Logout</a></li> 
-                            <li class=""><a href="">Privacy</a></li> 
-                        </ul> 
-                    </div>
-                </div>
+            
+            <?php } else { ?>
+            <div class='global_header_container'>
+            	<div class="loginbox">
+                	<input type="text" spellcheck="false" placeholder="Email" autocomplete="off" tabindex="1" class='email_login'/>
+                	<input type="password" spellcheck="false" tabindex="2" placeholder="Password" autocomplete="off" class='password_login'/>
+                	<button onclick='logIn();' class='pure-button-secondary small'>Login</button>
+<!--                 	<a href='signup?m'><button class='pure-button-neutral small signup_button'>Signup</button><a/> -->
+            	</div>
+            <div class='logo'>
+            	<div></div>
+            	<h2>PLACEHOLDER</h2>
             </div>
+            <?php } ?>
         </div>
-        <div class='files_space_container'>
+    </div> 
+</div>
+
+    
+        
+        <!-- 
+<div class='files_space_container'>
             <div class='files_space_meter' style='height:<?php echo Registry::get('files')->getUsedSize(); ?>%;'></div>
         </div>
+ -->
         <?php
     }
 }

@@ -178,69 +178,77 @@ Application.prototype.upload = function(files) {
 /****************************************************
  * 1.3 Files                                         *
  ****************************************************/
-Application.prototype.file = function(file) {
-    this.file = file;
-    this.file.comment = new Application.prototype.Comment(this.file.activity);
-    /****************************************************
-     * 1.3.1 Files - Print                               *
-     ****************************************************/
-
-    this.view = function() {
-        $.post("Scripts/files.class.php", {file_id: this.file.id, action: "view"}, function() {
-        });
+Application.prototype.file = function(file) {    
+    this.getById = function(file_id) {
+        return this.items[file_id] || null;
     };
 
-    this.list = function(element, type, callback) {
-        callback = typeof callback !== 'undefined' ? callback : function() {
-        };
-        $.post('Scripts/home.class.php', {type: type, action: "file_list"}, function(response) {
-            $(element).html(response);
-            $(element).mCustomScrollbar(SCROLL_OPTIONS);
-            callback();
-        });
-    };
+    if (file !== false) {
+        this.playing = false;
+        this.file = file;
+        this.items[this.file.id] = this;
 
-    this.initializeWaveForm = function() {
-        $('[uid]').each(function() {
-            createWaveForm($(this).attr('uid'), function() {
+        this.file.comment = new Application.prototype.Comment(this.file.activity);
+        /****************************************************
+         * 1.3.1 Files - Print                               *
+         ****************************************************/
+
+        this.view = function() {
+            $.post("Scripts/files.class.php", {file_id: this.file.id, action: "view"}, function() {
             });
-        });
-    };
+        };
 
-    this.rename = function(id, text) {
-        $.post('Scripts/files.class.php', {action: "rename", file_id: this.file.id, name: text}, function() {
-        });
-    };
-    this.print = function(activity_type) {
-        this.file.name = typeof this.file.name !== 'undefined' && !isEmpty(this.file.name) ? this.file.name : 'Untitled';
-        this.file.description = typeof this.file.description !== 'undefined' && !isEmpty(this.file.description) ? this.file.description : '';
-        this.file.time = typeof this.file.time !== 'undefined' && !isEmpty(this.file.time) ? this.file.time : 'No Date';
-        this.file.type_preview = typeof this.file.type_preview !== 'undefined' && !isEmpty(this.file.type_preview) ? this.file.type_preview : file.thumb_path;
+        this.list = function(element, type, callback) {
+            callback = typeof callback !== 'undefined' ? callback : function() {
+            };
+            $.post('Scripts/home.class.php', {type: type, action: "file_list"}, function(response) {
+                $(element).html(response);
+                $(element).mCustomScrollbar(SCROLL_OPTIONS);
+                callback();
+            });
+        };
 
-        var string = $('<div class="post_feed_item"></div>');
-        if (this.file.type == "Audio") {
-            string.addClass("post_media_double");
-            string.append(this.printDoc());
-        } else if (this.file.type == "Image") {
-            string.addClass("post_media_photo");
-            string.append(this.printDoc());
-        } else if (this.file.type == "Video") {
-            string.append(this.printDoc());
-            string.addClass("post_media_video");
+        this.initializeWaveForm = function() {
+            $('[uid]').each(function() {
+                createWaveForm($(this).attr('uid'), function() {
+                });
+            });
+        };
+
+        this.rename = function(id, text) {
+            $.post('Scripts/files.class.php', {action: "rename", file_id: this.file.id, name: text}, function() {
+            });
+        };
+        this.print = function(activity_type) {
+            this.file.name = typeof this.file.name !== 'undefined' && !isEmpty(this.file.name) ? this.file.name : 'Untitled';
+            this.file.description = typeof this.file.description !== 'undefined' && !isEmpty(this.file.description) ? this.file.description : '';
+            this.file.time = typeof this.file.time !== 'undefined' && !isEmpty(this.file.time) ? this.file.time : 'No Date';
+            this.file.type_preview = typeof this.file.type_preview !== 'undefined' && !isEmpty(this.file.type_preview) ? this.file.type_preview : file.thumb_path;
+
+            var string = $('<div class="post_feed_item"></div>');
+            if (this.file.type == "Audio") {
+                string.addClass("post_media_double");
+                string.append(this.printDoc());
+            } else if (this.file.type == "Image") {
+                string.addClass("post_media_photo");
+                string.append(this.printDoc());
+            } else if (this.file.type == "Video") {
+                string.append(this.printDoc());
+                string.addClass("post_media_video");
 //        post_content += video_player(file, classes, "height:100%;", "home_feed_video_", true);
-        } else if (this.file.type === "WORD Document"
-                || this.file.type === "PDF Document"
-                || this.file.type === "EXCEL Document"
-                || this.file.type === "PPT Document"
-                || this.file.type === "Folder") {
-            string.css('height', 'auto');
-            string.addClass("post_media_double");
-            string.append(this.printDoc());
-        } else if (this.file.type == "Folder") {
-            string.css('height', 'auto');
-            string.addClass("post_media_double");
-            string.append(this.printDoc());
-        } else if (this.file.type == "Webpage") {
+            } else if (this.file.type === "WORD Document"
+                    || this.file.type === "PDF Document"
+                    || this.file.type === "EXCEL Document"
+                    || this.file.type === "PPT Document"
+                    || this.file.type === "Folder") {
+                string.css('height', 'auto');
+                string.addClass("post_media_double");
+                string.append(this.printDoc());
+            } else if (this.file.type == "Folder") {
+                string.css('height', 'auto');
+                string.addClass("post_media_double");
+                string.append(this.printDoc());
+            } else if (this.file.type == "Webpage") {
 //            post_classes += "post_media_full";
 //            post_styles += "height:auto;";
 //            post_content += "<table style='height:100%;'><tr><td rowspan='3'>";
@@ -252,98 +260,79 @@ Application.prototype.file = function(file) {
 //            post_content += "<tr><td><span style='font-size:12px;' class='user_preview_community'>";
 //            post_content += this.file.web_description + "</span></td></tr>";
 //            post_content += "</table>";
-        } else {
-            string.addClass("post_media_full");
-            string.append(this.printDoc());
-        }
-        var actions = $("<div class='top_right_actions'></div>");
-        if (this.file.user_id == USER_ID && activity_type != 'File') {
-            actions.append("<i class='fa fa-times delete_cross delete_cross_top remove_event_post'></i>");
-        }
-        string.append(actions);
+            } else {
+                string.addClass("post_media_full");
+                string.append(this.printDoc());
+            }
+            var actions = $("<div class='top_right_actions'></div>");
+            if (this.file.user_id == USER_ID && activity_type != 'File') {
+                actions.append("<i class='fa fa-times delete_cross delete_cross_top remove_event_post'></i>");
+            }
+            string.append(actions);
 
-        if (activity_type == "Text" && typeof this.file.activity != 'undefined') {
-            string.append(this.file.comment.print());
+            if (activity_type == "Text" && typeof this.file.activity != 'undefined') {
+                string.append(this.file.comment.print());
+            }
+
+            if (activity_type == "File" && typeof file.share != 'undefined') {
+                //WHO IS FILE SHARED WITH?
+            }
+
+            string.data("activity_id", this.file.activity.id).data("file_id", this.file.id);
+
+            return string;
         }
-
-        if (activity_type == "File" && typeof file.share != 'undefined') {
-            //WHO IS FILE SHARED WITH?
-        }
-
-        string.data("activity_id", this.file.activity.id).data("file_id", this.file.id);
-
-        return string;
-    };
+    }
+    ;
 
     this.printDoc = function() {
-        var preview_classes = '';
-        var preview_styles = '';
-        var preview_content = '';
-        var post_content = '<tr><td>';
-        var post_content_under_title = '<tr><td>';
-        var string = '';
+        var string = $('<div></div>');
         var link = "files?f=" + this.file.id;
-        var path = this.file.type_preview;
+        this.file_activity_section = $("<div class='file_activity_section'></div>");
+        this.preview = $("<div class='post_media_preview'></div>");
+        this.actions = $("<div style='margin-top:5px;'></div>");
+        this.stats = $("<div style='margin-top:5px;'></div>");
+        
         if (this.file.type == "Folder") {
-            path = FOLDER_THUMB;
+            this.file.type_preview = FOLDER_THUMB;
             link = "files?pd=" + this.file.enc_parent_folder_id;
         } else if (this.file.type == "Image") {
-            path = this.file.thumb_path;
-            preview_classes += " post_media_photo ";
-            preview_styles += " width:auto;height:auto; ";
-            preview_content += "<img style='opacity:0;max-width:150px;max-height:150px;' src='" + path + "'></img>";
+            this.preview.addClass("post_media_photo");
+//            preview_styles += " width:auto;height:auto; ";
+            this.preview.append("<img style='max-width:150px;max-height:150px;' src='" + this.file.thumb_path + "'></img>");
         } else if (this.file.type == "Video") {
-            path = this.file.thumbnail;
-            preview_classes += " post_media_photo ";
-            preview_content += "<img style='position:absolute;top:40%;left:40%;' src='" + VIDEO_BUTTON + "'></img>";
+            this.preview.addClass("post_media_photo");
+            this.preview.append("<img style='position:absolute;top:40%;left:40%;' src='" + VIDEO_BUTTON + "'></img>");
+            this.preview.css("background-image", "url(\"" + this.file.thumbnail + "\")");
         } else if (this.file.type == "Audio") {
-            preview_styles = 'background-image: none !important;';
-            preview_content += "<i class='fa fa-music'></i>";
-            preview_content += this.audioPlayer(this.file, 'button', false);
-            post_content_under_title += this.audioPlayer(this.file, 'timeline');
+            this.preview.css('background-image', 'none !important');
+            this.preview.append("<i class='fa fa-music'></i>");
+            this.preview.append(this.audioPlayer('button'));
+            this.file_activity_section.append(this.audioPlayer('timeline'));
         } else {
-            preview_classes += "";
-            preview_styles += "background-image: url(\"" + path + "\")";
-            preview_content += "<img style='opacity:0;max-width:150px;max-height:150px;' src='" + path + "'></img>";
+            this.preview.css('background-image', 'url(' + this.file.type_preview + ')');
         }
 
-        string += "<div class='post_media_preview " + preview_classes + "' style='background-image:url(&quot;";
-        string += path + "&quot;); " + preview_styles + "'>" + preview_content + "</div>";
-        string += "<div class='file_activity_section'>";
-        string += "<a class='user_preview_name' target='_blank' href='" + link + "'>";
-        string += "<p class='ellipsis_overflow' style='word-break:break-word; '>";
-        string += this.file.name + "</p></a>";
-        if (post_content_under_title != "") {
-            string += post_content_under_title;
-        }
-        if (this.file.description != "") {
-            string += "<span style='font-size:12px;' class='post_comment_time'>";
-            string += this.file.description + "</span>";
-        }
-        string += "";
-        string += "<div style='margin-top:5px;'>";
-        string += "<i class='heart_like_icon fa fa-heart'></i><span class='post_comment_time post_like_count'>" + this.file.like.count + "</span>";
+        this.file_activity_section
+                .append(this.user_link = $("<a class='user_preview_name' target='_blank' href='" + link + "'></a>")
+                        .append($("<p class='ellipsis_overflow' style='word-break:break-word; '>" + this.file.name + "</p>")))
+                .append("<span style='font-size:12px;' class='post_comment_time'>" + this.file.description + "</span>")
+                .append(this.stats)
+                .append(this.actions);
+        
+        this.stats.append("<i class='heart_like_icon fa fa-heart'></i><span class='post_comment_time post_like_count'>" + this.file.like.count + "</span>");
+
         if (typeof this.file.activity.comment != 'undefined') {
-            string += "<i class='fa fa-comment heart_like_icon'></i><span class='post_comment_time post_comment_count'>"
-                    + (parseInt(this.file.activity.comment.comment.length) + parseInt(this.file.activity.comment.hidden)) + "</span>";
+            this.stats.append("<i class='fa fa-comment heart_like_icon'></i><span class='post_comment_time post_comment_count'>"
+                    + (parseInt(this.file.activity.comment.comment.length) + parseInt(this.file.activity.comment.hidden)) + "</span>");
         }
-        string += "<i class='fa fa-eye heart_like_icon'></i><span class='post_comment_time'>" + this.file.view.count + "</span><br />";
-//    string += "<div class='file_info'><span class='post_comment_time'>Uploaded: " + this.file.time + "</span><br />";
-//    string += "<span class='post_comment_time'>Size: " + this.file.size + " bits</span><br />";
-//    string += "<span class='post_comment_time'>Type: " + this.file.type + "</span></div>";
+        this.stats.append("<i class='fa fa-eye heart_like_icon'></i><span class='post_comment_time'>" + this.file.view.count + "</span><br />");
 
-        string += "</div>";
-
-        string += "<div style='margin-top:5px;'>";
-        string += "<a class='no-ajax' href='download.php?id=" + this.file.id + "'>" + "<button class='pure-button-green'><i class='fa fa-cloud-download'></i><span></span></button></a>";
-        string += "<button has_liked='" + (this.file.activity.stats.like.has_liked === true ? "true" : "false") + "' class='activity_like_text post_like_activity "
-                + "pure-button-neutral " + (this.file.activity.stats.like.has_liked === true ? " pure-button-blue" : "") + "'>";
-        string += "<i class='fa fa-heart'></i>";
-//    string += "<span>" + (this.file.activity.stats.like.has_liked === true ? COMMENT_UNLIKE_TEXT : COMMENT_LIKE_TEXT) + "</span>";
-        string += "</button>";
-        string += ""; //LEAVING this.file_activity_section OPEN!!
-
-        string += post_content;
+        this.actions.append("<a class='no-ajax' href='download.php?id=" + this.file.id + "'>" + "<button class='pure-button-green'><i class='fa fa-cloud-download'></i><span></span></button></a>");
+        this.actions.append("<button has_liked='" + (this.file.activity.stats.like.has_liked === true ? "true" : "false") + "' class='activity_like_text post_like_activity "
+                + "pure-button-neutral " + (this.file.activity.stats.like.has_liked === true ? " pure-button-blue" : "") + "'>" + "<i class='fa fa-heart'></i></button>");
+        
+string.append(this.preview).append(this.file_activity_section);
         return string;
     };
 
@@ -375,33 +364,30 @@ Application.prototype.file = function(file) {
         return string;
     };
 
-    this.audioPlayer = function(file, part, source) {
-        var string = '';
-        string += '<div data-path="' + file.thumb_path + '" uid="' + file.uid + '" data-file_id="' + file.id + '">';
+    this.audioPlayer = function(part) {
+        var string = $('<div data-path="' + this.file.thumb_path + '" uid="' + this.file.uid + '" data-file_id="' + this.file.id + '"></div>');
         if (part == 'all') {
-            string += '<div class="audio_container">';
-            string += this.audioButton(file, source);
-            string += this.audioInfo(file);
-            string += '</div>';
+            string.append($('<div class="audio_container"></div>').append(this.audioButton()).append(this.audioInfo()));
         } else if (part == "button") {
-            string += this.audioButton(file, source);
+            string.append(this.audioButton());
         } else if (part == "info") {
-            string += this.audioInfo(file);
+            string.append(this.audioInfo());
         } else if (part == 'timeline') {
-            string += this.audioTimeline();
+            string.append(this.audioTimeline());
         }
-        string += "</div>";
         return string;
     };
 
     this.audioButton = function(file, source) {
-        var string = '<div class="audio_button">';
+        var self = this;
+        var string = $('<div class="audio_button"></div>').on('click', function() {
+            self.audioPlay();
+        });
         if (source === true) {
-            string += '<audio style="display:none;"><source src="' + file.path + '"></source><source src="'
-                    + file.thumb_path + '"></source></audio>';
+            string.append('<audio style="display:none;"><source src="' + file.path + '"></source><source src="'
+                    + file.thumb_path + '"></source></audio>');
         }
-        string += '<div class="audio_button_inside"></div><div class="audio_loader"><div class="loader_outside"></div><div class="loader_inside">'
-                + '</div><span class="audio_loader_text loader_text"></span></div></div>';
+        string.append('<div class="audio_button_inside"></div><div class="audio_loader"></div>');
         return string;
     };
 
@@ -415,39 +401,32 @@ Application.prototype.file = function(file) {
                 + '</div><div class="audio_line"></div></div>';
     };
 
-    this.audioPlay = function(id, start, progress, end, uid) {
-        if (!$('[uid="' + uid + '"] .audio_button').hasClass('audio_playing')) {
-            this.startAudioInfo(id, start, progress, end, uid);
-            $('[uid="' + uid + '"] .audio_button').addClass('audio_playing');
+    this.audioPlay = function() {
+        if (!this.playing) {
+            this.startAudioInfo();
+            this.audio_button.addClass('audio_playing');
         } else {
-            this.files[uid]['element'].pause();
-            $('[uid="' + uid + '"] .audio_button').removeClass('audio_playing');
+            this.files[this.file.uid]['element'].pause();
+            this.audio_button.removeClass('audio_playing');
         }
     };
 
-    this.startAudioInfo = function(id, start, progress, end, uid) {
-        if (uid in this.files) {
-            if (typeof this.files[uid]['element'] != 'undefined') {
-                this.files[uid]['element'].play();
-                return;
-            }
-        }
-
-        this.view(id);
+    this.startAudioInfo = function(start, progress, end) {
+        this.view();
 
         var headerControl = $("<div uid='" + uid + "'></div>");
-        headerControl.append(this.audioPlayer(this.files[uid], 'all', true));
+        headerControl.append(this.audioPlayer('all'));
         $('.global_media_container').html(headerControl);
 
-        $("[uid='" + uid + "'] .audio_loader").fadeIn();
-        var audio = headerControl.find('audio');
-        this.files[uid]['element'] = audio.get(0);
+        this.loader.fadeIn();
+        this.files[uid]['element'] = this.audio.get(0);
         this.files[uid]['element'].volume = 1;
         this.files[uid]['element'].play();
-        audio.bind('loadedmetadata', function() {
-            audio.bind('progress', function() {
-                var track_length = audio.get(0).duration;
-                var secs = audio.get(0).buffered.end(0);
+        var self = this;
+        this.audio.bind('loadedmetadata', function() {
+            self.audio.bind('progress', function() {
+                var track_length = self.audio.get(0).duration;
+                var secs = self.audio.get(0).buffered.end(0);
                 var progress = 0;
                 if (secs > 0 && track_length > 0) {
                     progress = (secs / track_length) * 100;
@@ -455,9 +434,9 @@ Application.prototype.file = function(file) {
                 $('[uid="' + uid + '"] .audio_buffered').css('width', progress + "%");
             });
 
-            audio.bind('timeupdate', function() {
-                var track_length = audio.get(0).duration;
-                var secs = audio.get(0).currentTime;
+            self.audio.bind('timeupdate', function() {
+                var track_length = self.audio.get(0).duration;
+                var secs = self.audio.get(0).currentTime;
                 var progress = (secs / track_length) * 100;
                 $('[uid="' + uid + '"] .audio_progress').css('width', progress + "%");
                 var minutes = Math.floor(track_length / 60);
@@ -469,12 +448,12 @@ Application.prototype.file = function(file) {
                 $("[uid='" + uid + "'] .audio_loader").fadeOut();
             });
 
-            audio.bind('canplaythrough', function() {
+            self.audio.bind('canplaythrough', function() {
                 $('[uid="' + uid + '"] .audio_buffered').css('background-color', 'grey');
             });
 
-            audio.bind('ended', function() {
-                audio.get(0).currentTime = 0;
+            self.audio.bind('ended', function() {
+                self.audio.get(0).currentTime = 0;
                 $('[uid="' + uid + '"] .audio_button').removeClass('audio_playing');
             });
 
@@ -484,9 +463,9 @@ Application.prototype.file = function(file) {
                 var width = $(this).width();
                 var percent_width = (width_click / width) * 100;
                 $('[uid="' + uid + '"] .audio_progress').css('width', percent_width + "%");
-                var secs = audio.get(0).duration;
+                var secs = self.audio.get(0).duration;
                 var new_secs = secs * (percent_width / 100);
-                audio.get(0).currentTime = new_secs;
+                self.audio.get(0).currentTime = new_secs;
             });
         });
 
@@ -593,6 +572,7 @@ Application.prototype.file = function(file) {
         }
     };
 };
+Application.prototype.file.prototype.items = {};
 
 Application.prototype.Folder = function(list) {
     this.files = list;
@@ -780,6 +760,7 @@ Application.prototype.Chat = function(chat_id, name) {
 
 
     $('.right_bar_container').append(this.container);
+    this.iniScroll();
     this.sendRequest('true');
     
     var self = this;
@@ -798,6 +779,15 @@ Application.prototype.Chat.prototype.get = function() {
     return this.all;
 };
 
+Application.prototype.Chat.prototype.iniScroll = function() {
+	var self = this;
+	this.chatoutput.on('scroll', function() {
+		if($(this)[0].scrollTop === 0) {
+			self.getPrevious();
+		}
+	});
+};
+
 Application.prototype.Chat.prototype.getPrevious = function() {
     var self = this;
     if (self.getting_previous == false) {
@@ -809,22 +799,22 @@ Application.prototype.Chat.prototype.getPrevious = function() {
         }
 
         if (self.last_chat != true) {
-            var element = $('[data-chat_room="' + self.id + '"] .single_chat:first');
-            $('[data-chat_room="' + self.id + '"] .chat_loader').slideDown('fast');
+            var element = self.chatoutput.find('.single_chat:first');
+            self.loader.slideDown('fast');
             var object = {chat: self.id, all: "previous", oldest: new_oldest, newest: self.oldest - 1};
             $.get("Scripts/chat.class.php", object, function(response) {
                 response = $.parseJSON(response);
                 if (response.length == 0) {
                     self.last_chat = true;
-                    $('[data-chat_room="' + self.id + '"] .chatreceive').prepend("<div class='timestamp'><span>Start of Conversation</span></div>");
-                    $('[data-chat_room="' + self.id + '"] .chat_loader').slideUp('fast');
+                   	self.list.prepend("<div class='timestamp'><span>Start of Conversation</span></div>");
+                    self.loader.slideUp('fast');
                     return;
                 }
-                $('[data-chat_room="' + self.id + '"] .chatreceive').prepend(self.styleResponse(response, self.id));
-                $('[data-chat_room="' + self.id + '"] .chat_loader').slideUp('fast');
+                self.list.prepend(self.styleResponse(response, self.id));
+                self.loader.slideUp('fast');
                 self.getting_previous = false;
                 element = element.offset().top;
-                $('[data-chat_room="' + self.id + '"]').scrollTop(element);
+               	self.chatoutput.scrollTop(element);
             });
         }
     }
@@ -878,7 +868,7 @@ Application.prototype.Chat.prototype.styleResponse = function(response) {
     for (var i = response.length - 1; i >= 0; i--) {
         if (response[i]['type'] != 'event') {
             var ChatItem = new Application.prototype.Chat.prototype.ChatItem(response[i]);
-            this.preview = ChatItem.preview;
+            this.preview.html(ChatItem.preview);
             final.append(ChatItem.print());
             this.entry.push(response[i]['id']);
             this.items.push(ChatItem);
@@ -2362,7 +2352,7 @@ $(function() {
     Application.prototype.UI.adjustSwitches();
 
     $(window).on('resize', function() {
-        Application.prototype.UI.resizeContainer();
+//        Application.prototype.UI.resizeContainer();
     });
 
     $(document).on('click', '.headerbar', function() {
@@ -2714,12 +2704,6 @@ $(function() {
         }
     });
 
-    $(document).on('click', '.post_media_photo.post_media_preview', function() {
-        var file_id = $(this).parents('[data-file_id]').data('file_id');
-        var activity_id = $(this).parents('[data-activity_id]').data('activity_id');
-        Application.prototype.file.theater.initiate(activity_id, file_id, {});
-    });
-
     $(document).on('click', '.comment_delete', function() {
         var comment_id = $(this).parents('[data-comment_id]').data('comment_id');
         $(this).parents('.single_comment_container').next('hr.post_comment_seperator').remove();
@@ -2797,12 +2781,6 @@ $(function() {
     });
 
     $(document).on('click', '.audio_button', function(event) {
-        var id = $(this).parents('[data-file_id]').data('file_id');
-        var uid = $(this).parents('[uid]').attr('uid');
-        Application.prototype.file.audioPlay(id, function() {
-        }, function(progress) {
-        }, function() {
-        }, uid);
         event.stopPropagation();
     });
 
@@ -3005,7 +2983,6 @@ $(function() {
     /****************************************************
      * 2.1.3 Startup - Chat                              *
      ****************************************************/
-//    Application.prototype.Chat.prototype.iniScroll();
     var cookie = 0; //getCookie('chat_feed');
     if (cookie == 0) {
         $('#chat').hide();
