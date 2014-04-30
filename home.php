@@ -4,70 +4,7 @@ function print_body() {
         global $feed_id;
         ?>
         <div class="container">
-            <div class='contentblock home_feed_post_container'>
-                <div class='home_feed_post_container_arrow_border'>
-                    <div class='home_feed_post_container_arrow'></div>
-                </div>
-                <div class='post_wrapper'>
-                    <table style='width:100%;' cellspacing='0' cellpadding='0'>
-                        <tr>
-                            <td>
-                                <table style='width:100%;' cellspacing='0' cellpadding='0'>
-                                    <tr style='height:100%;'>
-                                        <td>
-                                            <textarea tabindex='1' id="status_text" placeholder= "Update Status or Share Files..." class="status_text autoresize"></textarea>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class='post_content_wrapper'>
-                                            <div class="post_media_wrapper">
-                                                <div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div>
-                                                <img class='post_media_loader' src='Images/ajax-loader.gif'></img>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                            <td style='width:30%;height:100%;position: relative;'>
-                                <div id='file_share'>
-                                    <table id='file_dialog' style='width:100%;' cellspacing="0" cellpadding="0">
-                                        <?php
-                                        foreach (Registry::get('files')->getList_r() as $file) {
-                                            Registry::get('home')->fileList($file);
-                                        }
-                                        ?>
-                                    </table>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                    <div id='post_more_options' class='post_more_options'>
-                        <button class="post-button pure-button-green small">Post</button>
-                        <button id='attach_file_button' class='pure-button-neutral smallest' style="cursor:pointer;" onclick="$('#post_file').trigger('click');">+</button>
-                        <input type="file" name="file" id="post_file" multiple style='display:none;' />
-                        <div class='default_dropdown_selector' style='display:inline-block;' wrapper_id='audience_selector'>
-                            <span class='default_dropdown_preview'>Everyone</span>
-                            <i class='fa fa-angle-down'></i>
-                            <div class='default_dropdown_wrapper' style='display:none;' id='audience_selector'>
-                                <ul class='default_dropdown_menu'>
-                                    <li class='default_dropdown_item' controller_id='audience_selector' share_id='a'>
-                                        <span>Everyone</span>
-                                    </li>
-                                    <?php
-                                    foreach (Registry::get('group')->getUserGroups() as $single_group) {
-                                        echo "<li class='default_dropdown_item' "
-                                        . "controller_id='audience_selector' share_id='" . $single_group . "'>";
-                                        echo "<span>" . Registry::get('group')->getName($single_group) . "</span>";
-                                        echo "</li>";
-                                    }
-                                    ?>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>	
-                <div style="width:100%" id="progress_bar_holder"></div>
-            </div>
+            <div class='contentblock home_feed_post_container createPost'></div>
             <div id='feed_refresh'> 
                 <div class='feed_container'>
                     <!--  Activity Here -->

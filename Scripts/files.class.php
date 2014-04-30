@@ -1053,6 +1053,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     if (isset($_POST['action'])) {
         if ($_POST['action'] == "getContents") {
             $files->getContents($_POST['parent_folder']);
+        } else if($_POST['action'] == "list") {
+        	die(json_encode($files->getList_r()));
         }
         else if ($_POST['action'] == "delete") {
             die($files->delete($_POST['id']));

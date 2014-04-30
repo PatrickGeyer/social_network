@@ -2,11 +2,11 @@
 
 /* CLEAN SECTION*/
 #header-featured {
-	position:relative;
-        height: 30em;
-        background-image: url(../images/banner.jpg);
-        background-position: center;
-        background-size: cover;
+    position:relative;
+    height: 30em;
+    background-image: url(../images/banner.jpg);
+    background-position: center;
+    background-size: cover;
 }
 section {
     position: relative;
@@ -216,7 +216,7 @@ section .icon
     -webkit-transform: rotate(0deg);
     -moz-transform: rotate(0deg);
     transform: rotate(0deg);
-    
+
     background-image: url('../Images/Icons/logo/logo_white.png');
     background-repeat: no-repeat;
     background-position: center;
@@ -361,17 +361,17 @@ h3 > button{
     margin-top: 0px;
 }
 .contentblock > h4 {
-	color: rgb(68, 68, 68) !important;
-	margin:0px;
-	margin-bottom: 10px;
-	font-size: 16px;
+    color: rgb(68, 68, 68) !important;
+    margin:0px;
+    margin-bottom: 10px;
+    font-size: 16px;
 }
 .contentblock * {
-	color: inherit;
-	font-size: 13px;
+    color: inherit;
+    font-size: 13px;
 }
 .fa{
-	text-indent: 0px;
+    text-indent: 0px;
 }
 label{
     text-shadow: 0px 1px 0px #fff;
@@ -1194,7 +1194,7 @@ button.large{
 }
 
 .left_bar_container .timestamp span {
-	
+
 }
 /*END CONTROLS*/
 
@@ -1231,9 +1231,10 @@ span.message_delete_receiver:hover{
 /*WELCOME*/
 
 .global_header_container {
-	overflow: hidden;
-	position: relative;
+    position: relative;
+    height: 100%;
 }
+
 @media only screen 
 and (min-width : 320px) 
 and (max-width : 900px) {
@@ -1249,7 +1250,7 @@ and (max-width : 900px) {
     padding: 0px;
     height: 100%;
     position: relative;
-    width: 50%;
+    width: 40%;
 }
 .search_container input {
     width: 100% !important;
@@ -1302,22 +1303,22 @@ div.headerbar{
 }
 
 div.headerbar .logo {
-	position: relative;
-	top: 10px;
-	display: inline;
+    position: relative;
+    top: 10px;
+    display: inline;
 }
 .logo h2 {
-	color: white;
-	font-size: 2em;
-	display: inline;
+    color: white;
+    font-size: 2em;
+    display: inline;
 }
 div.headerbar .logo > div {
-	background-image: url('../Images/Icons/logo/logo_white.png');
-	background-repeat: no-repeat;
-	background-size: contain;
-	width: 40px;
-	height: 40px;
-	display: inline-block;
+    background-image: url('../Images/Icons/logo/logo_white.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 40px;
+    height: 40px;
+    display: inline-block;
 }
 
 .global_header_icon_container{
@@ -1862,6 +1863,11 @@ div.container{
     /*width:650px;*/
     padding-left: 20px;
     padding-right: 20px;
+    margin-left: 200px;
+}
+
+.login .global_header_container {
+    margin-left: 0px;
 }
 .global_header > div {
 
@@ -1874,7 +1880,7 @@ and (max-width : 950px) {
         min-width: 0px !important;
     }
     .global_header_media_container {
-        
+
     }
 }
 .global_container, .global_header {
@@ -2161,7 +2167,7 @@ a.friend_list{
 }
 
 .contentblock > ul{
-	margin-top: 20px;
+    margin-top: 20px;
 }
 
 /* SEARCH */
@@ -2421,7 +2427,7 @@ div.comment_box{
 }
 
 .top_content {
-	position:relative;
+    position:relative;
 }
 
 .post_text{
@@ -2456,7 +2462,7 @@ div.post_height_restrictor{
     box-sizing: border-box;
 }
 .post_height_restrictor > div {
-	padding: 2px;
+    padding: 2px;
 }
 .post_height_restrictor:last-of-type {
     border-bottom: 0px !important;
@@ -3037,7 +3043,7 @@ td.calendar-day, td.calendar-day-np, td.calendar-day-current {
 }
 
 td.calendar-day-current{
-    
+
 }
 
 td.calendar-day .event, td.calendar-day-current .event, .calendar-container .event{
@@ -3064,7 +3070,7 @@ td.calendar-day .event, td.calendar-day-current .event, .calendar-container .eve
 }
 
 .calendar-day .event {
-	margin-top: 0px !important;
+    margin-top: 0px !important;
 }
 .event:hover {
     background-image: url('../Images/up.png');
@@ -3311,10 +3317,10 @@ div.files, div.folder{
 }
 div.files:hover, div.folder:hover{
 
-/*    box-shadow: inset 0 5px 10px 0px lightblue;
-    -moz-box-shadow: inset 5px 0px 10px 0px lightblue;
-    -webkit-box-shadow: inset 5px 0 10px 0px lightblue;
-    border-left: 2px solid rgb(0, 140, 250);*/
+    /*    box-shadow: inset 0 5px 10px 0px lightblue;
+        -moz-box-shadow: inset 5px 0px 10px 0px lightblue;
+        -webkit-box-shadow: inset 5px 0 10px 0px lightblue;
+        border-left: 2px solid rgb(0, 140, 250);*/
     background-color: #f5fafe;
 
 }
@@ -3629,7 +3635,7 @@ div.signup{
 }
 
 div.signupbox input{
-	width:100% !important;
+    width:100% !important;
 }
 h1.signupheader{
     font-size: 2em;

@@ -84,7 +84,7 @@ else {
             $.post('Scripts/calendar.class.php', {action: "completeEvent", event_id: event_id});
         });
 
-        Application.prototype.file.list($('.file_box'), null, function() {
+        Application.prototype.FileList($('.file_box'), null, function() {
             select_event_files();
         });
         $('.file_box').on('click', 'div.file_item', function() {
