@@ -20,9 +20,35 @@ Application.prototype.user = {
     },
     isMobile: navigator.userAgent.match(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/)
 };
+
+
+Date.prototype.getMonthName = function(lang) {
+    lang = lang && (lang in Date.locale) ? lang : 'en';
+    return Date.locale[lang].month_names[this.getMonth()];
+};
+
+Date.prototype.getMonthNameShort = function(lang) {
+    lang = lang && (lang in Date.locale) ? lang : 'en';
+    return Date.locale[lang].month_names_short[this.getMonth()];
+};
+
+Date.locale = {
+    en: {
+       month_names: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+       month_names_short: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    }
+};
+
+
 Application.prototype.date = function(time) {
     this.time = time;
-    this.date = new Date(this.time * 1000);
+    if(time % 1 === 0) {
+        this.date = new Date(this.time * 1000);
+    } else {
+        var t = this.time.split(/[- :]/);
+        this.date = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
+    }
+    
     this.tokens = [
         {time: 1, unit: 'second'},
         {time: 60, unit: 'minute'},
@@ -43,36 +69,69 @@ Application.prototype.date = function(time) {
     };
 
     this.timeAgo = function(length) {
-        this.timeAgo = Math.floor((new Date().getTime() / 1000 - this.time));
-        var string = '';
-
+//        Divide time by a thousand because PHP time doesn't handle milliseconds
+        this.timeAgo = Math.floor((new Date().getTime() / 1000 - this.date.getTime() / 1000));
+        var times = new Array();
+        var y = 0;
         for (var i = this.tokens.length - 1; i > 0; i--) {
             if (this.timeAgo < this.tokens[i].time) {
                 continue;
             }
+            
             var numberOfUnits = Math.floor(this.timeAgo / this.tokens[i].time);
-
-            if (numberOfUnits < 5 && this.tokens[i].unit == "second") {
-                string = "Just Now";
-            } else {
-                if (numberOfUnits == 1) {
-                    string += 'a ' + this.tokens[i].unit + ((numberOfUnits > 1) ? 's' : '');
-                } else {
-                    string += numberOfUnits + ' ' + this.tokens[i].unit + ((numberOfUnits > 1) ? 's' : '');
-                }
-            }
-            if (this.tokens[i].unit === "week") {
-                return string + " ago";
-            }
             this.timeAgo -= numberOfUnits * this.tokens[i].time;
-//            console.log("Num:" + numberOfUnits + " time: " + this.timeAgo + " unit:" + this.tokens[i].unit);
-            if (length === "short") {
-//            console.log(this.tokens[i].unit);
-                return numberOfUnits + " " + this.short[this.tokens[i].unit];
-            }
+            times[y] = new Array();
+            times[y]['unit'] = this.tokens[i];
+            times[y]['NoU'] = numberOfUnits;
+            y++;
         }
 
-        return string + " ago";
+        var string = '';
+        for (var i = 0; i < times.length; i++) {
+            if (length !== 'short') {
+                if (times[i]['unit'].unit === 'year') {//Check if date was longer than a year ago
+                    string = this.date.getDay() + " "
+                            + this.date.getMonthName() + ", "
+                            + this.date.getFullYear();
+                    break;
+                } else if (times[i]['unit'].unit === 'month') {//Check if date was longer than a year ago
+                    string = this.date.getDay() + " "
+                            + this.date.getMonthName()
+                            + " at "
+                            + this.date.getHours() + ":"
+                            + this.date.getMinutes();
+                    break;
+                } else if (times[i]['NoU'] === 1 && times[i]['unit'].unit === 'day') {
+                    string = "Yesterday, "
+                            + this.date.getHours() + ":"
+                            + this.date.getMinutes();
+                    break;
+                } else if (i === 0 && times[i]['unit'].unit === 'hour') {
+                    string = "Today, "
+                            + this.date.getHours() + ":"
+                            + this.date.getMinutes();
+                    break;
+                }
+            } else if (length === 'short') {
+                if (times[i]['unit'].unit === 'year') {//Check if date was longer than a year ago
+                    string = this.date.getMonthName()
+                            + " " + this.date.getDay() + ", "
+                            + this.date.getFullYear();
+                    break;
+                } else if (times[i]['NoU'] === 1 && times[i]['unit'].unit === 'day') {
+                    string = "Yesterday, "
+                            + this.date.getHours() + ":"
+                            + this.date.getMinutes();
+                    break;
+                } else if (i === 0 && times[i]['unit'].unit === 'hour') {
+                    string = "Today, "
+                            + this.date.getHours() + ":"
+                            + this.date.getMinutes();
+                    break;
+                }
+            }
+        }
+        return string;
     };
 };
 
@@ -1041,7 +1100,7 @@ Application.prototype.Feed = function(entity_id, entity_type) {
         this.printStats = function(activity) {
             var string = $("<div class='activity_stats'></div>");
             string.append(print_likes(activity));
-            var time = $("<span class='post_comment_time'></span>").text(Application.prototype.calendar.datetime.format(activity.time) + " |");
+            var time = $("<span class='post_comment_time'></span>").text(new Application.prototype.date(activity['time']).timeAgo() + " |");
             string.append(time);
             var subarray = [{'element': time, 'time': activity.time}];
             Application.prototype.calendar.datetime.entry.push(subarray);
