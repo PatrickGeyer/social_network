@@ -345,10 +345,10 @@ h3 > button{
     width: 200px;
 }
 .contentblock{
-    border-top-right-radius: 3px;
-    border-bottom-right-radius: 3px;
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
     background-color: white;
-    border: 1px;
+    border: 1px solid;
     border-color: #e5e6e9 #dfe0e4 #d0d1d5 !important;
     border-left: 5px solid #85bdad !important;
     padding: 10px;
@@ -369,6 +369,11 @@ h3 > button{
 .contentblock * {
     color: inherit;
     font-size: 13px;
+}
+.contentblock.post_height_restrictor{
+    border: 1px solid !important;
+    border-color: #e5e6e9 #dfe0e4 #d0d1d5 !important;
+    border-radius: 2px !important;
 }
 .fa{
     text-indent: 0px;
