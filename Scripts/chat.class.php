@@ -38,11 +38,10 @@ class Chat {
             return;
         }
         Registry::get('db')->beginTransaction();
-        $sql = "INSERT INTO chat(user_id, `text`, chat_room, time) VALUES(:user_id, :text, :aimed, :time);";
+        $sql = "INSERT INTO chat(user_id, `text`, chat_room) VALUES(:user_id, :text, :aimed);";
         $variables = array(
             ":user_id" => Registry::get('user')->getId(),
             ":text" => $text,
-            ":time" => time(),
             ":aimed" => $aimed,
         );
         $sql = Registry::get('db')->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
