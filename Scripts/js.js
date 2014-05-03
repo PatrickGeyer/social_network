@@ -99,81 +99,76 @@ Date.prototype.formatWeek = function() {
  ****************************************************/
 
 Application.prototype.upload = function(files) {
-    this.files = files;
-
-    this.start = function() {
+    this.files = files || new Array();
+    this.sessions.push(this);
+    this.progressElement = new Array();
+    this.onstart = function() {
     };
-    this.progress = function() {
+    this.onprogress = function() {
     };
-    this.end = function() {
+    this.onend = function() {
+    };
+    this.addFiles = function(files) {
+        for(var i = 0; i < files.length; i++) {
+            this.files.push(files[i]);
+        }
     };
 
     this.push = function() {
-        if ($('.upload_file_container').length == 0) {
-            var file_container = $('<div class="event upload_file_container contentblock"></div>');
-            file_container.append("<a>Upload</a>");
-            var file_upload_container = $('<div class="calendar-event-info-files"></div>');
-            file_container.append(file_upload_container);
-            $('.calendar-container').append(file_container);
-        } else {
-            var file_upload_container = $('.upload_file_container .calendar-event-info-files');
-        }
+        var file_upload_container = $('<div></div>');
+        this.container.append(file_upload_container);
+        
         var session = this.session++;
-        this.start();
+        this.start(this.onstart);
 
         for (var i = 0; i < this.files.length; i++) {
+            this.count++;
             (function(count, session, Upload) {
-                var file = Upload.files[count].file;
+                var file = Upload.files[count];
+                var file_container = $("<div class='upload_preview'>");
+                file_container.append(file.name);
+                file_container.append("<br />");
+                file_upload_container.append(file_container);
+                Upload.progressElement[count] = new Application.prototype.UI.progress(count);
+                Upload.progressElement[count].element = file_container;
+                file_container.append(Upload.progressElement[count].print());
                 var formdata = new FormData();
                 formdata.append("file", file);
                 formdata.append("action", 'upload');
                 formdata.append("parent_folder", parent_folder);
+
                 var xhr = new XMLHttpRequest();
                 xhr.upload.onprogress = function(event) {
-                    Application.prototype.upload.progressHandler(event, "" + session + count, Upload.progress());
+                    Upload.progress(event, count, Upload.onprogress);
                 };
                 xhr.onload = function() {
-                    Application.prototype.upload.completeHandler(Upload, "" + session + count, Upload.end(), name);
+                    Upload.complete(Upload, count, Upload.onend);
                 };
-                xhr.addEventListener("error", Application.prototype.upload.errorHandler, false);
-                xhr.addEventListener("abort", Application.prototype.upload.abortHandler, false);
+                xhr.addEventListener("error", Application.prototype.upload.error, false);
+                xhr.addEventListener("abort", Application.prototype.upload.abort, false);
                 xhr.open("post", "Scripts/files.class.php");
                 xhr.send(formdata);
-                var file_container = $("<div class='upload_preview'>");
-                file_container.attr('id', "" + session + count + "_upload_preview");
-                file_container.append(file.name);
-                file_container.append("<br />");
-                file_upload_container.append(file_container);
-                Application.prototype.UI.progress.create(file_container, "" + session + count);
             })(i, session, this);
         }
     };
+    
+    this.start = function(callback) {
+        callback();
+    };
 
     this.progress = function(event, id, callback) {
-        $('#loading_icon').show();
         var percent = (event.loaded / event.total) * 100;
         percent = Math.round(percent);
-        Application.prototype.UI.progress.update(id, percent);
-        callback(percent);
+        this.progressElement[id].update(percent);
+//        callback(percent);
     };
 
     this.complete = function(event, id, callback) {
-        $('#' + id + '_upload_preview').slideUp();
-        Application.prototype.UI.progress.remove(id);
-        if (this.session > 0) {
-            this.session--;
-            if (this.session === 0) {
-                $('#loading_icon').fadeOut();
-                $('.upload_file_container').slideUp(function() {
-                    $(this).remove();
-                });
-            }
-        }
-        if (onComplete == "addToStatus") {
-            alert('not adding file to statuc');
-        } else {
-            if (this.session === 0) {
-            }
+        this.progressElement[id].element.slideUp();
+        this.progressElement[id].remove();
+        this.count--;
+        if (this.count === 0) {
+            this.reset();
         }
         callback($.parseJSON(event.responseText));
     };
@@ -183,7 +178,6 @@ Application.prototype.upload = function(files) {
             this.session--;
         }
         alert('upload failed');
-        $('#loading_icon').fadeOut();
     };
 
     this.abort = function(event) {
@@ -191,7 +185,17 @@ Application.prototype.upload = function(files) {
             this.session--;
         }
     };
+    this.reset = function() {
+        this.files = new Array();
+    };
 };
+
+Application.prototype.upload.prototype.sessions = new Array();
+Application.prototype.upload.prototype.count = new Array();
+Application.prototype.upload.prototype.container = $('<div class="upload_file_container contentblock"></div>');
+$(function() {
+    $('.right_bar_container').append(Application.prototype.upload.prototype.container.append(new Application.prototype.UI.DragUpload().print()));
+});
 
 /****************************************************
  * 1.3 Files                                         *
@@ -935,7 +939,7 @@ Application.prototype.Chat.prototype.ChatItem = function(item) {
         var chat_text = $("<div class='chattext'>").append(item['text'].replaceLinks().replaceEmoticons());
         chat_bubble.append(chat_name);
         chat_bubble.append(chat_text);
-        chat_bubble.append(this.time.element = $("<span class='chat_time post_comment_time'>" + new Date(item['time']).timeAgo('short') + "</span>"));
+        chat_bubble.append(this.time.element = $("<span class='chat_time post_comment_time'>" + new Date(item.time).timeAgo('short') + "</span>"));
 
         if (USER_ID == item['user_id']) {
             chat_wrapper.append(chat_bubble).append(profile_picture);
@@ -1458,10 +1462,30 @@ Application.prototype.UI = {
         $('.createPost').each(function() {
             new Application.prototype.Post({}, $(this));
         });
+        $('.upload_here').each(function() {
+            $(this).replaceWith(new Application.prototype.UI.DragUpload().print());
+        });
     },
     dropArrow: $("<i class='fa fa-angle-down'></i>"),
-    progress: {
-        instance: new Array()
+    progress: function() {
+        this.container = $("<div class='progress_container'></div>");
+        this.container.append($("<div class='progress_bar'></div>"));
+        this.print = function() {
+            return this.container;
+        };
+
+        this.update = function(progress) {
+            this.container.width(progress + "%");
+            if (progress >= 100) {
+                this.container.addClass('progress_bar_processing');
+            }
+            this.progress = progress;
+        };
+
+        this.remove = function() {
+            this.container.remove();
+        };
+        return this;
     },
     Dropdown: function(controller) {
         var object = $("<div class='default_dropdown_actions' style='display:inline-block;' wrapper_id='" + controller + "'></div>");
@@ -1481,6 +1505,47 @@ Application.prototype.UI = {
             }
         };
     },
+    DragUpload: function() {
+        var entered = 0;
+        var self = this;
+        var upload = new Application.prototype.upload();
+
+        this.drag = $("<div class='upload_here'></div>");
+        this.drag.on('click', function(event) {
+            var element = $(this);
+            var input = $("<input multiple='multiple' id='file_picture' type='file' />");
+            input.trigger('click');
+            input.on('change', function() {
+                upload.addFiles($(this).get(0).files);
+                upload.push();
+            });
+        });
+        this.drag.on('dragover', function(event) {
+            $(this).addClass('upload_hover');
+            entered++;
+        });
+        this.drag.on('dragleave', function(event) {
+            $(this).removeClass('upload_hover');
+            entered--;
+        });
+        
+        this.drag.on('drop', function(event) {
+            $(this).removeClass('upload_hover');
+            entered--;
+            var files = event.target.files || (event.dataTransfer && event.dataTransfer.files);
+            if (!files) {
+                files = event.dataTransfer || (event.originalEvent && event.originalEvent.dataTransfer);
+            }            
+            upload.addFiles(files.files);            
+            upload.push();
+        });
+        this.drag.on("dragenter dragstart dragend dragleave dragover drag drop", function(event) {
+            event.preventDefault();
+        });
+        this.print = function() {
+            return this.drag;
+        }
+    }
 };
 Application.prototype.notification = {
 };
@@ -1552,30 +1617,6 @@ Application.prototype.UI.getViewPortWidth = function() {
     }
 
     return viewportwidth;
-};
-
-Application.prototype.UI.progress.create = function(element, id) {
-    var upload = $("<div class='progress_container'></div>");
-    upload.attr('id', 'progress_container_" + id + "');
-    upload.append($("<div class='progress_bar'></div>"));
-    $(element).append(upload);
-    this.instance[id] = {
-        element: upload,
-        progress: 0
-    };
-};
-
-Application.prototype.UI.progress.update = function(id, progress) {
-    this.instance[id].element.width(progress + "%");
-    if (progress >= 100) {
-        this.instance[id].element.addClass('progress_bar_processing');
-    }
-    this.instance[id].progress = progress;
-};
-
-Application.prototype.UI.progress.remove = function(id) {
-    this.instance[id].element.remove();
-    this.instance.splice(id, 1);
 };
 
 Application.prototype.UI.dialog = function(content, buttons, properties) {
@@ -2632,9 +2673,7 @@ $(function() {
      * 2.1.3 Startup - Feed - Post                        *
      ****************************************************/
     
-    $('.createPost').each(function() {
-        new Application.prototype.Post({}, $(this));
-    });
+    Application.prototype.UI.init();
 
     $(window).on('scroll', function() {
         if ($(document).height() == $(window).scrollTop() + Application.prototype.UI.getViewPortHeight()) {
@@ -2878,41 +2917,6 @@ $(function() {
         });
         $(this).prev('p.files').text($(this).val()).show();
         $(this).hide();
-    });
-
-    var entered = 0;
-    $(document).on('click', '.upload_here', function(event) {
-        var element = $(this);
-        var input = $("<input id='file_picture' type='file' />");
-        input.trigger('click');
-        input.on('change', function() {
-            uploadDragDrop(element, $(this).get(0).files);
-        });
-    });
-
-    $(document).on('dragover', '.upload_here', function(event) {
-        $(this).addClass('upload_hover');
-        entered++;
-    });
-
-    $(document).on('dragleave', '.upload_here', function(event) {
-        $(this).removeClass('upload_hover');
-        entered--;
-    });
-
-    $(document).on('drop', '.upload_here', function(event) {
-        var element = $(this);
-        $(this).removeClass('upload_hover');
-        entered--;
-        var files = event.target.files || (event.dataTransfer && event.dataTransfer.files);
-        if (!files) {
-            files = event.dataTransfer || (event.originalEvent && event.originalEvent.dataTransfer);
-        }
-        uploadDragDrop(element, files.files);
-    });
-
-    $(document).on("dragenter dragstart dragend dragleave dragover drag drop", '.upload_here', function(event) {
-        event.preventDefault();
     });
 
     $(document).on('click', '#create_folder', function() {
