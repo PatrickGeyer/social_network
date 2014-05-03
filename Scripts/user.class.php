@@ -548,4 +548,14 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
         }
     }
 }
+else if ($_SERVER['REQUEST_METHOD'] == "GET") {
+    if (isset($_GET['action'])) {
+        require_once('declare.php');
+        die(json_encode(array(
+            'groups' => Registry::get('group')->getUserGroups(),
+            'connection' => Registry::get('user')->getConnections(),
+            'group' => Registry::get('group')->getUserGroups()
+        )));
+    }
+}
 ?>
