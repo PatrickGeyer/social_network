@@ -32,108 +32,67 @@ Date.prototype.getMonthNameShort = function(lang) {
     return Date.locale[lang].month_names_short[this.getMonth()];
 };
 
+Date.prototype.getDayName = function(lang) {
+    lang = lang && (lang in Date.locale) ? lang : 'en';
+    return Date.locale[lang].week_names[this.getDay()];
+};
+
 Date.locale = {
     en: {
        month_names: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-       month_names_short: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+       month_names_short: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+       week_names: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     }
 };
 
-
-Application.prototype.date = function(time) {
-    this.time = time;
-    if(time % 1 === 0) {
-        this.date = new Date(this.time * 1000);
+Date.prototype.timeAgo = function(length) {
+    var now = new Date();
+    if( now.getFullYear() - this.getFullYear() >= 1 ) {
+        return this.formatYear();
+    } else if( now.getMonth() - this.getMonth() >= 1 || now.getDay() - this.getDay() > 7) {
+        return this.formatMonth();
     } else {
-        var t = this.time.split(/[- :]/);
-        this.date = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
+        return this.formatWeek();
     }
-    
-    this.tokens = [
-        {time: 1, unit: 'second'},
-        {time: 60, unit: 'minute'},
-        {time: 3600, unit: 'hour'},
-        {time: 86400, unit: 'day'},
-        {time: 604000, unit: 'week'},
-        {time: 2592000, unit: 'month'},
-        {time: 31536000, unit: 'year'},
-    ];
-    this.short = {
-        'second': 'sec',
-        'minute': 'min',
-        'hour': 'hr',
-        'day': 'd',
-        'week': 'wk',
-        'month': 'mo',
-        'year': 'yr',
-    };
-
-    this.timeAgo = function(length) {
-//        Divide time by a thousand because PHP time doesn't handle milliseconds
-        this.timeAgo = Math.floor((new Date().getTime() / 1000 - this.date.getTime() / 1000));
-        var times = new Array();
-        var y = 0;
-        for (var i = this.tokens.length - 1; i > 0; i--) {
-            if (this.timeAgo < this.tokens[i].time) {
-                continue;
-            }
-            
-            var numberOfUnits = Math.floor(this.timeAgo / this.tokens[i].time);
-            this.timeAgo -= numberOfUnits * this.tokens[i].time;
-            times[y] = new Array();
-            times[y]['unit'] = this.tokens[i];
-            times[y]['NoU'] = numberOfUnits;
-            y++;
-        }
-
-        var string = '';
-        for (var i = 0; i < times.length; i++) {
-            if (length !== 'short') {
-                if (times[i]['unit'].unit === 'year') {//Check if date was longer than a year ago
-                    string = this.date.getDay() + " "
-                            + this.date.getMonthName() + ", "
-                            + this.date.getFullYear();
-                    break;
-                } else if (times[i]['unit'].unit === 'month') {//Check if date was longer than a year ago
-                    string = this.date.getDay() + " "
-                            + this.date.getMonthName()
-                            + " at "
-                            + this.date.getHours() + ":"
-                            + this.date.getMinutes();
-                    break;
-                } else if (times[i]['NoU'] === 1 && times[i]['unit'].unit === 'day') {
-                    string = "Yesterday, "
-                            + this.date.getHours() + ":"
-                            + this.date.getMinutes();
-                    break;
-                } else if (i === 0 && times[i]['unit'].unit === 'hour') {
-                    string = "Today, "
-                            + this.date.getHours() + ":"
-                            + this.date.getMinutes();
-                    break;
-                }
-            } else if (length === 'short') {
-                if (times[i]['unit'].unit === 'year') {//Check if date was longer than a year ago
-                    string = this.date.getMonthName()
-                            + " " + this.date.getDay() + ", "
-                            + this.date.getFullYear();
-                    break;
-                } else if (times[i]['NoU'] === 1 && times[i]['unit'].unit === 'day') {
-                    string = "Yesterday, "
-                            + this.date.getHours() + ":"
-                            + this.date.getMinutes();
-                    break;
-                } else if (i === 0 && times[i]['unit'].unit === 'hour') {
-                    string = "Today, "
-                            + this.date.getHours() + ":"
-                            + this.date.getMinutes();
-                    break;
-                }
-            }
-        }
-        return string;
-    };
 };
+
+Date.prototype.formatYear = function() {
+    return this.getDay() + " " + this.getMonthName() + ", " + this.getFullYear();
+};
+
+Date.prototype.formatYear = function() {
+    return this.getDay() + " " + this.getMonthName() + ", " + this.getFullYear();
+};
+
+Date.prototype.formatMonth = function() {
+    return this.getDay() + " " + this.getMonthName() + " at " + this.getHours() + ":" + this.getMinutes();
+};
+
+Date.prototype.formatWeek = function() {
+    var now = new Date();
+    return (now.getDay() - this.getDay() < 2 ? (now.getDay() - this.getDay() < 1 ? "Today, " : "Yesterday, ") : (this.getDayName() + ", "))
+            + this.getHours() + ":" + this.getMinutes();
+};
+
+//    this.tokens = [
+//        {time: 1, unit: 'second'},
+//        {time: 60, unit: 'minute'},
+//        {time: 3600, unit: 'hour'},
+//        {time: 86400, unit: 'day'},
+//        {time: 604000, unit: 'week'},
+//        {time: 2592000, unit: 'month'},
+//        {time: 31536000, unit: 'year'},
+//    ];
+//    this.short = {
+//        'second': 'sec',
+//        'minute': 'min',
+//        'hour': 'hr',
+//        'day': 'd',
+//        'week': 'wk',
+//        'month': 'mo',
+//        'year': 'yr',
+//    };
+
 
 /****************************************************
  * 0. Upload                                        *
@@ -247,7 +206,7 @@ Application.prototype.file = function(file) {
         this.file = file;
         this.items[this.file.id] = this;
 
-        this.file.comment = new Application.prototype.Comment(this.file.activity);
+        this.file.item = new Application.prototype.Comment(this.file.activity);
         /****************************************************
          * 1.3.1 Files - Print                               *
          ****************************************************/
@@ -330,7 +289,7 @@ Application.prototype.file = function(file) {
             string.append(actions);
 
             if (activity_type == "Text" && typeof this.file.activity != 'undefined') {
-                string.append(this.file.comment.print());
+                string.append(this.file.item.print());
             }
 
             if (activity_type == "File" && typeof file.share != 'undefined') {
@@ -381,9 +340,9 @@ Application.prototype.file = function(file) {
 
         this.stats.append("<i class='heart_like_icon fa fa-heart'></i><span class='post_comment_time post_like_count'>" + this.file.like.count + "</span>");
 
-        if (typeof this.file.activity.comment != 'undefined') {
-            this.stats.append("<i class='fa fa-comment heart_like_icon'></i><span class='post_comment_time post_comment_count'>"
-                    + (parseInt(this.file.activity.comment.comment.length) + parseInt(this.file.activity.comment.hidden)) + "</span>");
+        if (typeof this.file.activity.item != 'undefined') {
+            this.stats.append("<i class='fa fa-item heart_like_icon'></i><span class='post_comment_time post_comment_count'>"
+                    + (parseInt(this.file.activity.item.item.length) + parseInt(this.file.activity.item.hidden)) + "</span>");
         }
         this.stats.append("<i class='fa fa-eye heart_like_icon'></i><span class='post_comment_time'>" + this.file.view.count + "</span><br />");
 
@@ -976,7 +935,7 @@ Application.prototype.Chat.prototype.ChatItem = function(item) {
         var chat_text = $("<div class='chattext'>").append(item['text'].replaceLinks().replaceEmoticons());
         chat_bubble.append(chat_name);
         chat_bubble.append(chat_text);
-        chat_bubble.append(this.time.element = $("<span class='chat_time post_comment_time'>" + new Application.prototype.date(item['time']).timeAgo('short') + "</span>"));
+        chat_bubble.append(this.time.element = $("<span class='chat_time post_comment_time'>" + new Date(item['time']).timeAgo('short') + "</span>"));
 
         if (USER_ID == item['user_id']) {
             chat_wrapper.append(chat_bubble).append(profile_picture);
@@ -1100,7 +1059,7 @@ Application.prototype.Feed = function(entity_id, entity_type) {
         this.printStats = function(activity) {
             var string = $("<div class='activity_stats'></div>");
             string.append(print_likes(activity));
-            var time = $("<span class='post_comment_time'></span>").text(new Application.prototype.date(activity['time']).timeAgo() + " |");
+            var time = $("<span class='post_comment_time'></span>").text(new Date(activity['time']).timeAgo() + " |");
             string.append(time);
             var subarray = [{'element': time, 'time': activity.time}];
             Application.prototype.calendar.datetime.entry.push(subarray);
@@ -1160,12 +1119,12 @@ Application.prototype.Feed = function(entity_id, entity_type) {
                 var activity_container = $('[data-activity_id="' + id + '"]');
                 var comment_container = activity_container.find('.comment_box_comment');
                 for (var i in response) { // FOR THAT ONE ACTIVITY
-                    for (var key in response[i].comment.comment) {
-                        append_comment(response[i].id, response[i].comment.comment[key]);
+                    for (var key in response[i].item.item) {
+                        append_comment(response[i].id, response[i].item.item[key]);
                     }
                     for (var media_id in response[i].media) {
-                        for (var key in response[i].media[media_id].activity.comment) {
-                            append_comment(response[i].media[media_id].activity.id, response[i].media[media_id].activity.comment.comment[key]);
+                        for (var key in response[i].media[media_id].activity.item) {
+                            append_comment(response[i].media[media_id].activity.id, response[i].media[media_id].activity.item.item[key]);
                         }
                     }
                 }
@@ -1218,7 +1177,18 @@ Application.prototype.Post = function(options, element) {
                     .append("<div class='home_feed_post_container_arrow'></div>"))
             .append(this.post_wrapper = $("<div class='post_wrapper'></div>")
                     .append($("<div class='post_content_wrapper'></div>")
-                            .append('<textarea tabindex="1" id="status_text" placeholder= "Update Status or Share Files..." class="status_text autoresize"></textarea>')
+                            .append($('<textarea tabindex="1" id="status_text" placeholder= "Update Status or Share Files..." class="status_text autoresize"></textarea>')
+                                    .focus(function() {
+                                        $(this).css('min-height', '100px');
+                                        $('#file_share').show();
+                                        $('#post_more_options').show();
+                                        $('.post_wrapper').css('padding-bottom', $('.post_more_options').height());
+                                        $('.post_media_wrapper').show();
+                                        $('#file_share').mCustomScrollbar("update");
+                                        $('.home_feed_post_container_arrow_border').css('border-right-color', 'rgb(70, 180,220)');
+                                    }).focusout(function() {
+                                $('.home_feed_post_container_arrow_border').css('border-right-color', 'lightgrey');
+                            }))
                             .append("<div class='post_media_wrapper'><div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div><img class='post_media_loader' src='Images/ajax-loader.gif'></img></div>"))
                     .append('<div class="file_container"></div>')
                     .append($("<div id='post_more_options' class='post_more_options'></div>")
@@ -1379,101 +1349,99 @@ Application.prototype.Post = function(options, element) {
         resizeScrollers();
     };
 };
+
+Application.prototype.CommentItem = function(item) {
+    this.item = item;
+};
+
+Application.prototype.CommentItem.prototype.delete = function() {
+    this.comment.remove();
+    $.post('Scripts/home.class.php', {action: "deleteComment", comment_id: this.item.id}, function(response) {
+    });
+};
+
+Application.prototype.CommentItem.prototype.show = function() {
+    this.comment = $("<div class='single_comment_container' data-comment_id='" + this.item.id + "'></div>");
+    this.item.like.like_text = (this.item.like.has_liked ? "Unlike" : "Like");
+    this.comment.append("<div class='profile_picture_medium' style='background-image:url(\"" + this.item.user.pic + "\");'></div>")
+            .append(this.comment_info = $("<div class='single_comment_info'></div>")
+                    .append($("<a class='userdatabase_connection' href='user?id=" + this.item.user.id + "'></a>")
+                            .append("<span class='user_preview user_preview_name post_comment_user_name' user_id='" + this.item.user.id + "'>" + this.item.user.name + " </span>"))
+                    .append("<span class='post_comment_text'>" + this.item.text + "</span><br />")
+                    .append(this.time = $("<span class='post_comment_time'>" + new Date(this.item.time).timeAgo('long') + " -</span>"))
+                    .append("<span class='post_comment_time post_comment_liked_num'>" + this.item.like.count + "</span>")
+                    .append("<i class='fa fa-heart heart_like_icon'></i>")
+                    .append("<span data-has_liked='" + this.item.like.has_liked + "' "
+                            + "class='user_preview_name post_comment_time post_comment_vote'>"
+                            + this.item.like.like_text + "</span>"));
+
+    if (this.item.user.id == USER_ID) {
+        var self = this;
+        this.comment_info.append("<i class='fa fa-times delete_cross delete_cross_top comment_delete'></i>").on('click', function() {
+            self.delete();
+        });
+    }
+    return this.comment;
+};
+
+
 Application.prototype.Comment = function(item) {
     this.item = item;
     this.comments = new Array();
     this.print = function() {
         var object = $('<div class="comment_box"></div>');
-        var comment = $('<div class="comment_box_comment"></div>');
-        comment.append(this.showComments());
-        object.append(comment);
+        this.comment = $('<div class="comment_box_comment"></div>');
+        this.comment.append(this.showComments());
+        object.append(this.comment);
         object.append(this.printInput());
         return object;
     };
     this.printInput = function() {
-        var string = '';
-        string += "<div class='comment_input' style='padding-left:2px;padding-top:2px;'>";
-        string += "<table style='width:100%;'>";
-        string += "<tr><td style='vertical-align:top;width:40px;'>";
-        string += "<div class='profile_picture_medium' style='background-image:url(\"" + USER_PIC + "\");'>";
-        string += "</div></td><td cellspacing='0' style='vertical-align:top;'>";
-        string += '<textarea placeholder="Write a comment..." ';
-        string += 'class="home_comment_input_text inputtext" id="comment_' + this.item.id;
-        string += '"></textarea>';
-        string += "</td></tr></table>";
-        string += "</td></tr></table></div>";
+        var string = $("<div class='comment_input single_comment_container'></div>");
+        var self = this;
+        string.append("<div class='profile_picture_medium' style='background-image:url(\"" + USER_PIC + "\");'></div>")
+                .append($("<div class='single_comment_info'></div>")
+                        .append(this.input = $('<textarea placeholder="Write a comment..." '
+                                + 'class="home_comment_input_text inputtext" id="comment_' + this.item.id
+                                + '"></textarea>').on('keydown', function(event) {
+                            if (event.keyCode === 13) {
+                                self.submit();
+                                return false;
+                            }
+                        })));
         return string;
     };
-    this.submit = function(comment_text, post_id, callback) {
-        comment_text = comment_text.replace(/^\s+|\s+$/g, "");
+    this.submit = function(callback) {
+        var self = this;
+        var comment_text = this.input.val().replace(/^\s+|\s+$/g, "");
         if (comment_text == "") {
-            comment_text = $('div[actual_id="comment_' + post_id + '"]').val();
-            comment_text = comment_text.replace(/^\s+|\s+$/g, "");
-            if (comment_text == "") {
-                return;
-            }
+            return;
         }
 
-        $.post("Scripts/home.class.php", {comment_text: comment_text, post_id: post_id, action: 'submitComment'}, function(data) {
-            $('[data-activity_id="' + post_id + '"] .inputtext').each(function() {
-                if ($(this).parents('[data-activity_id]').data('activity_id') == post_id) {
-                    $(this).val("").blur();
-                }
-            });
+        $.post("Scripts/home.class.php", {comment_text: comment_text, post_id: this.item.id, action: 'submitComment'}, function(data) {
+            self.input.val('');
+            self.input.blur();
             data = $.parseJSON(data);
-            callback(data);
+            var comment = new Application.prototype.CommentItem(data);
+            self.comment.append(comment.show());
         });
     };
     this.showComments = function() {
         this.comments[this.item.id] = new Array();
-        var string = '';
+        var string = $("<div></div>");
 
         if (this.item.comment.format == 'top') {
-            string += "<div class='activity_actions user_preview_name post_comment_user_name' style='font-weight:100;'>Show <span class='num_comments'>" + this.item.item.comment.hidden + "</span> more comments...</div>";
+            string.append("<div class='activity_actions user_preview_name post_comment_user_name' style='font-weight:100;'>Show <span class='num_comments'>" + this.item.item.this.item.hidden + "</span> more comments...</div>");
         }
         for (var i in this.item.comment.comment) {
             this.comments[this.item.id].push(this.item.comment.comment[i].id);
-            string += this.show(this.item.comment.comment[i]);
+            var commentItem = new Application.prototype.CommentItem(this.item.comment.comment[i]);
+            string.append(commentItem.show());
         }
 
         this.comments[this.item.id]['max'] = Array.max(this.comments[this.item.id]);
         this.comments[this.item.id]['min'] = Array.min(this.comments[this.item.id]);
         return string;
-    };
-    this.show = function(comment) {
-        var string = '';
-        comment.like.like_text = (comment.like.has_liked ? "Unlike" : "Like");
-        string += "<div class='single_comment_container' data-comment_id='" + comment.id + "'>";
-        string += "<table style='font-size: 0.9em;'><tr><td style='vertical-align:top;' rowspan='2'>";
-        string += "<div class='profile_picture_medium' style='background-image:url(\"" + comment.user.pic + "\");'></div></td><td style='vertical-align:top;'>";
-        string += "<a class='userdatabase_connection' href='user?id=" + comment.user.id + "'>";
-        string += "<span class='user_preview user_preview_name post_comment_user_name' user_id='" + comment.user.id + "'>" + comment.user.name + " </span></a>";
-        string += "";
-        string += "<span class='post_comment_text'>" + comment.text + "</span>"
-        string += "</td></tr><tr><td colspan=2 style='vertical-align:bottom;' >"
-        string += "<span class='post_comment_time'>" + new Application.prototype.date(comment.time).timeAgo() + " -</span>"
-        string += "<span class='post_comment_time post_comment_liked_num'>"
-        string += comment.like.count + "</span><i class='fa fa-heart heart_like_icon'></i>";
-        string += "<span data-has_liked='" + comment.like.has_liked + "' "
-        string += "class='user_preview_name post_comment_time post_comment_vote'>"
-        string += comment.like.like_text + "</span>";
-        string += "</tr></table>";
-        if (comment.user.id == USER_ID) {
-            string += "<i class='fa fa-times delete_cross delete_cross_top comment_delete'></i>";
-        }
-        string += "</div>";
-        return string;
-    };
-    this.append = function(post_id, comment) {
-        if ($('[data-comment_id="' + comment.id + '"]').length == 0) {
-            var comment_container = $('[data-activity_id="' + post_id + '"]').find('.comment_box_comment').last();
-            comment_container.append(this.show(comment));
-        }
-        // $("[data-activity_id='" + post_id + "'] [data-comment_id]").sort(function(left, right) {
-        //     return parseInt($(right).data("comment_id")) - parseInt($(left).data("comment_id"));
-        // }).each(function() {
-        //     $("[data-activity_id='" + post_id + "']").find('.comment_box_comment').last().append($(this));
-        // });
     };
 };
 
@@ -1486,6 +1454,11 @@ Application.prototype.calendar = {
     }
 };
 Application.prototype.UI = {
+    init: function() {
+        $('.createPost').each(function() {
+            new Application.prototype.Post({}, $(this));
+        });
+    },
     dropArrow: $("<i class='fa fa-angle-down'></i>"),
     progress: {
         instance: new Array()
@@ -1757,6 +1730,7 @@ Application.prototype.navigation.relocate = function(event, element) {
 //        container.fadeIn('fast');
         window.history.pushState({}, 'WhatTheHellDoesThisDo?!', '/' + $(element).attr('href'));
         $('body').scrollTop(0);
+        Application.prototype.UI.init();
     });
 }
 
@@ -2448,6 +2422,7 @@ $(function() {
     /****************************************************
      * 2.1.1 Startup - Generic                           *
      ****************************************************/
+//    Application.prototype.UI.init();
 
     $(document).on('click', 'a[href!="#"][href]:not([download], .no-ajax)', function(e) {
         Application.prototype.navigation.relocate(e, $(this));
@@ -2656,7 +2631,7 @@ $(function() {
     /****************************************************
      * 2.1.3 Startup - Feed - Post                        *
      ****************************************************/
-
+    
     $('.createPost').each(function() {
         new Application.prototype.Post({}, $(this));
     });
@@ -2736,17 +2711,17 @@ $(function() {
         });
     });
 
-    $(document).on('keyup', '.inputtext', function(event) {
-        var id = $(this).attr('id');
-        var clone = $('#' + id + "_clone")
-        if (event.keyCode == 13) {
-            var post_id = $(this).parents('[data-activity_id]').data('activity_id');
-            Application.prototype.feed.comment.submit($(this).val(), post_id, function(comment) {
-                Application.prototype.feed.comment.append(post_id, comment);
-            });
-            return false;
-        }
-    });
+//    $(document).on('keyup', '.inputtext', function(event) {
+//        var id = $(this).attr('id');
+//        var clone = $('#' + id + "_clone")
+//        if (event.keyCode == 13) {
+//            var post_id = $(this).parents('[data-activity_id]').data('activity_id');
+//            Application.prototype.feed.item.submit($(this).val(), post_id, function(this.item) {
+//                Application.prototype.feed.this.item.append(post_id, this.item);
+//            });
+//            return false;
+//        }
+//    });
 
     $(document).on('click', '.activity_actions', function(event) {
         var activity = {};
@@ -2760,10 +2735,10 @@ $(function() {
         }
         $.post('Scripts/home.class.php', data, function(response) {
             reponse = $.parseJSON(response);
-            activity.comment = response;
-            for (var i in activity.comment.comment) {
-                comments[activity.id].push(activity.comment.comment[i].id);
-                append_comment(post_id, activity.comment.comment[i]);
+            activity.item = response;
+            for (var i in activity.item.item) {
+                comments[activity.id].push(activity.item.item[i].id);
+                append_comment(post_id, activity.item.item[i]);
             }
         });
     });
@@ -2813,15 +2788,7 @@ $(function() {
             });
         }
     });
-
-    $(document).on('click', '.comment_delete', function() {
-        var comment_id = $(this).parents('[data-comment_id]').data('comment_id');
-        $(this).parents('.single_comment_container').next('hr.post_comment_seperator').remove();
-        $(this).parents('.single_comment_container').hide();
-        $.post('Scripts/home.class.php', {action: "deleteComment", comment_id: comment_id}, function(response) {
-        });
-    });
-
+    
     $(document).on('click', '.post_like_activity', function(event) {
         var post_id = $(this).parents('[data-activity_id]').data('activity_id');
         var has_liked = $(this).attr('has_liked');
