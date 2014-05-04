@@ -53,6 +53,13 @@ class Group extends Entity {
         $friend_query->execute(array(":user_id" => Registry::get('user')->user_id, ":group_id" => $group_id));
         return Registry::get('system')->array_values_r($friend_query->fetchAll(PDO::FETCH_ASSOC));
     }
+    function getMembers_Connections($group_id) {
+        $friend_query = "SELECT DISTINCT user_id as id FROM group_member WHERE group_id = :group_id AND user_id != :user_id AND user_id NOT IN"
+                . "(SELECT IF(receiver_id = :user_id, user_id, receiver_id)as user_id FROM connection WHERE user_id = :user_id OR receiver_id = :user_id);";
+        $friend_query = Registry::get('db')->prepare($friend_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+        $friend_query->execute(array(":user_id" => Registry::get('user')->user_id, ":group_id" => $group_id));
+        return $friend_query->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     function getProfilePicture($size = "chat", $id) {
         $user_query = "SELECT profile_picture FROM `group` WHERE id = :id";

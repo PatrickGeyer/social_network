@@ -21,7 +21,15 @@ Application.prototype.user = {
     isMobile: navigator.userAgent.match(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/)
 };
 
+Date.mysql = function(string) {
+    if (typeof string === 'string')
+    {
+        var t = string.split(/[- :]/);
 
+        //when t[3], t[4] and t[5] are missing they defaults to zero
+        return new Date(t[0], t[1] - 1, t[2], t[3] || 0, t[4] || 0, t[5] || 0);
+    }
+};
 Date.prototype.getMonthName = function(lang) {
     lang = lang && (lang in Date.locale) ? lang : 'en';
     return Date.locale[lang].month_names[this.getMonth()];
@@ -70,7 +78,7 @@ Date.prototype.formatMonth = function() {
 
 Date.prototype.formatWeek = function() {
     var now = new Date();
-    return (now.getDay() - this.getDay() < 2 ? (now.getDay() - this.getDay() < 1 ? "Today, " : "Yesterday, ") : (this.getDayName() + ", "))
+    return (now.getDate() - this.getDate() < 2 ? (now.getDate() - this.getDate() < 1 ? "Today, " : "Yesterday, ") : (this.getDayName() + ", "))
             + this.getHours() + ":" + this.getMinutes();
 };
 
@@ -208,6 +216,10 @@ Application.prototype.file = function(file) {
     if (file !== false) {
         this.playing = false;
         this.file = file;
+        this.file.name = typeof this.file.name !== 'undefined' && !isEmpty(this.file.name) ? this.file.name : 'Untitled';
+        this.file.description = typeof this.file.description !== 'undefined' && !isEmpty(this.file.description) ? this.file.description : '';
+        this.file.time = typeof this.file.time !== 'undefined' && !isEmpty(this.file.time) ? this.file.time : 'No Date';
+        this.file.type_preview = typeof this.file.type_preview !== 'undefined' && !isEmpty(this.file.type_preview) ? this.file.type_preview : file.thumb_path;
         this.items[this.file.id] = this;
 
         this.file.item = new Application.prototype.Comment(this.file.activity);
@@ -241,12 +253,12 @@ Application.prototype.file = function(file) {
             $.post('Scripts/files.class.php', {action: "rename", file_id: this.file.id, name: text}, function() {
             });
         };
+        this.printTag = function() {
+            var object = $("<div></div>");
+            object.append(this.file.name);
+            return object;
+        };
         this.print = function(activity_type) {
-            this.file.name = typeof this.file.name !== 'undefined' && !isEmpty(this.file.name) ? this.file.name : 'Untitled';
-            this.file.description = typeof this.file.description !== 'undefined' && !isEmpty(this.file.description) ? this.file.description : '';
-            this.file.time = typeof this.file.time !== 'undefined' && !isEmpty(this.file.time) ? this.file.time : 'No Date';
-            this.file.type_preview = typeof this.file.type_preview !== 'undefined' && !isEmpty(this.file.type_preview) ? this.file.type_preview : file.thumb_path;
-
             var string = $('<div class="post_feed_item"></div>');
             if (this.file.type == "Audio") {
                 string.addClass("post_media_double");
@@ -341,7 +353,6 @@ Application.prototype.file = function(file) {
                 .append("<span style='font-size:12px;' class='post_comment_time'>" + this.file.description + "</span>")
                 .append(this.stats)
                 .append(this.actions);
-
         this.stats.append("<i class='heart_like_icon fa fa-heart'></i><span class='post_comment_time post_like_count'>" + this.file.like.count + "</span>");
 
         if (typeof this.file.activity.item != 'undefined') {
@@ -601,15 +612,31 @@ Application.prototype.file = function(file) {
 };
 Application.prototype.file.prototype.items = {};
 
-Application.prototype.FileList = function(type) {
-    this.type = type;
-    $.get('Scripts/files.class.php', {action: 'list', type: this.type}, function(response) {
+Application.prototype.FileList = function(type, pf) {
+    this.type = type || 'all';
+    this.pf = pf || 0;
+    this.container = $("<div class='file_list'></div>");
+    this.onclick = function() {
+        
+    };
+    var self = this;
+    $.get('Scripts/files.class.php', {action: 'list', type: this.type, pf: this.pf}, function(response) {
         response = $.parseJSON(response);
+        for(var i = 0; i < response.length; i++) {
+            var file = new Application.prototype.file(response[i]);
+            self.container.append(file.printTag('none').on('click', function() {
+                self.onclick(file);
+            }));
+        }
     });
     this.print = function() {
+        return this.container;
     };
-}
-;
+};
+
+Application.prototype.FileList.prototype.addFile = function(file) {
+    
+};
 
 Application.prototype.Folder = function(list) {
     this.files = list;
@@ -904,16 +931,14 @@ Application.prototype.Chat.prototype.styleResponse = function(response) {
 
     }
     for (var i = response.length - 1; i >= 0; i--) {
-        if ($.inArray(response[i]['id'], this.entry !== -1)) {
+        if ($.inArray(response[i]['id'], this.entry === -1)) {
             var ChatItem = new Application.prototype.Chat.prototype.ChatItem(response[i]);
             this.preview.html(ChatItem.preview);
             final.append(ChatItem.print());
             this.entry.push(ChatItem.id);
             this.items.push(ChatItem);
         }
-// 		console.log(this.items);
-    }
-    ;
+    };
 
     this.newest = Array.max(this.entry);
     this.oldest = Array.min(this.entry);
@@ -939,7 +964,7 @@ Application.prototype.Chat.prototype.ChatItem = function(item) {
         var chat_text = $("<div class='chattext'>").append(item['text'].replaceLinks().replaceEmoticons());
         chat_bubble.append(chat_name);
         chat_bubble.append(chat_text);
-        chat_bubble.append(this.time.element = $("<span class='chat_time post_comment_time'>" + new Date(item.time).timeAgo('short') + "</span>"));
+        chat_bubble.append(this.time.element = $("<span class='chat_time post_comment_time'>" + new Date.mysql(item.time).timeAgo('short') + "</span>"));
 
         if (USER_ID == item['user_id']) {
             chat_wrapper.append(chat_bubble).append(profile_picture);
@@ -1063,7 +1088,7 @@ Application.prototype.Feed = function(entity_id, entity_type) {
         this.printStats = function(activity) {
             var string = $("<div class='activity_stats'></div>");
             string.append(print_likes(activity));
-            var time = $("<span class='post_comment_time'></span>").text(new Date(activity['time']).timeAgo() + " |");
+            var time = $("<span class='post_comment_time'></span>").text(new Date.mysql(activity['time']).timeAgo() + " |");
             string.append(time);
             var subarray = [{'element': time, 'time': activity.time}];
             Application.prototype.calendar.datetime.entry.push(subarray);
@@ -1175,6 +1200,10 @@ Application.prototype.Post = function(options, element) {
             text: "Private",
             class: "",
         }]);
+    this.fileList = new Application.prototype.FileList();
+    this.fileList.onclick = function(file) {
+        this.addFile(file);
+    };
 
     element
             .append($("<div class='home_feed_post_container_arrow_border'></div>")
@@ -1184,17 +1213,17 @@ Application.prototype.Post = function(options, element) {
                             .append($('<textarea tabindex="1" id="status_text" placeholder= "Update Status or Share Files..." class="status_text autoresize"></textarea>')
                                     .focus(function() {
                                         $(this).css('min-height', '100px');
-                                        $('#file_share').show();
                                         $('#post_more_options').show();
                                         $('.post_wrapper').css('padding-bottom', $('.post_more_options').height());
                                         $('.post_media_wrapper').show();
-                                        $('#file_share').mCustomScrollbar("update");
                                         $('.home_feed_post_container_arrow_border').css('border-right-color', 'rgb(70, 180,220)');
                                     }).focusout(function() {
                                 $('.home_feed_post_container_arrow_border').css('border-right-color', 'lightgrey');
                             }))
-                            .append("<div class='post_media_wrapper'><div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div><img class='post_media_loader' src='Images/ajax-loader.gif'></img></div>"))
-                    .append('<div class="file_container"></div>')
+                            .append(this.file_container = $("<div class='post_media_wrapper'></div>")
+                                    .append(this.fileList.print())
+                                    .append("<div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div><img class='post_media_loader' src='Images/ajax-loader.gif'></img></div>")))
+
                     .append($("<div id='post_more_options' class='post_more_options'></div>")
                             .append(this.post_button)
                             .append(this.dropdown)));
@@ -1203,8 +1232,7 @@ Application.prototype.Post = function(options, element) {
     this.submit = function() {
         var text = $('#status_text').val();
         if (text != "" || this.files.length != 0) {
-            $.post("Scripts/home.class.php", {action: "update_status", status_text: text, group_id: share_group_id, post_media_added_files: this.files}, function(data)
-            {
+            $.post("Scripts/home.class.php", {action: "update_status", status_text: text, group_id: share_group_id, post_media_added_files: this.files}, function(data) {
                 return;
                 if (data == "") {
                     removeModal('', function() {
@@ -1217,141 +1245,48 @@ Application.prototype.Post = function(options, element) {
                         });
                     });
                     clearPostArea();
-                }
-                else
-                {
+                } else {
                     alert(data);
                 }
             });
         }
     };
-    this.addFile = function(object, activity_id) {
-        $('.post_media_wrapper_background').hide();
-        var post_media_classes = '';
-        var post_media_style = " style=' ";
-        var text_to_append = '';
-        var additional_close = '';
-        var extra_params = " post_file_id='" + object.file_id + "' ";
-        //text_to_append += ">"; 
-        text_to_append += Application.prototype.file.print(object, 'add_to_status');
-        if (object.type == "Image")
-        {
-            post_media_classes += "post_media_photo post_media_full";
-            additional_close += " post_media_single_close_file";
-        } else if (object.type == "Audio")
-        {
-            post_media_classes += " post_media_item post_media_full";
-            additional_close += " post_media_single_close_file";
+};
 
-        } else if (object.type == "Video") {
-            post_media_classes += " post_media_video";
-            additional_close += " post_media_single_close_file";
-            //text_to_append += video_player(object, 'classes', 'styles', 'added_to_status_', true);
-
-        } else if (object.type == "Webpage") {
-            post_media_classes += " post_media_double";
-            post_media_style += "height:auto;";
-            additional_close += " post_media_single_close_webpage";
-            extra_params = " post_file_id='" + object.path + "' ";
-            text_to_append += "><table style='height:100%;'><tr><td rowspan='3'>" +
-                    "<div class='post_media_preview' style='background-image:url(&quot;" + object.info.favicon + "&quot;);'></div></td>" +
-                    "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>" +
-                    "<a class='user_preview_name' target='_blank' href='" + object.path + "'><span style='font-size:13px;'>" + object.info.title + "</span></a></div></td></tr>" +
-                    "<tr><td><span style='font-size:12px;' class='user_preview_community'>" + object.info.description + "</span></td></tr></table>";
-        } else if (object.type == "Folder") {
-            //            text_to_append += documentStatus(object.path, object.name, object.description, FOLDER_THUMB);
-        } else if (object.type == "WORD Document") {
-        } else if (object.type == "PDF Document") {
-        } else if (object.type == "PPT Document") {
-        } else {
-        }
-        if (object.type == "WORD Document"
-                || object.type == "PDF Document"
-                || object.type == "PPT Document"
-                || object.type == "ACCESS Document"
-                || object.type == "EXCEL Document"
-                || object.type == "Folder") {
-            post_media_classes += " post_media_double";
-            post_media_style += "height:auto;";
-            additional_close += " post_media_single_close_file";
-            extra_params = " post_file_id='" + object.id + "' ";
-        }
-        var index;
-        for (var i = 0; i < this.files.length; i++)
-        {
-            if (this.files[i].id == object.id || this.files[i] == object.id)
-            {
-                index = "found";
-                Application.prototype.UI.dialog(
-                        content = {
-                            type: 'html',
-                            content: "Sorry, but you have already added this file to your post. Please choose another instead!"
-                        },
-                buttons = [{
-                        type: "error",
-                        text: "OK",
-                        onclick: function() {
-                            removeDialog();
-                        }
-                    }],
-                properties = {
-                    modal: false,
-                    title: "Whoops!"
-                });
-            }
-        }
-        if (index != "found")
-        {
-            if (object.type == "Webpage") {
-                this.files.push(object);
+Application.prototype.Post.prototype.addFile = function(object) {
+    console.log(object);
+    this.file_container.append(object.print());
+    this.files.push(object);
+};
+Application.prototype.Post.prototype.removeFile = function(object) {
+    var id;
+    if (object.type == "Webpage") {
+        addedURLs = removeFromArray(addedURLs, object.value);
+        id = '#post_media_single_' + formatToID(object.value);
+        for (var i = 0; i < post_media_added_files.length; i++) {
+            if (object.value == post_media_added_files[i].path) {
+                post_media_added_files.splice(i, 1);
             } else {
-                this.files.push(object.id);
-            }
-            $('.post_media_wrapper').append(text_to_append);
-            if (object.type == "Video") {
-                refreshVideoJs();
             }
         }
+    } else {
+        var element = $('.post_media_wrapper [data-file_id="' + object.value + '"]');
+        element.remove();
+        for (var i = 0; i < post_media_added_files.length; i++) {
+            if (object.value == post_media_added_files[i]) {
+                post_media_added_files.splice(i, 1);
+            } else {
+            }
+        }
+    }
+    $(id).remove();
 
-        if (this.files.length > 1) {
-            $('#status_text').attr('placeholder', 'Write about these files...');
-        }
-        else {
-            $('#status_text').attr('placeholder', 'Write about this file...');
-        }
-        $('#status_text').focus();
-        $('#file_share').mCustomScrollbar("update");
-    };
-    this.removeFile = function(object) {
-        var id;
-        if (object.type == "Webpage") {
-            addedURLs = removeFromArray(addedURLs, object.value);
-            id = '#post_media_single_' + formatToID(object.value);
-            for (var i = 0; i < post_media_added_files.length; i++) {
-                if (object.value == post_media_added_files[i].path) {
-                    post_media_added_files.splice(i, 1);
-                } else {
-                }
-            }
-        } else {
-            var element = $('.post_media_wrapper [data-file_id="' + object.value + '"]');
-            element.remove();
-            for (var i = 0; i < post_media_added_files.length; i++) {
-                if (object.value == post_media_added_files[i]) {
-                    post_media_added_files.splice(i, 1);
-                } else {
-                }
-            }
-        }
-        $(id).remove();
-
-        if (post_media_added_files.length == 0) {
-            $('#status_text').attr('placeholder', 'Update Status or Share Files...');
-            $('.post_media_wrapper_background').show();
-        }
-        $('#status_text').focus();
-        resizeScrollers();
-    };
+    if (post_media_added_files.length == 0) {
+        $('#status_text').attr('placeholder', 'Update Status or Share Files...');
+        $('.post_media_wrapper_background').show();
+    }
+    $('#status_text').focus();
+    resizeScrollers();
 };
 
 Application.prototype.CommentItem = function(item) {
@@ -1372,7 +1307,7 @@ Application.prototype.CommentItem.prototype.show = function() {
                     .append($("<a class='userdatabase_connection' href='user?id=" + this.item.user.id + "'></a>")
                             .append("<span class='user_preview user_preview_name post_comment_user_name' user_id='" + this.item.user.id + "'>" + this.item.user.name + " </span>"))
                     .append("<span class='post_comment_text'>" + this.item.text + "</span><br />")
-                    .append(this.time = $("<span class='post_comment_time'>" + new Date(this.item.time).timeAgo('long') + " -</span>"))
+                    .append(this.time = $("<span class='post_comment_time'>" + new Date.mysql(this.item.time).timeAgo('long') + " -</span>"))
                     .append("<span class='post_comment_time post_comment_liked_num'>" + this.item.like.count + "</span>")
                     .append("<i class='fa fa-heart heart_like_icon'></i>")
                     .append("<span data-has_liked='" + this.item.like.has_liked + "' "
@@ -1457,6 +1392,39 @@ Application.prototype.calendar = {
         entry: new Array()
     }
 };
+
+Application.prototype.ConnectionList = function() {
+    this.object = {};
+    this.onfetch = function() {
+        
+    };
+    this.update();
+};
+
+Application.prototype.ConnectionList.prototype.update = function() {
+    var self = this;
+    $.get('Scripts/user.class.php', {action: 'connections'}, function(response) {
+        self.object = $.parseJSON(response);
+        self.onfetch();
+    });
+};
+
+Application.prototype.ConnectionList.prototype.print = function() {
+    var object = $("<div></div>");
+    for (var i in this.object) {
+        if(this.object[i].length > 0) {
+            var container = $("<div class='contentblock'></div>").append("<b>" + i + "</b>");
+            for (var key in this.object[i]) {
+                var user = new Application.prototype.User(this.object[i][key]);
+                container.append(user.print());
+            }
+            object.append(container);
+        }
+    }
+    console.log(this);
+    return object;
+};
+
 Application.prototype.UI = {
     init: function() {
         $('.createPost').each(function() {
@@ -1465,6 +1433,12 @@ Application.prototype.UI = {
         $('.upload_here').each(function() {
             $(this).replaceWith(new Application.prototype.UI.DragUpload().print());
         });
+        $('.file_container').each(function() {
+            $(this).replaceWith(new Application.prototype.FileList().print());
+        });
+        var connections = new Application.prototype.ConnectionList().onfetch = function() {
+            $('.left_bar_container').append(this.print());
+        };
     },
     dropArrow: $("<i class='fa fa-angle-down'></i>"),
     progress: function() {
@@ -1521,8 +1495,18 @@ Application.prototype.UI = {
             });
         });
         this.drag.on('dragover', function(event) {
-            $(this).addClass('upload_hover');
-            entered++;
+            var files = (event.dataTransfer && event.dataTransfer);
+            if (!files) {
+                files = event.dataTransfer || (event.originalEvent && event.originalEvent.dataTransfer);
+            }        
+            if (files) {
+                for (var i = 0; i < files.types.length; i++) {
+                    if (files.types[i] == "Files") {
+                        $(this).addClass('upload_hover');
+                        entered++;
+                    }
+                }
+            }
         });
         this.drag.on('dragleave', function(event) {
             $(this).removeClass('upload_hover');
@@ -2058,6 +2042,22 @@ Application.prototype.notification.getNotificationNumber = function() {
 /****************************************************
  * 1.4 User                                          *
  ****************************************************/
+Application.prototype.User = function(user) {
+    this.user = user;
+    if(this.items[this.user.id]) {
+        return this.items[this.user.id];
+    } else {
+        this.items[this.user.id] = this;
+    }
+};
+Application.prototype.User.prototype.items = {};
+Application.prototype.User.prototype.print = function() {
+    var container = $("<div class='user-tag'></div>");
+            container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.user.pic.small + "\");'"
+            + "href ='user?id=" + this.user.id + "'>" + this.user.name + "</a>");
+
+    return container;
+};
 
 Application.prototype.user.setProfilePicture = function(file_id) {
     $.post('Scripts/user.class.php', {action: "profile_picture", file_id: file_id}, function(response) {
@@ -2944,17 +2944,6 @@ $(function() {
 
     refreshVideoJs();
 
-    $(document).on('change', '#file', function() {
-        var input = $(this).get(0).files;
-        var index = 0;
-        var files = getInputFiles('file');
-        var uploadCount = 0;
-        var Upload = new Application.prototype.upload(files);
-        Upload.end = function() {
-            refreshFileContainer(encrypted_folder);
-        };
-        Upload.push();
-    });
     $('#loading_icon').fadeOut();
 
     $(document).on('mouseleave', "div.files, div.folder", function() {

@@ -194,7 +194,7 @@ class Home {
     function submit_comment($comment, $post_id) {
         if ($comment != '') {
             Registry::get('db')->beginTransaction();
-            $sql = "INSERT INTO comment (user_id, activity_id, comment, time) VALUES (" . Registry::get('user')->user_id . ", :post_id, :comment, " . time() . ");";
+            $sql = "INSERT INTO comment (user_id, activity_id, comment) VALUES (" . Registry::get('user')->user_id . ", :post_id, :comment);";
             $sql = Registry::get('db')->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $sql->execute(array(":post_id" => $post_id, ":comment" => $comment));
             $last_id = Registry::get('db')->lastInsertId();
@@ -426,13 +426,12 @@ class Home {
     function create_activity($status_text, $type) {
     	$status_text = strip_tags($status_text);
         Registry::get('db')->beginTransaction();
-        $school_query = "INSERT INTO activity (user_id, status_text, type, time) "
-                . "VALUES(:user_id, :status_text, '$type', :time);";
+        $school_query = "INSERT INTO activity (user_id, status_text, type) "
+                . "VALUES(:user_id, :status_text, '$type');";
         $school_query = Registry::get('db')->prepare($school_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $school_query->execute(array(
             ":user_id" => Registry::get('user')->user_id,
             ":status_text" => $status_text,
-            ":time" => time(),
         ));
 
         $lastInsertId = Registry::get('db')->lastInsertId();

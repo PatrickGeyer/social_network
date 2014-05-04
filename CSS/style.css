@@ -367,7 +367,6 @@ h3 > button{
     font-size: 16px;
 }
 .contentblock * {
-    color: inherit;
     font-size: 13px;
 }
 .contentblock.post_height_restrictor{
@@ -935,8 +934,8 @@ button.large{
     height:20px;
 }
 .profile_picture_medium {
-    width:40px;
-    height:40px;
+    width:30px;
+    height:30px;
 }
 .profile_picture_thumb {
     width:200px;
@@ -2488,7 +2487,14 @@ div.post_height_restrictor{
     padding:2px;
     position: relative;
     border-bottom: 1px solid white;
+    display: table;
+    width: 100%;
 }
+
+.single_comment_container > .profile_picture_medium, .single_comment_container > .single_comment_info {
+    display: table-cell;
+}
+
 .post_comment_text{
     color: #141823;
     font-weight: normal;
@@ -2577,7 +2583,7 @@ table.singleupdate{
 
 .post_wrapper{
     position:relative;
-    border:1px solid lightgrey;
+    border: 1px solid lightgrey;
 }
 
 .status_text{
@@ -2844,23 +2850,20 @@ table.singleupdate{
 .post_content_wrapper{
     position: relative;
 }
-#file_share{
+
+.file_list{
     padding-left:5px;
-    height:100%;
     border-left:1px solid lightgrey;
-    transition:all 0.3s;
-    -webkit-transition:all 0.3s;
-    display: none;
     right:0px;
     top: 0px;
-    bottom:45px;
+    bottom:0px;
+    width: 200px;
     background-color: white;
-}
-#file_share:hover{
-    /*max-height: 500px;*/
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
-.home_feed_post_container #file_share {
+.home_feed_post_container .file_list {
     position: absolute;
 }
 
@@ -2935,8 +2938,8 @@ img.add_image_status_icon{
     cursor: pointer;
 }
 a.user_name_post .profile_picture_medium {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     background-repeat: no-repeat;
     background-size: cover;
     overflow: hidden;

@@ -219,11 +219,17 @@ class Files {
         return self :: $files;
     }
 
-    function getList_r($id = null, $dir = null) {
-        $sql = "SELECT * FROM file WHERE user_id = :user_id AND type != 'Webpage' AND visible=1 ORDER BY name;";
+    function getList($dir = null, $id = null) {
+        $sql = "SELECT * FROM file WHERE user_id = :user_id AND type != 'Webpage' AND visible = 1 AND parent_folder_id = :pf ORDER BY name;";
         $sql = Registry::get('db')->prepare($sql);
-        $sql->execute(array(":user_id" => Registry::get('user')->user_id));
+        $sql->execute(array(
+            ":user_id" => Registry::get('user')->user_id,
+            ":pf" => $dir
+        ));
         $return_array = $sql->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($return_array as $key => $value) {
+            $return_array[$key] = $this->format_file($return_array[$key]);
+        }
         return $return_array;
     }
 
@@ -1039,7 +1045,8 @@ class Files {
     }
 
 }
-if ($_SERVER['REQUEST_METHOD'] == "POST") {
+
+if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'])) {
     require('home.class.php');
     $home = Home::getInstance();
     $files = Files::getInstance();
@@ -1050,50 +1057,52 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $pdir = null;
     }
     $dir = "../" . $pdir;
-    if (isset($_POST['action'])) {
-        if ($_POST['action'] == "getContents") {
-            $files->getContents($_POST['parent_folder']);
-        } else if($_POST['action'] == "list") {
-        	die(json_encode($files->getList_r()));
+    if ($_POST['action'] == "getContents") {
+        $files->getContents($_POST['parent_folder']);
+    }
+    else if ($_POST['action'] == "delete") {
+        die($files->delete($_POST['id']));
+    }
+    else if ($_POST['action'] == "createFolder") {
+        $files->createFolder($_POST['parent_folder'], $_POST['folder_name']);
+    }
+    else if ($_POST['action'] == "convert") {
+        foreach ($_POST['file_info'] as $file) {
+            $files->convert($file['from'], $file['to'], $file['args'], $file['before_args']);
         }
-        else if ($_POST['action'] == "delete") {
-            die($files->delete($_POST['id']));
+    }
+    else if ($_POST['action'] == "get_conversion_progress") {
+        foreach ($_POST['file_info'] as $file) {
+            $files->getConversionProgress($file['to']);
         }
-        else if ($_POST['action'] == "createFolder") {
-            $files->createFolder($_POST['parent_folder'], $_POST['folder_name']);
+    }
+    else if ($_POST['action'] == "share") {
+        die($files->shareFile($_POST['file_id'], $_POST['receivers']));
+    }
+    else if ($_POST['action'] == "view") {
+        die($files->fileView($_POST['file_id']));
+    }
+    else if ($_POST['action'] == "rename") {
+        die($files->rename($_POST['file_id'], $_POST['text']));
+    }
+    else if ($_POST['action'] == "upload") {
+        ignore_user_abort(true);
+        die(json_encode($files->upload($_POST, $_FILES)));
+    }
+    else if ($_POST['action'] == "preview") {
+        $activity_id = NULL;
+        if (isset($_POST['activity_id'])) {
+            $activity_id = $_POST['activity_id'];
         }
-        else if ($_POST['action'] == "convert") {
-            foreach ($_POST['file_info'] as $file) {
-                $files->convert($file['from'], $file['to'], $file['args'], $file['before_args']);
-            }
-        }
-        else if ($_POST['action'] == "get_conversion_progress") {
-            foreach ($_POST['file_info'] as $file) {
-                $files->getConversionProgress($file['to']);
-            }
-        }
-        else if ($_POST['action'] == "share") {
-            die($files->shareFile($_POST['file_id'], $_POST['receivers']));
-        }
-        else if ($_POST['action'] == "view") {
-            die($files->fileView($_POST['file_id']));
-        }
-        else if ($_POST['action'] == "rename") {
-            die($files->rename($_POST['file_id'], $_POST['text']));
-        }
-        else if ($_POST['action'] == "upload") {
-            ignore_user_abort(true);
-            die(json_encode($files->upload($_POST, $_FILES)));
-        }
-        else if ($_POST['action'] == "preview") {
-            $activity_id = NULL;
-            if (isset($_POST['activity_id'])) {
-                $activity_id = $_POST['activity_id'];
-            }
-            die(json_encode($home->homeify($home->getSingleActivity($files->getActivity($_POST['file_id'], "File")), 'home', $activity_id), JSON_HEX_APOS)); //HOME WAS PREVIEW
-        }
-        else if ($_POST['action'] == "removePostFile") {
-            $files->removeFromPost($_POST['file_id'], $_POST['activity_id']);
-        }
+        die(json_encode($home->homeify($home->getSingleActivity($files->getActivity($_POST['file_id'], "File")), 'home', $activity_id), JSON_HEX_APOS)); //HOME WAS PREVIEW
+    }
+    else if ($_POST['action'] == "removePostFile") {
+        $files->removeFromPost($_POST['file_id'], $_POST['activity_id']);
+    }
+} else if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['action'])) {
+    require_once('declare.php');
+    $files = Files::getInstance();
+    if ($_GET['action'] === "list") {
+        die(json_encode($files->getList($_GET['pf'])));
     }
 }

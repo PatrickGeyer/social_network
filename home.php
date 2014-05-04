@@ -35,17 +35,7 @@ function print_body() {
                     }
                 });
 
-                $('#status_text').focus(function() {
-                    $(this).css('min-height', '100px');
-                    $('#file_share').show();
-                    $('#post_more_options').show();
-                    $('.post_wrapper').css('padding-bottom', $('.post_more_options').height());
-                    $('.post_media_wrapper').show();
-                    $('#file_share').mCustomScrollbar("update");
-                    $('.home_feed_post_container_arrow_border').css('border-right-color', 'rgb(70, 180,220)');
-                }).focusout(function() {
-                    $('.home_feed_post_container_arrow_border').css('border-right-color', 'lightgrey');
-                });
+                
                 
                 $('.default_dropdown_item').click(function()
                 {

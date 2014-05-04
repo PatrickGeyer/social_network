@@ -547,15 +547,38 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
             $user->connectAccept($_POST['invite_id']);
         }
     }
-}
-else if ($_SERVER['REQUEST_METHOD'] == "GET") {
+} else if ($_SERVER['REQUEST_METHOD'] == "GET") {
     if (isset($_GET['action'])) {
-        require_once('declare.php');
-        die(json_encode(array(
-            'groups' => Registry::get('group')->getUserGroups(),
-            'connection' => Registry::get('user')->getConnections(),
-            'group' => Registry::get('group')->getUserGroups()
-        )));
+        if ($_GET['action'] === "connections") {
+            require_once('declare.php');
+            $cons = array(
+                'Groups' => Registry::get('group')->getUserGroups(),
+                'Connections' => Registry::get('user')->getConnections(),
+                'Users' => array()
+            );
+            foreach($cons as $key => $value) {
+                if($key === "Groups") {
+                    foreach ($cons[$key] as $i => $value) {
+                        $cons["Groups"][$i] = array();
+                        $cons["Groups"][$i]['id'] = $value;
+                        $cons["Groups"][$i]['name'] = Registry::get('group')->getName($value);
+                        $members = Registry::get('group')->getMembers_Connections($value);
+                         foreach ($members as $key => $value) {
+                            $cons['Users'][$key] = array();
+                            $cons['Users'][$key]['id'] = $value['id'];
+                            $cons['Users'][$key]['name'] = Registry::get('user')->getName($value['id']);
+                         }
+                    }
+                } else if($key === "Connections") {
+                    foreach ($cons[$key] as $i => $value) {
+                        $cons['Connections'][$i] = array();
+                        $cons['Connections'][$i]['id'] = $value[0];
+                        $cons['Connections'][$i]['name'] = Registry::get('user')->getName($value[0]);
+                    }
+                }
+            }
+            die(json_encode($cons));
+        }
     }
 }
 ?>
