@@ -268,7 +268,7 @@ Application.prototype.file = function(file) {
             return object;
         };
         this.print = function(activity_type) {
-            var string = $('<div class="post_feed_item"></div>');
+            var string = $('<div class="post_feed_item contentblock"></div>');
             if (this.file.type == "Audio") {
                 string.addClass("post_media_double");
                 string.append(this.printDoc());
@@ -370,7 +370,7 @@ Application.prototype.file = function(file) {
         }
         this.stats.append("<i class='fa fa-eye heart_like_icon'></i><span class='post_comment_time'>" + this.file.view.count + "</span><br />");
 
-        this.actions.append("<a class='no-ajax' href='download.php?id=" + this.file.id + "'>" + "<button class='pure-button-green'><i class='fa fa-cloud-download'></i><span></span></button></a>");
+        this.actions.append("<a class='no-ajax' href='download.php?id=" + this.file.id + "'>" + "Download<span></span></a>");
         this.actions.append("<button has_liked='" + (this.file.activity.stats.like.has_liked === true ? "true" : "false") + "' class='activity_like_text post_like_activity "
                 + "pure-button-neutral " + (this.file.activity.stats.like.has_liked === true ? " pure-button-blue" : "") + "'>" + "<i class='fa fa-heart'></i></button>");
 
@@ -1054,146 +1054,122 @@ Application.prototype.Feed = function(entity_id, entity_type) {
         }
         return object;
     };
+};
 
-    this.Item = function(item) {
-        this.item = item;
-        this.print = function() {
-            return this.homify();
-        };
-        this.homify = function() {
-            this.item.stats.like.count = parseInt(this.item.stats.like.count);
-            this.item.status_text = typeof this.item.status_text !== 'undefined' && !isEmpty(this.item.status_text) ? this.item.status_text : '';
-            var string = $("<div data-this.item_id='" + this.item.id + "' class='post_height_restrictor contentblock' id='post_height_restrictor_" + this.item.id + "'></div>");
-            if (this.item.view == 'home') {
-                var user_link = $("<a class='user_name_post' href='user?id=" + this.item.user.id + "'></a>");
-                user_link.append("<div class='profile_picture_medium' style='background-image:url(\"" + this.item.user.pic.icon + "\");'></div>");
-                var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.id + "' href='user?id=" + this.item.user.id + "'>" + this.item.user.name + "</a>");
-                var top_content = $("<div class='top_content'>").append(user_link).append(user_name);
-                var single_post = $('<div id="single_post_' + this.item.id + '" class="singlepostdiv"></div').append(top_content);
-                string.append(single_post);
-                if (!Application.prototype.userAgent.isMobile) {
-                    top_content.append(this.printStats(this.item));
-                }
-                if (this.item.type == "Text" || this.item.type == "File") {
-                    if (!Application.prototype.userAgent.isMobile) {
-//                        single_post.append("<hr class='post_user_name_underline'>");
-                    }
-                }
-                var content_wrapper = $("<div class='post_content_wrapper'></div>");
-                content_wrapper.append("<p class='post_text'>" + this.item.status_text + '</p>');
-
-                if (this.item.media.length > 0) {
-                    var media_wrapper = $("<div class='post_feed_media_wrapper'></div>");
-                    content_wrapper.append(media_wrapper);
-                    for (var i in this.item.media) {
-                        media_wrapper.append(new Application.prototype.file(this.item.media[i]).print(this.item.type));
-                    }
-                }
-                single_post.append(content_wrapper);
-                if (Application.prototype.userAgent.isMobile) {
-                    var stats = $("<div class='this.item_stats_mobile'></div>");
-                    stats.append(this.printStats(this.item));
-                    top_content.append(stats);
-                }
-                content_wrapper.append(new Application.prototype.Comment(this.item).print());
-            }
-            return string;
-        };
-
-        this.printStats = function(activity) {
-            var string = $("<div class='activity_stats'></div>");
-            string.append(print_likes(activity));
-            var time = $("<span class='post_comment_time'></span>").text(new Date.mysql(activity['time']).timeAgo() + " |");
-            string.append(time);
-            var subarray = [{'element': time, 'time': activity.time}];
-            Application.prototype.calendar.datetime.entry.push(subarray);
-            if (activity.type == "File") {
-                activity.media[0] = (activity.media[0] || new Object());
-                activity.media[0].view = new Object();
-                activity.media[0].view.count = (activity.media[0].view.count || 0);
-                //        string += "<span class='post_comment_time'>| <span class='post_view_count'>" + activity.media[0].view.count + "</span> views</span>";
-            }
-
-//            if (activity.user.id == Application.prototype.MyUser.id) {
-            var Dropdown = new Application.prototype.UI.Dropdown("activity_options");
-            Dropdown.addOptions([{
-                    class: "delete_activity",
-                    text: "Delete"
-                }, {
-                    class: "edit_activity",
-                    text: "Edit"
-                }]);
-            string.append(Dropdown.print());
-//            }
-            return string;
-
-            function print_likes(activity) {
-                var string = '';
-                string += '<div class="who_liked_hover" ';
-                string += 'style="display:inline;"> ';
-                string += '<span class="post_comment_time post_like_count">' + activity.stats.like.count + '</span>';
-                string += '<i class="fa fa-heart heart_like_icon"></i>';
-                string += '<div style="display:inline;">';
-                string += '<span has_liked="';
-                string += (activity.stats.like.has_liked === true ? "true" : "false");
-                string += '" class="post_comment_time user_preview_name activity_like_text post_like_activity">';
-                string += (activity.stats.like.has_liked === true ? COMMENT_UNLIKE_TEXT : COMMENT_LIKE_TEXT) + '</span><span class="post_comment_time">|</span></div>';
-                string += "</span>";
-                string += '<div class="who_liked" id="who_liked_' + activity.id + '">';
-                for (var i = 0; i < activity.stats.like.count; i++) {
-                    name = activity.stats.like.user[i].name;
-                    if (i == 1) {
-                        string += name;
-                    }
-                    else {
-                        string += ",<br>" + name;
-                    }
-                }
-                if (activity.stats.like.count == 0) {
-                    string += "No one has liked this post yet.";
-                }
-                string += "</div></div>";
-                return string;
-            }
-        };
-
-        this.refreshContent = function(id) {
-            return;
-            Application.prototype.feed.get(null, null, id, function(response) {
-                var activity_container = $('[data-activity_id="' + id + '"]');
-                var comment_container = activity_container.find('.comment_box_comment');
-                for (var i in response) { // FOR THAT ONE ACTIVITY
-                    for (var key in response[i].item.item) {
-                        append_comment(response[i].id, response[i].item.item[key]);
-                    }
-                    for (var media_id in response[i].media) {
-                        for (var key in response[i].media[media_id].activity.item) {
-                            append_comment(response[i].media[media_id].activity.id, response[i].media[media_id].activity.item.item[key]);
-                        }
-                    }
-                }
-            });
-        };
+Application.prototype.Feed.prototype.Item = function(item) {
+    this.item = item;
+    this.print = function() {
+        return this.homify();
     };
-    this.createPost = function(text, files, activity_id) {
-        var string = "<div class='home_feed_post_container'><div class='home_feed_post_container_arrow_border'>";
-        string += "<div class='home_feed_post_container_arrow'></div>";
-        string += "</div>";
-        string += "<div class='post_wrapper'>";
-        string += "<table style='width:100%;' cellspacing='0' cellpadding='0'>";
-        string += "<tr><td><table style='width:100%;' cellspacing='0' cellpadding='0'>";
-        string += "<tr style='height:100%;'><td><textarea tabindex='1' placeholder= 'Update Status or Share Files...' class='status_text scroll_thin'>" + text + "</textarea>";
-        string += "</td></tr><tr><td class='post_content_wrapper'>";
-        string += "<div class='post_media_wrapper'>";
-        string += "<div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div>";
-        string += "<img class='post_media_loader' src='Images/ajax-loader.gif'></img> </div></td></tr></table></td>";
-        string += "<td style='width:00px;height:100%;position: relative;'><div id='file_share'>";
-        string += "<table id='file_dialog' style='width:100%;' cellspacing='0' cellpadding='0'>";
-        string += "<div class='home_feed_post_container'></table></div>";
-        string += "</td></tr></table><div id='post_more_options' class='post_more_options'>";
-        string += "<button class='pure-button-green small submit_post'><span>Post</span></button>";
-        string += "</div></div></div></div></div>";
+    this.homify = function() {
+        this.item.stats.like.count = parseInt(this.item.stats.like.count);
+        this.item.status_text = typeof this.item.status_text !== 'undefined' && !isEmpty(this.item.status_text) ? this.item.status_text : '';
+        var string = $("<div data-this.item_id='" + this.item.id + "' class='post_height_restrictor contentblock' id='post_height_restrictor_" + this.item.id + "'></div>");
+        if (this.item.view == 'home') {
+            var user_link = $("<a class='user_name_post' href='user?id=" + this.item.user.id + "'></a>");
+            user_link.append("<div class='profile_picture_medium' style='background-image:url(\"" + this.item.user.pic.icon + "\");'></div>");
+            var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.id + "' href='user?id=" + this.item.user.id + "'>" + this.item.user.name + "</a>");
+            var top_content = $("<div class='top_content'>").append(user_link).append(user_name);
+            var single_post = $('<div id="single_post_' + this.item.id + '" class="singlepostdiv"></div').append(top_content);
+            string.append(single_post);
+            var Stats = new Application.prototype.Feed.prototype.Item.prototype.Stats(this.item);
+            if (!Application.prototype.userAgent.isMobile) {
+                top_content.append(Stats.printStats());
+            }
+            var content_wrapper = $("<div class='post_content_wrapper'></div>");
+            content_wrapper.append("<p class='post_text'>" + this.item.status_text + '</p>');
+
+            if (this.item.media.length > 0) {
+                var media_wrapper = $("<div class='post_feed_media_wrapper'></div>");
+                content_wrapper.append(media_wrapper);
+                for (var i in this.item.media) {
+                    media_wrapper.append(new Application.prototype.file(this.item.media[i]).print(this.item.type));
+                }
+            }
+            single_post.append(content_wrapper);
+            if (Application.prototype.userAgent.isMobile) {
+                var stats = $("<div class='this.item_stats_mobile'></div>");
+                stats.append(Stats.printStats());
+                top_content.append(stats);
+            }
+            content_wrapper.append(new Application.prototype.Comment(this.item).print());
+        }
+        return string;
     };
+
+//        this.refreshContent = function(id) {
+//            return;
+//            Application.prototype.feed.get(null, null, id, function(response) {
+//                var activity_container = $('[data-activity_id="' + id + '"]');
+//                var comment_container = activity_container.find('.comment_box_comment');
+//                for (var i in response) { // FOR THAT ONE ACTIVITY
+//                    for (var key in response[i].item.item) {
+//                        append_comment(response[i].id, response[i].item.item[key]);
+//                    }
+//                    for (var media_id in response[i].media) {
+//                        for (var key in response[i].media[media_id].activity.item) {
+//                            append_comment(response[i].media[media_id].activity.id, response[i].media[media_id].activity.item.item[key]);
+//                        }
+//                    }
+//                }
+//            });
+//        };
+};
+
+Application.prototype.Feed.prototype.Item.prototype.Stats = function(item) {
+    this.item = item || this.item;
+    this.printStats = function() {
+        var string = $("<div class='activity_stats'></div>");
+        string.append(this.printLikes());
+        var time = $("<span class='post_comment_time'></span>").text(new Date.mysql(this.item['time']).timeAgo() + " |");
+        string.append(time);
+        var subarray = [{'element': time, 'time': this.item.time}];
+        Application.prototype.calendar.datetime.entry.push(subarray);
+        if (this.item.type == "File") {
+            this.item.media[0] = (this.item.media[0] || new Object());
+            this.item.media[0].view = new Object();
+            this.item.media[0].view.count = (this.item.media[0].view.count || 0);
+        }
+
+        var Dropdown = new Application.prototype.UI.Dropdown("activity_options");
+        Dropdown.addOptions([{
+                class: "delete_activity",
+                text: "Delete"
+            }, {
+                class: "edit_activity",
+                text: "Edit"
+            }]);
+        string.append(Dropdown.print());
+        return string;
+    };
+    this.printLikes = function() {
+        var string = '';
+        string += '<div class="who_liked_hover" ';
+        string += 'style="display:inline;"> ';
+        string += '<span class="post_comment_time post_like_count">' + this.item.stats.like.count + '</span>';
+        string += '<i class="fa fa-heart heart_like_icon"></i>';
+        string += '<div style="display:inline;">';
+        string += '<span has_liked="';
+        string += (this.item.stats.like.has_liked === true ? "true" : "false");
+        string += '" class="post_comment_time user_preview_name activity_like_text post_like_activity">';
+        string += (this.item.stats.like.has_liked === true ? COMMENT_UNLIKE_TEXT : COMMENT_LIKE_TEXT) + '</span><span class="post_comment_time">|</span></div>';
+        string += "</span>";
+        string += '<div class="who_liked" id="who_liked_' + this.item.id + '">';
+        for (var i = 0; i < this.item.stats.like.count; i++) {
+            name = this.item.stats.like.user[i].name;
+            if (i == 1) {
+                string += name;
+            }
+            else {
+                string += ",<br>" + name;
+            }
+        }
+        if (this.item.stats.like.count == 0) {
+            string += "No one has liked this post yet.";
+        }
+        string += "</div></div>";
+        return string;
+    }
 };
 
 Application.prototype.Post = function(options, element) {

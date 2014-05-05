@@ -15,7 +15,6 @@ else {
 $chat_rooms = $chat->get_chat_rooms();
 ?>
 <head>
-    <link rel="stylesheet" type="text/css" href="CSS/chat.css">
     <script id="chat_loader">
         var chat_room = '<?php echo $chat_feed ?>';
         var loaded_chat_room = <?php echo $chat_feed ?>;
