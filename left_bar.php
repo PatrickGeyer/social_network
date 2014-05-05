@@ -4,10 +4,8 @@ if (!isset($page_identifier)) {
 }
 ?>
 <div class='left_bar_container'>
-    <!--        <button style='float:right;margin-top:10px;' class='pure-button-blue smallest' onclick='' title='Create a Group'>+</button>-->
     <?php
     if ($page_identifier != "inbox") :
-        include_once ("friends_list.php");
     else : ?>
             <div class="messagecomplete">
             <div id="message" class="messagehi">

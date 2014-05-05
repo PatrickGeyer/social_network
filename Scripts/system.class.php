@@ -121,8 +121,8 @@ class System {
                 theme:'dark',
                 autoHideScrollbar: true,
                 mouseWheelPixels: 100 
-            };";
-        echo "USER_ID='".base64_decode((isset($_COOKIE['id']) ? $_COOKIE['id'] : ''))."';</script>";
+            };</script>";
+        ;
     }
     /**
      * AudioPlayer function

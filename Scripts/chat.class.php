@@ -141,7 +141,7 @@ class Chat {
     }
 
     function format_chat($chat) {
-        $chat['pic'] = Registry::get('user')->getProfilePicture('chat', $chat['user_id']);
+        $chat['pic'] = Registry::get('user')->getProfilePicture($chat['user_id']);
         $chat['name'] = Registry::get('user')->getName($chat['user_id']);
         return $chat;
     }

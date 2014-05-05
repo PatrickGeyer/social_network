@@ -61,17 +61,14 @@ class Group extends Entity {
         return $friend_query->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    function getProfilePicture($size = "chat", $id) {
-        $user_query = "SELECT profile_picture FROM `group` WHERE id = :id";
+    function getProfilePicture($id) {
+        $user_query = "SELECT path as full, thumb_path as thumb, icon_path as icon FROM file WHERE id = (SELECT profile_picture FROM `group` WHERE id = :id);";
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $user_query->execute(array(":id" => Registry::get('user')->user_id));
-        $user = $user_query->fetchColumn();
-        if (!empty($user) || $user != "") {
-            return $user;
-        }
-        else {
-            return "Images/group-default-chat.png";
-        }
+        $user_query->execute(array(
+        ":id" => $id
+        ));
+        $user = $user_query->fetch(PDO::FETCH_ASSOC);
+        return $user;
     }
 
     public function getFounderId($group_id) {

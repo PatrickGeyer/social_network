@@ -31,6 +31,8 @@ div.chat_text{
 .chatheader{
     overflow: hidden;
     height: 50px;
+    display: table;
+    width: 100%;
 }
 .chat-container > div:first-child{
     /*background: -webkit-linear-gradient(left, rgb(0,140, 280), #e4e4e4);*/

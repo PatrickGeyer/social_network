@@ -53,6 +53,11 @@ if(swfobject.hasFlashPlayerVersion("3")) {
     _V_.options.flash.swf = "Scripts/external/video-js/video-js.swf";
 </script>
 
+<script>
+Application.prototype.MyUser = <?php echo json_encode(Registry::get('user')->get_user_preview()); ?> ;
+</script>
+
+
 <script type="text/javascript">
     var loggedIn = getCookie('id');
     var min_activity_id = 0;

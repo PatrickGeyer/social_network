@@ -12,9 +12,17 @@
 
 function Application() {
 
-}
-;
-Application.prototype.user = {
+};
+Application.prototype.default = {
+	pic : {
+		icon: "Images/male-default-icon.jpg",
+		thumb: "Images/male-default-icon.jpg",
+		large: "Images/male-default-icon.jpg"
+	}
+};
+Application.prototype.MyUser = {
+};
+Application.prototype.userAgent = {
     preview: {
         showing: false
     },
@@ -214,6 +222,7 @@ Application.prototype.file = function(file) {
     };
 
     if (file !== false) {
+    	this.init = false;
         this.playing = false;
         this.file = file;
         this.file.name = typeof this.file.name !== 'undefined' && !isEmpty(this.file.name) ? this.file.name : 'Untitled';
@@ -299,7 +308,7 @@ Application.prototype.file = function(file) {
                 string.append(this.printDoc());
             }
             var actions = $("<div class='top_right_actions'></div>");
-            if (this.file.user_id == USER_ID && activity_type != 'File') {
+            if (this.file.user_id == Application.prototype.MyUser.id && activity_type != 'File') {
                 actions.append("<i class='fa fa-times delete_cross delete_cross_top remove_event_post'></i>");
             }
             string.append(actions);
@@ -408,17 +417,18 @@ Application.prototype.file = function(file) {
         } else if (part == 'timeline') {
             string.append(this.audioTimeline());
         }
+        string.append(this.audio = $('<audio style="display:none;"><source src="' + this.file.path + '"></source><source src="'
+                + this.file.thumb_path + '"></source></audio>'));
         return string;
     };
-
+    var self = this;
+	
+	this.audio_button = $('<div class="audio_button"></div>').on('click', function() {
+        self.audioPlay();
+    });
+    this.audio_button.append('<div class="audio_button_inside"></div>').append(this.loader = $('<div class="audio_loader"></div>'));
     this.audioButton = function() {
         var self = this;
-        self.audio_button = $('<div class="audio_button"></div>').on('click', function() {
-            self.audioPlay();
-        });
-        self.audio_button.append(self.audio = $('<audio style="display:none;"><source src="' + self.file.path + '"></source><source src="'
-                + self.file.thumb_path + '"></source></audio>'));
-        self.audio_button.append('<div class="audio_button_inside"></div>').append(self.loader = $('<div class="audio_loader"></div>'));
         return self.audio_button;
     };
 
@@ -450,6 +460,11 @@ Application.prototype.file = function(file) {
     };
 
     this.startAudioInfo = function(start, progress, end) {
+    	if(this.init === true){
+    		this.audio.get(0).play();
+    		return;
+    	}
+    	this.init = true;
         this.view();
 
         var headerControl = $("<div></div>");
@@ -900,7 +915,7 @@ Application.prototype.Chat.prototype.sendRequest = function(all) {
         }
         if (all == 'false' && response.length > 0) {
             for (var i = response.length - 1; i >= 0; i--) {
-                if (response[i]['user_id'] != USER_ID) {
+                if (response[i]['user_id'] != Application.prototype.MyUser.id) {
                     $('#chat_new_message_sound').get(0).play();
                 }
             }
@@ -949,16 +964,16 @@ Application.prototype.Chat.prototype.ChatItem = function(item) {
     this.time = {};
     this.time.time = item['time'];
     this.pic = item['pic'];
-    this.preview = $('<span><img style="width:20px;" src="' + this.pic + '"/> ' + item['text'] + '</span>');
+    this.preview = $('<span><img style="width:20px;" src="' + this.pic.icon + '"/> ' + item['text'] + '</span>');
     this.id = item['id'];
 
     this.print = function() {
         var final = $('<div></div>');
 
         var string = $("<li class='single_chat'></li>")
-        var chat_wrapper = $("<div class='chat_wrapper " + (USER_ID == item['user_id'] ? 'self-chat' : 'other-chat') + "'>");
+        var chat_wrapper = $("<div class='chat_wrapper " + (Application.prototype.MyUser.id == item['user_id'] ? 'self-chat' : 'other-chat') + "'>");
         var profile_picture = $("<div data-user_id='" + item['user_id'] + "' class='profile_picture_medium online_status'>");
-        profile_picture.css('background-image', 'url("' + item['pic'] + '")');
+        profile_picture.css('background-image', 'url("' + item['pic'].icon + '")');
         var chat_bubble = $("<div class='chat-content'></div>");
         var chat_name = $("<div class='chatname'></div>").append("<span class='user_preview user_preview_name chatname' user_id='" + item['user_id'] + "'>" + item['name'] + "</span>");
         var chat_text = $("<div class='chattext'>").append(item['text'].replaceLinks().replaceEmoticons());
@@ -966,7 +981,7 @@ Application.prototype.Chat.prototype.ChatItem = function(item) {
         chat_bubble.append(chat_text);
         chat_bubble.append(this.time.element = $("<span class='chat_time post_comment_time'>" + new Date.mysql(item.time).timeAgo('short') + "</span>"));
 
-        if (USER_ID == item['user_id']) {
+        if (Application.prototype.MyUser.id == item['user_id']) {
             chat_wrapper.append(chat_bubble).append(profile_picture);
         } else {
             chat_wrapper.append(profile_picture).append(chat_bubble);
@@ -1051,16 +1066,16 @@ Application.prototype.Feed = function(entity_id, entity_type) {
             var string = $("<div data-this.item_id='" + this.item.id + "' class='post_height_restrictor contentblock' id='post_height_restrictor_" + this.item.id + "'></div>");
             if (this.item.view == 'home') {
                 var user_link = $("<a class='user_name_post' href='user?id=" + this.item.user.id + "'></a>");
-                user_link.append("<div class='profile_picture_medium' style='background-image:url(\"" + this.item.user.pic + "\");'></div>");
+                user_link.append("<div class='profile_picture_medium' style='background-image:url(\"" + this.item.user.pic.icon + "\");'></div>");
                 var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.id + "' href='user?id=" + this.item.user.id + "'>" + this.item.user.name + "</a>");
                 var top_content = $("<div class='top_content'>").append(user_link).append(user_name);
                 var single_post = $('<div id="single_post_' + this.item.id + '" class="singlepostdiv"></div').append(top_content);
                 string.append(single_post);
-                if (!Application.prototype.user.isMobile) {
+                if (!Application.prototype.userAgent.isMobile) {
                     top_content.append(this.printStats(this.item));
                 }
                 if (this.item.type == "Text" || this.item.type == "File") {
-                    if (!Application.prototype.user.isMobile) {
+                    if (!Application.prototype.userAgent.isMobile) {
 //                        single_post.append("<hr class='post_user_name_underline'>");
                     }
                 }
@@ -1075,7 +1090,7 @@ Application.prototype.Feed = function(entity_id, entity_type) {
                     }
                 }
                 single_post.append(content_wrapper);
-                if (Application.prototype.user.isMobile) {
+                if (Application.prototype.userAgent.isMobile) {
                     var stats = $("<div class='this.item_stats_mobile'></div>");
                     stats.append(this.printStats(this.item));
                     top_content.append(stats);
@@ -1099,7 +1114,7 @@ Application.prototype.Feed = function(entity_id, entity_type) {
                 //        string += "<span class='post_comment_time'>| <span class='post_view_count'>" + activity.media[0].view.count + "</span> views</span>";
             }
 
-//            if (activity.user.id == USER_ID) {
+//            if (activity.user.id == Application.prototype.MyUser.id) {
             var Dropdown = new Application.prototype.UI.Dropdown("activity_options");
             Dropdown.addOptions([{
                     class: "delete_activity",
@@ -1302,7 +1317,7 @@ Application.prototype.CommentItem.prototype.delete = function() {
 Application.prototype.CommentItem.prototype.show = function() {
     this.comment = $("<div class='single_comment_container' data-comment_id='" + this.item.id + "'></div>");
     this.item.like.like_text = (this.item.like.has_liked ? "Unlike" : "Like");
-    this.comment.append("<div class='profile_picture_medium' style='background-image:url(\"" + this.item.user.pic + "\");'></div>")
+    this.comment.append("<div class='profile_picture_medium' style='background-image:url(\"" + this.item.user.pic.icon + "\");'></div>")
             .append(this.comment_info = $("<div class='single_comment_info'></div>")
                     .append($("<a class='userdatabase_connection' href='user?id=" + this.item.user.id + "'></a>")
                             .append("<span class='user_preview user_preview_name post_comment_user_name' user_id='" + this.item.user.id + "'>" + this.item.user.name + " </span>"))
@@ -1314,7 +1329,7 @@ Application.prototype.CommentItem.prototype.show = function() {
                             + "class='user_preview_name post_comment_time post_comment_vote'>"
                             + this.item.like.like_text + "</span>"));
 
-    if (this.item.user.id == USER_ID) {
+    if (this.item.user.id == Application.prototype.MyUser.id) {
         var self = this;
         this.comment_info.append("<i class='fa fa-times delete_cross delete_cross_top comment_delete'></i>").on('click', function() {
             self.delete();
@@ -1328,7 +1343,7 @@ Application.prototype.Comment = function(item) {
     this.item = item;
     this.comments = new Array();
     this.print = function() {
-        var object = $('<div class="comment_box"></div>');
+        var object = $('<div class="comment_box contentblock"></div>');
         this.comment = $('<div class="comment_box_comment"></div>');
         this.comment.append(this.showComments());
         object.append(this.comment);
@@ -1338,7 +1353,7 @@ Application.prototype.Comment = function(item) {
     this.printInput = function() {
         var string = $("<div class='comment_input single_comment_container'></div>");
         var self = this;
-        string.append("<div class='profile_picture_medium' style='background-image:url(\"" + USER_PIC + "\");'></div>")
+        string.append("<div class='profile_picture_medium' style='background-image:url(\"" + Application.prototype.MyUser.pic.icon + "\");'></div>")
                 .append($("<div class='single_comment_info'></div>")
                         .append(this.input = $('<textarea placeholder="Write a comment..." '
                                 + 'class="home_comment_input_text inputtext" id="comment_' + this.item.id
@@ -1415,19 +1430,29 @@ Application.prototype.ConnectionList.prototype.print = function() {
         if(this.object[i].length > 0) {
             var container = $("<div class='contentblock'></div>").append("<b>" + i + "</b>");
             for (var key in this.object[i]) {
-                var user = new Application.prototype.User(this.object[i][key]);
-                container.append(user.print());
+            	if(i === 'Users' || i === 'Connections') {
+                	var user = new Application.prototype.User(this.object[i][key]);
+                	container.append(user.print());
+                } else {
+                	var group = new Application.prototype.Group(this.object[i][key]);
+                	container.append(group.print());
+                }
             }
             object.append(container);
         }
     }
-    console.log(this);
-    return object;
+    return object.html();
 };
 
 Application.prototype.UI = {
     init: function() {
-        $('.createPost').each(function() {
+        this.update();
+        var connections = new Application.prototype.ConnectionList().onfetch = function() {
+            $('.left_bar_container').append(this.print());
+        };
+    },
+    update: function() {
+    	$('.createPost').each(function() {
             new Application.prototype.Post({}, $(this));
         });
         $('.upload_here').each(function() {
@@ -1436,9 +1461,6 @@ Application.prototype.UI = {
         $('.file_container').each(function() {
             $(this).replaceWith(new Application.prototype.FileList().print());
         });
-        var connections = new Application.prototype.ConnectionList().onfetch = function() {
-            $('.left_bar_container').append(this.print());
-        };
     },
     dropArrow: $("<i class='fa fa-angle-down'></i>"),
     progress: function() {
@@ -1748,14 +1770,13 @@ Application.prototype.navigation.relocate = function(event, element) {
     this.initial = false;
     event.preventDefault();
     $('.container').html("<div class='loader_outside'></div><div class='loader_inside'></div>");
+    window.history.pushState({}, 'WhatTheHellDoesThisDo?!', '/' + $(element).attr('href'));//Push new URL before waiting for load to complete
     $.get($(element).attr('href'), {ajax: 'ajax'}, function(response) {
         var container = $(response);
-//        container.hide();
         $('.container').replaceWith(container);
-//        container.fadeIn('fast');
-        window.history.pushState({}, 'WhatTheHellDoesThisDo?!', '/' + $(element).attr('href'));
+        
         $('body').scrollTop(0);
-        Application.prototype.UI.init();
+        Application.prototype.UI.update();
     });
 }
 
@@ -2044,6 +2065,7 @@ Application.prototype.notification.getNotificationNumber = function() {
  ****************************************************/
 Application.prototype.User = function(user) {
     this.user = user;
+    this.user.pic = this.user.pic || Application.prototype.default.pic;
     if(this.items[this.user.id]) {
         return this.items[this.user.id];
     } else {
@@ -2053,19 +2075,39 @@ Application.prototype.User = function(user) {
 Application.prototype.User.prototype.items = {};
 Application.prototype.User.prototype.print = function() {
     var container = $("<div class='user-tag'></div>");
-            container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.user.pic.small + "\");'"
+            container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.user.pic.icon + "\");'"
             + "href ='user?id=" + this.user.id + "'>" + this.user.name + "</a>");
 
     return container;
 };
+/****************************************************
+ * 1.4 Group                                         *
+ ****************************************************/
+Application.prototype.Group = function(group) {
+    this.group = group;
+    this.group.pic = this.group.pic || Application.prototype.default.pic;
+    if(this.items[this.group.id]) {
+        return this.items[this.group.id];
+    } else {
+        this.items[this.group.id] = this;
+    }
+};
+Application.prototype.Group.prototype.items = {};
+Application.prototype.Group.prototype.print = function() {
+    var container = $("<div class='user-tag'></div>");
+            container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.group.pic.icon + "\");'"
+            + "href ='group?id=" + this.group.id + "'>" + this.group.name + "</a>");
 
-Application.prototype.user.setProfilePicture = function(file_id) {
+    return container;
+};
+
+Application.prototype.MyUser.setProfilePicture = function(file_id) {
     $.post('Scripts/user.class.php', {action: "profile_picture", file_id: file_id}, function(response) {
         Application.prototype.UI.removeDialog();
         window.location.reload();
     });
 };
-
+Application.prototype.user = function(){};
 Application.prototype.user.showPhotoChoose = function() {
     var content = $("<div><table><tr><td><div class='upload_here'></div></td><td><div class='profile_picture_chooser' style='max-height:200px;overflow:auto;margin-left:20px;height:100%;' id='file_container'>Loading...</div></td></tr></table></div>");
     Application.prototype.UI.dialog(
@@ -2099,7 +2141,7 @@ Application.prototype.user.showPhotoChoose = function() {
         profile_picture_id = file.id;
     });
 };
-
+Application.prototype.user.preview = function(){};
 Application.prototype.user.preview.show = function(element, user_id) {
     if (this.showing === false) {
         this.remove();
@@ -2463,7 +2505,6 @@ $(function() {
     /****************************************************
      * 2.1.1 Startup - Generic                           *
      ****************************************************/
-//    Application.prototype.UI.init();
 
     $(document).on('click', 'a[href!="#"][href]:not([download], .no-ajax)', function(e) {
         Application.prototype.navigation.relocate(e, $(this));

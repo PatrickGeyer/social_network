@@ -226,40 +226,16 @@ class User {
 //        return $user;
 //    }
 
-    function getProfilePicture($size = "thumb", $id = null) {
-        $size = strtolower($size);
+    function getProfilePicture($id = null) {
         $set = false;
         if ($id == null) {
-            $set = true;
-            if(!is_null($this->profile_picture["$size"])) {
-                return $this->profile_picture["$size"];
-            }
             $id = $this->user_id;
         }
-        if ($size == "original") {
-            $user_query = "SELECT path FROM file WHERE id = (SELECT profile_picture FROM user WHERE id = :user_id);";
-        } else if ($size == "thumb" || $size == "chat") {
-            $user_query = "SELECT thumb_path FROM file WHERE id = (SELECT profile_picture FROM user WHERE id = :user_id);";
-        } else if ($size == "icon") {
-            $user_query = "SELECT icon_path FROM file WHERE id = (SELECT profile_picture FROM user WHERE id = :user_id);";
-        }
+        $user_query = "SELECT path as full, thumb_path as thumb, icon_path as icon FROM file WHERE id = (SELECT profile_picture FROM user WHERE id = :user_id);";
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
-        $user_profile_picture = $user_query->fetchColumn();
-        $user = NULL;
-        if (!empty($user_profile_picture) || $user_profile_picture != "") {
-            $user =  $user_profile_picture;
-        } else {
-            if ($this->getGender($id) == "Male") {
-                $user = constant("BASE::MALE_DEFAULT_".strtoupper($size));
-            } else {
-                $user = constant("BASE::FEMALE_DEFAULT_".strtoupper($size));
-            }
-        }
-        if($set) {
-            $this->profile_picture["$size"] = $user;
-        }
-        return $user;
+        $user_profile_picture = $user_query->fetch(PDO::FETCH_ASSOC);
+        return $user_profile_picture;
     }
 
     function getGender($id = null) {
@@ -455,12 +431,14 @@ class User {
         ));
     }
     
-    function get_user_preview($user_id) {
+    function get_user_preview($user_id = null) {
+    	if(is_null($user_id)) {
+    		$user_id = $this->user_id;
+    	}
         $array = array();
-        $array['encrypted_id'] = urlencode(base64_encode($user_id));
         $array['id'] = $user_id;
         $array['name'] = $this->getName($user_id);
-        $array['pic'] = $this->getProfilePicture('thumb', $user_id);
+        $array['pic'] = $this->getProfilePicture($user_id);
         return $array;
     }
 
@@ -562,11 +540,13 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
                         $cons["Groups"][$i] = array();
                         $cons["Groups"][$i]['id'] = $value;
                         $cons["Groups"][$i]['name'] = Registry::get('group')->getName($value);
+                        $cons["Groups"][$i]['pic'] = Registry::get('group')->getProfilePicture($value);
                         $members = Registry::get('group')->getMembers_Connections($value);
                          foreach ($members as $key => $value) {
                             $cons['Users'][$key] = array();
                             $cons['Users'][$key]['id'] = $value['id'];
                             $cons['Users'][$key]['name'] = Registry::get('user')->getName($value['id']);
+                            $cons['Users'][$key]['pic'] = Registry::get('user')->getProfilePicture($value['id']);
                          }
                     }
                 } else if($key === "Connections") {
@@ -574,6 +554,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
                         $cons['Connections'][$i] = array();
                         $cons['Connections'][$i]['id'] = $value[0];
                         $cons['Connections'][$i]['name'] = Registry::get('user')->getName($value[0]);
+                        $cons['Connections'][$i]['pic'] = Registry::get('user')->getProfilePicture($value[0]);
                     }
                 }
             }

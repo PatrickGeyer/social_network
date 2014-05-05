@@ -122,7 +122,7 @@ class Home {
         $response['user']['id'] = $activity['user_id'];
         $response['user']['encrypted_id'] = urlencode(base64_encode($activity['user_id']));
         $response['user']['name'] = Registry::get('user')->getName($activity['user_id']);
-        $response['user']['pic'] = Registry::get('user')->getProfilePicture("thumb", $activity['user_id']);
+        $response['user']['pic'] = Registry::get('user')->getProfilePicture($activity['user_id']);
 
         $response['stats'] = $this->getStats($activity);
         $response['time'] = $activity['time'];
@@ -214,7 +214,7 @@ class Home {
 
     function format_comment($comment) {
         $comment['user']['id'] = $comment['user_id'];
-        $comment['user']['pic'] = Registry::get('user')->getProfilePicture('chat', $comment['user_id']);
+        $comment['user']['pic'] = Registry::get('user')->getProfilePicture($comment['user_id']);
         $comment['user']['name'] = Registry::get('user')->getName($comment['user_id']);
         $comment['user']['encrypted_id'] = urlencode(base64_encode($comment['user_id']));
         $comment['text'] = $comment['comment'];
