@@ -1314,9 +1314,9 @@ Application.prototype.CommentItem.prototype.show = function() {
 
     if (this.item.user.id == Application.prototype.MyUser.id) {
         var self = this;
-        this.comment_info.append("<i class='fa fa-times delete_cross delete_cross_top comment_delete'></i>").on('click', function() {
+        this.comment_info.append($("<i class='fa fa-times delete_cross delete_cross_top comment_delete'></i>").on('click', function() {
             self.delete();
-        });
+        }));
     }
     return this.comment;
 };
