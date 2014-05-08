@@ -234,7 +234,7 @@ function print_header($PRINT = TRUE) {
             	</div>
             <div class='logo'>
             	<div></div>
-            	<h2>PLACEHOLDER</h2>
+            	<h3>PLACEHOLDER</h3>
             </div>
             <?php } ?>
         </div>

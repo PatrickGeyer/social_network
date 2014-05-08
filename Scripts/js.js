@@ -12,13 +12,14 @@
 
 function Application() {
 
-};
+}
+;
 Application.prototype.default = {
-	pic : {
-		icon: "Images/male-default-icon.jpg",
-		thumb: "Images/male-default-icon.jpg",
-		large: "Images/male-default-icon.jpg"
-	}
+    pic: {
+        icon: "Images/male-default-icon.jpg",
+        thumb: "Images/male-default-icon.jpg",
+        large: "Images/male-default-icon.jpg"
+    }
 };
 Application.prototype.MyUser = {
 };
@@ -30,10 +31,8 @@ Application.prototype.userAgent = {
 };
 
 Date.mysql = function(string) {
-    if (typeof string === 'string')
-    {
+    if (typeof string === 'string') {
         var t = string.split(/[- :]/);
-
         //when t[3], t[4] and t[5] are missing they defaults to zero
         return new Date(t[0], t[1] - 1, t[2], t[3] || 0, t[4] || 0, t[5] || 0);
     }
@@ -55,17 +54,17 @@ Date.prototype.getDayName = function(lang) {
 
 Date.locale = {
     en: {
-       month_names: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-       month_names_short: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-       week_names: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        month_names: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+        month_names_short: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        week_names: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     }
 };
 
 Date.prototype.timeAgo = function(length) {
     var now = new Date();
-    if( now.getFullYear() - this.getFullYear() >= 1 ) {
+    if (now.getFullYear() - this.getFullYear() >= 1) {
         return this.formatYear();
-    } else if( now.getMonth() - this.getMonth() >= 1 || now.getDay() - this.getDay() > 7) {
+    } else if (now.getMonth() - this.getMonth() >= 1 || now.getDay() - this.getDay() > 7) {
         return this.formatMonth();
     } else {
         return this.formatWeek();
@@ -125,7 +124,7 @@ Application.prototype.upload = function(files) {
     this.onend = function() {
     };
     this.addFiles = function(files) {
-        for(var i = 0; i < files.length; i++) {
+        for (var i = 0; i < files.length; i++) {
             this.files.push(files[i]);
         }
     };
@@ -133,7 +132,7 @@ Application.prototype.upload = function(files) {
     this.push = function() {
         var file_upload_container = $('<div></div>');
         this.container.append(file_upload_container);
-        
+
         var session = this.session++;
         this.start(this.onstart);
 
@@ -167,7 +166,7 @@ Application.prototype.upload = function(files) {
             })(i, session, this);
         }
     };
-    
+
     this.start = function(callback) {
         callback();
     };
@@ -222,7 +221,7 @@ Application.prototype.file = function(file) {
     };
 
     if (file !== false) {
-    	this.init = false;
+        this.init = false;
         this.playing = false;
         this.file = file;
         this.file.name = typeof this.file.name !== 'undefined' && !isEmpty(this.file.name) ? this.file.name : 'Untitled';
@@ -422,8 +421,8 @@ Application.prototype.file = function(file) {
         return string;
     };
     var self = this;
-	
-	this.audio_button = $('<div class="audio_button"></div>').on('click', function() {
+
+    this.audio_button = $('<div class="audio_button"></div>').on('click', function() {
         self.audioPlay();
     });
     this.audio_button.append('<div class="audio_button_inside"></div>').append(this.loader = $('<div class="audio_loader"></div>'));
@@ -460,11 +459,11 @@ Application.prototype.file = function(file) {
     };
 
     this.startAudioInfo = function(start, progress, end) {
-    	if(this.init === true){
-    		this.audio.get(0).play();
-    		return;
-    	}
-    	this.init = true;
+        if (this.init === true) {
+            this.audio.get(0).play();
+            return;
+        }
+        this.init = true;
         this.view();
 
         var headerControl = $("<div></div>");
@@ -632,12 +631,12 @@ Application.prototype.FileList = function(type, pf) {
     this.pf = pf || 0;
     this.container = $("<div class='file_list'></div>");
     this.onclick = function() {
-        
+
     };
     var self = this;
     $.get('Scripts/files.class.php', {action: 'list', type: this.type, pf: this.pf}, function(response) {
         response = $.parseJSON(response);
-        for(var i = 0; i < response.length; i++) {
+        for (var i = 0; i < response.length; i++) {
             var file = new Application.prototype.file(response[i]);
             self.container.append(file.printTag('none').on('click', function() {
                 self.onclick(file);
@@ -650,7 +649,7 @@ Application.prototype.FileList = function(type, pf) {
 };
 
 Application.prototype.FileList.prototype.addFile = function(file) {
-    
+
 };
 
 Application.prototype.Folder = function(list) {
@@ -953,7 +952,8 @@ Application.prototype.Chat.prototype.styleResponse = function(response) {
             this.entry.push(ChatItem.id);
             this.items.push(ChatItem);
         }
-    };
+    }
+    ;
 
     this.newest = Array.max(this.entry);
     this.oldest = Array.min(this.entry);
@@ -1131,7 +1131,10 @@ Application.prototype.Feed.prototype.Item.prototype.Stats = function(item) {
             this.item.media[0].view.count = (this.item.media[0].view.count || 0);
         }
 
-        var Dropdown = new Application.prototype.UI.Dropdown("activity_options");
+        var Dropdown = new Application.prototype.UI.Dropdown({
+            id: "activity_options",
+            type: "actions"
+        });
         Dropdown.addOptions([{
                 class: "delete_activity",
                 text: "Delete"
@@ -1179,7 +1182,11 @@ Application.prototype.Post = function(options, element) {
         self.submit();
     });
 
-    this.dropdown = new Application.prototype.UI.Dropdown();
+    this.dropdown = new Application.prototype.UI.Dropdown({
+        type: 'selector',
+        id: 'post_dropdown',
+        name: false
+    });
     this.dropdown.addOptions([
         {
             value: 'a',
@@ -1387,7 +1394,7 @@ Application.prototype.calendar = {
 Application.prototype.ConnectionList = function() {
     this.object = {};
     this.onfetch = function() {
-        
+
     };
     this.update();
 };
@@ -1403,15 +1410,15 @@ Application.prototype.ConnectionList.prototype.update = function() {
 Application.prototype.ConnectionList.prototype.print = function() {
     var object = $("<div></div>");
     for (var i in this.object) {
-        if(this.object[i].length > 0) {
+        if (this.object[i].length > 0) {
             var container = $("<div class='contentblock'></div>").append("<b>" + i + "</b>");
             for (var key in this.object[i]) {
-            	if(i === 'Users' || i === 'Connections') {
-                	var user = new Application.prototype.User(this.object[i][key]);
-                	container.append(user.print());
+                if (i === 'Users' || i === 'Connections') {
+                    var user = new Application.prototype.User(this.object[i][key]);
+                    container.append(user.print());
                 } else {
-                	var group = new Application.prototype.Group(this.object[i][key]);
-                	container.append(group.print());
+                    var group = new Application.prototype.Group(this.object[i][key]);
+                    container.append(group.print());
                 }
             }
             object.append(container);
@@ -1428,7 +1435,7 @@ Application.prototype.UI = {
         };
     },
     update: function() {
-    	$('.createPost').each(function() {
+        $('.createPost').each(function() {
             new Application.prototype.Post({}, $(this));
         });
         $('.upload_here').each(function() {
@@ -1436,6 +1443,24 @@ Application.prototype.UI = {
         });
         $('.file_container').each(function() {
             $(this).replaceWith(new Application.prototype.FileList().print());
+        });
+        $('select.dropdown').each(function() {
+            var dropdown = new Application.prototype.UI.Dropdown({
+                id: 'select',
+                type: 'selector'
+            });
+            var options = new Array();
+            var i = 0;
+            $(this).find('option').each(function() {
+                options[i] = {
+                    value : $(this).val(),
+                    text : $(this).text(),
+                    selected : $(this).attr('selected')
+                };
+                i++;
+            });
+            dropdown.addOptions(options);
+            $(this).replaceWith(dropdown.print());
         });
     },
     dropArrow: $("<i class='fa fa-angle-down'></i>"),
@@ -1460,22 +1485,47 @@ Application.prototype.UI = {
         return this;
     },
     Dropdown: function(controller) {
-        var object = $("<div class='default_dropdown_actions' style='display:inline-block;' wrapper_id='" + controller + "'></div>");
-        var wrapper = $("<div class='default_dropdown_wrapper'></div>");
-        var list = $("<ul class='default_dropdown_menu'></ul>");
+        var self = this;
+        this.class = 'default_dropdown_' + controller.type;
+        this.object = $("<div class='" + this.class + "' style='display:inline-block;' wrapper_id='" + controller.id + "'></div>")
+                .on('click', function(event) {
+                    event.stopPropagation();
+                    self.object.toggleClass('default_dropdown_active');
+                });
+        self.preview = $('<div class="default_dropdown_preview">' + controller.name + '</div>')
+        if (controller.type == 'selector') {
+            this.object.append(self.preview);
+        }
+        this.wrapper = $("<div class='default_dropdown_wrapper'></div>");
+        this.list = $("<ul class='default_dropdown_menu'></ul>");
 
         this.print = function() {
-            wrapper.append(list);
-            object.append($("<i class='fa fa-angle-down'></i>"));
-            object.append(wrapper);
-            return object;
+            this.wrapper.append(this.list);
+            this.object.append($("<i class='fa fa-angle-down'></i>"));
+            this.object.append(this.wrapper);
+            return this.object;
         };
         this.addOptions = function(options) {
             for (var i = 0; i < options.length; i++) {
-                options[i]['value'] = options[i]['value'] || options[i]['text'];
-                list.append("<li value='" + options[i]['value'] + "' class='" + options[i].class + "'>" + options[i].text + "</li>");
+                if (options[i]['selected'] || self.list.children('li').length === 0) {
+                    self.preview.html(options[i].text);
+                    self.object.val(options[i]['value']);
+                }
+//                Immediate Function Invokation
+                (function(i) {
+                    options[i]['value'] = options[i]['value'] || options[i]['text'];
+                    self.list.append($("<li value='" + options[i]['value'] + "' class='default_dropdown_item " + options[i].class + "'>" + options[i].text + "</li>").on('click', function(event) {
+                        event.stopPropagation();
+                        self.preview.html(options[i].text);
+                        self.object.val(options[i]['value']);
+                        self.object.toggleClass('default_dropdown_active');
+                    }));
+                }(i));                
             }
         };
+        $(document).on('click', function() {
+            self.object.removeClass('default_dropdown_active');
+        });
     },
     DragUpload: function() {
         var entered = 0;
@@ -1496,7 +1546,7 @@ Application.prototype.UI = {
             var files = (event.dataTransfer && event.dataTransfer);
             if (!files) {
                 files = event.dataTransfer || (event.originalEvent && event.originalEvent.dataTransfer);
-            }        
+            }
             if (files) {
                 for (var i = 0; i < files.types.length; i++) {
                     if (files.types[i] == "Files") {
@@ -1510,15 +1560,15 @@ Application.prototype.UI = {
             $(this).removeClass('upload_hover');
             entered--;
         });
-        
+
         this.drag.on('drop', function(event) {
             $(this).removeClass('upload_hover');
             entered--;
             var files = event.target.files || (event.dataTransfer && event.dataTransfer.files);
             if (!files) {
                 files = event.dataTransfer || (event.originalEvent && event.originalEvent.dataTransfer);
-            }            
-            upload.addFiles(files.files);            
+            }
+            upload.addFiles(files.files);
             upload.push();
         });
         this.drag.on("dragenter dragstart dragend dragleave dragover drag drop", function(event) {
@@ -1529,6 +1579,7 @@ Application.prototype.UI = {
         }
     }
 };
+
 Application.prototype.notification = {
 };
 Application.prototype.search = {
@@ -1750,7 +1801,7 @@ Application.prototype.navigation.relocate = function(event, element) {
     $.get($(element).attr('href'), {ajax: 'ajax'}, function(response) {
         var container = $(response);
         $('.container').replaceWith(container);
-        
+
         $('body').scrollTop(0);
         Application.prototype.UI.update();
     });
@@ -2042,7 +2093,7 @@ Application.prototype.notification.getNotificationNumber = function() {
 Application.prototype.User = function(user) {
     this.user = user;
     this.user.pic = this.user.pic || Application.prototype.default.pic;
-    if(this.items[this.user.id]) {
+    if (this.items[this.user.id]) {
         return this.items[this.user.id];
     } else {
         this.items[this.user.id] = this;
@@ -2051,7 +2102,7 @@ Application.prototype.User = function(user) {
 Application.prototype.User.prototype.items = {};
 Application.prototype.User.prototype.print = function() {
     var container = $("<div class='user-tag'></div>");
-            container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.user.pic.icon + "\");'"
+    container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.user.pic.icon + "\");'"
             + "href ='user?id=" + this.user.id + "'>" + this.user.name + "</a>");
 
     return container;
@@ -2062,7 +2113,7 @@ Application.prototype.User.prototype.print = function() {
 Application.prototype.Group = function(group) {
     this.group = group;
     this.group.pic = this.group.pic || Application.prototype.default.pic;
-    if(this.items[this.group.id]) {
+    if (this.items[this.group.id]) {
         return this.items[this.group.id];
     } else {
         this.items[this.group.id] = this;
@@ -2071,7 +2122,7 @@ Application.prototype.Group = function(group) {
 Application.prototype.Group.prototype.items = {};
 Application.prototype.Group.prototype.print = function() {
     var container = $("<div class='user-tag'></div>");
-            container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.group.pic.icon + "\");'"
+    container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.group.pic.icon + "\");'"
             + "href ='group?id=" + this.group.id + "'>" + this.group.name + "</a>");
 
     return container;
@@ -2083,7 +2134,8 @@ Application.prototype.MyUser.setProfilePicture = function(file_id) {
         window.location.reload();
     });
 };
-Application.prototype.user = function(){};
+Application.prototype.user = function() {
+};
 Application.prototype.user.showPhotoChoose = function() {
     var content = $("<div><table><tr><td><div class='upload_here'></div></td><td><div class='profile_picture_chooser' style='max-height:200px;overflow:auto;margin-left:20px;height:100%;' id='file_container'>Loading...</div></td></tr></table></div>");
     Application.prototype.UI.dialog(
@@ -2117,7 +2169,8 @@ Application.prototype.user.showPhotoChoose = function() {
         profile_picture_id = file.id;
     });
 };
-Application.prototype.user.preview = function(){};
+Application.prototype.user.preview = function() {
+};
 Application.prototype.user.preview.show = function(element, user_id) {
     if (this.showing === false) {
         this.remove();
@@ -2530,30 +2583,6 @@ $(function() {
     /****************************************************
      * 2.1.1.1 Startup - Generic - Dropdown              *
      ****************************************************/
-    $(document).on('click', ".default_dropdown_selector .default_dropdown_actions", function(event) {
-        event.stopPropagation();
-        $('.default_dropdown_wrapper').hide();
-        //$(this) // PARENT;
-        var wrapper = '#' + $(this).parents('wrapper_id');
-        $(wrapper).toggle();
-        $(wrapper).mCustomScrollbar(SCROLL_OPTIONS);
-        $(this).toggleClass('default_dropdown_active');
-    });
-
-    $(document).on('click', "html", function(event) {
-        $('.default_dropdown_selector').removeClass('default_dropdown_active');
-        $('.default_dropdown_wrapper').hide();
-    });
-
-    $(document).on('click', ".default_dropdown_selector .default_dropdown_item", function(event) {
-        event.stopPropagation();
-        var selection_value = $(this).attr('value');
-        var wrapper = $(this).parents('.default_dropdown_wrapper');
-        $(this).parents('.default_dropdown_selector').removeClass('default_dropdown_active');
-        wrapper.find('.default_dropdown_item').removeClass('default_dropdown_active');
-        $(this).addClass('default_dropdown_active');
-        $(this).parents('.default_dropdown_selector').attr('value', selection_value).find('.default_dropdown_preview').text($(this).text());
-    });
 
     $('.default_dropdown_selector').on({
         focus: function() {
@@ -2565,14 +2594,6 @@ $(function() {
             $('html').trigger('click');
         }
     });
-
-//    $(document).on('click', ".default_dropdown_actions", function(event) {
-//        event.stopPropagation();
-//        $('.default_dropdown_wrapper').hide();
-//        var wrapper = '#' + $(this).attr('wrapper_id');
-//        $(wrapper).toggle();
-//        $(wrapper).mCustomScrollbar(SCROLL_OPTIONS);
-//    });
 
     /****************************************************
      * 2.1.2 Startup - User                              *
@@ -2689,7 +2710,7 @@ $(function() {
     /****************************************************
      * 2.1.3 Startup - Feed - Post                        *
      ****************************************************/
-    
+
     Application.prototype.UI.init();
 
     $(window).on('scroll', function() {
@@ -2844,7 +2865,7 @@ $(function() {
             });
         }
     });
-    
+
     $(document).on('click', '.post_like_activity', function(event) {
         var post_id = $(this).parents('[data-activity_id]').data('activity_id');
         var has_liked = $(this).attr('has_liked');
@@ -2958,8 +2979,6 @@ $(function() {
         $('.files, .folder').removeClass('file_hidden_container_active');
         $(this).toggleClass('file_hidden_container_active');
     });
-
-    refreshVideoJs();
 
     $('#loading_icon').fadeOut();
 
@@ -3093,7 +3112,6 @@ $(function() {
      * 2.1.4 Startup - Notification                      *
      ****************************************************/
 
-    refreshVideoJs();
     Application.prototype.notification.getNotificationNumber();
     var table = "<table style='min-height:100px;height:100px;width:100%;'><tr style='vertical-align:middle;'><td style='width:100%;text-align:center;'><div class='loader_outside_small'></div><div class='loader_inside_small'></div></td></tr></table>";
     $('ul.message, ul.network, ul.notify').prepend(table);

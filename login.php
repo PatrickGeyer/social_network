@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     //die("ID:".$user_data. "EMAIL:".$_POST['email'] ."ENCRYOT:".Registry::get('system')->encrypt($_POST['password']));
 
     if (!empty($user_data)) {
-        
+
         //$rooms = $chat->get_chat_rooms();
         //setcookie("chat_feed", $rooms[0]['id'], time() + 3600000);
         //include_once('Scripts/user.class.php');
@@ -38,7 +38,7 @@ if (isset($_COOKIE['id'])) {
 $fb_id = Base::$FB->getUser();
 
 if ($fb_id) {
-    if(isset($_GET['code'])) {
+    if (isset($_GET['code'])) {
         $user_profile = Base::$FB->api('/me');
         $user_info = array(
             'firstname' => $user_profile['first_name'],
@@ -50,7 +50,8 @@ if ($fb_id) {
         );
         login(Registry::get('user')->create($user_info));
         header("location: home");
-    } else {
+    }
+    else {
         $sql = "SELECT id FROM user WHERE fb_id=:fb_id;";
         $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
@@ -181,11 +182,11 @@ else {
                     }
                 });
             });
-            <?php 
-            if(isset($_GET['m'])) {
-                showToast('Text');
-            }
-            ?>
+<?php
+if (isset($_GET['m'])) {
+    showToast('Text');
+}
+?>
             function showToast(toast) {
                 alert(toast);
                 //Android.showToast(toast);
@@ -193,152 +194,152 @@ else {
         </script>
     </head>
     <body class="login">
-		<?php include_once('welcome.php'); ?>
-<!--         <div id="header-featured"></div> -->
+<?php include_once('welcome.php'); ?>
+        <!--         <div id="header-featured"></div> -->
 
-         <section class='layer'>
-        	<div>
-        		<div>
-        			<div class="column"> <span class="fa fa-cogs"></span>
-					<div class="title">
-					  <h2>Maecenas lectus sapien</h2>
-					</div>
-					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
-				  </div>
-				  <div class="column"> <span class="fa fa-legal"></span>
-					<div class="title">
-					  <h2>Praesent scelerisque</h2>
-					</div>
-					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
-				  </div>
-				  <div class="column double_column"> <span class="fa fa-cogs"></span>
-						<div class="signup_container">
-							<div class='title'><h2>Signup</h2></div>
-							<div class="signupbox">
-								<table border="0" style='width:100%'>
-									<tr>
-										<td><input type="text" class="first_name_signup" spellcheck="false" placeholder="First Name"autocomplete="off"/>
-										</td><td><input type="text" class="last_name_signup" placeholder="Last Name"autocomplete="off"/></td>
-									</tr>
-									<tr>
-										<td colspan="2"><input class="password_signup" spellcheck="false" type="password" style="width:100%;" placeholder="Password" autocomplete="off"/></td>
-									</tr>
-									<tr>
-										<td colspan="2"><input class="email_signup" spellcheck="false" type="text" style="width:100%;" autocomplete="off" placeholder="Email"/></td>
-									</tr>
+        <section class='layer'>
+            <div>
+                <div>
+                    <div class="column"> <span class="fa fa-cogs"></span>
+                        <div class="title">
+                            <h3>Maecenas lectus sapien</h3>
+                        </div>
+                        <p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+                    </div>
+                    <div class="column"> <span class="fa fa-legal"></span>
+                        <div class="title">
+                            <h3>Praesent scelerisque</h3>
+                        </div>
+                        <p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+                    </div>
+                    <div class="column double_column"> <span class="fa fa-cogs"></span>
+                        <div class="signup_container">
+                            <div class='title'><h3>Signup</h3></div>
+                            <div class="signupbox">
+                                <table border="0" style='width:100%'>
+                                    <tr>
+                                        <td><input type="text" class="first_name_signup" spellcheck="false" placeholder="First Name"autocomplete="off"/>
+                                        </td><td><input type="text" class="last_name_signup" placeholder="Last Name"autocomplete="off"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2"><input class="password_signup" spellcheck="false" type="password" style="width:100%;" placeholder="Password" autocomplete="off"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2"><input class="email_signup" spellcheck="false" type="text" style="width:100%;" autocomplete="off" placeholder="Email"/></td>
+                                    </tr>
 
-									<!-- 
+                                    <!-- 
 <tr>
-										<td colspan="2">
-											<select class='dropdown' data-wrapper_id='gender_choose'>
-												<option selected>
-													Gender
-												</option>
-												<option value='male'>
-													Male
-												</option>
-												<option value='female'>
-													Female
-												</option>
-											</select>
-										</td>
-									</tr>
- -->
-									<tr>
-										<td colspan="2">
-											<button id="signup" onclick="signUp();" class="pure-button-green large">Sign Up</button>
-											<a class='no-ajax' href='<?php echo Base::$FB_LOGIN;?>'>
-												<button class="pure-button-green large">Facebook Sign Up</button>
-											</a>
-										</td>
-									</tr>
-								</table>
-							</div>
-					 </div>
+                                            <td colspan="2">
+                                                    <select class='dropdown' data-wrapper_id='gender_choose'>
+                                                            <option selected>
+                                                                    Gender
+                                                            </option>
+                                                            <option value='male'>
+                                                                    Male
+                                                            </option>
+                                                            <option value='female'>
+                                                                    Female
+                                                            </option>
+                                                    </select>
+                                            </td>
+                                    </tr>
+                                    -->
+                                    <tr>
+                                        <td colspan="2">
+                                            <button id="signup" onclick="signUp();" class="pure-button-green large">Sign Up</button>
+                                            <a class='no-ajax' href='<?php echo Base::$FB_LOGIN; ?>'>
+                                                <button class="pure-button-green large">Facebook Sign Up</button>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
 
-					</div>
-        	</div>
+                    </div>
+                </div>
         </section>
         <section class='layer'>
-        	<div>
-        		<div>
-        			<div class="column"> <span class="fa fa-cogs"></span>
-					<div class="title">
-					  <h2>Maecenas lectus sapien</h2>
-					</div>
-					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
-				  </div>
-				  <div class="column"> <span class="fa fa-legal"></span>
-					<div class="title">
-					  <h2>Praesent scelerisque</h2>
-					</div>
-					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
-				  </div>
-				  <div class="column"> <span class="fa fa-unlock"></span>
-					<div class="title">
-					  <h2>Fusce ultrices fringilla</h2>
-					</div>
-					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
-				  </div>
-				  <div class="column"> <span class="fa fa-wrench"></span>
-					<div class="title">
-					  <h2>Etiam posuere augue</h2>
-					</div>
-					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
-				  </div>
-					</div>
-        	</div>
+            <div>
+                <div>
+                    <div class="column"> <span class="fa fa-cogs"></span>
+                        <div class="title">
+                            <h3>Maecenas lectus sapien</h3>
+                        </div>
+                        <p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+                    </div>
+                    <div class="column"> <span class="fa fa-legal"></span>
+                        <div class="title">
+                            <h3>Praesent scelerisque</h3>
+                        </div>
+                        <p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+                    </div>
+                    <div class="column"> <span class="fa fa-unlock"></span>
+                        <div class="title">
+                            <h3>Fusce ultrices fringilla</h3>
+                        </div>
+                        <p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+                    </div>
+                    <div class="column"> <span class="fa fa-wrench"></span>
+                        <div class="title">
+                            <h3>Etiam posuere augue</h3>
+                        </div>
+                        <p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+                    </div>
+                </div>
+            </div>
         </section>
         <section class='layer'>
-        	<div>
-        		<div>
-        			<div class="column"> <span class="fa fa-cogs"></span>
-					<div class="title">
-					  <h2>Maecenas lectus sapien</h2>
-					</div>
-					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
-				  </div>
-				  <div class="column"> <span class="fa fa-legal"></span>
-					<div class="title">
-					  <h2>Praesent scelerisque</h2>
-					</div>
-					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
-				  </div>
-				  <div class="column"> <span class="fa fa-unlock"></span>
-					<div class="title">
-					  <h2>Fusce ultrices fringilla</h2>
-					</div>
-					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
-				  </div>
-				  <div class="column"> <span class="fa fa-wrench"></span>
-					<div class="title">
-					  <h2>Etiam posuere augue</h2>
-					</div>
-					<p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
-				  </div>
-					</div>
-        	</div>
+            <div>
+                <div>
+                    <div class="column"> <span class="fa fa-cogs"></span>
+                        <div class="title">
+                            <h3>Maecenas lectus sapien</h3>
+                        </div>
+                        <p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+                    </div>
+                    <div class="column"> <span class="fa fa-legal"></span>
+                        <div class="title">
+                            <h3>Praesent scelerisque</h3>
+                        </div>
+                        <p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+                    </div>
+                    <div class="column"> <span class="fa fa-unlock"></span>
+                        <div class="title">
+                            <h3>Fusce ultrices fringilla</h3>
+                        </div>
+                        <p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+                    </div>
+                    <div class="column"> <span class="fa fa-wrench"></span>
+                        <div class="title">
+                            <h3>Etiam posuere augue</h3>
+                        </div>
+                        <p>In posuere eleifend odio. Quisque semper augue mattis wisi. Pellentesque viverra vulputate enim. Aliquam erat volutpat.</p>
+                    </div>
+                </div>
+            </div>
         </section>
         <section class='layer'>
-        	<div>
-        		<div>
-        		<div>
-					<div style='float:left;margin-right:20px;'>
-						<a href="http://stackoverflow.com/users/2506225/patrick-geyer">
-							<img src="http://stackoverflow.com/users/flair/2506225.png?theme=clean" width="208" height="58" alt="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers" title="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers">
-							</a>
-						</div>
-						<span>Warning: This site is in development. I will not be held liable for any damages you may incur on this site. By signing up, you agree to these terms. Although you are welcome to sign-up, Registry schools and store your files here for testing purposes, I cannot guarantee the safety/availability of any of your data yet. Release date: 2014, June 21. You can watch the site develop everyday.</span>
-					</div>
-					<div class="links" style='display:none;'>
-						<a id="schoollink" href="login" style="text-decoration:none; font-size:0.8em;">Registry a User</a>/
-						<a id="schoollink" href="login?action=school" style="text-decoration:none; font-size:0.8em;">Registry a School + User</a>/
-						<a id="schoollink" href="about" style="text-decoration:none; font-size:0.8em;">About</a><br/>
-						<span>Suggestions/bugs? Email me at patrick.geyer1@gmail.com</span>
-					</div>
-				</div>
-        		</div>
-        	</div>
-         
-    </body>
+            <div>
+                <div>
+                    <div>
+                        <div style='float:left;margin-right:20px;'>
+                            <a href="http://stackoverflow.com/users/2506225/patrick-geyer">
+                                <img src="http://stackoverflow.com/users/flair/2506225.png?theme=clean" width="208" height="58" alt="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers" title="profile for Patrick Geyer at Stack Overflow, Q&A for professional and enthusiast programmers">
+                            </a>
+                        </div>
+                        <span>Warning: This site is in development. I will not be held liable for any damages you may incur on this site. By signing up, you agree to these terms. Although you are welcome to sign-up, Registry schools and store your files here for testing purposes, I cannot guarantee the safety/availability of any of your data yet. Release date: 2014, June 21. You can watch the site develop everyday.</span>
+                    </div>
+                    <div class="links" style='display:none;'>
+                        <a id="schoollink" href="login" style="text-decoration:none; font-size:0.8em;">Registry a User</a>/
+                        <a id="schoollink" href="login?action=school" style="text-decoration:none; font-size:0.8em;">Registry a School + User</a>/
+                        <a id="schoollink" href="about" style="text-decoration:none; font-size:0.8em;">About</a><br/>
+                        <span>Suggestions/bugs? Email me at patrick.geyer1@gmail.com</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+</body>
 </html>
