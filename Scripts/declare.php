@@ -7,6 +7,9 @@ class Registry {
         if (!class_exists('System')) {
             require 'system.class.php';
         }
+        if (!class_exists('App')) {
+            require 'app.class.php';
+        }
         if (!class_exists('Phrase')) {
             require 'phrase.class.php';
         }
@@ -35,6 +38,7 @@ class Registry {
             require 'home.class.php';
         }
         self :: $objects['user'] = User::getInstance();
+        self :: $objects['app'] = new App();
         self :: $objects['entity'] = Entity::getInstance();
         self :: $objects['calendar'] = Calendar::getInstance();
         self :: $objects['base'] = new Base();

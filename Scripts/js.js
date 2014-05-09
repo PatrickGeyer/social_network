@@ -21,6 +21,24 @@ Application.prototype.default = {
         large: "Images/male-default-icon.jpg"
     }
 };
+Application.prototype.App = function(options) {
+    var self = this;
+    this.options = options;
+    this.options.path = "/Leo/Freezetag.html";
+    this.container = $('.app[data-game_id="' + this.options.id + '"]');
+    this.name = '';
+    this.create = function() {
+        $.post('Scripts/app.class.php', {action: 'create', name: this.name}, function() {
+            alert('done');
+        });
+    };
+    this.print = function() {
+        this.frame = $('<iframe seamless sandbox="allow-popups allow-scripts allow-same-origin" src="' + this.options.path + '"></iframe>');
+        this.container.append(this.frame).append($("<i class='fa fa-expand'></i>").on('click', function() {
+            Application.prototype.UI.launchFullscreen(self.container[0]);
+        }));
+    };
+};
 Application.prototype.MyUser = {
 };
 Application.prototype.userAgent = {
@@ -1462,6 +1480,17 @@ Application.prototype.UI = {
             dropdown.addOptions(options);
             $(this).replaceWith(dropdown.print());
         });
+    },
+    launchFullscreen: function(element) {
+        if (element.requestFullscreen) {
+            element.requestFullscreen();
+        } else if (element.mozRequestFullScreen) {
+            element.mozRequestFullScreen();
+        } else if (element.webkitRequestFullscreen) {
+            element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) {
+            element.msRequestFullscreen();
+        }
     },
     dropArrow: $("<i class='fa fa-angle-down'></i>"),
     progress: function() {
