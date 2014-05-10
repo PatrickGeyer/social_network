@@ -1,6 +1,7 @@
 <?php
 
 class Files {
+
     private static $files = NULL;
     public static $PARENT_DIR = NULL;
     public $extension_to_mime = array(
@@ -62,8 +63,8 @@ class Files {
         'htm' => 'text/html',
         'html' => 'text/html',
         'htt' => 'text/webviewhtml',
-        'ico' => 'image/x-icon', 
-       'ief' => 'image/ief',
+        'ico' => 'image/x-icon',
+        'ief' => 'image/ief',
         'iii' => 'application/x-iphone',
         'ins' => 'application/x-internet-signup',
         'isp' => 'application/x-internet-signup',
@@ -281,7 +282,7 @@ class Files {
         require_once('home.class.php');
         $this->home = Home::getInstance($args = array());
         $activity = array('id' => $this->getActivity($file['id']));
-        if($file['type'] != "Folder") {
+        if ($file['type'] != "Folder") {
             $file['type'] = $this->getType($this->mime_content_type($file['path']));
         }
         if (!isset($file['type_preview'])) {
@@ -298,7 +299,7 @@ class Files {
         if (!isset($file['like']['count'])) {
             $file['like']['count'] = $this->home->getLikeNumber($activity['id']);
         }
-        if(!isset($file['activity']['id'])) {
+        if (!isset($file['activity']['id'])) {
             $file['activity']['id'] = $this->getActivity($file['id']);
         }
         $file['activity']['stats'] = $this->home->getStats($activity);
@@ -318,7 +319,7 @@ class Files {
         }
         else if ($file['type'] == "Image") {
             //$post_styles .= "background-image:url(\"" . $file['thumb_path'] . "\")' "
-                    //. "onclick='initiateTheater(\"no_text\", " . $file['id'] . ");";
+            //. "onclick='initiateTheater(\"no_text\", " . $file['id'] . ");";
         }
         else if ($file['type'] == "Video") {
             $post_classes .= "files_shared_video";
@@ -339,7 +340,7 @@ class Files {
         }
         return "<td><div " . $post_classes . "' " . $post_styles . "'>" . $post_content . "</div></td>";
     }
-    
+
     function get_shared($file_id) {
         $sql = "SELECT group_id, user_id FROM activity_share WHERE activity_id IN "
                 . "(SELECT activity_id FROM activity_media WHERE file_id = :file_id);";
@@ -482,18 +483,18 @@ class Files {
     }
 
     function mime_content_type($path) {
-        $path = $_SERVER['DOCUMENT_ROOT']."/".$path;
+        $path = $_SERVER['DOCUMENT_ROOT'] . "/" . $path;
         @$file_info = new finfo(FILEINFO_MIME);  // object oriented approach!
         @$mime_type = $file_info->buffer(file_get_contents($path));  // e.g. gives "image/jpeg"
         @$mime_type = explode(';', $mime_type);
         return $this->alias_mime_type($mime_type[0]);
     }
-    
+
     function alias_mime_type($mime) {
         if (array_key_exists($mime, $this->alias_mime)) {
-             return $this->alias_mime[$mime];
-             
-        } else {
+            return $this->alias_mime[$mime];
+        }
+        else {
             return $mime;
         }
     }
@@ -681,7 +682,8 @@ class Files {
         }
         else if ($file['type'] == "Text File") {
             return constant("BASE::TEXT_" . $size);
-        } else if($file['type'] == "Code") {
+        }
+        else if ($file['type'] == "Code") {
             return constant("BASE::CODE_" . $size);
         }
         else {
@@ -836,8 +838,22 @@ class Files {
         foreach ($sql->fetchAll(PDO::FETCH_ASSOC) as $size) {
             $used_size += $size['size'];
         }
-        $used_size = round(($used_size/1073741824) * 100);
+        $used_size = round(($used_size / 1073741824) * 100);
         return $used_size;
+    }
+    
+    function createFolders($folders) {
+        $arranged = array();
+        foreach($folders as $key => $folder) {
+            $info = pathinfo($folder);
+            if(!isset($arranged[$info['dirname']])) { //Folder doesn't exist yet
+                $arranged[$info['dirname']] = array();
+                $arranged[$info['dirname']][] = $info['filename'];
+            } else {                                //Folder already exists
+                $arranged[$info['dirname']][] = $info['filename'];
+            }
+        }
+        die(var_dump($arranged));
     }
 
     function upload($post, $file) {
@@ -912,7 +928,7 @@ class Files {
                         if ($convert != $base_path . $mp3_path) {
                             echo ("Error: " . $convert);
                         }
-						$convert = $this->convert($convert_path, $base_path . $thumbsavepath, '-acodec libvorbis');
+                        $convert = $this->convert($convert_path, $base_path . $thumbsavepath, '-acodec libvorbis');
                         if ($convert != $base_path . $thumbsavepath) {
                             echo ("Error: " . $convert);
                         }
@@ -1046,7 +1062,7 @@ class Files {
 
 }
 
-if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'])) {
+if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action'])) {
     require('home.class.php');
     $home = Home::getInstance();
     $files = Files::getInstance();
@@ -1089,6 +1105,10 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'])) {
         ignore_user_abort(true);
         die(json_encode($files->upload($_POST, $_FILES)));
     }
+    else if ($_POST['action'] === "createFolders") {
+        $folders = $_POST['folders'];
+        $files->createFolders($folders);
+    }
     else if ($_POST['action'] == "preview") {
         $activity_id = NULL;
         if (isset($_POST['activity_id'])) {
@@ -1099,7 +1119,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'])) {
     else if ($_POST['action'] == "removePostFile") {
         $files->removeFromPost($_POST['file_id'], $_POST['activity_id']);
     }
-} else if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['action'])) {
+}
+else if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['action'])) {
     require_once('declare.php');
     $files = Files::getInstance();
     if ($_GET['action'] === "list") {

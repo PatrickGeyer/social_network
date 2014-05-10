@@ -137,51 +137,75 @@ Application.prototype.upload = function(files) {
     this.progressElement = new Array();
     this.onstart = function() {
     };
+    
     this.onprogress = function() {
     };
+    
     this.onend = function() {
     };
+    
     this.addFiles = function(files) {
         for (var i = 0; i < files.length; i++) {
             this.files.push(files[i]);
         }
     };
-
-    this.push = function() {
+    
+    this.addInput = function(input) {
+        this.files = (input);
+    };
+    
+    this.push = function(type) {
         var file_upload_container = $('<div></div>');
         this.container.append(file_upload_container);
 
         var session = this.session++;
         this.start(this.onstart);
+        if (type !== 'folder') {
+            for (var i = 0; i < this.files.length; i++) {
+                this.count++;
+                (function(count, session, Upload) {
+                    var file = Upload.files[count];
+                    var file_container = $("<div class='upload_preview'>");
+                    file_container.append(file.name);
+                    file_container.append("<br />");
+                    file_upload_container.append(file_container);
+                    Upload.progressElement[count] = new Application.prototype.UI.progress(count);
+                    Upload.progressElement[count].element = file_container;
+                    file_container.append(Upload.progressElement[count].print());
+                    var formdata = new FormData();
+                    formdata.append("file", file);
+                    formdata.append("action", 'upload');
+                    formdata.append("parent_folder", parent_folder);
 
-        for (var i = 0; i < this.files.length; i++) {
-            this.count++;
-            (function(count, session, Upload) {
-                var file = Upload.files[count];
-                var file_container = $("<div class='upload_preview'>");
-                file_container.append(file.name);
-                file_container.append("<br />");
-                file_upload_container.append(file_container);
-                Upload.progressElement[count] = new Application.prototype.UI.progress(count);
-                Upload.progressElement[count].element = file_container;
-                file_container.append(Upload.progressElement[count].print());
-                var formdata = new FormData();
-                formdata.append("file", file);
-                formdata.append("action", 'upload');
-                formdata.append("parent_folder", parent_folder);
-
-                var xhr = new XMLHttpRequest();
-                xhr.upload.onprogress = function(event) {
-                    Upload.progress(event, count, Upload.onprogress);
-                };
-                xhr.onload = function() {
-                    Upload.complete(Upload, count, Upload.onend);
-                };
-                xhr.addEventListener("error", Application.prototype.upload.error, false);
-                xhr.addEventListener("abort", Application.prototype.upload.abort, false);
-                xhr.open("post", "Scripts/files.class.php");
-                xhr.send(formdata);
-            })(i, session, this);
+                    var xhr = new XMLHttpRequest();
+                    xhr.upload.onprogress = function(event) {
+                        Upload.progress(event, count, Upload.onprogress);
+                    };
+                    xhr.onload = function() {
+                        Upload.complete(Upload, count, Upload.onend);
+                    };
+                    xhr.addEventListener("error", Application.prototype.upload.error, false);
+                    xhr.addEventListener("abort", Application.prototype.upload.abort, false);
+                    xhr.open("post", "Scripts/files.class.php");
+                    xhr.send(formdata);
+                })(i, session, this);
+            }
+        } else {
+//            var baseDir = this.files[0].webkitRelativePath.split('/')[0];
+            var folders = {};
+//            folders[baseDir] = 0;
+            var folder_id = 0;
+            for (var i = 0; i < this.files.length; i++) {
+                if(this.files[i].name === ".") {
+//                    var parts =a.pathname.split("/");
+//                    var name = parts[parts.length-2]; //MINUS TWO for last slash
+                    folders[++folder_id] = this.files[i].webkitRelativePath.substring(0, this.files[i].webkitRelativePath.length - 1);
+                }
+            }
+            console.log(folders);
+            $.post('Scripts/files.class.php', {action:'createFolders', folders: folders}, function(response) {
+                response = $.parseJSON(response);
+            });
         }
     };
 
@@ -1560,15 +1584,17 @@ Application.prototype.UI = {
         var entered = 0;
         var self = this;
         var upload = new Application.prototype.upload();
-
+        this.container = $("<div></div>");
         this.drag = $("<div class='upload_here'></div>");
         this.drag.on('click', function(event) {
             var element = $(this);
-            var input = $("<input multiple='multiple' id='file_picture' type='file' />");
+            var input = $("<input multiple='multiple' webkitdirectory='' directory type='file' name='folder[]'/>");
+//            var form = $("<form enctype='multipart/form-data'></form>").append(input);
+            
             input.trigger('click');
             input.on('change', function() {
-                upload.addFiles($(this).get(0).files);
-                upload.push();
+                upload.addFiles(input[0].files);
+                upload.push('folder');
             });
         });
         this.drag.on('dragover', function(event) {
@@ -1603,8 +1629,9 @@ Application.prototype.UI = {
         this.drag.on("dragenter dragstart dragend dragleave dragover drag drop", function(event) {
             event.preventDefault();
         });
+        this.container.append(this.drag);
         this.print = function() {
-            return this.drag;
+            return this.container;
         }
     }
 };
