@@ -155,17 +155,17 @@ function print_body() {
     if ($feed_id == "p") {
         ?>
         <script>
-            Application.prototype.feed.get(<?php echo $userid; ?>, 'user', min_activity_id, null, function(response) {
-                var string = '';
-                for (var i in response) {
-                    string += Application.prototype.feed.homify(response[i]);
-                }
-                if (response.length == 0) {
-                    $('.feed_container').prepend("This user has not made any posts!");
-                } else {
-                    $('.feed_container').prepend(string);
-                }
-            });
+//            Application.prototype.feed.get(<?php //echo $userid; ?>, 'user', min_activity_id, null, function(response) {
+//                var string = '';
+//                for (var i in response) {
+//                    string += Application.prototype.feed.homify(response[i]);
+//                }
+//                if (response.length == 0) {
+//                    $('.feed_container').prepend("This user has not made any posts!");
+//                } else {
+//                    $('.feed_container').prepend(string);
+//                }
+//            });
         </script>
     <?php
     }

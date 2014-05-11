@@ -9,7 +9,6 @@
 /****************************************************
  * 0. Global Setup                                   *
  ****************************************************/
-
 function Application() {
 
 }
@@ -132,6 +131,7 @@ Date.prototype.formatWeek = function() {
  ****************************************************/
 
 Application.prototype.upload = function(files) {
+    var self = this;
     this.files = files || new Array();
     this.sessions.push(this);
     this.progressElement = new Array();
@@ -145,13 +145,13 @@ Application.prototype.upload = function(files) {
     };
     
     this.addFiles = function(files) {
-        for (var i = 0; i < files.length; i++) {
-            this.files.push(files[i]);
+        if(files.length) {
+            for (var i = 0; i < files.length; i++) {
+                this.files.push(files[i]);
+            }
+        } else {
+            this.files.push(files);
         }
-    };
-    
-    this.addInput = function(input) {
-        this.files = (input);
     };
     
     this.push = function(type) {
@@ -162,6 +162,7 @@ Application.prototype.upload = function(files) {
         this.start(this.onstart);
         if (type !== 'folder') {
             for (var i = 0; i < this.files.length; i++) {
+                this.files[i].parent_folder_id = this.files[i].parent_folder_id || 0;
                 this.count++;
                 (function(count, session, Upload) {
                     var file = Upload.files[count];
@@ -175,7 +176,7 @@ Application.prototype.upload = function(files) {
                     var formdata = new FormData();
                     formdata.append("file", file);
                     formdata.append("action", 'upload');
-                    formdata.append("parent_folder", parent_folder);
+                    formdata.append("parent_folder", file.parent_folder_id);
 
                     var xhr = new XMLHttpRequest();
                     xhr.upload.onprogress = function(event) {
@@ -191,21 +192,34 @@ Application.prototype.upload = function(files) {
                 })(i, session, this);
             }
         } else {
-//            var baseDir = this.files[0].webkitRelativePath.split('/')[0];
-            var folders = {};
-//            folders[baseDir] = 0;
-            var folder_id = 0;
+            items = {};
             for (var i = 0; i < this.files.length; i++) {
-                if(this.files[i].name === ".") {
-//                    var parts =a.pathname.split("/");
-//                    var name = parts[parts.length-2]; //MINUS TWO for last slash
-                    folders[++folder_id] = this.files[i].webkitRelativePath.substring(0, this.files[i].webkitRelativePath.length - 1);
-                }
+                items[i] = this.files[i].webkitRelativePath;
             }
-            console.log(folders);
-            $.post('Scripts/files.class.php', {action:'createFolders', folders: folders}, function(response) {
+            $.post("Scripts/files.class.php", {action: "createFolders", files: items}, function(response) {
                 response = $.parseJSON(response);
+                self.pushFolder(response);
+                self.push();
+                console.log(self);
             });
+        }
+    };
+    this.pushFolder = function(tree) {
+        for(var i = 0; i < tree.length; i++) {
+            if(tree[i].children) {
+                this.pushFolder(tree[i].children);                
+            } else {
+                for(var n = 0; n < this.files.length; n++) {
+                    if(this.files[n].webkitRelativePath === tree[i].href) {
+                        if(this.files[n].name !== ".") {
+                            this.files[n].parent_folder_id = tree[i].parent_folder_id;
+                        } else {
+                            this.files.splice(n, 1);
+                        }
+                    }
+                }
+                
+            }
         }
     };
 
@@ -258,6 +272,7 @@ $(function() {
  * 1.3 Files                                         *
  ****************************************************/
 Application.prototype.file = function(file) {
+    var self = this;
     this.getById = function(file_id) {
         return this.items[file_id] || null;
     };
@@ -426,6 +441,9 @@ Application.prototype.file = function(file) {
             string.addClass('files');
         } else {
             string.addClass('folder');
+            string.on('click', function() {
+                Application.prototype.navigation.relocate('files?pd=' + self.file.folder_id);
+            });
         }
 
         string.append("<div class='files_icon_preview' style='background-image:url(\"" + this.file.type_preview + "\");'></div>");
@@ -1849,12 +1867,11 @@ Application.prototype.search.styleSingle = function(item) {
     return div;
 };
 
-Application.prototype.navigation.relocate = function(event, element) {
+Application.prototype.navigation.relocate = function(link) {
     this.initial = false;
-    event.preventDefault();
     $('.container').html("<div class='loader_outside'></div><div class='loader_inside'></div>");
-    window.history.pushState({}, 'WhatTheHellDoesThisDo?!', '/' + $(element).attr('href'));//Push new URL before waiting for load to complete
-    $.get($(element).attr('href'), {ajax: 'ajax'}, function(response) {
+    window.history.pushState({}, 'WhatTheHellDoesThisDo?!', '/' + link);//Push new URL before waiting for load to complete
+    $.get(link, {ajax: 'ajax'}, function(response) {
         var container = $(response);
         $('.container').replaceWith(container);
 
@@ -2592,12 +2609,13 @@ $(function() {
      ****************************************************/
 
     $(document).on('click', 'a[href!="#"][href]:not([download], .no-ajax)', function(e) {
-        Application.prototype.navigation.relocate(e, $(this));
+        e.preventDefault();
+        Application.prototype.navigation.relocate($(this).attr('href'));
     });
 
     window.onpopstate = function(event) {
         if (Application.prototype.navigation.initial === false) {
-            Application.prototype.navigation.relocate(event, $("<a></a>").attr('href', window.location.pathname + window.location.search));
+            Application.prototype.navigation.relocate(window.location.pathname + window.location.search);
         }
     };
 
@@ -2725,17 +2743,17 @@ $(function() {
 //         $('.search_results').slideUp();
 //     });
 
-    $(document).on('click', '.global_header_container .search_option', function(e) {
+    $(document).on('click', '.global_header_container .search_option', function() {
         var entity = $(this).data('entity');
         var link;
         if (entity.entity_type == 'user') {
-            link = $('<a></a>').attr('href', 'user?id=' + entity.id);
+            link = 'user?id=' + entity.id;
         } else if (entity.entity_type == 'group') {
-            link = $('<a></a>').attr('href', 'group?id=' + entity.id);
+            link = 'group?id=' + entity.id;
         } else {
-            link = $('<a></a>').attr('href', 'files?f=' + entity.id);
+            link = 'files?f=' + entity.id;
         }
-        Application.prototype.navigation.relocate(e, link);
+        Application.prototype.navigation.relocate(link);
     });
 
     $(document).on('click', '.search_option', function() { // Hide the search results when the user selects an option.

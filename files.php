@@ -11,7 +11,7 @@ function print_body() {
     }
 
     if (isset($_GET['pd'])) {
-        Files::$PARENT_DIR = urldecode(Registry::get('system')->decrypt($_GET['pd']));
+        Files::$PARENT_DIR = $_GET['pd'];
         if (empty(Files::$PARENT_DIR)) {
             Files::$PARENT_DIR = 0;
         }
@@ -150,8 +150,7 @@ function print_body() {
             </div>
             <?php
             if ($files::$PARENT_DIR != 0) {
-                echo "<button class='pure-button-neutral smallest' style='margin-top:20px;margin-left:20px;' "
-                . "onclick='window.location.assign(&quot;files?pd=" . urlencode(Registry::get('system')->encrypt(Registry::get('files')->getParentId($parent_folder))) . "&quot;)'>Back</button>";
+                echo "<a href='files?pd=" . Registry::get('files')->getParentId($files::$PARENT_DIR) . "'><button class='pure-button-neutral smallest' style='margin-top:20px;'>Back</button></a>";
             }
             ?>
             <div id="progress_bar_holder"></div>

@@ -716,9 +716,9 @@ class Files {
             ":time" => time(),
         ));
 
-        $this->create_zip($_SERVER['DOCUMENT_ROOT'] . "/User/Files/" . Registry::get('user')->user_id . "/" . $name . ".zip", array(), true);
+//        $this->create_zip($_SERVER['DOCUMENT_ROOT'] . "/User/Files/" . Registry::get('user')->user_id . "/" . $name . ".zip", array(), true);
 
-        return true;
+        return $new_folder_id;
     }
 
     function getParentId($folder_id) {
@@ -841,19 +841,73 @@ class Files {
         $used_size = round(($used_size / 1073741824) * 100);
         return $used_size;
     }
-    
+
     function createFolders($folders) {
-        $arranged = array();
-        foreach($folders as $key => $folder) {
-            $info = pathinfo($folder);
-            if(!isset($arranged[$info['dirname']])) { //Folder doesn't exist yet
-                $arranged[$info['dirname']] = array();
-                $arranged[$info['dirname']][] = $info['filename'];
-            } else {                                //Folder already exists
-                $arranged[$info['dirname']][] = $info['filename'];
+        $arranged = $this->parseArrayToTree($folders);
+        foreach ($arranged as $arrange) {
+            
+        }
+    }
+
+    function parseArrayToTree($paths) {
+        sort($paths);
+        $tree = array();
+        foreach ($paths as $path) {
+            $path = trim($path, '/');
+            $list = explode('/', $path);
+            $n = count($list);
+
+            $arrayRef = &$tree; // start from the root
+            for ($i = 0; $i < $n; $i++) {
+                $key = $list[$i];
+                $arrayRef = &$arrayRef[$key]; // index into the next level
             }
         }
-        die(var_dump($arranged));
+
+        $pf = 0;
+        $dataArray = $this->formatTree($tree, '', $pf);
+        die(json_encode($dataArray));
+        return $dataArray;
+    }
+
+    function formatTree($tree, $prefix = '', $base_f) {
+        $finalArray = array();
+        
+        foreach ($tree as $key => $value) {
+            $levelArray = array();
+            $path_parts = pathinfo($key);
+            if (!empty($path_parts['extension']) && $path_parts['extension'] != '') {
+                $extension = $path_parts['extension'];
+            } else {
+                if (empty($value)) {
+                    $extension = "";
+                }
+                else if (is_array($value)) {
+                    $extension = 'folder';
+                }
+            }
+
+            if (is_array($value)) { //its a folder
+//                $levelArray['data'] = array();
+               
+            } else { //its a file
+                $levelArray['name'] = $key;
+                $levelArray['href'] = $prefix . $key;
+                $levelArray['parent_folder_id'] = $base_f;
+            }
+
+            // if the value is another array, recursively build the list$key
+            if (is_array($value)) {
+                $pf = $this->createFolder($base_f, $path_parts['filename']);
+                $levelArray['folder_id'] = $pf;
+                $levelArray['parent_folder_id'] = $base_f;
+                $levelArray['children'] = $this->formatTree($value, $prefix . $key . "/", $pf);
+            }
+
+            $finalArray[] = $levelArray;
+        } //end foreach
+
+        return $finalArray;
     }
 
     function upload($post, $file) {
@@ -1106,7 +1160,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action'])) {
         die(json_encode($files->upload($_POST, $_FILES)));
     }
     else if ($_POST['action'] === "createFolders") {
-        $folders = $_POST['folders'];
+        $folders = $_POST['files'];
         $files->createFolders($folders);
     }
     else if ($_POST['action'] == "preview") {
@@ -1119,7 +1173,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action'])) {
     else if ($_POST['action'] == "removePostFile") {
         $files->removeFromPost($_POST['file_id'], $_POST['activity_id']);
     }
-}
+} 
 else if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['action'])) {
     require_once('declare.php');
     $files = Files::getInstance();
