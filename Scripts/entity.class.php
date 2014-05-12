@@ -50,7 +50,7 @@ class Entity {
             $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN "
                     . "(SELECT activity_id FROM activity_share WHERE "
                     . "group_id in (SELECT group_id FROM group_member WHERE user_id = :user_id) "
-                    . "OR user_id = :user_id))"
+                    . "OR user_id = :user_id)"
                     . " AND visible = 1 AND user_id = :user_id " . $min_activity_id_query . " ORDER BY time DESC";
             $activity_query = Registry::get('db')->prepare($activity_query);
             $activity_query->execute(array(":user_id" => $user_id));
@@ -66,7 +66,6 @@ class Entity {
                 ":user_id" => Registry::get('user')->user_id,
             ));
         }
-//        die($filter);
         return $activity_query;
     }
 

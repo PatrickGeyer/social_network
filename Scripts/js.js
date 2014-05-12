@@ -38,14 +38,6 @@ Application.prototype.App = function(options) {
         }));
     };
 };
-Application.prototype.MyUser = {
-};
-Application.prototype.userAgent = {
-    preview: {
-        showing: false
-    },
-    isMobile: navigator.userAgent.match(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/)
-};
 
 Date.mysql = function(string) {
     if (typeof string === 'string') {
@@ -200,7 +192,6 @@ Application.prototype.upload = function(files) {
                 response = $.parseJSON(response);
                 self.pushFolder(response);
                 self.push();
-                console.log(self);
             });
         }
     };
@@ -364,7 +355,7 @@ Application.prototype.file = function(file) {
                 string.append(this.printDoc());
             }
             var actions = $("<div class='top_right_actions'></div>");
-            if (this.file.user_id == Application.prototype.MyUser.id && activity_type != 'File') {
+            if (this.file.user_id == MyUser.attr.id && activity_type != 'File') {
                 actions.append("<i class='fa fa-times delete_cross delete_cross_top remove_event_post'></i>");
             }
             string.append(actions);
@@ -974,7 +965,7 @@ Application.prototype.Chat.prototype.sendRequest = function(all) {
         }
         if (all == 'false' && response.length > 0) {
             for (var i = response.length - 1; i >= 0; i--) {
-                if (response[i]['user_id'] != Application.prototype.MyUser.id) {
+                if (response[i]['user_id'] != MyUser.attr.id) {
                     $('#chat_new_message_sound').get(0).play();
                 }
             }
@@ -1031,7 +1022,7 @@ Application.prototype.Chat.prototype.ChatItem = function(item) {
         var final = $('<div></div>');
 
         var string = $("<li class='single_chat'></li>")
-        var chat_wrapper = $("<div class='chat_wrapper " + (Application.prototype.MyUser.id == item['user_id'] ? 'self-chat' : 'other-chat') + "'>");
+        var chat_wrapper = $("<div class='chat_wrapper " + (MyUser.attr.id == item['user_id'] ? 'self-chat' : 'other-chat') + "'>");
         var profile_picture = $("<div data-user_id='" + item['user_id'] + "' class='profile_picture_medium online_status'>");
         profile_picture.css('background-image', 'url("' + item['pic'].icon + '")');
         var chat_bubble = $("<div class='chat-content'></div>");
@@ -1041,7 +1032,7 @@ Application.prototype.Chat.prototype.ChatItem = function(item) {
         chat_bubble.append(chat_text);
         chat_bubble.append(this.time.element = $("<span class='chat_time post_comment_time'>" + new Date.mysql(item.time).timeAgo('short') + "</span>"));
 
-        if (Application.prototype.MyUser.id == item['user_id']) {
+        if (MyUser.attr.id == item['user_id']) {
             chat_wrapper.append(chat_bubble).append(profile_picture);
         } else {
             chat_wrapper.append(profile_picture).append(chat_bubble);
@@ -1101,7 +1092,7 @@ Application.prototype.Feed = function(entity_id, entity_type) {
         $.post('Scripts/home.class.php', data, function(response) {
             response = $.parseJSON(response);
             for (var i = 0; i < response.length; i++) {
-                self.items.push(new Feed.Item(response[i]));
+                self.items.push(new Application.prototype.Feed.prototype.Item(response[i]));
             }
             self.onfetch();
         });
@@ -1133,7 +1124,7 @@ Application.prototype.Feed.prototype.Item = function(item) {
             var single_post = $('<div id="single_post_' + this.item.id + '" class="singlepostdiv"></div').append(top_content);
             string.append(single_post);
             var Stats = new Application.prototype.Feed.prototype.Item.prototype.Stats(this.item);
-            if (!Application.prototype.userAgent.isMobile) {
+            if (!MyUser.userAgent.isMobile) {
                 top_content.append(Stats.printStats());
             }
             var content_wrapper = $("<div class='post_content_wrapper'></div>");
@@ -1147,7 +1138,7 @@ Application.prototype.Feed.prototype.Item = function(item) {
                 }
             }
             single_post.append(content_wrapper);
-            if (Application.prototype.userAgent.isMobile) {
+            if (MyUser.userAgent.isMobile) {
                 var stats = $("<div class='this.item_stats_mobile'></div>");
                 stats.append(Stats.printStats());
                 top_content.append(stats);
@@ -1372,7 +1363,7 @@ Application.prototype.CommentItem.prototype.show = function() {
                             + "class='user_preview_name post_comment_time post_comment_vote'>"
                             + this.item.like.like_text + "</span>"));
 
-    if (this.item.user.id == Application.prototype.MyUser.id) {
+    if (this.item.user.id == MyUser.attr.id) {
         var self = this;
         this.comment_info.append($("<i class='fa fa-times delete_cross delete_cross_top comment_delete'></i>").on('click', function() {
             self.delete();
@@ -1396,7 +1387,7 @@ Application.prototype.Comment = function(item) {
     this.printInput = function() {
         var string = $("<div class='comment_input single_comment_container'></div>");
         var self = this;
-        string.append("<div class='profile_picture_medium' style='background-image:url(\"" + Application.prototype.MyUser.pic.icon + "\");'></div>")
+        string.append("<div class='profile_picture_medium' style='background-image:url(\"" + MyUser.attr.pic.icon + "\");'></div>")
                 .append($("<div class='single_comment_info'></div>")
                         .append(this.input = $('<textarea placeholder="Write a comment..." '
                                 + 'class="home_comment_input_text inputtext" id="comment_' + this.item.id
@@ -1555,6 +1546,31 @@ Application.prototype.UI = {
         };
         return this;
     },
+    ButtonSwitch: function() {
+        var self = this;
+        this.container = $("<ul class='buttons'></ul>");
+        this.addOptions = function(options) {
+            for (var i = 0; i < options.length; i++) {
+                var item = $("<li class='ellipsis_overflow'>" + options[i].text + "</li>").attr('title', options[i].text).on('click', options[i].onclick);
+                if (options[i]['selected'] || this.container.children('li').length === 0) {
+                    item.addClass('active');
+                }
+                if (options[i].unexecutable !== true) {
+                    item.on('click', function() {
+                        $(this).siblings().removeClass('active');
+                        $(this).addClass('active');
+                    });
+                }
+                if (options[i].icon) {
+                    item.prepend("<i class='fa " + options[i].icon + "'></i>");
+                }
+                this.container.append(item);
+            }
+        }
+        this.print = function() {
+            return this.container;
+        }
+    },
     Dropdown: function(controller) {
         var self = this;
         this.class = 'default_dropdown_' + controller.type;
@@ -1598,23 +1614,54 @@ Application.prototype.UI = {
             self.object.removeClass('default_dropdown_active');
         });
     },
-    DragUpload: function() {
+    DragUpload: function(options) {
+        this.options = options || {};
+        this.options.round = this.options.round || true;
+        this.options.buttons = this.options.buttons || [
+            {
+                text: "Files",
+                onclick: function() {
+                    var input = $("<input multiple='multiple' type='file'/>");
+                    input.trigger('click');
+                    input.on('change', function() {
+                        upload.addFiles(input[0].files);
+                        upload.push();
+                    });
+                },
+                icon: "fa-file"
+            },
+            {
+                text: (navigator.userAgent.toLowerCase().indexOf('chrome') > -1 ? "Folder" : "Folder Upload only available in new versions of Chrome"),
+                onclick: (navigator.userAgent.toLowerCase().indexOf('chrome') > -1 ? function() {
+                    var input = $("<input multiple='multiple' webkitdirectory='webkitdirectory' mozdirectory='mozdirectory' directory='' type='file'/>");
+                    input.trigger('click');
+                    input.on('change', function() {
+                        upload.addFiles(input[0].files);
+                        upload.push('folder');
+                    });
+                } : function() {
+                	dialog = new Application.prototype.UI.Dialog({});
+                	dialog.addButton({type:"success", text: "OK"});
+                	dialog.title('Oh no...');
+                	dialog.content('Unfortunately you are not using the most up to date version of Chrome. This means you cannot upload folders, but you will have to upload File by File. In the future, you may be able to sync using a Desktop alternative.');
+                	dialog.show();
+                }),
+                unexecutable: true,
+                icon: "fa-folder"
+            }
+        ];
         var entered = 0;
         var self = this;
         var upload = new Application.prototype.upload();
         this.container = $("<div></div>");
-        this.drag = $("<div class='upload_here'></div>");
-        this.drag.on('click', function(event) {
-            var element = $(this);
-            var input = $("<input multiple='multiple' webkitdirectory='' directory type='file' name='folder[]'/>");
-//            var form = $("<form enctype='multipart/form-data'></form>").append(input);
-            
-            input.trigger('click');
-            input.on('change', function() {
-                upload.addFiles(input[0].files);
-                upload.push('folder');
-            });
-        });
+        this.buttonSwitch = new Application.prototype.UI.ButtonSwitch();
+        this.buttonSwitch.addOptions(this.options.buttons);
+        this.container.append(this.buttonSwitch.print());
+        this.drag = $("<div class='upload_replaced'></div>");
+        if(this.options.round === true) {
+            this.drag.addClass('round');
+        }
+        
         this.drag.on('dragover', function(event) {
             var files = (event.dataTransfer && event.dataTransfer);
             if (!files) {
@@ -1634,18 +1681,31 @@ Application.prototype.UI = {
             entered--;
         });
 
-        this.drag.on('drop', function(event) {
+        this.drag.on('drop', function(e) {
             $(this).removeClass('upload_hover');
             entered--;
-            var files = event.target.files || (event.dataTransfer && event.dataTransfer.files);
+            if(e.dataTransfer.items) {
+				var length = e.dataTransfer.items.length;
+				for (var i = 0; i < length; i++) {
+					var entry = e.dataTransfer.items[i].webkitGetAsEntry();
+					if (entry.isFile) {
+						alert('file');
+					} else if (entry.isDirectory) {
+						alert('dir');
+					}
+// 					upload.addFiles(files.files);
+				}
+			}
+            var files = e.target.files || (e.dataTransfer && e.dataTransfer.files);
             if (!files) {
-                files = event.dataTransfer || (event.originalEvent && event.originalEvent.dataTransfer);
+                files = e.dataTransfer || (e.originalEvent && e.originalEvent.dataTransfer);
             }
             upload.addFiles(files.files);
-            upload.push();
+            upload.push('folder');
         });
-        this.drag.on("dragenter dragstart dragend dragleave dragover drag drop", function(event) {
-            event.preventDefault();
+        this.drag.on("dragenter dragstart dragend dragleave dragover drag drop", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
         });
         this.container.append(this.drag);
         this.print = function() {
@@ -1726,88 +1786,91 @@ Application.prototype.UI.getViewPortWidth = function() {
     return viewportwidth;
 };
 
-Application.prototype.UI.dialog = function(content, buttons, properties) {
-    properties.modal = (typeof properties.modal === "undefined") ? true : properties.modal;
-    properties.loading = (typeof properties.loading === "undefined") ? false : properties.loading;
-    properties.title = (typeof properties.title === "undefined") ? "Undefined Title" : properties.title;
-    properties.width = (typeof properties.width === "undefined") ? "auto" : properties.width;
+Application.prototype.UI.Dialog = function(properties) {
+	var self = this;
+	this.properties = properties || {};
+    this.properties.modal = (typeof this.properties.modal === "undefined") ? true : this.properties.modal;
+    this.properties.loading = (typeof this.properties.loading === "undefined") ? false : this.properties.loading;
+    this.properties.title = (typeof this.properties.title === "undefined") ? "Undefined Title" : this.properties.title;
+    this.properties.width = (typeof this.properties.width === "undefined") ? "auto" : this.properties.width;
 
-    var dialog_container = $("<div class='dialog_container'></div>").css({'opacity': '0'});
-    $('body').append(dialog_container);
+    this.dialog_container = $("<div class='dialog_container'></div>").css({'opacity': '0'});
 
     var closingX = $("<span class='dialog_close_button'>x</span>").click(function() {
-        Application.prototype.UI.removeDialog();
+        self.removeDialog();
     });
-    var dialog_title = $("<div class='dialog_title'>" + properties.title + "</div>").append(closingX);
+    this.title = $("<div class='dialog_title'>" + this.properties.title + "</div>").append(closingX);
 
-    var content_container = $("<div class='dialog_content_container'></div>");
-    dialog_container.append(dialog_title);
-    dialog_container.append(content_container);
+    this.content_container = $("<div class='dialog_content_container'></div>");
+    this.dialog_container.append(this.title);
+    this.dialog_container.append(this.content_container);
 
-    if (content.type == "text") {
-        dialog_container.append(content.content);
-    } else if (content.type == "html") {
-        content_container.append(content.content);
-    }
-    dialog_container.width(properties.width);
-    var button_complete = $('<div></div>');
-    for (var i = 0; i < buttons.length; i++) {
-        var single_button = document.createElement('button');
-        $(single_button).addClass('small');
-        $(single_button).addClass('pure-button-' + buttons[i].type);
-        $(single_button).css('float', 'right');
-        $(single_button).text(buttons[i].text);
-        single_button.onclick = buttons[i].onclick;
-        button_complete.append(single_button);
-    }
+    this.dialog_container.width(properties.width);
+    this.button_complete = $('<div></div>');
 
     var dialog_buttons = $("<div class='dialog_buttons'><img class='dialog_loading' src='Images/ajax-loader.gif'></img></div>");
-    dialog_container.append(dialog_buttons);
-    dialog_buttons.append(button_complete);
-
-    if (properties.modal == true) {
-        $('body').append("<div class='background-overlay'></div>");
-    } else {
-        $('body').append("<div onclick='removeDialog()' style='opacity:0.5' class='background_white_overlay'></div>");
-    }
-
-    if (properties.loading == true) {
-        dialogLoad();
-    }
-    this.alignDialog();
-    var real_height = dialog_container.height();
-    content_container.mCustomScrollbar({
+    this.dialog_container.append(dialog_buttons);
+    dialog_buttons.append(this.button_complete);
+    
+    this.content_container.mCustomScrollbar({
         scrollInertia: 10,
         autoHideScrollbar: true,
     });
-    dialog_container.css({height: "0px"});
-    dialog_container.animate({minHeight: real_height + "px", opacity: 1}, 100, function() {
-        dialog_container.css({height: "auto", opacity: 1}, 'fast');
-        content_container.mCustomScrollbar("update");
-        setTimeout(function() {
-            content_container.mCustomScrollbar("update");
-        }, 200);
-    });
+
 };
 
-Application.prototype.UI.alignDialog = function() {
-    var width = $('.dialog_container').width();
-    var height = $('.dialog_container').height();
-    $('.dialog_container').css({
-        'margin-left': '-' + width / 2 + "px",
-        'margin-top': '-' + height / 2 + "px",
-    });
+Application.prototype.UI.Dialog.prototype.show = function() {
+	var self = this;
+// 	if (this.properties.modal == true) {
+// 		$('body').append("<div class='background-overlay'></div>");
+// 	} else {
+		$('body').append(this.background = $("<div onclick='removeDialog()' style='opacity:0.5' class='background_white_overlay'></div>"));
+// 	}
+	$('body').append(this.dialog_container);
+	this.alignDialog();
+	var real_height = this.dialog_container.height();
+	this.dialog_container.css({height: "0px"});
+	this.dialog_container.animate({minHeight: real_height + "px", opacity: 1}, 100, function() {
+		$(this).css({height: "auto", opacity: 1}, 'fast');
+		self.content_container.mCustomScrollbar("update");
+		setTimeout(function() {
+			self.content_container.mCustomScrollbar("update");
+		}, 200);
+	});
 };
 
-Application.prototype.UI.removeDialog = function() {
-    $('.background-overlay, .background_white_overlay').remove();
-
-    $('.dialog_container').css('min-height', '0px');
-    $('.dialog_container').animate({height: 0, opacity: 0}, 100, function() {
-        $(this).remove();
-    });
+Application.prototype.UI.Dialog.prototype.addButton = function(button) {
+	var single_button = document.createElement('button');
+	$(single_button).addClass('small');
+	$(single_button).addClass('pure-button-' + button.type);
+	$(single_button).css('float', 'right');
+	$(single_button).text(button.text);
+	single_button.onclick = button.onclick;
+	this.button_complete.append(single_button);
+};
+Application.prototype.UI.Dialog.prototype.alignDialog = function() {
+	var width = this.dialog_container.width();
+	var height = this.dialog_container.height();
+	this.dialog_container.css({
+		'margin-left': '-' + width / 2 + "px",
+		'margin-top': '-' + height / 2 + "px",
+	});
 };
 
+Application.prototype.UI.Dialog.prototype.removeDialog = function() {
+	this.background.remove();
+
+	this.dialog_container.css('min-height', '0px');
+	this.dialog_container.animate({height: 0, opacity: 0}, 100, function() {
+		$(this).remove();
+	});
+};
+Application.prototype.UI.Dialog.prototype.content = function(content) {
+	this.dialog_container.append(content);
+};
+Application.prototype.UI.Dialog.prototype.title = function(content) {
+	this.title.html(content);
+};
 /****************************************************
  * 1.1 Generic Functions                             *
  ****************************************************/
@@ -2180,6 +2243,55 @@ Application.prototype.User.prototype.print = function() {
 
     return container;
 };
+Application.prototype.User.prototype.printMap = function() {
+    return $("<img src='http://maps.googleapis.com/maps/api/staticmap?center=" + this.location.coords.latitude
+            + "," + this.location.coords.latitude + "&zoom=14&size=400x300&sensor=false' />");
+};
+
+Application.prototype.User.prototype.printHeader = function() {
+    this.container = $("<div class='contentblock userHeader'></div>");
+    this.container.append($('<img src="' + this.user.pic.icon + '"></img>'));
+    this.container.append("<span class='user_preview_name'>" + this.user.name + "</span>");
+    this.switch = new Application.prototype.UI.ButtonSwitch();
+    this.switch.addOptions([{
+        text: "Feed",
+        icon: "fa-list-ul"
+    },
+    {
+        text: "Files",
+        icon: "fa-file"
+    }]);
+    this.container.append(this.switch.print());
+    return this.container;
+};
+
+Application.prototype.User.prototype.printFeed = function() {
+    var self = this;
+    this.container = $("<div class=''></div>");
+    this.feed = new Application.prototype.Feed(this.user.id, 'user');
+    this.feed.onfetch = function() {
+        self.container.append(self.feed.print());
+    }
+    this.feed.get();
+    return this.container;
+};
+
+Application.prototype.User.prototype.MyUser = function() {
+    this.userAgent = {
+        isMobile: navigator.userAgent.match(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/)
+    };
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition( function(loc) {
+            Application.prototype.User.prototype.MyUser.prototype.location = loc;
+        });
+    }
+//    this.setProfilePicture = function(file_id) {
+//        $.post('Scripts/user.class.php', {action: "profile_picture", file_id: file_id}, function(response) {
+//            Application.prototype.UI.removeDialog();
+//        });
+//    }
+};
+
 /****************************************************
  * 1.4 Group                                         *
  ****************************************************/
@@ -2201,12 +2313,6 @@ Application.prototype.Group.prototype.print = function() {
     return container;
 };
 
-Application.prototype.MyUser.setProfilePicture = function(file_id) {
-    $.post('Scripts/user.class.php', {action: "profile_picture", file_id: file_id}, function(response) {
-        Application.prototype.UI.removeDialog();
-        window.location.reload();
-    });
-};
 Application.prototype.user = function() {
 };
 Application.prototype.user.showPhotoChoose = function() {

@@ -128,11 +128,9 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
             $.post("Scripts/notifications.class.php", {action: "mark", type: type}, function(response) {
             });
         }
-        function markNotificationRead(id, nextPage)
-        {
-            $.post("Scripts/notifications.class.php", {action: "markNotificationRead", id: id}, function(response)
-            {
-                window.location.assign(nextPage);
+        function markNotificationRead(id, nextPage) {
+            $.post("Scripts/notifications.class.php", {action: "markNotificationRead", id: id}, function(response) {
+//                window.location.assign(nextPage);
             });
         }
     </script>

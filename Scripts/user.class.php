@@ -162,69 +162,28 @@ class User {
         }
         return $location;
     }
-    function setLocation($id = NULL) {
+    function setLocation($id = NULL, $coords) {
         if(!isset($id)) {
             $id = $this->user_id;
-        } 
-        $ip = $_SERVER['REMOTE_ADDR'];
-        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
-            throw new InvalidArgumentException("IP invalid");
         }
-        $ipLite = new ip2location_lite;
-        $ipLite->setKey('b9afa6a06d06ac61e4879994d40bbd76af1137438cd1ca2d57a6334345a70f33');
-        $locations = $ipLite->getCity($ip);
-        
-        $sql = "INSERT INTO marker (user_id, country, region, city, lat, lng, time) VALUES (:user_id, :country, :region, :city, :lat, :lng, :time);";
+        Registry::get('db')->beginTransaction();
+        $sql = "INSERT INTO location (lat, long, name) VALUES (:lat, :long);";
         $sql = Registry::get('db')->prepare($sql);
         $sql->execute(
                 array(
-                    ":user_id" => $id,
-                    ":country" => $locations['countryName'],
-                    ":region" => $locations['regionName'],
                     ":lat" => $locations['latitude'],
-                    ":lng" => $locations['longitude'],
-                    ":city" => $locations['cityName'],
-                    ":time" => time(),
+                    ":long" => $locations['longitude'],
+                ));
+        $lid = Registry::get('db')->lastInsertId();
+        Registry::get('db')->commit();
+        $sql = "INSERT INTO marker (loc_id, user_id) VALUES (:lid, :id);";
+        $sql = Registry::get('db')->prepare($sql);
+        $sql->execute(
+                array(
+                    ":lid" => $lid,
+                    ":id" => $id
                 ));
     }
-    
-//    function getComunityId($id = null) {
-//        $set = false;
-//        if (!isset($id)) {
-//            $id = $this->user_id;
-//            $set = true;
-//            if(!is_null($this->comunity_id)) {
-//                return $this->commnity_id;
-//            }
-//        }
-//        $user_query = "SELECT comunity_id FROM user WHERE id = :user_id";
-//        $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-//        $user_query->execute(array(":user_id" => $id));
-//        $user = $user_query->fetchColumn();
-//        if($set) {
-//            $this->comunity_id = $user;
-//        }
-//        return $user;
-//    }
-//
-//    function getComunityName($id = null) {
-//        $set = false;
-//        if (!isset($id)) {
-//            $id = $this->user_id;
-//            $set = true;
-//            if(!is_null($this->comunity_name)) {
-//                return $this->comunity_name;
-//            }
-//        }
-//        $user_query = "SELECT name FROM comunity WHERE id = (SELECT commnity_id FROM user WHERE id = :user_id);";
-//        $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-//        $user_query->execute(array(":user_id" => $id));
-//        $user = $user_query->fetchColumn();
-//        if($set) {
-//            $this->commuity_name = $user;
-//        }
-//        return $user;
-//    }
 
     function getProfilePicture($id = null) {
         $set = false;
@@ -441,21 +400,6 @@ class User {
         $array['pic'] = $this->getProfilePicture($user_id);
         return $array;
     }
-
-    function printTag($id) {
-        $return = "<table cellspacing='0'>"
-                . "<tr><td><a href='user?id=".$id."'><div class='profile_picture_medium' style='background-image: url(\"".$this->getProfilePicture("thumb", $id). "\");'></div></a>
-                                        </td>
-                                        <td>
-                                            <p style='padding-left: 0px;' class='settings'>
-                                                <a href='user?id=".$id."'>
-                                                    <span class='user_preview_name'>". $this->getName($id) ."</span>
-                                                </a>
-                                            </p>
-                                        </td></tr></table>";
-        return $return;
-                                            
-    }
     
     function getOnlineMass($users) {
         $array = array();
@@ -523,6 +467,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
             $user->connect($_POST['user_id']);
         } else if($_POST['action'] == "acceptInvite") {
             $user->connectAccept($_POST['invite_id']);
+        } else if($_POST['action'] == "loc") {
+            $user->setLocation(NULL, $_POST['coords']);
         }
     }
 } else if ($_SERVER['REQUEST_METHOD'] == "GET") {

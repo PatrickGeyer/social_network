@@ -54,7 +54,8 @@ if(swfobject.hasFlashPlayerVersion("3")) {
 </script>
 
 <script>
-Application.prototype.MyUser = <?php echo json_encode(Registry::get('user')->get_user_preview()); ?> ;
+var MyUser = new Application.prototype.User.prototype.MyUser();
+MyUser.attr = <?php echo json_encode(Registry::get('user')->get_user_preview()); ?> ;
 </script>
 
 
@@ -62,53 +63,53 @@ Application.prototype.MyUser = <?php echo json_encode(Registry::get('user')->get
     var loggedIn = getCookie('id');
     var min_activity_id = 0;
 
-    function createMap(city, country) {
-        var geocoder = new google.maps.Geocoder();
-        geocoder.geocode({'address': city + ", " + country}, function(results, status) {
-            if (status == google.maps.GeocoderStatus.OK) {
-                var latLng = new google.maps.LatLng(results[0].geometry.location.lat(), results[0].geometry.location.lng());
-                var mapOptions = {
-                    center: latLng,
-                    zoom: 8
-                };
-                var element = $("#map-canvas")[0];
-                var map = new google.maps.Map(element, mapOptions);
-
-                var marker = new google.maps.Marker({
-                    position: latLng,
-                    map: map,
-                    title: "User's location, based on IP.",
-                    draggable: true,
-                });
-                google.maps.event.addListener(marker, "dragend", function() {
-                    Application.prototype.UI.dialog(
-                            content = {
-                                type: "html",
-                                content: "Are you sure you want to update your location?",
-                            },
-                            buttons = [{
-                                    type: "primary",
-                                    text: "Yes",
-                                    onclick: function() {
-                                        updateLocation(" + marker.position.lat() + ", " + marker.position.lng() + ");
-                                    },
-                                }],
-                            properties = {
-                                modal: false,
-                                title: 'Location',
-                            });
-                });
-            } else {
-                $("#map-canvas").hide();
-            }
-        });
-    }
-    function updateLocation(lat, lng)
-    {
-        $.post('Scripts/user.class.php', {lat: lat, lng: lng}, function(response) {
-            alert(response);
-        });
-    }
+//    function createMap(city, country) {
+//        var geocoder = new google.maps.Geocoder();
+//        geocoder.geocode({'address': city + ", " + country}, function(results, status) {
+//            if (status == google.maps.GeocoderStatus.OK) {
+//                var latLng = new google.maps.LatLng(results[0].geometry.location.lat(), results[0].geometry.location.lng());
+//                var mapOptions = {
+//                    center: latLng,
+//                    zoom: 8
+//                };
+//                var element = $("#map-canvas")[0];
+//                var map = new google.maps.Map(element, mapOptions);
+//
+//                var marker = new google.maps.Marker({
+//                    position: latLng,
+//                    map: map,
+//                    title: "User's location, based on IP.",
+//                    draggable: true,
+//                });
+//                google.maps.event.addListener(marker, "dragend", function() {
+//                    Application.prototype.UI.dialog(
+//                            content = {
+//                                type: "html",
+//                                content: "Are you sure you want to update your location?",
+//                            },
+//                            buttons = [{
+//                                    type: "primary",
+//                                    text: "Yes",
+//                                    onclick: function() {
+//                                        updateLocation(" + marker.position.lat() + ", " + marker.position.lng() + ");
+//                                    },
+//                                }],
+//                            properties = {
+//                                modal: false,
+//                                title: 'Location',
+//                            });
+//                });
+//            } else {
+//                $("#map-canvas").hide();
+//            }
+//        });
+//    }
+//    function updateLocation(lat, lng)
+//    {
+//        $.post('Scripts/user.class.php', {lat: lat, lng: lng}, function(response) {
+//            alert(response);
+//        });
+//    }
 
 // FILES
 
