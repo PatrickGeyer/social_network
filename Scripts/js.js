@@ -22,20 +22,33 @@ Application.prototype.default = {
 };
 Application.prototype.App = function(options) {
     var self = this;
-    this.options = options;
-    this.options.path = "/Leo/Freezetag.html";
-    this.container = $('.app[data-game_id="' + this.options.id + '"]');
-    this.name = '';
+    this.attr = options;
+    this.attr.path = "/Leo/Dev/Freeze%20tag.html";
+    this.container = $('.app[data-game_id="' + this.attr.id + '"]');
+    this.temp = {};
     this.create = function() {
-        $.post('Scripts/app.class.php', {action: 'create', name: this.name}, function() {
+        $.post('Scripts/app.class.php', {action: 'create', name: this.attr.name}, function() { //this.name!
             alert('done');
         });
     };
     this.print = function() {
-        this.frame = $('<iframe seamless sandbox="allow-popups allow-scripts allow-same-origin" src="' + this.options.path + '"></iframe>');
+        this.frame = $('<iframe seamless sandbox="allow-popups allow-scripts allow-same-origin" src="' + this.attr.path + '"></iframe>'); 
+//        this.frame.on('load', function() {
+//        	console.log('App Loaded');
+//        });
         this.container.append(this.frame).append($("<i class='fa fa-expand'></i>").on('click', function() {
             Application.prototype.UI.launchFullscreen(self.container[0]);
         }));
+        this.frame[0].contentWindow.App = self;
+    };
+    
+    this.setHighscore = function(score) {
+    	$.post('Scripts/app.class.php', {action: "setHighscore", game_id: this.attr.id, score: score}, function(response) {
+            alert('updated highscore to: ' + score + " -::" + response);
+    	});
+    };
+    
+    this.getHighscores = function() {
     };
 };
 
@@ -2280,11 +2293,11 @@ Application.prototype.User.prototype.MyUser = function() {
     this.userAgent = {
         isMobile: navigator.userAgent.match(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/)
     };
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition( function(loc) {
-            Application.prototype.User.prototype.MyUser.prototype.location = loc;
-        });
-    }
+    // if (navigator.geolocation) {
+//         navigator.geolocation.getCurrentPosition( function(loc) {
+//             Application.prototype.User.prototype.MyUser.prototype.location = loc;
+//         });
+//     }
 //    this.setProfilePicture = function(file_id) {
 //        $.post('Scripts/user.class.php', {action: "profile_picture", file_id: file_id}, function(response) {
 //            Application.prototype.UI.removeDialog();

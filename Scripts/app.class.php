@@ -1,5 +1,5 @@
 <?php
-
+require_once 'declare.php';
 class App {
 
     public function create($name, $type) {
@@ -17,7 +17,7 @@ class App {
     }
 
     public function highscore($score, $game_id) {
-        Registry::get('db')->startTransaction();
+        Registry::get('db')->beginTransaction();
         $sql = "INSERT INTO app.highscore (score, user_id, game_id) VALUES (:score, :user_id, :game_id);";
         $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
@@ -25,12 +25,12 @@ class App {
             ":game_id" => $game_id,
             ":user_id" => Registry::get('user')->user_id,
         ));
-        $game_id = Registry::get('db')->lastInsertId;
+        $game_id = Registry::get('db')->lastInsertId();
         Registry::get('db')->commit();
         return $game_id;
     }
     public function get($id) {
-        $sql = "SELECT * FROM app.app WHERE id=:id;";
+        $sql = "SELECT * FROM app.app WHERE id = :id;";
         $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":id" => $id,
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action'])) {
     if ($_POST['action'] === 'create') {
         Registry::get('app')->create($_POST['name'], $_POST['type']);
     }
-    if ($_POST['action'] === 'highscore') {
+    if ($_POST['action'] === 'setHighscore') {
         Registry::get('app')->highscore($_POST['score'], $_POST['game_id']);
     }
 }

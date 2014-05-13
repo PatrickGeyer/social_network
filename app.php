@@ -9,7 +9,7 @@ function print_body() { ?>
                     var options = <?php echo json_encode(Registry::get('app')->get($_GET['id'])); ?>;
                     var app = new Application.prototype.App(options);
                     app.print();
-                    document.title = app.options.name;
+                    document.title = app.attr.name;
                 </script>
             <?php } ?>
         </div>
