@@ -26,29 +26,38 @@ Application.prototype.App = function(options) {
     this.attr.path = "/Leo/Dev/Freeze%20tag.html";
     this.container = $('.app[data-game_id="' + this.attr.id + '"]');
     this.temp = {};
+    this.enlarge = this.container;
     this.create = function() {
         $.post('Scripts/app.class.php', {action: 'create', name: this.attr.name}, function() { //this.name!
             alert('done');
         });
     };
     this.print = function() {
-        this.frame = $('<iframe seamless sandbox="allow-popups allow-scripts allow-same-origin" src="' + this.attr.path + '"></iframe>'); 
+        this.frame = $('<iframe allowFullScreen="true" seamless sandbox="allow-popups allow-scripts allow-same-origin" src="' + this.attr.path + '"></iframe>'); 
 //        this.frame.on('load', function() {
 //        	console.log('App Loaded');
 //        });
         this.container.append(this.frame).append($("<i class='fa fa-expand'></i>").on('click', function() {
-            Application.prototype.UI.launchFullscreen(self.container[0]);
+            Application.prototype.UI.launchFullscreen(self.enlarge[0]);
         }));
         this.frame[0].contentWindow.App = self;
     };
     
-    this.setHighscore = function(score) {
+    this.setHighscore = function(score, callback) {
+    	callback = callback || function() {};
     	$.post('Scripts/app.class.php', {action: "setHighscore", game_id: this.attr.id, score: score}, function(response) {
-            alert('updated highscore to: ' + score + " -::" + response);
-    	});
+            response = $.parseJSON(response);
+            callback(response);
+        });
     };
-    
-    this.getHighscores = function() {
+
+    this.getHighscores = function(min, max, callback) {
+        min = min || 0;
+        max = max || 10;
+        $.get('Scripts/app.class.php', {action: "getHighscores", game_id: this.attr.id, min: min, max: max}, function(response) {
+            response = $.parseJSON(response);
+            callback(response);
+        });
     };
 };
 

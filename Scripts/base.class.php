@@ -5,20 +5,20 @@ class Base {
     public static $FB;
 
     public function __construct() {
-        require_once($_SERVER['DOCUMENT_ROOT']."/../Global_Tools/facebook-php-sdk-master/facebook.php");
-        $config = array(
-            'appId' => '219388501582266',
-            'secret' => 'c1684eed82295d4f1683367dd8c9a849',
-            'fileUpload' => false, // optional
-            'allowSignedRequest' => false, // optional, but should be set to false for non-canvas apps
-        );
-        self::$FB = new Facebook($config);
-        self::$FB_LOGIN = self::$FB->getLoginUrl(array(
-           'next' => '',
-           'cancel_url' => '',
-           //'req_perms' => 'email,publish_stream,status_update',
-           'scope' => 'email,publish_stream,status_update,user_birthday'
-        ));
+//        require_once($_SERVER['DOCUMENT_ROOT']."/../Global_Tools/facebook-php-sdk-master/facebook.php");
+//        $config = array(
+//            'appId' => '219388501582266',
+//            'secret' => 'c1684eed82295d4f1683367dd8c9a849',
+//            'fileUpload' => false, // optional
+//            'allowSignedRequest' => false, // optional, but should be set to false for non-canvas apps
+//        );
+//        self::$FB = new Facebook($config);
+//        self::$FB_LOGIN = self::$FB->getLoginUrl(array(
+//           'next' => '',
+//           'cancel_url' => '',
+//           //'req_perms' => 'email,publish_stream,status_update',
+//           'scope' => 'email,publish_stream,status_update,user_birthday'
+//        ));
     }
 
     const MALE_DEFAULT_ICON = "Images/male-default-icon.jpg";
