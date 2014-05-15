@@ -1335,6 +1335,9 @@ and (max-width : 900px) {
     box-sizing:border-box;
     -moz-box-sizing:border-box;
 }
+.global_media_container .audio_container {
+	padding-top: 10px;
+}
 
 .global_media_container .audio_button {
     position: absolute;
@@ -2420,8 +2423,7 @@ HOME
 ************************/
 
 .post_height_restrictor .post_feed_item{
-    margin-left: -13px;
-    margin-right: -13px;
+
 }
 
 .post_feed_item .comment_box{

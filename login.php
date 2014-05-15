@@ -35,7 +35,7 @@ Registry::get('system')->getGlobalMeta();
 if (isset($_COOKIE['id'])) {
     header("location: home");
 }
-$fb_id = Base::$FB->getUser();
+// $fb_id = Base::$FB->getUser();
 
 if ($fb_id) {
     if (isset($_GET['code'])) {
@@ -61,7 +61,7 @@ if ($fb_id) {
     }
 }
 else {
-    $loginUrl = Base::$FB->getLoginUrl(); //USER HAS NOT LINKED FB
+//     $loginUrl = Base::$FB->getLoginUrl(); //USER HAS NOT LINKED FB
 }
 ?>
 

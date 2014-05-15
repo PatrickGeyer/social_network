@@ -59,6 +59,12 @@ Application.prototype.App = function(options) {
             callback(response);
         });
     };
+    this.getHighscore = function(callback) {
+    	$.get('Scripts/app.class.php', {action: "getHighscore", game_id: this.attr.id}, function(response) {
+            response = $.parseJSON(response);
+            callback(response);
+        });
+    };
 };
 
 Date.mysql = function(string) {

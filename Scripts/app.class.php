@@ -50,6 +50,18 @@ class App {
         ));
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+    
+    public function getHighscore($game_id) {
+        Registry::get('db')->query("SET @curRank := 0;");
+        $sql = "SELECT *, @curRank := @curRank + 1 AS rank FROM app.highscore WHERE game_id = :game_id "
+                . "AND user_id = :user_id ORDER BY score DESC;";
+        $sql = Registry::get('db')->prepare($sql);
+        $sql->execute(array(
+            ":game_id" => $game_id,
+            ":user_id" => Registry::get('user')->user_id,
+        ));
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
 
 }
 
@@ -63,5 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action'])) {
     switch($_GET['action']) {
         case "getHighscores" :
             die(json_encode(Registry::get('app')->getHighscores($_GET['game_id'], $_GET['min'], $_GET['max']), JSON_HEX_APOS));
+        case "getHighscore" :
+        	die(json_encode(Registry::get('app')->getHighscore($_GET['game_id']), JSON_HEX_APOS));
     }
 }
