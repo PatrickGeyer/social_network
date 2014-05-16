@@ -17,7 +17,7 @@ class User {
     
     private static $user = null;
     public function __construct() {
-       $this->user_id = (isset($_COOKIE['id']) ? base64_decode($_COOKIE['id']) : "''");
+       $this->user_id = (isset($_COOKIE['id']) ? ($_COOKIE['id']) : "''");
     }
     public static function getInstance ( ) {
         if (self :: $user) {
@@ -451,7 +451,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
 
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'get_preview_info') {
-            $array[] = urlencode(base64_encode($_POST['id']));
+            $array[] = $_POST['id'];
             $array[] = $user->getName($_POST['id']);
             $array[] = $user->getProfilePicture('chat', $_POST['id']);
             $array[] = $user->getAbout($_POST['id']);

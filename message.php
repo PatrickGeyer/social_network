@@ -32,7 +32,7 @@ if (isset($_GET['r'])) {
 else if (isset($_GET['c'])) {
     $receivers = array();
     $current_thread = NULL;
-    $receiver = base64_decode($_GET['c']);
+    $receiver = $_GET['c'];
     $uid = json_encode($notification->format_receivers($receivers));
     echo "composeMessage();message_receivers = addreceiver('user', " . $receiver . ", '" . $user->getName($receiver) . "', message_receivers, 'message');";
 }

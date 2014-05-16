@@ -120,7 +120,6 @@ class Home {
         $response['id'] = $activity['id'];
 
         $response['user']['id'] = $activity['user_id'];
-        $response['user']['encrypted_id'] = urlencode(base64_encode($activity['user_id']));
         $response['user']['name'] = Registry::get('user')->getName($activity['user_id']);
         $response['user']['pic'] = Registry::get('user')->getProfilePicture($activity['user_id']);
 
@@ -216,7 +215,6 @@ class Home {
         $comment['user']['id'] = $comment['user_id'];
         $comment['user']['pic'] = Registry::get('user')->getProfilePicture($comment['user_id']);
         $comment['user']['name'] = Registry::get('user')->getName($comment['user_id']);
-        $comment['user']['encrypted_id'] = urlencode(base64_encode($comment['user_id']));
         $comment['text'] = $comment['comment'];
         $comment['like'] = array();
         $comment['like']['count'] = $this->comment_like_count($comment['id']);

@@ -70,7 +70,7 @@ class Notification {
     function getMessageNum() {
         $user_query = "SELECT id FROM message_share WHERE user_id = :user_id AND `seen` = 0;";
         $user_query = Registry::get('db')->prepare($user_query);
-        $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
+        $user_query->execute(array(":user_id" => Registry::get('user')->user_id));
         $user = $user_query->rowCount();
         return $user;
     }
@@ -118,13 +118,13 @@ class Notification {
         if ($type == "thread") {
             $thread = $id;
         }
-        $sql = "UPDATE message_share SET seen=1, `read`=1 WHERE `thread` = " . $id . " AND user_id=" . base64_decode($_COOKIE['id']) . ";";
+        $sql = "UPDATE message_share SET seen=1, `read`=1 WHERE `thread` = " . $id . " AND user_id=" . Registry::get('user')->user_id . ";";
         $sql = Registry::get('db')->prepare($sql);
         $sql->execute();
     }
 
     function markAllMessageSeen() {
-        $sql = "UPDATE message_share SET seen=1 WHERE user_id=" . base64_decode($_COOKIE['id']) . ";";
+        $sql = "UPDATE message_share SET seen=1 WHERE user_id=" . Registry::get('user')->user_id . ";";
         $sql = Registry::get('db')->prepare($sql);
         $sql->execute();
     }
@@ -295,7 +295,7 @@ class Notification {
         $message_query = Registry::get('db')->prepare($message_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $message_query->execute(
                 array(
-                    ":user_id" => base64_decode($_COOKIE['id']),
+                    ":user_id" => Registry::get('user')->user_id,
                     ":message" => $message, ":thread_id" => $thread,
                     ":time" => time(),
                     ":u_id" => $uid,
@@ -358,7 +358,7 @@ class Notification {
     function getNotification() {
         $user_query = "SELECT * FROM notification WHERE receiver_id = :user_id AND sender_id != :user_id ORDER BY time DESC;";
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
+        $user_query->execute(array(":user_id" => Registry::get('user')->user_id));
         $user = $user_query->fetchAll();
         return $user;
     }
@@ -395,14 +395,14 @@ class Notification {
     }
 
     function markAllNotificationsSeen() {
-        Registry::get('db')->query("UPDATE notification SET seen = 1 WHERE receiver_id = " . base64_decode($_COOKIE['id']) . "");
+        Registry::get('db')->query("UPDATE notification SET seen = 1 WHERE receiver_id = " . Registry::get('user')->user_id . "");
     }
 
     function getNotificationNum() {
         $user_query = "SELECT user_id, time FROM connection_invite WHERE receiver_id = :user_id "
         . "UNION SELECT event_id, time FROM event_share WHERE user_id = :user_id ORDER BY time;";
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
+        $user_query->execute(array(":user_id" => Registry::get('user')->user_id));
         $user = $user_query->rowCount();
         return 0;//$user;
     }
@@ -414,7 +414,7 @@ class Notification {
     function getNetwork() {
         $user_query = "SELECT * FROM group_invite WHERE user_id = :user_id ORDER BY time DESC;";
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
+        $user_query->execute(array(":user_id" => Registry::get('user')->user_id));
         $user = $user_query->fetchAll();
         return $user;
     }
@@ -422,21 +422,21 @@ class Notification {
     function getConnection() {
         $user_query = "SELECT * FROM connection_invite WHERE receiver_id = :user_id ORDER BY time DESC;";
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
+        $user_query->execute(array(":user_id" => Registry::get('user')->user_id));
         $user_1 = $user_query->fetchAll();
         return $user_1;
     }
     function getConnectionNum() {
         $user_query = "SELECT id FROM connection_invite WHERE user_id = :user_id AND `seen` = 0 AND invite_status = 1;";
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
+        $user_query->execute(array(":user_id" => Registry::get('user')->user_id));
         $user = $user_query->rowCount();
         return $user;
     }
     function getNetworkNum() {
         $user_query = "SELECT id FROM group_invite WHERE user_id = :user_id AND `seen` = 0 AND invite_status = 1;";
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $user_query->execute(array(":user_id" => base64_decode($_COOKIE['id'])));
+        $user_query->execute(array(":user_id" => Registry::get('user')->user_id));
         $user = $user_query->rowCount();
         return $user;
     }
@@ -522,7 +522,7 @@ class Notification {
     }
 
     function markAllNetworkSeen() {
-        Registry::get('db')->query('UPDATE group_invite SET seen=1 WHERE receiver_id = ' . base64_decode($_COOKIE['id']) . ';');
+        Registry::get('db')->query('UPDATE group_invite SET seen=1 WHERE receiver_id = ' . Registry::get('user')->user_id . ';');
     }
 
 }

@@ -139,7 +139,7 @@ class Group extends Entity {
                 }
             }
         }
-        die("success/" . urlencode(base64_encode($new_group_id)));
+        die("success/" . $new_group_id);
     }
 
 }
@@ -148,7 +148,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['action'])) {
         if ($_POST['action'] == "leave") {
             if (Registry::get('db')->query("DELETE FROM group_member WHERE member_id = " . $user->getId() . " AND group_id = " . $_POST['group_id'] . "")) {
-                die("success/" . urlencode(base64_encode($_POST['group_id'])));
+                die("success/" . $_POST['group_id']);
             }
         }
         if ($_POST['action'] == "deleteG") {

@@ -30,7 +30,18 @@ class Entity {
      */
     function getActivityQuery($filter = NULL, $group_id = NULL, $user_id = NULL, $min = 0, $max = 482734279, $activity_id = NULL) {
         Registry::setup();
-
+        $order_by = "ORDER BY (
+	( 
+		(
+			((SELECT COUNT(*) FROM activity_vote WHERE activity_id = activity.id AND vote_value != 0) + 
+			(SELECT COUNT(*) FROM comment WHERE activity_id = activity.id AND visible=1)) * 2 +
+			1
+		) 
+	) / 
+	POW
+	( 
+		TIMESTAMPDIFF(SECOND, activity.time, NOW()), 1.5)
+) DESC";
         $min_activity_id_query = "AND id BETWEEN " . $min . " AND " . $max;
         if (isset($activity_id)) {
             $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id = :activity_id AND visible = 1 ORDER BY time DESC";
@@ -60,7 +71,7 @@ class Entity {
                     . "(SELECT activity_id FROM activity_share WHERE "
                     . "group_id in (SELECT group_id FROM group_member WHERE user_id = :user_id) "
                     . "OR user_id = :user_id)"
-                    . " AND visible = 1 " . $min_activity_id_query . " ORDER BY time DESC LIMIT 4";
+                    . " AND visible = 1 " . $min_activity_id_query . " " . $order_by . " LIMIT 20";
             $activity_query = Registry::get('db')->prepare($activity_query);
             $activity_query->execute(array(
                 ":user_id" => Registry::get('user')->user_id,

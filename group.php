@@ -3,7 +3,7 @@
 function print_body() {
     require_once 'Thumbnail/ThumbLib.inc.php';
 
-    $group_id = urldecode(base64_decode($_GET['id']));
+    $group_id = $_GET['id'];
 
     $leader_query = "SELECT id, name, position FROM user WHERE id = " . Registry::get('group')->getFounderId($group_id) . "";
     $leader_query = Registry::get('db')->prepare($leader_query);
@@ -217,42 +217,6 @@ ORDER BY time DESC";
             </div>
         </div>
     </div>
-    <script>
-        $('.group_feed_selector').click(function(event)
-        {
-            $('.group_feed_selector').removeClass('active_feed');
-            $(this).addClass('active_feed');
-
-            $('#container_refresh').fadeOut(100, function()
-            {
-                $(this).empty();
-                $('#container_refresh').append('<center><img style="margin-top:50px;" src="Images/ajax-loader.gif"></img></center>');
-                $(this).fadeIn();
-            });
-
-            var element_id = "#" + $(this).attr('id');
-            var wrapper = "#" + $(this).parents('div[id]').attr('id');
-
-            scrollH(element_id, wrapper, 400);
-
-            var value = $(this).attr('filter_id');
-            if (typeof value === "undefined")
-            {
-
-            }
-            else
-            {
-                setCookie('group_feed', value);
-            }
-            getUserContent(value);
-        });
-        function getUserContent(feed_id)
-        {
-            var encrypted_id = "<?php echo $_GET['id']; ?>";
-            $('#container_refresh').load("group?id=" + encrypted_id + "&f=" + feed_id + " #container_refresh", function(response) {
-            });
-        }
-    </script>
 <?php
 }
 

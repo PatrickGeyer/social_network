@@ -3,7 +3,7 @@ include_once 'Scripts/declare.php';
 
 function login($user_id) {
     setcookie("home_feed", 'a', time() + 3600000, '/');
-    setcookie("id", base64_encode($user_id), time() + 3600000);
+    setcookie("id", $user_id, time() + 3600000);
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -37,7 +37,7 @@ if (isset($_COOKIE['id'])) {
 }
 // $fb_id = Base::$FB->getUser();
 
-if ($fb_id) {
+if (isset($fb_id)) {
     if (isset($_GET['code'])) {
         $user_profile = Base::$FB->api('/me');
         $user_info = array(
@@ -84,59 +84,6 @@ else {
         <link href="Scripts/external/jquery.mCustomScrollbar.min.css" rel="stylesheet" type="text/css" />
         <title>Login</title>
         <script>
-            function signUp() {
-                var error = false;
-                var firstname = $('.first_name_signup').val();
-                if (firstname === "" || firstname === "undefined" || typeof firstname === "undefined" || (/^[a-zA-Z0-9- ]*$/.test(firstname) === false)) {
-                    pulsate($('.first_name_signup'), 300, "red");
-                    error = true;
-                }
-                var lastname = $('.last_name_signup').val();
-                if (lastname === "" || lastname === "undefined" || typeof lastname === "undefined" || (/^[a-zA-Z0-9- ]*$/.test(lastname) === false)) {
-                    pulsate($('.last_name_signup'), 300, "red");
-                    error = true;
-                }
-                var email = $('.email_signup').val();
-                if (email === "" || email === "undefined" || typeof email === "undefined") {
-                    pulsate($('.email_signup'), 300, "red");
-                    error = true;
-                }
-                var password = $('.password_signup').val();
-                if (password === "" || password === "undefined" || typeof password === "undefined") {
-                    pulsate($('.password_signup'), 300, "red");
-                    error = true;
-                }
-//                var community_id = $('.default_dropdown_selector[wrapper_id="organization_choose"]').attr('value');
-//                if (community_id === "" || community_id === "undefined" || typeof community_id === "undefined") {
-//                    pulsate($('.default_dropdown_selector[wrapper_id="organization_choose"]'), 300, "red");
-//                    error = true;
-//                }
-//                var position = $('.default_dropdown_selector[wrapper_id="position_choose"]').attr('value');
-//                if (position === "" || position === "undefined" || typeof position === "undefined") {
-//                    pulsate($('.default_dropdown_selector[wrapper_id="position_choose"]'), 300, "red");
-//                    error = true;
-//                }
-                var gender = $('.default_dropdown_selector[wrapper_id="gender_choose"]').attr('value');
-                if (gender === "" || gender === "undefined" || typeof gender === "undefined") {
-                    pulsate($('.default_dropdown_selector[wrapper_id="gender_choose"]'), 300, "red");
-                    error = true;
-                }
-                if (error === false) {
-                    Application.prototype.UI.modal($('body'), properties = {text: "Signing up..."});
-                    $.post('Scripts/verifysignup.php', {
-                        firstname: firstname,
-                        lastname: lastname,
-                        email: email,
-                        password: password,
-                        position: position,
-                        gender: gender
-                    }, function(response) {
-                        if (response == "") {
-                            window.location.replace('home');
-                        }
-                    });
-                }
-            }
             function logIn() {
                 Application.prototype.UI.modal($('body'),
                         properties = {
@@ -181,6 +128,26 @@ else {
                         logIn();
                     }
                 });
+                $("#signup").on('submit', function(e) {
+                    e.preventDefault();
+                    var firstname = $('.first_name_signup').val();
+                    var lastname = $('.last_name_signup').val();
+                    var email = $('.email_signup').val();
+                    var password = $('.password_signup').val();
+                    $.post('Scripts/verifysignup.php', {
+                        firstname: firstname,
+                        lastname: lastname,
+                        email: email,
+                        password: password,
+//                        position: position,
+//                        gender: gender
+                    }, function(response) {
+                        if (response == "") {
+                            window.location.replace('home');
+                        }
+                    });
+                });
+
             });
 <?php
 if (isset($_GET['m'])) {
@@ -194,9 +161,7 @@ if (isset($_GET['m'])) {
         </script>
     </head>
     <body class="login">
-<?php include_once('welcome.php'); ?>
-        <!--         <div id="header-featured"></div> -->
-
+        <?php include_once('welcome.php'); ?>
         <section class='layer'>
             <div>
                 <div>
@@ -216,44 +181,28 @@ if (isset($_GET['m'])) {
                         <div class="signup_container">
                             <div class='title'><h3>Signup</h3></div>
                             <div class="signupbox">
-                                <table border="0" style='width:100%'>
-                                    <tr>
-                                        <td><input type="text" class="first_name_signup" spellcheck="false" placeholder="First Name"autocomplete="off"/>
-                                        </td><td><input type="text" class="last_name_signup" placeholder="Last Name"autocomplete="off"/></td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2"><input class="password_signup" spellcheck="false" type="password" style="width:100%;" placeholder="Password" autocomplete="off"/></td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2"><input class="email_signup" spellcheck="false" type="text" style="width:100%;" autocomplete="off" placeholder="Email"/></td>
-                                    </tr>
-
-                                    <!-- 
-<tr>
+                                <form id='signup'>
+                                    <table border="0" style='width:100%'>
+                                        <tr>
+                                            <td><input type="text" class="first_name_signup" required spellcheck="false" placeholder="First Name"autocomplete="off"/>
+                                            </td><td><input type="text" class="last_name_signup" required placeholder="Last Name"autocomplete="off"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2"><input class="password_signup" required spellcheck="false" type="password" style="width:100%;" placeholder="Password" autocomplete="off"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2"><input class="email_signup" required spellcheck="false" type="text" style="width:100%;" autocomplete="off" placeholder="Email"/></td>
+                                        </tr>
+                                        <tr>
                                             <td colspan="2">
-                                                    <select class='dropdown' data-wrapper_id='gender_choose'>
-                                                            <option selected>
-                                                                    Gender
-                                                            </option>
-                                                            <option value='male'>
-                                                                    Male
-                                                            </option>
-                                                            <option value='female'>
-                                                                    Female
-                                                            </option>
-                                                    </select>
+                                                <input type='submit' class="pure-button-green large" value='Signup' />
+                                                <a class='no-ajax' href='<?php echo Base::$FB_LOGIN; ?>'>
+                                                    <button class="pure-button-green large">Facebook Sign Up</button>
+                                                </a>
                                             </td>
-                                    </tr>
-                                    -->
-                                    <tr>
-                                        <td colspan="2">
-                                            <button id="signup" onclick="signUp();" class="pure-button-green large">Sign Up</button>
-                                            <a class='no-ajax' href='<?php echo Base::$FB_LOGIN; ?>'>
-                                                <button class="pure-button-green large">Facebook Sign Up</button>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                </table>
+                                        </tr>
+                                    </table>
+                                </form>
                             </div>
                         </div>
 

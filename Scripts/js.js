@@ -1142,12 +1142,13 @@ Application.prototype.Feed.prototype.Item = function(item) {
     };
     this.homify = function() {
         this.item.stats.like.count = parseInt(this.item.stats.like.count);
+        this.item.user = new Application.prototype.User(this.item.user);
         this.item.status_text = typeof this.item.status_text !== 'undefined' && !isEmpty(this.item.status_text) ? this.item.status_text : '';
         var string = $("<div data-this.item_id='" + this.item.id + "' class='post_height_restrictor contentblock' id='post_height_restrictor_" + this.item.id + "'></div>");
         if (this.item.view == 'home') {
             var user_link = $("<a class='user_name_post' href='user?id=" + this.item.user.id + "'></a>");
-            user_link.append("<div class='profile_picture_medium' style='background-image:url(\"" + this.item.user.pic.icon + "\");'></div>");
-            var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.id + "' href='user?id=" + this.item.user.id + "'>" + this.item.user.name + "</a>");
+            user_link.append(this.item.user.printImg());
+            var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.user.id + "' href='user?id=" + this.item.user.user.id + "'>" + this.item.user.user.name + "</a>");
             var top_content = $("<div class='top_content'>").append(user_link).append(user_name);
             var single_post = $('<div id="single_post_' + this.item.id + '" class="singlepostdiv"></div').append(top_content);
             string.append(single_post);
@@ -1447,7 +1448,7 @@ Application.prototype.Comment = function(item) {
         var string = $("<div></div>");
 
         if (this.item.comment.format == 'top') {
-            string.append("<div class='activity_actions user_preview_name post_comment_user_name' style='font-weight:100;'>Show <span class='num_comments'>" + this.item.item.this.item.hidden + "</span> more comments...</div>");
+            string.append("<div class='activity_actions user_preview_name post_comment_user_name' style='font-weight:100;'>Show <span class='num_comments'>" + this.item.comment.hidden + "</span> more comments...</div>");
         }
         for (var i in this.item.comment.comment) {
             this.comments[this.item.id].push(this.item.comment.comment[i].id);
@@ -2271,6 +2272,10 @@ Application.prototype.User.prototype.print = function() {
 
     return container;
 };
+Application.prototype.User.prototype.printImg = function() {
+    return $("<div class='profile_picture_medium' style='background-image:url(\"" + this.user.pic.icon + "\");'></div>");
+};
+
 Application.prototype.User.prototype.printMap = function() {
     return $("<img src='http://maps.googleapis.com/maps/api/staticmap?center=" + this.location.coords.latitude
             + "," + this.location.coords.latitude + "&zoom=14&size=400x300&sensor=false' />");
