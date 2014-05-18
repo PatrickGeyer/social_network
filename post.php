@@ -1,13 +1,14 @@
 <?php
-include_once 'welcome.php';
-include_once 'chat.php';
-include_once 'friends_list.php';
-$activity_id = $_GET['a'];
-?>
+function print_body() { 
+    $activity_id = $_GET['a'];
+    ?>
 <div class="container" id="home_container">
-    <div class='home_feed_post_container' style="padding-top:0px;border: 0px;">
-        <?php
-        Registry::get('home')->homeify(Registry::get('home')->getSingleActivity($activity_id));
-        ?>
+    <div class='post_container'>
+        <script>
+            var Feed = new Application.prototype.Feed(<?php echo $activity_id; ?>, 'activity', {container: $('.post_container')});
+            Feed.get();
+        </script>
     </div>
 </div>
+<?php }
+ require_once 'Scripts/lock.php';
