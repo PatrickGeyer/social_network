@@ -1110,6 +1110,7 @@ Application.prototype.Feed = function(entity_id, entity_type, properties) {
     this.onfetch = function() {
         this.print();
     };
+    this.noItems = $('<div class="contentblock post_height_restrictor">This feed contains no posts.</div>');
 //    this.loader = new Application.prototype.UI.Loader();
     this.get = function() {
         if(this.active !== true) {
@@ -1132,6 +1133,11 @@ Application.prototype.Feed = function(entity_id, entity_type, properties) {
             }
             self.loader.hide();
             self.onfetch(response);
+            if(self.active === true && self.items.length === 0) {
+                self.feed.append(self.noItems);
+            } else {
+                self.noItems.remove();
+            }
         });
     };
 
@@ -1295,12 +1301,12 @@ Application.prototype.Post = function(options, element) {
                     .append("<div class='home_feed_post_container_arrow'></div>"))
             .append(this.post_wrapper = $("<div class='post_wrapper'></div>")
                     .append($("<div class='post_content_wrapper'></div>")
-                            .append($('<textarea tabindex="1" id="status_text" placeholder= "Update Status or Share Files..." class="status_text autoresize"></textarea>')
+                            .append(this.status = $('<textarea tabindex="1" placeholder= "Update Status or Share Files..." class="status_text autoresize"></textarea>')
                                     .focus(function() {
                                         $(this).css('min-height', '100px');
-                                        $('#post_more_options').show();
+                                        self.file_container.css('display', 'table');
+                                        self.post_options.show();
                                         $('.post_wrapper').css('padding-bottom', $('.post_more_options').height());
-                                        $('.post_media_wrapper').show();
                                         $('.home_feed_post_container_arrow_border').css('border-right-color', 'rgb(70, 180,220)');
                                     }).focusout(function() {
                                 $('.home_feed_post_container_arrow_border').css('border-right-color', 'lightgrey');
@@ -1310,13 +1316,13 @@ Application.prototype.Post = function(options, element) {
                                     .append(this.fileList.print())
                                     ))
 
-                    .append($("<div id='post_more_options' class='post_more_options'></div>")
+                    .append(this.post_options = $("<div class='post_more_options'></div>")
                             .append(this.post_button)
                             .append(this.dropdown)));
 
     this.files = new Array();
     this.submit = function() {
-        var text = $('#status_text').val();
+        var text = this.status.val();
         if (text != "" || this.files.length != 0) {
             $.post("Scripts/home.class.php", {action: "update_status", status_text: text, group_id: share_group_id, post_media_added_files: this.files}, function(data) {
                 if (data == "") {
@@ -1468,16 +1474,20 @@ Application.prototype.calendar = {
     }
 };
 
-Application.prototype.ConnectionList = function() {
+Application.prototype.ConnectionList = function(props) {
+    this.props = props;
     this.object = {};
     this.onfetch = function() {
-
+        this.loader.remove();
+        this.print();
     };
+    this.loader = new Application.prototype.UI.Loader();
     this.update();
 };
 
 Application.prototype.ConnectionList.prototype.update = function() {
     var self = this;
+    self.props.container.append(self.loader);
     $.get('Scripts/user.class.php', {action: 'connections'}, function(response) {
         self.object = $.parseJSON(response);
         self.onfetch();
@@ -1485,7 +1495,6 @@ Application.prototype.ConnectionList.prototype.update = function() {
 };
 
 Application.prototype.ConnectionList.prototype.print = function() {
-    var object = $("<div></div>");
     for (var i in this.object) {
         if (this.object[i].length > 0) {
             var container = $("<div class='contentblock'></div>").append("<b>" + i + "</b>");
@@ -1498,18 +1507,15 @@ Application.prototype.ConnectionList.prototype.print = function() {
                     container.append(group.print());
                 }
             }
-            object.append(container);
+            this.props.container.append(container);
         }
     }
-    return object.html();
 };
 
 Application.prototype.UI = {
     init: function() {
         this.update();
-        var connections = new Application.prototype.ConnectionList().onfetch = function() {
-            $('.left_bar_container').append(this.print());
-        };
+        var connections = new Application.prototype.ConnectionList({container: $('.left_bar_container')});
     },
     update: function() {
         $('.createPost').each(function() {
@@ -2254,35 +2260,31 @@ Application.prototype.notification.getNotificationNumber = function() {
 };
 
 /****************************************************
- * 1.4 User                                          *
+ * 1.4 Entity                                          *
  ****************************************************/
-Application.prototype.User = function(entity) {
-    this.entity = entity;
-    this.entity.pic = this.entity.pic || Application.prototype.default.pic;
-    if (this.items[this.entity.id]) {
-        return this.items[this.entity.id];
-    } else {
-        this.items[this.entity.id] = this;
-    }
+Application.prototype.Entity = function() {
 };
-Application.prototype.User.prototype.items = {};
-Application.prototype.User.prototype.print = function() {
+Application.prototype.Entity.prototype.items = {};
+Application.prototype.Entity.prototype.print = function() {
     var container = $("<div class='user-tag'></div>");
     container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.entity.pic.icon + "\");'"
             + "href ='user?id=" + this.entity.id + "'>" + this.entity.name + "</a>");
 
     return container;
 };
-Application.prototype.User.prototype.printImg = function() {
+Application.prototype.Entity.prototype.list = function() {
+    return this;
+}
+Application.prototype.Entity.prototype.printImg = function() {
     return $("<div class='profile_picture_medium' style='background-image:url(\"" + this.entity.pic.icon + "\");'></div>");
 };
 
-Application.prototype.User.prototype.printMap = function() {
+Application.prototype.Entity.prototype.printMap = function() {
     return $("<img src='http://maps.googleapis.com/maps/api/staticmap?center=" + this.location.coords.latitude
             + "," + this.location.coords.latitude + "&zoom=14&size=400x300&sensor=false' />");
 };
 
-Application.prototype.User.prototype.printHeader = function() {
+Application.prototype.Entity.prototype.printHeader = function() {
     this.container = $("<div class='contentblock userHeader'></div>");
     this.container.append($('<img src="' + this.entity.pic.icon + '"></img>'));
     this.container.append("<span class='user_preview_name'>" + this.entity.name + "</span>");
@@ -2299,7 +2301,7 @@ Application.prototype.User.prototype.printHeader = function() {
     return this.container;
 };
 
-Application.prototype.User.prototype.printFeed = function() {
+Application.prototype.Entity.prototype.printFeed = function() {
     var self = this;
     this.container = $("<div class=''></div>");
     this.feed = new Application.prototype.Feed(this.entity.id, 'user', {container: self.container});
@@ -2309,6 +2311,28 @@ Application.prototype.User.prototype.printFeed = function() {
     this.feed.get();
     return this.container;
 };
+
+Application.prototype.Group = function(entity) {
+    this.entity = entity;
+        this.entity.pic = this.entity.pic || Application.prototype.default.pic;
+        if (this.items[this.entity.id]) {
+            return this.items[this.entity.id];
+        } else {
+            this.items[this.entity.id] = this;
+        }
+};
+Application.prototype.User = function(entity) {
+    this.entity = entity;
+        this.entity.pic = this.entity.pic || Application.prototype.default.pic;
+        if (this.items[this.entity.id]) {
+            return this.items[this.entity.id];
+        } else {
+            this.items[this.entity.id] = this;
+        }
+};
+Application.prototype.Group.prototype = new Application.prototype.Entity();
+Application.prototype.User.prototype = new Application.prototype.Entity();
+console.log(Application.prototype.Entity.prototype.list());
 
 Application.prototype.User.prototype.MyUser = function() {
     this.userAgent = {
@@ -2326,18 +2350,8 @@ Application.prototype.User.prototype.MyUser = function() {
 //    }
 };
 
-/****************************************************
- * 1.4 Group                                         *
- ****************************************************/
-Application.prototype.Group = Application.prototype.User;
-//Application.prototype.Group.prototype.items = {};
-//Application.prototype.Group.prototype.print = function() {
-//    var container = $("<div class='user-tag'></div>");
-//    container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.group.pic.icon + "\");'"
-//            + "href ='group?id=" + this.group.id + "'>" + this.group.name + "</a>");
-//
-//    return container;
-//};
+
+
 
 Application.prototype.user = function() {
 };

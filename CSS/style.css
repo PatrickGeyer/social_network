@@ -2718,9 +2718,9 @@ table.singleupdate{
     padding-top: 12px;
     padding-bottom: 0px;
     margin-top: 0px;
-    display: table;
     width: 100%;
     box-sizing: border-box;
+    display: none;
 }
 .post_media_wrapper_background{
     /*position: absolute;*/
