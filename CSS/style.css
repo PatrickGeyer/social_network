@@ -492,7 +492,14 @@ label{
     border: 2px solid rgb(0, 140, 250);
 }
 /*LOADER*/
-
+.loader {
+    margin-top: 10px;
+    text-align: center;
+}
+.loader > i {
+    font-size: 1.5em;
+    color: grey;
+}
 .loader_outside, .loader_outside_small {
     background-color: rgba(0,0,0,0);
     border: 5px solid rgba(0,183,229,0.9);
@@ -2708,9 +2715,12 @@ table.singleupdate{
 
 .post_media_wrapper{
     content: "Add Files here...";
-    padding:20px;
-    padding-bottom: 10px;
+    padding-top: 12px;
+    padding-bottom: 0px;
     margin-top: 0px;
+    display: table;
+    width: 100%;
+    box-sizing: border-box;
 }
 .post_media_wrapper_background{
     /*position: absolute;*/
@@ -2911,7 +2921,7 @@ table.singleupdate{
 }
 
 .home_feed_post_container .file_list {
-    position: absolute;
+    display: table-cell;
 }
 
 .post_more_options{

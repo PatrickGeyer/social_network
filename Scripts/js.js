@@ -716,10 +716,12 @@ Application.prototype.FileList = function(type, pf) {
     $.get('Scripts/files.class.php', {action: 'list', type: this.type, pf: this.pf}, function(response) {
         response = $.parseJSON(response);
         for (var i = 0; i < response.length; i++) {
-            var file = new Application.prototype.file(response[i]);
-            self.container.append(file.printTag('none').on('click', function() {
-                self.onclick(file);
-            }));
+            (function(i) {
+                var file = new Application.prototype.file(response[i]);
+                self.container.append(file.printTag('none').on('click', function() {
+                    self.onclick(file);
+                }));
+            })(i);
         }
     });
     this.print = function() {
@@ -805,7 +807,6 @@ Application.prototype.theater = function() {
 
         $.post('Scripts/files.class.php', {action: "preview", file_id: file_id, activity_id: activity_id}, function(response) {
             response = $.parseJSON(response);
-            var string = Application.prototype.feed.item.homify(response);
             self.theater_info_padding.append("<div>" + string + "</div>");
             var image = $('<img class="image" />');
 
@@ -1098,17 +1099,24 @@ Application.prototype.generic = {
 Application.prototype.navigation = {
     initial: true
 };
-Application.prototype.Feed = function(entity_id, entity_type) {
+Application.prototype.Feed = function(entity_id, entity_type, properties) {
+    this.prop = properties || {};
+    this.prop.container.append(this.feed = $("<div></div>")).append(this.loader = new Application.prototype.UI.Loader());
     this.entity_id = entity_id;
     this.entity_type = entity_type;
     this.items = new Array();
     this.min = 0;
     this.max = 9999999999;
     this.onfetch = function() {
+        this.print();
     };
-
+//    this.loader = new Application.prototype.UI.Loader();
     this.get = function() {
-        this.active = true;
+        if(this.active !== true) {
+            this.prop.container.append(this.loader);
+            this.active = true;
+        }
+        this.loader.show();
         var data = {
             action: "get_feed",
             min: this.min,
@@ -1122,16 +1130,15 @@ Application.prototype.Feed = function(entity_id, entity_type) {
             for (var i = 0; i < response.length; i++) {
                 self.items.push(new Application.prototype.Feed.prototype.Item(response[i]));
             }
-            self.onfetch();
+            self.loader.hide();
+            self.onfetch(response);
         });
     };
 
     this.print = function() {
-        var object = $('<div></div>');
         for (var i = 0; i < this.items.length; i++) {
-            object.append(this.items[i].print());
+            this.feed.append(this.items[i].print());
         }
-        return object;
     };
 };
 
@@ -1148,7 +1155,7 @@ Application.prototype.Feed.prototype.Item = function(item) {
         if (this.item.view == 'home') {
             var user_link = $("<a class='user_name_post' href='user?id=" + this.item.user.id + "'></a>");
             user_link.append(this.item.user.printImg());
-            var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.user.id + "' href='user?id=" + this.item.user.user.id + "'>" + this.item.user.user.name + "</a>");
+            var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.entity.id + "' href='user?id=" + this.item.user.entity.id + "'>" + this.item.user.entity.name + "</a>");
             var top_content = $("<div class='top_content'>").append(user_link).append(user_name);
             var single_post = $('<div id="single_post_' + this.item.id + '" class="singlepostdiv"></div').append(top_content);
             string.append(single_post);
@@ -1280,7 +1287,7 @@ Application.prototype.Post = function(options, element) {
         }]);
     this.fileList = new Application.prototype.FileList();
     this.fileList.onclick = function(file) {
-        this.addFile(file);
+        self.addFile(file);
     };
 
     element
@@ -1299,8 +1306,9 @@ Application.prototype.Post = function(options, element) {
                                 $('.home_feed_post_container_arrow_border').css('border-right-color', 'lightgrey');
                             }))
                             .append(this.file_container = $("<div class='post_media_wrapper'></div>")
+                                    .append(this.appended_files = $("<div class='appendFiles'></div>").append($("<div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div><img class='post_media_loader' src='Images/ajax-loader.gif'></img></div>")))
                                     .append(this.fileList.print())
-                                    .append("<div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div><img class='post_media_loader' src='Images/ajax-loader.gif'></img></div>")))
+                                    ))
 
                     .append($("<div id='post_more_options' class='post_more_options'></div>")
                             .append(this.post_button)
@@ -1311,18 +1319,8 @@ Application.prototype.Post = function(options, element) {
         var text = $('#status_text').val();
         if (text != "" || this.files.length != 0) {
             $.post("Scripts/home.class.php", {action: "update_status", status_text: text, group_id: share_group_id, post_media_added_files: this.files}, function(data) {
-                return;
                 if (data == "") {
-                    removeModal('', function() {
-                        Application.prototype.feed.prototype.get(share_group_id, null, 0, activity_id, function(response) {
-                            var string = $('');
-                            for (var i in response) {
-                                string.append(Application.prototype.feed.prototype.homify(response[i]));
-                            }
-                            $('.feed_container').prepend(string);
-                        });
-                    });
-                    clearPostArea();
+                    Application.prototype.Feed.update();
                 } else {
                     alert(data);
                 }
@@ -1332,8 +1330,7 @@ Application.prototype.Post = function(options, element) {
 };
 
 Application.prototype.Post.prototype.addFile = function(object) {
-    console.log(object);
-    this.file_container.append(object.print());
+    this.appended_files.append(object.print());
     this.files.push(object);
 };
 Application.prototype.Post.prototype.removeFile = function(object) {
@@ -1448,7 +1445,7 @@ Application.prototype.Comment = function(item) {
         var string = $("<div></div>");
 
         if (this.item.comment.format == 'top') {
-            string.append("<div class='activity_actions user_preview_name post_comment_user_name' style='font-weight:100;'>Show <span class='num_comments'>" + this.item.comment.hidden + "</span> more comments...</div>");
+            string.append("<div class='activity_actions user_preview_name post_comment_user_name' style='font-weight:100;'><a href='post?a=" + this.item.id + "'>Show <span class='num_comments'>" + this.item.comment.hidden + "</span> more comments...</a></div>");
         }
         for (var i in this.item.comment.comment) {
             this.comments[this.item.id].push(this.item.comment.comment[i].id);
@@ -1599,6 +1596,10 @@ Application.prototype.UI = {
         this.print = function() {
             return this.container;
         }
+    },
+    Loader: function() {
+        this.object = $('<div class="loader"></div>').append($('<i class="fa fa-spinner fa-spin"></i>'));
+        return this.object;
     },
     Dropdown: function(controller) {
         var self = this;
@@ -1962,7 +1963,7 @@ Application.prototype.search.styleSingle = function(item) {
 Application.prototype.navigation.relocate = function(link) {
     this.initial = false;
     $('.container').html("<div class='loader_outside'></div><div class='loader_inside'></div>");
-    window.history.pushState({}, 'WhatTheHellDoesThisDo?!', '/' + link);//Push new URL before waiting for load to complete
+    window.history.pushState({}, 'WhatTheHellDoesThisDo?!', link );//Push new URL before waiting for load to complete
     $.get(link, {ajax: 'ajax'}, function(response) {
         var container = $(response);
         $('.container').replaceWith(container);
@@ -2255,25 +2256,25 @@ Application.prototype.notification.getNotificationNumber = function() {
 /****************************************************
  * 1.4 User                                          *
  ****************************************************/
-Application.prototype.User = function(user) {
-    this.user = user;
-    this.user.pic = this.user.pic || Application.prototype.default.pic;
-    if (this.items[this.user.id]) {
-        return this.items[this.user.id];
+Application.prototype.User = function(entity) {
+    this.entity = entity;
+    this.entity.pic = this.entity.pic || Application.prototype.default.pic;
+    if (this.items[this.entity.id]) {
+        return this.items[this.entity.id];
     } else {
-        this.items[this.user.id] = this;
+        this.items[this.entity.id] = this;
     }
 };
 Application.prototype.User.prototype.items = {};
 Application.prototype.User.prototype.print = function() {
     var container = $("<div class='user-tag'></div>");
-    container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.user.pic.icon + "\");'"
-            + "href ='user?id=" + this.user.id + "'>" + this.user.name + "</a>");
+    container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.entity.pic.icon + "\");'"
+            + "href ='user?id=" + this.entity.id + "'>" + this.entity.name + "</a>");
 
     return container;
 };
 Application.prototype.User.prototype.printImg = function() {
-    return $("<div class='profile_picture_medium' style='background-image:url(\"" + this.user.pic.icon + "\");'></div>");
+    return $("<div class='profile_picture_medium' style='background-image:url(\"" + this.entity.pic.icon + "\");'></div>");
 };
 
 Application.prototype.User.prototype.printMap = function() {
@@ -2283,8 +2284,8 @@ Application.prototype.User.prototype.printMap = function() {
 
 Application.prototype.User.prototype.printHeader = function() {
     this.container = $("<div class='contentblock userHeader'></div>");
-    this.container.append($('<img src="' + this.user.pic.icon + '"></img>'));
-    this.container.append("<span class='user_preview_name'>" + this.user.name + "</span>");
+    this.container.append($('<img src="' + this.entity.pic.icon + '"></img>'));
+    this.container.append("<span class='user_preview_name'>" + this.entity.name + "</span>");
     this.switch = new Application.prototype.UI.ButtonSwitch();
     this.switch.addOptions([{
         text: "Feed",
@@ -2301,9 +2302,9 @@ Application.prototype.User.prototype.printHeader = function() {
 Application.prototype.User.prototype.printFeed = function() {
     var self = this;
     this.container = $("<div class=''></div>");
-    this.feed = new Application.prototype.Feed(this.user.id, 'user');
+    this.feed = new Application.prototype.Feed(this.entity.id, 'user', {container: self.container});
     this.feed.onfetch = function() {
-        self.container.append(self.feed.print());
+        self.feed.print();
     }
     this.feed.get();
     return this.container;
@@ -2328,23 +2329,15 @@ Application.prototype.User.prototype.MyUser = function() {
 /****************************************************
  * 1.4 Group                                         *
  ****************************************************/
-Application.prototype.Group = function(group) {
-    this.group = group;
-    this.group.pic = this.group.pic || Application.prototype.default.pic;
-    if (this.items[this.group.id]) {
-        return this.items[this.group.id];
-    } else {
-        this.items[this.group.id] = this;
-    }
-};
-Application.prototype.Group.prototype.items = {};
-Application.prototype.Group.prototype.print = function() {
-    var container = $("<div class='user-tag'></div>");
-    container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.group.pic.icon + "\");'"
-            + "href ='group?id=" + this.group.id + "'>" + this.group.name + "</a>");
-
-    return container;
-};
+Application.prototype.Group = Application.prototype.User;
+//Application.prototype.Group.prototype.items = {};
+//Application.prototype.Group.prototype.print = function() {
+//    var container = $("<div class='user-tag'></div>");
+//    container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.group.pic.icon + "\");'"
+//            + "href ='group?id=" + this.group.id + "'>" + this.group.name + "</a>");
+//
+//    return container;
+//};
 
 Application.prototype.user = function() {
 };
@@ -2754,7 +2747,7 @@ $(function() {
 
     window.onpopstate = function(event) {
         if (Application.prototype.navigation.initial === false) {
-            Application.prototype.navigation.relocate(window.location.pathname + window.location.search);
+            Application.prototype.navigation.relocate(window.location);
         }
     };
 

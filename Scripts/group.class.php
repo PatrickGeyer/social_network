@@ -88,6 +88,14 @@ class Group extends Entity {
         $usergroups = $user_query->fetchAll(PDO::FETCH_COLUMN);
         return $usergroups;
     }
+    
+    function get_preview($id) {
+        $array = array();
+        $array['id'] = $id;
+        $array['name'] = $this->getName($id);
+        $array['pic'] = $this->getProfilePicture($id);
+        return $array;
+    }
 
     function createGroup($name, $about, $type, $receivers) {
         $type = 'public';

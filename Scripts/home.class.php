@@ -554,15 +554,13 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 }
                 else if ($_POST['entity_type'] == 'group') {
                     $group_id = $_POST['entity_id'];
+                } else if($_POST['entity_type'] == 'activity') {
+                    $activity_id = $_POST['entity_id'];
                 }
             }
             else {
                 $filter = $feed_id = 'a';
             }
-            if (isset($_POST['activity_id']) && !empty($_POST['activity_id'])) {
-                $activity_id = $_POST['activity_id'];
-            }
-//            die(var_dump($entity->getActivityQuery($filter, $group_id, $user_id, $min_activity_id, $max, $activity_id)));
             die(json_encode($home->getActivity($entity->getActivityQuery($filter, $group_id, $user_id, $min_activity_id, $max, $activity_id)), JSON_HEX_APOS));
         }
         else if ($_POST['action'] == 'submitComment') {
