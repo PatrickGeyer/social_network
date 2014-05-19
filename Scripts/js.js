@@ -473,9 +473,9 @@ Application.prototype.file = function(file) {
             string.addClass('files');
         } else {
             string.addClass('folder');
-            string.on('click', function() {
-                Application.prototype.navigation.relocate('files?pd=' + self.file.folder_id);
-            });
+//            string.on('click', function() {
+//                Application.prototype.navigation.relocate('files?pd=' + self.file.folder_id);
+//            });
         }
 
         string.append("<div class='files_icon_preview' style='background-image:url(\"" + this.file.type_preview + "\");'></div>");
@@ -791,33 +791,45 @@ Application.prototype.file = function(file) {
 Application.prototype.file.prototype.items = {};
 
 Application.prototype.FileList = function(type, pf, user_id, prop) {
+    var self = this;
     this.prop = prop || {};
     this.user_id = user_id || MyUser.attr.id;
     this.items.push(this);
     this.type = type || 'all';
     this.pf = pf || 0;
     this.container = $("<div class='file_list'></div>");
-    this.onclick = function() {
-
-    };
-    var self = this;
-    $.get('Scripts/files.class.php', {action: 'list', type: this.type, pf: this.pf, receiver_id: this.user_id}, function(response) {
-        response = $.parseJSON(response);
-        for (var i = 0; i < response.length; i++) {
-            (function(i) {
-                var file = new Application.prototype.file(response[i]);
-                self.container.append(file.printTag('none').on('click', function() {
-                    self.onclick(file);
-                }));
-            })(i);
+    this.onclick = function(file) {
+        if(file.file.type === "Folder") {
+            self.pf = file.file.folder_id;
+            self.get();
         }
-    });
+    };
+    this.printItem = function(file) {
+        return file.printTag('none');
+    };
+    
     if(this.prop.container) {
         this.prop.container.append(this.container);
     }
     this.print = function() {
         return this.container;
     };
+};
+
+Application.prototype.FileList.prototype.get = function() {
+    var self = this;
+    self.container.html('');
+    $.get('Scripts/files.class.php', {action: 'list', type: this.type, pf: this.pf, receiver_id: this.user_id}, function(response) {
+        response = $.parseJSON(response);
+        for (var i = 0; i < response.length; i++) {
+            (function(i) {
+                var file = new Application.prototype.file(response[i]);
+                self.container.append(self.printItem(file).on('click', function() {
+                    self.onclick(file);
+                }));
+            })(i);
+        }
+    });
 };
 
 Application.prototype.FileList.prototype.items = new Array();
@@ -2085,17 +2097,21 @@ Application.prototype.search.styleSingle = function(item) {
     return div;
 };
 
-Application.prototype.navigation.relocate = function(link) {
+Application.prototype.navigation.relocate = function(link, get) {
+    this.get = get || true;
     this.initial = false;
-    $('.container').html(new Application.prototype.UI.Loader());
+    
     window.history.pushState({}, 'WhatTheHellDoesThisDo?!', link );//Push new URL before waiting for load to complete
-    $.get(link, {ajax: 'ajax'}, function(response) {
-        var container = $(response);
-        $('.container').replaceWith(container);
+    if(this.get) {
+        $('.container').html(new Application.prototype.UI.Loader());
+        $.get(link, {ajax: 'ajax'}, function(response) {
+            var container = $(response);
+            $('.container').replaceWith(container);
 
-        $('body').scrollTop(0);
-        Application.prototype.UI.update();
-    });
+            $('body').scrollTop(0);
+            Application.prototype.UI.update();
+        });
+    }
 }
 
 /****************************************************
@@ -2444,6 +2460,10 @@ Application.prototype.Entity.prototype.printFeed = function(prop) {
 Application.prototype.Entity.prototype.printSharedFiles = function(prop) {
     var self = this;
     this.feed = new Application.prototype.FileList('all', 0, this.entity.id, {container: prop.container});
+    this.feed.printItem = function(file) {
+        return file.print_row();
+    };
+    this.feed.get();
 };
 
 

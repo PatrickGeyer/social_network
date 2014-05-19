@@ -225,7 +225,7 @@ class Files {
         if(is_null($id)) {
             $id = Registry::get('user')->user_id;
         }
-        $sql = "SELECT * FROM file WHERE user_id = :receiver_id AND :receiver_id = :user_id OR file.id IN "
+        $sql = "SELECT *, @rec_pf:=parent_folder_id as 'rec_pf' FROM file WHERE user_id = :receiver_id AND :receiver_id = :user_id OR file.id IN "
                 . "(SELECT file_id FROM file_share WHERE" . constant('Base::CAN_VIEW_FILE') . ")"
                 . " AND type != 'Webpage' AND visible = 1 AND parent_folder_id = :pf ORDER BY name;";
         $sql = Registry::get('db')->prepare($sql);
@@ -240,23 +240,7 @@ class Files {
         }
         return $return_array;
     }
-
-    public function getSharedList($viewed_id = NULL, $id = null, $parent_folder = 0) {
-        if ($id == null) {
-            $id = Registry::get('user')->user_id;
-        }
-        $sql = "SELECT * FROM file WHERE type != 'Webpage' AND id IN (SELECT file_id FROM file_share WHERE user_id = :viewed_id "
-                . "AND (receiver_id = :user_id "
-                . "OR group_id IN(SELECT group_id FROM group_member WHERE member_id = :user_id)));";
-        $sql = Registry::get('db')->prepare($sql);
-        $sql->execute(array(
-            ":user_id" => Registry::get('user')->user_id,
-            ":viewed_id" => $viewed_id,
-        ));
-        $return_array = $sql->fetchAll();
-        return $return_array;
-    }
-
+    
     public function getActivity($file_id) {
         $sql = "SELECT activity_id FROM activity_media WHERE file_id = :file_id AND activity_id IN"
                 . " (SELECT id FROM activity WHERE type = 'File'); ";
