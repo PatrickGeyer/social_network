@@ -68,10 +68,9 @@ class Entity {
         }
         if (!isset($activity_query)) {
             $activity_query = "SELECT id, user_id, status_text, type, time FROM activity WHERE id IN "
-                    . "(SELECT activity_id FROM activity_share WHERE "
-                    . "group_id in (SELECT group_id FROM group_member WHERE user_id = :user_id) "
-                    . "OR user_id = :user_id)"
-                    . " AND visible = 1 " . $min_activity_id_query . " " . $order_by . " LIMIT 20";
+                    . "(SELECT activity_id FROM activity_share WHERE"
+                    . constant('Base::CAN_VIEW_POST')
+                    . ") AND visible = 1 " . $min_activity_id_query . " " . $order_by . " LIMIT 20";
             $activity_query = Registry::get('db')->prepare($activity_query);
             $activity_query->execute(array(
                 ":user_id" => Registry::get('user')->user_id,

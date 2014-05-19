@@ -176,8 +176,8 @@ function print_header($PRINT = TRUE) {
                     <a href="#" class="no-ajaxy center"></a>
                 </div>
                 <div class='global_header_container'>
-                    <div class='search_container contentblock' style='float:left;'>
-                        <input class="search_box search" autocomplete='off' mode='universal' type='text' id='names_input' placeholder='Search for people, groups and files' name='receiver'>
+                    <div class='search_container contentblock plain' style='float:left;'>
+                        <input class="search_box search plain" autocomplete='off' mode='universal' type='text' id='names_input' placeholder='Search for people, groups and files' name='receiver'>
                         <div class="search_results"></div>
                     </div>
                     <div class='global_header_icon_container'>
@@ -220,7 +220,7 @@ function print_header($PRINT = TRUE) {
                             <span id='network_num' class="message_notification"></span>
                         </div>
                     </div>
-                <div class='contentblock global_media_container'></div>
+                <div class='contentblock global_media_container square plain'></div>
             
             <?php } else { ?>
             <div class='global_header_container'>

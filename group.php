@@ -5,7 +5,7 @@ function print_body() {
     $is_member = Registry::get('group')->isMember(Registry::get('user')->user_id, $group_id);
 
 
-    if (isset($_GET['f']) && $_GET['f'] == 'f') {
+    if (isset($_GET['t']) && $_GET['t'] == 'f') {
         $feed_id = 'f';
     }
     else {
@@ -42,13 +42,13 @@ function print_body() {
         </script>
     </head>
     <div class="container">
+        <div class='header'></div>
         <div class='group_feed'>
             <script>
-                var group = new Application.prototype.User(<?php echo json_encode(Registry::get('group')->get_preview($group_id)); ?>);
-                $(".group_feed").append(group.printHeader());
-    <?php if ($feed_id == "p") { ?> $(".user_feed").append(group.printFeed()); <?php }
-    else {
-        ?> $(".group_feed").append(group.printSharedFiles()); <?php } ?>
+                var group = new Application.prototype.Group(<?php echo json_encode(Registry::get('group')->get_preview($group_id)); ?>);
+                group.printHeader({container: $(".header"), tab: "<?php echo $feed_id;?>"});
+    <?php if ($feed_id == "p") { ?> group.printFeed({container: $(".group_feed")}); <?php }
+    else { ?> group.printSharedFiles({container: $(".group_feed")}); <?php } ?>
             </script>
         </div>
     </div>

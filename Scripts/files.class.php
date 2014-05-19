@@ -179,6 +179,7 @@ class Files {
         'wcm' => 'application/vnd.ms-works',
         'wdb' => 'application/vnd.ms-works',
         'wks' => 'application/vnd.ms-works',
+        'wma' => 'audio/x-ms-wma',
         'wmf' => 'application/x-msmetafile',
         'wps' => 'application/vnd.ms-works',
         'wri' => 'application/x-mswrite',
@@ -221,10 +222,16 @@ class Files {
     }
 
     function getList($dir = null, $id = null) {
-        $sql = "SELECT * FROM file WHERE user_id = :user_id AND type != 'Webpage' AND visible = 1 AND parent_folder_id = :pf ORDER BY name;";
+        if(is_null($id)) {
+            $id = Registry::get('user')->user_id;
+        }
+        $sql = "SELECT * FROM file WHERE user_id = :receiver_id AND :receiver_id = :user_id OR file.id IN "
+                . "(SELECT file_id FROM file_share WHERE" . constant('Base::CAN_VIEW_FILE') . ")"
+                . " AND type != 'Webpage' AND visible = 1 AND parent_folder_id = :pf ORDER BY name;";
         $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":user_id" => Registry::get('user')->user_id,
+            ":receiver_id" => $id,
             ":pf" => $dir
         ));
         $return_array = $sql->fetchAll(PDO::FETCH_ASSOC);
@@ -437,6 +444,7 @@ class Files {
             case "audio/mpeg" :
             case "audio/wav" :
             case "audio/m4a" :
+            case "audio/x-ms-wma" :
                 $extn = "Audio";
                 break;
 
@@ -1178,6 +1186,6 @@ else if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['action'])) {
     require_once('declare.php');
     $files = Files::getInstance();
     if ($_GET['action'] === "list") {
-        die(json_encode($files->getList($_GET['pf'])));
+        die(json_encode($files->getList($_GET['pf'], $_GET['receiver_id'])));
     }
 }

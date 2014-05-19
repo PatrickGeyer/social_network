@@ -125,9 +125,6 @@ function print_body() {
                                 <img style='height: 30px; width:30px' src='Images/Icons/Icon_Pacs/typicons.2.0/png-48px/upload-white.png'></img>
                             </button>
                         </td>
-                        <td>
-                            <img id='loading_icon' src='Images/ajax-loader.gif'></img>
-                        </td>
                     </tr>
                 </table>
             </div>
@@ -143,7 +140,7 @@ function print_body() {
                     }
                     else {
                         $files_list = Registry::get('files')->get_content(Files::$PARENT_DIR, $files_user_id);
-                        echo "<script>$('.feed_container').append(new Application.prototype.Folder(" . json_encode($files_list) . ").print());</script>";
+                        ?><script>new Application.prototype.Folder(<?php echo json_encode($files_list); ?>, {container: $(".feed_container")});</script><?php
                     }
                     ?>
                 </div>

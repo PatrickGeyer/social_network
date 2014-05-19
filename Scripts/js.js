@@ -117,13 +117,16 @@ Date.prototype.formatYear = function() {
 };
 
 Date.prototype.formatMonth = function() {
-    return this.getDay() + " " + this.getMonthName() + " at " + this.getHours() + ":" + this.getMinutes();
+    return this.getDay() + " " + this.getMonthName() + " at " + this.formatTime();
 };
 
 Date.prototype.formatWeek = function() {
     var now = new Date();
     return (now.getDate() - this.getDate() < 2 ? (now.getDate() - this.getDate() < 1 ? "Today, " : "Yesterday, ") : (this.getDayName() + ", "))
-            + this.getHours() + ":" + this.getMinutes();
+            + this.formatTime();
+};
+Date.prototype.formatTime = function() {
+    return (this.getHours() > 9 ? this.getHours() : "0" + this.getHours()) + ":" + (this.getMinutes() > 9 ? this.getMinutes() : "0" + this.getMinutes());
 };
 
 //    this.tokens = [
@@ -150,7 +153,7 @@ Date.prototype.formatWeek = function() {
  * 0. Upload                                        *
  ****************************************************/
 
-Application.prototype.upload = function(files) {
+Application.prototype.Upload = function(files) {
     var self = this;
     this.files = files || new Array();
     this.sessions.push(this);
@@ -202,11 +205,13 @@ Application.prototype.upload = function(files) {
                     xhr.upload.onprogress = function(event) {
                         Upload.progress(event, count, Upload.onprogress);
                     };
-                    xhr.onload = function() {
-                        Upload.complete(Upload, count, Upload.onend);
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState == 4) {
+                            Upload.complete(xhr, count, Upload.onend);
+                        }
                     };
-                    xhr.addEventListener("error", Application.prototype.upload.error, false);
-                    xhr.addEventListener("abort", Application.prototype.upload.abort, false);
+                    xhr.addEventListener("error", Application.prototype.Upload.error, false);
+                    xhr.addEventListener("abort", Application.prototype.Upload.abort, false);
                     xhr.open("post", "Scripts/files.class.php");
                     xhr.send(formdata);
                 })(i, session, this);
@@ -260,7 +265,10 @@ Application.prototype.upload = function(files) {
         if (this.count === 0) {
             this.reset();
         }
-        callback($.parseJSON(event.responseText));
+        var file = $.parseJSON(event.responseText);
+        Application.prototype.FileList.prototype.addFile(file);
+        Application.prototype.Folder.prototype.addFile(file);
+        callback(file);
     };
 
     this.error = function(event) {
@@ -280,11 +288,11 @@ Application.prototype.upload = function(files) {
     };
 };
 
-Application.prototype.upload.prototype.sessions = new Array();
-Application.prototype.upload.prototype.count = new Array();
-Application.prototype.upload.prototype.container = $('<div class="upload_file_container contentblock"></div>');
+Application.prototype.Upload.prototype.sessions = new Array();
+Application.prototype.Upload.prototype.count = new Array();
+Application.prototype.Upload.prototype.container = $('<div class="upload_file_container contentblock"></div>');
 $(function() {
-    $('.right_bar_container').append(Application.prototype.upload.prototype.container.append(new Application.prototype.UI.DragUpload().print()));
+    $('.right_bar_container').append(Application.prototype.Upload.prototype.container.append(new Application.prototype.UI.DragUpload().print()));
 });
 
 /****************************************************
@@ -297,6 +305,11 @@ Application.prototype.file = function(file) {
     };
 
     if (file !== false) {
+    	if(this.items[file.id]) {
+    		return this.items[file.id];
+    	} else {
+    		this.items[file.id] = this;
+    	}
         this.init = false;
         this.playing = false;
         this.file = file;
@@ -485,7 +498,7 @@ Application.prototype.file = function(file) {
     };
 
     this.audioPlayer = function(part) {
-        var string = $('<div data-path="' + this.file.thumb_path + '" uid="' + this.file.uid + '" data-file_id="' + this.file.id + '"></div>');
+        var string = $('<div data-file_id="' + this.file.id + '"></div>');
         if (part == 'all') {
             string.append($('<div class="audio_container"></div>').append(this.audioButton()).append(this.audioInfo()));
         } else if (part == "button") {
@@ -500,39 +513,130 @@ Application.prototype.file = function(file) {
         return string;
     };
     var self = this;
+    
+    this.audioButtons = new Array();
+	this.timelines = new Array();
+	this.times = new Array();
+	this.audioInfos = new Array();
+	this.titles = new Array();
+	this.progressContainer = new Array();
+	this.audioProgresses = new Array();
+	this.audioBuffered = new Array();          
+                
 
     this.audio_button = $('<div class="audio_button"></div>').on('click', function() {
         self.audioPlay();
     });
-    this.audio_button.append('<div class="audio_button_inside"></div>').append(this.loader = $('<div class="audio_loader"></div>'));
+    self.progress_item = $('<div class="audio_progress"></div>');
+    self.buffered = $('<div class="audio_buffered"></div>');
+    
+    this.audio_button.append('<div class="audio_button_inside"></div>');
     this.audioButton = function() {
-        var self = this;
-        return self.audio_button;
+    	var a = self.audio_button.clone(true);
+    	self.audioButtons.push(a);
+        return a;
     };
 
     this.audioInfo = function(file) {
-        return self.audio_info = $('<div class="audio_info"></div>')
-                .append('<div class="ellipsis_overflow audio_title">' + this.file.name + '</div>')
+        var a = $('<div class="audio_info"></div>')
+                .append(this.audioTitle())
                 .append(this.audioTimeline())
-                .append(this.audio_time = $('<div class="audio_time">0:00</div></div>'));
+                .append(this.audioTime());
+    	self.audioInfos.push(a);
+        return a;
     };
 
     this.audioTimeline = function() {
-        var self = this;
-        return self.progress_container = $('<div class="audio_progress_container"></div>')
-                .append(self.progress = $('<div class="audio_progress"></div>'))
-                .append(self.buffered = $('<div class="audio_buffered"></div>'))
-                .append('<div class="audio_line"></div></div>');
+        var a = $('<div class="audio_progress_container"></div>')
+                .append(self.audioProgress())
+                .append(self.audioBuffer())
+                .append('<div class="audio_line"></div>').on('click', function(e) {
+                	var x = $(this).offset().left;
+					var width_click = e.pageX - x;
+					var width = $(this).width();
+					var percent_width = (width_click / width) * 100;
+					var secs = self.audio.get(0).duration;
+					var new_secs = secs * (percent_width / 100);
+					self.audio.get(0).currentTime = new_secs;
+					self.updateTimeline();
+                });
+    	self.timelines.push(a);
+        return a;
     };
-
+    this.audioProgress = function() {
+    	var a = self.progress_item.clone(true);
+    	self.audioProgresses.push(a);
+        return a;
+    };
+    this.audioBuffer = function() {
+    	var a = self.buffered.clone(true);
+    	self.audioBuffered.push(a);
+        return a;
+    };
+    
+    this.audioTitle = function() {
+    	var a = self.audio_title.clone(true);
+    	self.titles.push(a);
+        return a;
+    };
+    this.audioTime = function() {
+    	var a = self.audio_time.clone(true);
+    	self.times.push(a);
+        return a;
+    };
+    self.audio_time = $('<div class="audio_time">0:00</div></div>');
+    self.audio_title = $('<div class="ellipsis_overflow audio_title">' + this.file.name + '</div>');
+    self.loader = new Application.prototype.UI.Loader({class: ['audio_loader']});
+    
+    this.updateTimeline = function() {
+    	var track_length = self.audio.get(0).duration;
+		var secs = self.audio.get(0).currentTime;
+		var progress = (secs / track_length) * 100;
+		for(var i = 0; i < self.audioProgresses.length; i++) {
+			self.audioProgresses[i].css('width', progress + "%");
+		}
+//                 self.progress.css('width', progress + "%");
+		var minutes = Math.floor(track_length / 60); 
+		var seconds = Math.floor(track_length - minutes * 60);
+		var done_secs = self.audio.get(0).currentTime;
+		var done_minutes = Math.floor(done_secs / 60);
+		var done_remaining_secons = Math.floor(done_secs - done_minutes * 60);
+		for(var i = 0; i < self.times.length; i++) {
+			self.times[i].html(done_minutes + ":" + pad(done_remaining_secons) + " - " + minutes + ":" + seconds);
+		}
+//                 self.audio_time.html(done_minutes + ":" + pad(done_remaining_secons) + " - " + minutes + ":" + seconds);
+		self.loader.fadeOut();
+		
+		var track_length = self.audio.get(0).duration;
+		var secs = 0;
+		if(self.audio.get(0).buffered.length > 0) {
+			secs = self.audio.get(0).buffered.end(0);
+		}
+		var progress = 0;
+		if (secs > 0 && track_length > 0) {
+			progress = (secs / track_length) * 100;
+		}
+		for(var i = 0; i < self.audioBuffered.length; i++) {
+			self.audioBuffered[i].css('width', progress + "%");
+		}
+		
+		if(self.audio[0].paused) {
+			self.loader.show();
+		}
+    };
+    
     this.audioPlay = function() {
         if (!this.playing) {
             this.startAudioInfo();
-            this.audio_button.addClass('audio_playing');
+            for(var i = 0; i < this.audioButtons.length; i++) {
+            	this.audioButtons[i].addClass('audio_playing');
+            }
             this.playing = true;
         } else {
             this.audio[0].pause();
-            this.audio_button.removeClass('audio_playing');
+            for(var i = 0; i < this.audioButtons.length; i++) {
+            	this.audioButtons[i].removeClass('audio_playing');
+            }
             this.playing = false;
         }
     };
@@ -547,36 +651,25 @@ Application.prototype.file = function(file) {
 
         var headerControl = $("<div></div>");
         headerControl.append(this.audioPlayer('all'));
+        
         $('.global_media_container').html(headerControl);
 
         this.loader.fadeIn();
         this.audio.get(0).play();
         this.audio.volume = 1;
         var self = this;
+        for(var i = 0; i < self.audioButtons.length; i++) {
+			self.audioButtons[i].append(self.loader);
+		}
 
         this.audio.bind('loadedmetadata', function() {
+        	self.updateTimeline();
             self.audio.bind('progress', function() {
-                var track_length = self.audio.get(0).duration;
-                var secs = self.audio.get(0).buffered.end(0);
-                var progress = 0;
-                if (secs > 0 && track_length > 0) {
-                    progress = (secs / track_length) * 100;
-                }
-                self.buffered.css('width', progress + "%");
+                self.updateTimeline();
             });
 
             self.audio.bind('timeupdate', function() {
-                var track_length = self.audio.get(0).duration;
-                var secs = self.audio.get(0).currentTime;
-                var progress = (secs / track_length) * 100;
-                self.progress.css('width', progress + "%");
-                var minutes = Math.floor(track_length / 60);
-                var seconds = Math.floor(track_length - minutes * 60);
-                var done_secs = self.audio.get(0).currentTime;
-                var done_minutes = Math.floor(done_secs / 60);
-                var done_remaining_secons = Math.floor(done_secs - done_minutes * 60);
-                self.audio_time.html(done_minutes + ":" + pad(done_remaining_secons) + " - " + minutes + ":" + seconds);
-                self.loader.fadeOut();
+                self.updateTimeline();
             });
 
             self.audio.bind('canplaythrough', function() {
@@ -587,16 +680,8 @@ Application.prototype.file = function(file) {
                 self.audio.get(0).currentTime = 0;
                 self.audio_button.removeClass('audio_playing');
             });
-
-            $(self.progress_container).click(function(e) {
-                var x = $(this).offset().left;
-                var width_click = e.pageX - x;
-                var width = $(this).width();
-                var percent_width = (width_click / width) * 100;
-                self.progress.css('width', percent_width + "%");
-                var secs = self.audio.get(0).duration;
-                var new_secs = secs * (percent_width / 100);
-                self.audio.get(0).currentTime = new_secs;
+            self.audio.bind('loadeddata', function() {
+            	// console.log('new buffer');
             });
         });
 
@@ -705,7 +790,10 @@ Application.prototype.file = function(file) {
 };
 Application.prototype.file.prototype.items = {};
 
-Application.prototype.FileList = function(type, pf) {
+Application.prototype.FileList = function(type, pf, user_id, prop) {
+    this.prop = prop || {};
+    this.user_id = user_id || MyUser.attr.id;
+    this.items.push(this);
     this.type = type || 'all';
     this.pf = pf || 0;
     this.container = $("<div class='file_list'></div>");
@@ -713,7 +801,7 @@ Application.prototype.FileList = function(type, pf) {
 
     };
     var self = this;
-    $.get('Scripts/files.class.php', {action: 'list', type: this.type, pf: this.pf}, function(response) {
+    $.get('Scripts/files.class.php', {action: 'list', type: this.type, pf: this.pf, receiver_id: this.user_id}, function(response) {
         response = $.parseJSON(response);
         for (var i = 0; i < response.length; i++) {
             (function(i) {
@@ -724,25 +812,45 @@ Application.prototype.FileList = function(type, pf) {
             })(i);
         }
     });
+    if(this.prop.container) {
+        this.prop.container.append(this.container);
+    }
     this.print = function() {
         return this.container;
     };
 };
 
-Application.prototype.FileList.prototype.addFile = function(file) {
+Application.prototype.FileList.prototype.items = new Array();
 
+Application.prototype.FileList.prototype.addFile = function(file) {
+    for (var i = 0; i < this.items.length; i++) {
+        var self = this.items[i];
+        var file = new Application.prototype.file(file);
+        self.container.append(file.printTag('none').on('click', function() {
+            self.onclick(file);
+        }));
+    }
 };
 
-Application.prototype.Folder = function(list) {
+Application.prototype.Folder = function(list, prop) {
+    this.prop = prop;
+    this.items.push(this);
     this.files = list;
+    this.print();
+};
+Application.prototype.Folder.prototype.items = new Array();
 
-    this.print = function() {
-        var string = $('<div></div>');
-        for (var file in this.files) {
-            string.append(new Application.prototype.file(this.files[file]).print_row());
-        }
-        return string;
-    };
+Application.prototype.Folder.prototype.print = function() {
+    for (var file in this.files) {
+        this.prop.container.append(new Application.prototype.file(this.files[file]).print_row());
+    }
+};
+Application.prototype.Folder.prototype.addFile = function(file) {
+    for (var i = 0; i < this.items.length; i++) {
+        var self = this.items[i];
+        var file = new Application.prototype.file(file);
+        self.prop.container.append(file.print_row());
+    }
 };
 
 Application.prototype.theater = function() {
@@ -1372,12 +1480,12 @@ Application.prototype.Post.prototype.removeFile = function(object) {
 
 Application.prototype.CommentItem = function(item) {
     this.item = item;
+    this.item.user.pic = this.item.user.pic || Application.prototype.default.pic;
 };
 
 Application.prototype.CommentItem.prototype.delete = function() {
     this.comment.remove();
-    $.post('Scripts/home.class.php', {action: "deleteComment", comment_id: this.item.id}, function(response) {
-    });
+    $.post('Scripts/home.class.php', {action: "deleteComment", comment_id: this.item.id}, function(response) {});
 };
 
 Application.prototype.CommentItem.prototype.show = function() {
@@ -1504,6 +1612,7 @@ Application.prototype.ConnectionList.prototype.print = function() {
                     container.append(user.print());
                 } else {
                     var group = new Application.prototype.Group(this.object[i][key]);
+                    console.log(group);
                     container.append(group.print());
                 }
             }
@@ -1583,7 +1692,8 @@ Application.prototype.UI = {
         this.container = $("<ul class='buttons'></ul>");
         this.addOptions = function(options) {
             for (var i = 0; i < options.length; i++) {
-                var item = $("<li class='ellipsis_overflow'>" + options[i].text + "</li>").attr('title', options[i].text).on('click', options[i].onclick);
+                var item = $("<li class='ellipsis_overflow'></li>").attr('title', options[i].text).on('click', options[i].onclick);
+                var item_content = $("<div></div>");
                 if (options[i]['selected'] || this.container.children('li').length === 0) {
                     item.addClass('active');
                 }
@@ -1593,18 +1703,27 @@ Application.prototype.UI = {
                         $(this).addClass('active');
                     });
                 }
-                if (options[i].icon) {
-                    item.prepend("<i class='fa " + options[i].icon + "'></i>");
+                if(options[i].href) {
+                     item_content.append(item_content = $("<a href='" + options[i].href + "'>" + options[i].text + "</a>"));
+                } else {
+                    item_content.text(options[i].text);
                 }
-                this.container.append(item);
+                if (options[i].icon) {
+                    item_content.prepend("<i class='fa " + options[i].icon + "'></i>");
+                }
+                this.container.append(item.append(item_content));
             }
         }
         this.print = function() {
             return this.container;
         }
     },
-    Loader: function() {
+    Loader: function(props) {
+    	this.prop = props || {class: []};
         this.object = $('<div class="loader"></div>').append($('<i class="fa fa-spinner fa-spin"></i>'));
+        for (var i = 0; i < this.prop.class.length; i++) {
+        	this.object.addClass(this.prop.class[i]);
+        }
         return this.object;
     },
     Dropdown: function(controller) {
@@ -1688,7 +1807,7 @@ Application.prototype.UI = {
         ];
         var entered = 0;
         var self = this;
-        var upload = new Application.prototype.upload();
+        var upload = new Application.prototype.Upload();
         this.container = $("<div></div>");
         this.buttonSwitch = new Application.prototype.UI.ButtonSwitch();
         this.buttonSwitch.addOptions(this.options.buttons);
@@ -1968,7 +2087,7 @@ Application.prototype.search.styleSingle = function(item) {
 
 Application.prototype.navigation.relocate = function(link) {
     this.initial = false;
-    $('.container').html("<div class='loader_outside'></div><div class='loader_inside'></div>");
+    $('.container').html(new Application.prototype.UI.Loader());
     window.history.pushState({}, 'WhatTheHellDoesThisDo?!', link );//Push new URL before waiting for load to complete
     $.get(link, {ajax: 'ajax'}, function(response) {
         var container = $(response);
@@ -2263,18 +2382,17 @@ Application.prototype.notification.getNotificationNumber = function() {
  * 1.4 Entity                                          *
  ****************************************************/
 Application.prototype.Entity = function() {
+    
 };
-Application.prototype.Entity.prototype.items = {};
+
 Application.prototype.Entity.prototype.print = function() {
     var container = $("<div class='user-tag'></div>");
     container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.entity.pic.icon + "\");'"
-            + "href ='user?id=" + this.entity.id + "'>" + this.entity.name + "</a>");
+            + "href ='" + this.baseUrl + "?id=" + this.entity.id + "'>" + this.entity.name + "</a>");
 
     return container;
 };
-Application.prototype.Entity.prototype.list = function() {
-    return this;
-}
+
 Application.prototype.Entity.prototype.printImg = function() {
     return $("<div class='profile_picture_medium' style='background-image:url(\"" + this.entity.pic.icon + "\");'></div>");
 };
@@ -2284,59 +2402,73 @@ Application.prototype.Entity.prototype.printMap = function() {
             + "," + this.location.coords.latitude + "&zoom=14&size=400x300&sensor=false' />");
 };
 
-Application.prototype.Entity.prototype.printHeader = function() {
+Application.prototype.Entity.prototype.printHeader = function(prop) {
     this.container = $("<div class='contentblock userHeader'></div>");
     this.container.append($('<img src="' + this.entity.pic.icon + '"></img>'));
     this.container.append("<span class='user_preview_name'>" + this.entity.name + "</span>");
     this.switch = new Application.prototype.UI.ButtonSwitch();
-    this.switch.addOptions([{
+    var options = [{
         text: "Feed",
-        icon: "fa-list-ul"
+        icon: "fa-list-ul",
+        href: this.baseUrl + "?id=" + this.entity.id + "&t=p"
     },
     {
         text: "Files",
-        icon: "fa-file"
-    }]);
-    this.container.append(this.switch.print());
-    return this.container;
-};
-
-Application.prototype.Entity.prototype.printFeed = function() {
-    var self = this;
-    this.container = $("<div class=''></div>");
-    this.feed = new Application.prototype.Feed(this.entity.id, 'user', {container: self.container});
-    this.feed.onfetch = function() {
-        self.feed.print();
+        icon: "fa-file",
+        href: this.baseUrl + "?id=" + this.entity.id + "&t=f"
+    }];
+    if(prop.tab === 'f'){
+            options[1].active = true;
     }
-    this.feed.get();
-    return this.container;
+    this.switch.addOptions(options);
+    this.container.append(this.switch.print());
+    prop.container.append(this.container);
 };
 
-Application.prototype.Group = function(entity) {
+Application.prototype.Entity.prototype.init  = function(entity) {
     this.entity = entity;
-        this.entity.pic = this.entity.pic || Application.prototype.default.pic;
-        if (this.items[this.entity.id]) {
-            return this.items[this.entity.id];
-        } else {
-            this.items[this.entity.id] = this;
-        }
+    this.entity.pic = this.entity.pic || Application.prototype.default.pic;
+    if (this.items[this.entity.id]) {
+        return this.items[this.entity.id];
+    } else {
+        this.items[this.entity.id] = this;
+    }
 };
-Application.prototype.User = function(entity) {
-    this.entity = entity;
-        this.entity.pic = this.entity.pic || Application.prototype.default.pic;
-        if (this.items[this.entity.id]) {
-            return this.items[this.entity.id];
-        } else {
-            this.items[this.entity.id] = this;
-        }
+
+Application.prototype.Entity.prototype.printFeed = function(prop) {
+    var self = this;
+    this.feed = new Application.prototype.Feed(this.entity.id, 'user', {container: prop.container});
+    this.feed.get();
+};
+
+Application.prototype.Entity.prototype.printSharedFiles = function(prop) {
+    var self = this;
+    this.feed = new Application.prototype.FileList('all', 0, this.entity.id, {container: prop.container});
+};
+
+
+
+Application.prototype.User = function() {
+    return Application.prototype.Entity.prototype.init.apply(this, arguments);
+};
+Application.prototype.Group = function() {
+    return Application.prototype.Entity.prototype.init.apply(this, arguments);
 };
 Application.prototype.Group.prototype = new Application.prototype.Entity();
 Application.prototype.User.prototype = new Application.prototype.Entity();
-console.log(Application.prototype.Entity.prototype.list());
+
+Application.prototype.Group.prototype.items = {};
+Application.prototype.User.prototype.items = {};
+Application.prototype.Group.prototype.baseUrl = 'group';
+Application.prototype.User.prototype.baseUrl = 'user';
 
 Application.prototype.User.prototype.MyUser = function() {
     this.userAgent = {
         isMobile: navigator.userAgent.match(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/)
+    };
+    this.setAttr = function(attr) {
+        this.attr = attr;
+        this.attr.pic = this.attr.pic || Application.prototype.default.pic;
     };
     // if (navigator.geolocation) {
 //         navigator.geolocation.getCurrentPosition( function(loc) {

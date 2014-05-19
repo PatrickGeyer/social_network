@@ -13,7 +13,7 @@ function print_body() {
     }
 
 
-    if (isset($_GET['tab']) && $_GET['tab'] == 'f') {
+    if (isset($_GET['t']) && $_GET['t'] == 'f') {
         $feed_id = 'f';
     }
     else {
@@ -22,12 +22,13 @@ function print_body() {
     ?>
     <script>document.title = "<?php echo $name = Registry::get('user')->getName($userid); ?>";</script>
     <div class='container'>
+        <div class='header'></div>
         <div class="user_feed">
             <script>
                 var user = new Application.prototype.User(<?php echo json_encode(Registry::get('user')->get_user_preview($userid)); ?>);
-                $(".user_feed").append(user.printHeader());
-    <?php if ($feed_id == "p") { ?> $(".user_feed").append(user.printFeed()); <?php }
-    else { ?> $(".user_feed").append(user.printSharedFiles()); <?php } ?>
+                user.printHeader({container: $('.header'), tab: "<?php echo $feed_id;?>"});
+    <?php if ($feed_id == "p") { ?> user.printFeed({container: $(".user_feed")}); <?php }
+    else { ?>user.printSharedFiles({container: $('.user_feed')}); <?php } ?>
             </script>
 
             <?php

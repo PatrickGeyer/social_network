@@ -55,7 +55,7 @@ if(swfobject.hasFlashPlayerVersion("3")) {
 
 <script>
 var MyUser = new Application.prototype.User.prototype.MyUser();
-MyUser.attr = <?php echo json_encode(Registry::get('user')->get_user_preview(Registry::get('user')->user_id)); ?> ;
+MyUser.setAttr(<?php echo json_encode(Registry::get('user')->get_user_preview(Registry::get('user')->user_id)); ?>);
 </script>
 
 
