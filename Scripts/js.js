@@ -800,7 +800,7 @@ Application.prototype.FileList = function(type, f_id, user_id, prop) {
     this.items.push(this);
     this.type = type || 'all';
     this.f_id = f_id || 0;
-    this.paths = new Array({name: 'Home', id: 0});
+    this.paths = new Array({name: 'Files', id: 0});
     this.container = $("<div></div>");
     for (var i = 0; i < this.prop.class.length; i++) {
         this.container.addClass(this.prop.class[i]);
@@ -859,7 +859,7 @@ Application.prototype.FileList.prototype.get = function() {
             })(i);
         }
         if (response.length === 0) {
-            self.container.append(Application.prototype.default.emptyFeed.text('There are no available files in this Folder.'));
+            self.container.append(Application.prototype.default.emptyFeed.clone().text('There are no available files in this Folder.'));
         }
 //        if (self.pf != 0) {
 //            self.container.append($('<button class="pure-button-blue">Back</button>').on('click', function() {
@@ -1608,7 +1608,7 @@ Application.prototype.Comment = function(item) {
     this.showComments = function() {
         this.comments[this.item.id] = new Array();
         var string = $("<div></div>");
-
+        this.item.comment.format = this.item.comment.format || 'all';
         if (this.item.comment.format == 'top') {
             string.append("<div class='activity_actions user_preview_name post_comment_user_name' style='font-weight:100;'><a href='post?a=" + this.item.id + "'>Show <span class='num_comments'>" + this.item.comment.hidden + "</span> more comments...</a></div>");
         }
