@@ -156,7 +156,7 @@ function print_header($PRINT = TRUE) {
                             echo "current_page";
                         }
                         ?>"></a>
-                        <a href="files" class="menuItem fa fa-play fa-2x <?php
+                        <a href="user?t=f" class="menuItem fa fa-play fa-2x <?php
                         if ($pid == "files") {
                             echo "current_page";
                         }

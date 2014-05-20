@@ -283,12 +283,10 @@ ul{
     margin: 0px;
     border-top-left-radius: 1px;
     border-top-right-radius: 1px;
-    background-color: #e0e0e0;
-    background-image: -webkit-linear-gradient(#fafafa, #e0e0e0);
+    background-color: white;
+/*    background-image: -webkit-linear-gradient(#fafafa, #e0e0e0);
     background-image: linear-gradient(#fafafa, #e0e0e0);
-    background-repeat: repeat-x;
-    border: 1px solid lightgrey;
-    border-bottom: none;
+    background-repeat: repeat-x;*/
     padding: 10px 10px 11px 10px;
     font-size: 14px;
     text-shadow: 0px 1px 0px #fff;
@@ -375,6 +373,7 @@ h3 > button{
 .contentblock{
     border-radius: 2px;
     background-color: white;
+    border: 1px solid !important;
     border-color: #e5e6e9 #dfe0e4 #d0d1d5 !important;
     padding: 10px;
     margin-top: 20px;
@@ -388,6 +387,9 @@ h3 > button{
     -ms-animation: fadein .2s; /* Internet Explorer */
     -o-animation: fadein .2s; /* Opera */
     animation: fadein .2s;
+}
+.contentblock .contentblock{
+    box-shadow: none;
 }
 
 @keyframes fadein {
@@ -431,11 +433,7 @@ h3 > button{
 .contentblock * {
     font-size: 13px;
 }
-.contentblock.post_height_restrictor{
-    border: 1px solid !important;
-    border-color: #e5e6e9 #dfe0e4 #d0d1d5 !important;
-    border-radius: 2px !important;
-}
+
 .fa{
     text-indent: 0px;
 }
@@ -1804,6 +1802,7 @@ html, body {
     vertical-align: top;
     line-height: 1.38;
     font-size: 14px;
+    box-sizing: border-box;
 }
 
 img{
@@ -1922,7 +1921,6 @@ iframe[seamless]{
     min-width: 490px;
     /*width:650px;*/
     padding-left: 20px;
-    padding-right: 20px;
     margin-left: 200px;
 }
 
@@ -2525,15 +2523,11 @@ div.comment_box{
 
 div.post_height_restrictor{
     text-align: left;
-    background-color: white;
     margin-top: 20px !important;
     box-sizing: border-box;
 }
 .post_height_restrictor > div {
     padding: 2px;
-}
-.post_height_restrictor:last-of-type {
-    border-bottom: 0px !important;
 }
 .comment_delete{
     position:absolute;
@@ -2942,12 +2936,11 @@ div[data-placeholder]:not(:focus):not([data-div-placeholder-content]):before {
 }
 div.home_feed_post_container{
     position: relative;
-    border-color: rgb(0, 140, 280) !important;
-    padding-top: 22px;
+/*    padding-top: 22px;
     padding-left: 20px;
     padding-right: 20px;
     padding-bottom: 22px;
-    background-color: white;
+    background-color: white;*/
 }
 .home_feed_post_container_arrow{
     content:"";
@@ -3367,47 +3360,19 @@ h3 {
     opacity: 1;
 }
 
-.files_shared_video{
-    /*height: 100%;*/
-    /*width: 100%;*/
-}
-.files_upload_image_preview{
-    height: 40px;
-    width: 40px;
-    margin-right: 10px;
-    background-size: cover;
-    background-repeat: no-repeat;
-    display: inline-block;
-}
 div.files, div.folder{
-    /*cursor: pointer;*/
     padding:5px;
     padding-right: 0px;
     position:relative;
     min-height: 30px;
     background-color: white;
-    margin-top: 1px;
+    margin-top: -1px !important;
 }
 div.files:hover, div.folder:hover{
-
-    /*    box-shadow: inset 0 5px 10px 0px lightblue;
-        -moz-box-shadow: inset 5px 0px 10px 0px lightblue;
-        -webkit-box-shadow: inset 5px 0 10px 0px lightblue;
-        border-left: 2px solid rgb(0, 140, 250);*/
     background-color: #f5fafe;
-
 }
 div.folder{
     cursor: pointer;
-    border-color: 1px solid limegreen !important;
-
-}
-div.files{
-    border-color: 1px solid rgb(0, 140, 250) !important;
-}
-
-.file_folder_active{
-    background-color: grey;
 }
 
 div.files:hover p.files, div.folder:hover p.files,div.files:hover input[type="text"], div.folder:hover input[type="text"]{
@@ -3762,9 +3727,9 @@ div.chat_text{
 }
 
 .chatheader{
-    overflow: hidden;
     height: 50px;
     display: table;
+    table-layout: fixed;
     width: 100%;
 }
 .chat-container > div:first-child{
@@ -3774,7 +3739,6 @@ div.chat_text{
     margin-bottom: 2px;
 }
 .chat-head{
-    height: 50px;
     width: 50px;
     overflow: hidden;
     background-image: url('../Images/unknown-default-chat.jpg');
@@ -3784,6 +3748,7 @@ div.chat_text{
 }
 .chat-info{
     display: table-cell;
+    padding: 5px;
 }
 div.chatoutput{
     max-height: 320px;
@@ -3833,18 +3798,6 @@ div.chatoutput{
 }
 .chat_header_text{
     margin: 0px;
-}
-.chat_feed_selector, .chat-preview{
-    display: inline-block;
-    background-color: rgb(0, 140, 280);
-    vertical-align: top;
-    max-width: 190px;
-    width: 100%;
-    cursor: pointer;
-    padding: 5px 5px 0px 5px;
-    margin-bottom: 2px;
-    height: 20px;
-    color: white;
 }
 table.chatbox {
     position: relative;

@@ -34,7 +34,7 @@ Application.prototype.App = function(options) {
         });
     };
     this.print = function() {
-        this.frame = $('<iframe allowFullScreen="true" seamless sandbox="allow-popups allow-scripts allow-same-origin" src="' + this.attr.path + '"></iframe>'); 
+        this.frame = $('<iframe allowFullScreen="true" seamless sandbox="allow-popups allow-scripts allow-same-origin" src="' + this.attr.path + '"></iframe>');
 //        this.frame.on('load', function() {
 //        	console.log('App Loaded');
 //        });
@@ -43,10 +43,11 @@ Application.prototype.App = function(options) {
         }));
         this.frame[0].contentWindow.App = self;
     };
-    
+
     this.setHighscore = function(score, callback) {
-    	callback = callback || function() {};
-    	$.post('Scripts/app.class.php', {action: "setHighscore", game_id: this.attr.id, score: score}, function(response) {
+        callback = callback || function() {
+        };
+        $.post('Scripts/app.class.php', {action: "setHighscore", game_id: this.attr.id, score: score}, function(response) {
             response = $.parseJSON(response);
             callback(response);
         });
@@ -61,7 +62,7 @@ Application.prototype.App = function(options) {
         });
     };
     this.getHighscore = function(callback) {
-    	$.get('Scripts/app.class.php', {action: "getHighscore", game_id: this.attr.id}, function(response) {
+        $.get('Scripts/app.class.php', {action: "getHighscore", game_id: this.attr.id}, function(response) {
             response = $.parseJSON(response);
             callback(response);
         });
@@ -161,15 +162,15 @@ Application.prototype.Upload = function(files) {
     this.progressElement = new Array();
     this.onstart = function() {
     };
-    
+
     this.onprogress = function() {
     };
-    
+
     this.onend = function() {
     };
-    
+
     this.addFiles = function(files) {
-        if(files.length) {
+        if (files.length) {
             for (var i = 0; i < files.length; i++) {
                 this.files.push(files[i]);
             }
@@ -177,7 +178,7 @@ Application.prototype.Upload = function(files) {
             this.files.push(files);
         }
     };
-    
+
     this.push = function(type) {
         var file_upload_container = $('<div></div>');
         this.container.append(file_upload_container);
@@ -230,20 +231,20 @@ Application.prototype.Upload = function(files) {
         }
     };
     this.pushFolder = function(tree) {
-        for(var i = 0; i < tree.length; i++) {
-            if(tree[i].children) {
-                this.pushFolder(tree[i].children);                
+        for (var i = 0; i < tree.length; i++) {
+            if (tree[i].children) {
+                this.pushFolder(tree[i].children);
             } else {
-                for(var n = 0; n < this.files.length; n++) {
-                    if(this.files[n].webkitRelativePath === tree[i].href) {
-                        if(this.files[n].name !== ".") {
+                for (var n = 0; n < this.files.length; n++) {
+                    if (this.files[n].webkitRelativePath === tree[i].href) {
+                        if (this.files[n].name !== ".") {
                             this.files[n].parent_folder_id = tree[i].parent_folder_id;
                         } else {
                             this.files.splice(n, 1);
                         }
                     }
                 }
-                
+
             }
         }
     };
@@ -306,11 +307,11 @@ Application.prototype.file = function(file) {
     };
 
     if (file !== false) {
-    	if(this.items[file.id]) {
-    		return this.items[file.id];
-    	} else {
-    		this.items[file.id] = this;
-    	}
+        if (this.items[file.id]) {
+            return this.items[file.id];
+        } else {
+            this.items[file.id] = this;
+        }
         this.init = false;
         this.playing = false;
         this.file = file;
@@ -468,7 +469,7 @@ Application.prototype.file = function(file) {
     };
 
     this.print_row = function() {
-        var string = $("<div data-file_id='" + this.file.id + "' class='contentblock post_height_restrictor'></div>");
+        var string = $("<div data-file_id='" + this.file.id + "' class='contentblock'></div>");
 
         if (this.file.type != "Folder") {
             string.addClass('files');
@@ -514,27 +515,27 @@ Application.prototype.file = function(file) {
         return string;
     };
     var self = this;
-    
+
     this.audioButtons = new Array();
-	this.timelines = new Array();
-	this.times = new Array();
-	this.audioInfos = new Array();
-	this.titles = new Array();
-	this.progressContainer = new Array();
-	this.audioProgresses = new Array();
-	this.audioBuffered = new Array();          
-                
+    this.timelines = new Array();
+    this.times = new Array();
+    this.audioInfos = new Array();
+    this.titles = new Array();
+    this.progressContainer = new Array();
+    this.audioProgresses = new Array();
+    this.audioBuffered = new Array();
+
 
     this.audio_button = $('<div class="audio_button"></div>').on('click', function() {
         self.audioPlay();
     });
     self.progress_item = $('<div class="audio_progress"></div>');
     self.buffered = $('<div class="audio_buffered"></div>');
-    
+
     this.audio_button.append('<div class="audio_button_inside"></div>');
     this.audioButton = function() {
-    	var a = self.audio_button.clone(true);
-    	self.audioButtons.push(a);
+        var a = self.audio_button.clone(true);
+        self.audioButtons.push(a);
         return a;
     };
 
@@ -543,7 +544,7 @@ Application.prototype.file = function(file) {
                 .append(this.audioTitle())
                 .append(this.audioTimeline())
                 .append(this.audioTime());
-    	self.audioInfos.push(a);
+        self.audioInfos.push(a);
         return a;
     };
 
@@ -552,91 +553,91 @@ Application.prototype.file = function(file) {
                 .append(self.audioProgress())
                 .append(self.audioBuffer())
                 .append('<div class="audio_line"></div>').on('click', function(e) {
-                	var x = $(this).offset().left;
-					var width_click = e.pageX - x;
-					var width = $(this).width();
-					var percent_width = (width_click / width) * 100;
-					var secs = self.audio.get(0).duration;
-					var new_secs = secs * (percent_width / 100);
-					self.audio.get(0).currentTime = new_secs;
-					self.updateTimeline();
-                });
-    	self.timelines.push(a);
+            var x = $(this).offset().left;
+            var width_click = e.pageX - x;
+            var width = $(this).width();
+            var percent_width = (width_click / width) * 100;
+            var secs = self.audio.get(0).duration;
+            var new_secs = secs * (percent_width / 100);
+            self.audio.get(0).currentTime = new_secs;
+            self.updateTimeline();
+        });
+        self.timelines.push(a);
         return a;
     };
     this.audioProgress = function() {
-    	var a = self.progress_item.clone(true);
-    	self.audioProgresses.push(a);
+        var a = self.progress_item.clone(true);
+        self.audioProgresses.push(a);
         return a;
     };
     this.audioBuffer = function() {
-    	var a = self.buffered.clone(true);
-    	self.audioBuffered.push(a);
+        var a = self.buffered.clone(true);
+        self.audioBuffered.push(a);
         return a;
     };
-    
+
     this.audioTitle = function() {
-    	var a = self.audio_title.clone(true);
-    	self.titles.push(a);
+        var a = self.audio_title.clone(true);
+        self.titles.push(a);
         return a;
     };
     this.audioTime = function() {
-    	var a = self.audio_time.clone(true);
-    	self.times.push(a);
+        var a = self.audio_time.clone(true);
+        self.times.push(a);
         return a;
     };
     self.audio_time = $('<div class="audio_time">0:00</div></div>');
     self.audio_title = $('<div class="ellipsis_overflow audio_title">' + this.file.name + '</div>');
     self.loader = new Application.prototype.UI.Loader({class: ['audio_loader']});
-    
+
     this.updateTimeline = function() {
-    	var track_length = self.audio.get(0).duration;
-		var secs = self.audio.get(0).currentTime;
-		var progress = (secs / track_length) * 100;
-		for(var i = 0; i < self.audioProgresses.length; i++) {
-			self.audioProgresses[i].css('width', progress + "%");
-		}
+        var track_length = self.audio.get(0).duration;
+        var secs = self.audio.get(0).currentTime;
+        var progress = (secs / track_length) * 100;
+        for (var i = 0; i < self.audioProgresses.length; i++) {
+            self.audioProgresses[i].css('width', progress + "%");
+        }
 //                 self.progress.css('width', progress + "%");
-		var minutes = Math.floor(track_length / 60); 
-		var seconds = Math.floor(track_length - minutes * 60);
-		var done_secs = self.audio.get(0).currentTime;
-		var done_minutes = Math.floor(done_secs / 60);
-		var done_remaining_secons = Math.floor(done_secs - done_minutes * 60);
-		for(var i = 0; i < self.times.length; i++) {
-			self.times[i].html(done_minutes + ":" + pad(done_remaining_secons) + " - " + minutes + ":" + seconds);
-		}
+        var minutes = Math.floor(track_length / 60);
+        var seconds = Math.floor(track_length - minutes * 60);
+        var done_secs = self.audio.get(0).currentTime;
+        var done_minutes = Math.floor(done_secs / 60);
+        var done_remaining_secons = Math.floor(done_secs - done_minutes * 60);
+        for (var i = 0; i < self.times.length; i++) {
+            self.times[i].html(done_minutes + ":" + pad(done_remaining_secons) + " - " + minutes + ":" + seconds);
+        }
 //                 self.audio_time.html(done_minutes + ":" + pad(done_remaining_secons) + " - " + minutes + ":" + seconds);
-		self.loader.fadeOut();
-		
-		var track_length = self.audio.get(0).duration;
-		var secs = 0;
-		if(self.audio.get(0).buffered.length > 0) {
-			secs = self.audio.get(0).buffered.end(0);
-		}
-		var progress = 0;
-		if (secs > 0 && track_length > 0) {
-			progress = (secs / track_length) * 100;
-		}
-		for(var i = 0; i < self.audioBuffered.length; i++) {
-			self.audioBuffered[i].css('width', progress + "%");
-		}
-		
-		if(self.audio[0].paused) {
-			self.loader.show();
-		}
+        self.loader.fadeOut();
+
+        var track_length = self.audio.get(0).duration;
+        var secs = 0;
+        if (self.audio.get(0).buffered.length > 0) {
+            secs = self.audio.get(0).buffered.end(0);
+        }
+        var progress = 0;
+        if (secs > 0 && track_length > 0) {
+            progress = (secs / track_length) * 100;
+        }
+        for (var i = 0; i < self.audioBuffered.length; i++) {
+            self.audioBuffered[i].css('width', progress + "%");
+        }
+
+        if (self.audio[0].paused) {
+            self.loader.show();
+        }
     };
-    
+
     this.audioPlay = function() {
         if (!this.playing) {
             this.startAudioInfo();
-            for(var i = 0; i < this.audioButtons.length; i++) {
-            	this.audioButtons[i].addClass('audio_playing');
+            for (var i = 0; i < this.audioButtons.length; i++) {
+                this.audioButtons[i].addClass('audio_playing');
             }
             this.playing = true;
         } else {
             this.audio[0].pause();
-            for(var i = 0; i < this.audioButtons.length; i++) {
-            	this.audioButtons[i].removeClass('audio_playing');
+            for (var i = 0; i < this.audioButtons.length; i++) {
+                this.audioButtons[i].removeClass('audio_playing');
             }
             this.playing = false;
         }
@@ -652,19 +653,19 @@ Application.prototype.file = function(file) {
 
         var headerControl = $("<div></div>");
         headerControl.append(this.audioPlayer('all'));
-        
+
         $('.global_media_container').html(headerControl);
 
         this.loader.fadeIn();
         this.audio.get(0).play();
         this.audio.volume = 1;
         var self = this;
-        for(var i = 0; i < self.audioButtons.length; i++) {
-			self.audioButtons[i].append(self.loader);
-		}
+        for (var i = 0; i < self.audioButtons.length; i++) {
+            self.audioButtons[i].append(self.loader);
+        }
 
         this.audio.bind('loadedmetadata', function() {
-        	self.updateTimeline();
+            self.updateTimeline();
             self.audio.bind('progress', function() {
                 self.updateTimeline();
             });
@@ -682,7 +683,7 @@ Application.prototype.file = function(file) {
                 self.audio_button.removeClass('audio_playing');
             });
             self.audio.bind('loadeddata', function() {
-            	// console.log('new buffer');
+                // console.log('new buffer');
             });
         });
 
@@ -791,41 +792,42 @@ Application.prototype.file = function(file) {
 };
 Application.prototype.file.prototype.items = {};
 
-Application.prototype.FileList = function(type, pf, user_id, prop) {
+Application.prototype.FileList = function(type, f_id, user_id, prop) {
     var self = this;
     this.prop = prop || {};
     this.prop.class = this.prop.class || ['file_list'];
     this.user_id = user_id || MyUser.attr.id;
     this.items.push(this);
     this.type = type || 'all';
-    this.pf = pf || 0;
-    this.paths = new Array({name: 'Home', id: "0"});
+    this.f_id = f_id || 0;
+    this.paths = new Array({name: 'Home', id: 0});
     this.container = $("<div></div>");
     for (var i = 0; i < this.prop.class.length; i++) {
-    	this.container.addClass(this.prop.class[i]);
+        this.container.addClass(this.prop.class[i]);
     }
     this.onclick = function(file) {
-        if(file.file.type === "Folder") {
-        	self.relocate(file.file.folder_id, file.file.name);
+        if (file.file.type === "Folder") {
+            self.relocate(file.file.folder_id, file.file.name);
         }
     };
     this.printItem = function(file) {
         return file.printTag('none');
     };
-    
+
     this.relocate = function(id, name) {
-    	for(var i = 0; i < self.paths.length; i++) {
-    		if(self.paths[i].id > id){
-    			self.paths.splice(i, 1);
-    		}
-    	}
-    	self.pf = id;
+        id = parseInt(id);
+        for (var i = self.paths.length -1; i >= 0; i--) {
+            if (parseInt(self.paths[i].id) >= id) {
+                self.paths.splice(i, 1);
+            }
+        }
+        self.f_id = id;
         self.paths.push({name: name, id: id});
         self.get();
     };
-    
-    if(this.prop.container) {
-        this.prop.container.replaceWith(this.container);
+
+    if (this.prop.container) {
+        this.prop.container.replaceWith(this.container.addClass('box_container contentblock'));
     }
     this.print = function() {
         return this.container;
@@ -835,18 +837,18 @@ Application.prototype.FileList = function(type, pf, user_id, prop) {
 Application.prototype.FileList.prototype.get = function() {
     var self = this;
     self.container.html('');
-    var path = $('<div class="contentblock"></div>');
-    for(var i = 0; i < self.paths.length; i++) {
-    console.log(i + " - " + self.paths[i]);
-    	path.append("<span>" + self.paths[i].name + "/</span>").on('click', function() {
-    		
-    		self.relocate(self.paths[i].id, self.paths[i].name);
-    	});
+    var path = $('<h3></h3>');
+    for (var i = 0; i < self.paths.length; i++) {
+        (function(i) {
+            path.append($("<span>" + self.paths[i].name + " / </span>").on('click', function() {
+                self.relocate(self.paths[i].id, self.paths[i].name);
+            }));
+        }(i));
     };
     self.container.append(new Application.prototype.UI.Loader());
-    $.get('Scripts/files.class.php', {action: 'list', type: this.type, pf: this.pf, receiver_id: this.user_id}, function(response) {
-    	self.container.html('');
-    	self.container.append(path);
+    $.get('Scripts/files.class.php', {action: 'list', type: this.type, pf: this.f_id, receiver_id: this.user_id}, function(response) {
+        self.container.html('');
+        self.container.append(path);
         response = $.parseJSON(response);
         for (var i = 0; i < response.length; i++) {
             (function(i) {
@@ -856,16 +858,16 @@ Application.prototype.FileList.prototype.get = function() {
                 }));
             })(i);
         }
-        if(response.length === 0) {
-        	self.container.append(Application.prototype.default.emptyFeed);
+        if (response.length === 0) {
+            self.container.append(Application.prototype.default.emptyFeed.text('There are no available files in this Folder.'));
         }
-        if(self.pf != 0) {
-        	self.container.append($('<button class="pure-button-blue">Back</button>').on('click', function() {
-        		self.pf = self.pf - 1;
-        		self.paths.pop();
-            	self.get();
-        	}));
-        }
+//        if (self.pf != 0) {
+//            self.container.append($('<button class="pure-button-blue">Back</button>').on('click', function() {
+//                self.paths.pop();
+//                self.f_id = self.paths[self.paths.length -1].id;
+//                self.get();
+//            }));
+//        }
     });
 };
 
@@ -1060,10 +1062,9 @@ Application.prototype.Chat = function(chat_id, name) {
             .append(this.header = $("<div class='chatheader'></div>")
                     .append(this.chathead = $("<div class='chat-head'></div>"))
                     .append(this.chatinfo = $("<div class='chat-info'></div>")
-                            .append(this.chat_feed_selector = $("<div class='chat_feed_selector'></div>")
-                                    .append(this.chat_header_text = $("<p class='chat_header_text ellipsis_overflow'></p>"))
+                            .append(this.chat_header_text = $("<p class='chat_header_text ellipsis_overflow user_preview_name'></p>")
                                     .append(this.name))
-                            .append(this.preview = $("<div class='chat-preview'></div>"))))
+                            .append(this.preview = $("<div class='chat-preview ellipsis_overflow'></div>"))))
             .append(this.chatcontainer = $("<div class='chat-container'></div")
                     .append("<div></div>")
                     .append(this.chatoutput = $("<div class='chatoutput'></div>")
@@ -1270,7 +1271,7 @@ Application.prototype.Feed = function(entity_id, entity_type, properties) {
     this.noItems = Application.prototype.default.emptyFeed;
 //    this.loader = new Application.prototype.UI.Loader();
     this.get = function() {
-        if(this.active !== true) {
+        if (this.active !== true) {
             this.prop.container.append(this.loader);
             this.active = true;
         }
@@ -1290,7 +1291,7 @@ Application.prototype.Feed = function(entity_id, entity_type, properties) {
             }
             self.loader.hide();
             self.onfetch(response);
-            if(self.active === true && self.items.length === 0) {
+            if (self.active === true && self.items.length === 0) {
                 self.feed.append(self.noItems);
             } else {
                 self.noItems.remove();
@@ -1534,7 +1535,8 @@ Application.prototype.CommentItem = function(item) {
 
 Application.prototype.CommentItem.prototype.delete = function() {
     this.comment.remove();
-    $.post('Scripts/home.class.php', {action: "deleteComment", comment_id: this.item.id}, function(response) {});
+    $.post('Scripts/home.class.php', {action: "deleteComment", comment_id: this.item.id}, function(response) {
+    });
 };
 
 Application.prototype.CommentItem.prototype.show = function() {
@@ -1661,7 +1663,6 @@ Application.prototype.ConnectionList.prototype.print = function() {
                     container.append(user.print());
                 } else {
                     var group = new Application.prototype.Group(this.object[i][key]);
-                    console.log(group);
                     container.append(group.print());
                 }
             }
@@ -1694,9 +1695,9 @@ Application.prototype.UI = {
             var i = 0;
             $(this).find('option').each(function() {
                 options[i] = {
-                    value : $(this).val(),
-                    text : $(this).text(),
-                    selected : $(this).attr('selected')
+                    value: $(this).val(),
+                    text: $(this).text(),
+                    selected: $(this).attr('selected')
                 };
                 i++;
             });
@@ -1740,18 +1741,18 @@ Application.prototype.UI = {
         var self = this;
         this.container = $("<ul class='buttons'></ul>");
         this.addOptions = function(options) {
-        var hasSelect = false;
-            	for(var o = 0; o < options.length; o++) {
-            		if(options[o].selected) {
-            			hasSelect = true;
-            		}
-            	}
+            var hasSelect = false;
+            for (var o = 0; o < options.length; o++) {
+                if (options[o].selected) {
+                    hasSelect = true;
+                }
+            }
             for (var i = 0; i < options.length; i++) {
-            	
+
                 var item = $("<li class='ellipsis_overflow'></li>").attr('title', options[i].text).on('click', options[i].onclick);
                 var item_content = $("<div></div>");
                 if (options[i]['selected'] || hasSelect === false) {
-                	hasSelect = true;
+                    hasSelect = true;
                     item.addClass('active');
                 }
                 if (options[i].unexecutable !== true) {
@@ -1760,8 +1761,8 @@ Application.prototype.UI = {
                         $(this).addClass('active');
                     });
                 }
-                if(options[i].href) {
-                     item_content.append(item_content = $("<a href='" + options[i].href + "'>" + options[i].text + "</a>"));
+                if (options[i].href) {
+                    item_content.append(item_content = $("<a href='" + options[i].href + "'>" + options[i].text + "</a>"));
                 } else {
                     item_content.text(options[i].text);
                 }
@@ -1776,10 +1777,10 @@ Application.prototype.UI = {
         }
     },
     Loader: function(props) {
-    	this.prop = props || {class: []};
+        this.prop = props || {class: []};
         this.object = $('<div class="loader"></div>').append($('<i class="fa fa-spinner fa-spin"></i>'));
         for (var i = 0; i < this.prop.class.length; i++) {
-        	this.object.addClass(this.prop.class[i]);
+            this.object.addClass(this.prop.class[i]);
         }
         return this.object;
     },
@@ -1819,7 +1820,7 @@ Application.prototype.UI = {
                         self.object.val(options[i]['value']);
                         self.object.toggleClass('default_dropdown_active');
                     }));
-                }(i));                
+                }(i));
             }
         };
         $(document).on('click', function() {
@@ -1852,11 +1853,11 @@ Application.prototype.UI = {
                         upload.push('folder');
                     });
                 } : function() {
-                	dialog = new Application.prototype.UI.Dialog({});
-                	dialog.addButton({type:"success", text: "OK"});
-                	dialog.title('Oh no...');
-                	dialog.content('Unfortunately you are not using the most up to date version of Chrome. This means you cannot upload folders, but you will have to upload File by File. In the future, you may be able to sync using a Desktop alternative.');
-                	dialog.show();
+                    dialog = new Application.prototype.UI.Dialog({});
+                    dialog.addButton({type: "success", text: "OK"});
+                    dialog.title('Oh no...');
+                    dialog.content('Unfortunately you are not using the most up to date version of Chrome. This means you cannot upload folders, but you will have to upload File by File. In the future, you may be able to sync using a Desktop alternative.');
+                    dialog.show();
                 }),
                 unexecutable: true,
                 icon: "fa-folder"
@@ -1870,10 +1871,10 @@ Application.prototype.UI = {
         this.buttonSwitch.addOptions(this.options.buttons);
         this.container.append(this.buttonSwitch.print());
         this.drag = $("<div class='upload_replaced'></div>");
-        if(this.options.round === true) {
+        if (this.options.round === true) {
             this.drag.addClass('round');
         }
-        
+
         this.drag.on('dragover', function(event) {
             var files = (event.dataTransfer && event.dataTransfer);
             if (!files) {
@@ -1896,18 +1897,18 @@ Application.prototype.UI = {
         this.drag.on('drop', function(e) {
             $(this).removeClass('upload_hover');
             entered--;
-            if(e.dataTransfer.items) {
-				var length = e.dataTransfer.items.length;
-				for (var i = 0; i < length; i++) {
-					var entry = e.dataTransfer.items[i].webkitGetAsEntry();
-					if (entry.isFile) {
-						alert('file');
-					} else if (entry.isDirectory) {
-						alert('dir');
-					}
+            if (e.dataTransfer.items) {
+                var length = e.dataTransfer.items.length;
+                for (var i = 0; i < length; i++) {
+                    var entry = e.dataTransfer.items[i].webkitGetAsEntry();
+                    if (entry.isFile) {
+                        alert('file');
+                    } else if (entry.isDirectory) {
+                        alert('dir');
+                    }
 // 					upload.addFiles(files.files);
-				}
-			}
+                }
+            }
             var files = e.target.files || (e.dataTransfer && e.dataTransfer.files);
             if (!files) {
                 files = e.dataTransfer || (e.originalEvent && e.originalEvent.dataTransfer);
@@ -1999,8 +2000,8 @@ Application.prototype.UI.getViewPortWidth = function() {
 };
 
 Application.prototype.UI.Dialog = function(properties) {
-	var self = this;
-	this.properties = properties || {};
+    var self = this;
+    this.properties = properties || {};
     this.properties.modal = (typeof this.properties.modal === "undefined") ? true : this.properties.modal;
     this.properties.loading = (typeof this.properties.loading === "undefined") ? false : this.properties.loading;
     this.properties.title = (typeof this.properties.title === "undefined") ? "Undefined Title" : this.properties.title;
@@ -2023,7 +2024,7 @@ Application.prototype.UI.Dialog = function(properties) {
     var dialog_buttons = $("<div class='dialog_buttons'><img class='dialog_loading' src='Images/ajax-loader.gif'></img></div>");
     this.dialog_container.append(dialog_buttons);
     dialog_buttons.append(this.button_complete);
-    
+
     this.content_container.mCustomScrollbar({
         scrollInertia: 10,
         autoHideScrollbar: true,
@@ -2032,56 +2033,56 @@ Application.prototype.UI.Dialog = function(properties) {
 };
 
 Application.prototype.UI.Dialog.prototype.show = function() {
-	var self = this;
+    var self = this;
 // 	if (this.properties.modal == true) {
 // 		$('body').append("<div class='background-overlay'></div>");
 // 	} else {
-		$('body').append(this.background = $("<div onclick='removeDialog()' style='opacity:0.5' class='background_white_overlay'></div>"));
+    $('body').append(this.background = $("<div onclick='removeDialog()' style='opacity:0.5' class='background_white_overlay'></div>"));
 // 	}
-	$('body').append(this.dialog_container);
-	this.alignDialog();
-	var real_height = this.dialog_container.height();
-	this.dialog_container.css({height: "0px"});
-	this.dialog_container.animate({minHeight: real_height + "px", opacity: 1}, 100, function() {
-		$(this).css({height: "auto", opacity: 1}, 'fast');
-		self.content_container.mCustomScrollbar("update");
-		setTimeout(function() {
-			self.content_container.mCustomScrollbar("update");
-		}, 200);
-	});
+    $('body').append(this.dialog_container);
+    this.alignDialog();
+    var real_height = this.dialog_container.height();
+    this.dialog_container.css({height: "0px"});
+    this.dialog_container.animate({minHeight: real_height + "px", opacity: 1}, 100, function() {
+        $(this).css({height: "auto", opacity: 1}, 'fast');
+        self.content_container.mCustomScrollbar("update");
+        setTimeout(function() {
+            self.content_container.mCustomScrollbar("update");
+        }, 200);
+    });
 };
 
 Application.prototype.UI.Dialog.prototype.addButton = function(button) {
-	var single_button = document.createElement('button');
-	$(single_button).addClass('small');
-	$(single_button).addClass('pure-button-' + button.type);
-	$(single_button).css('float', 'right');
-	$(single_button).text(button.text);
-	single_button.onclick = button.onclick;
-	this.button_complete.append(single_button);
+    var single_button = document.createElement('button');
+    $(single_button).addClass('small');
+    $(single_button).addClass('pure-button-' + button.type);
+    $(single_button).css('float', 'right');
+    $(single_button).text(button.text);
+    single_button.onclick = button.onclick;
+    this.button_complete.append(single_button);
 };
 Application.prototype.UI.Dialog.prototype.alignDialog = function() {
-	var width = this.dialog_container.width();
-	var height = this.dialog_container.height();
-	this.dialog_container.css({
-		'margin-left': '-' + width / 2 + "px",
-		'margin-top': '-' + height / 2 + "px",
-	});
+    var width = this.dialog_container.width();
+    var height = this.dialog_container.height();
+    this.dialog_container.css({
+        'margin-left': '-' + width / 2 + "px",
+        'margin-top': '-' + height / 2 + "px",
+    });
 };
 
 Application.prototype.UI.Dialog.prototype.removeDialog = function() {
-	this.background.remove();
+    this.background.remove();
 
-	this.dialog_container.css('min-height', '0px');
-	this.dialog_container.animate({height: 0, opacity: 0}, 100, function() {
-		$(this).remove();
-	});
+    this.dialog_container.css('min-height', '0px');
+    this.dialog_container.animate({height: 0, opacity: 0}, 100, function() {
+        $(this).remove();
+    });
 };
 Application.prototype.UI.Dialog.prototype.content = function(content) {
-	this.dialog_container.append(content);
+    this.dialog_container.append(content);
 };
 Application.prototype.UI.Dialog.prototype.title = function(content) {
-	this.title.html(content);
+    this.title.html(content);
 };
 /****************************************************
  * 1.1 Generic Functions                             *
@@ -2145,9 +2146,9 @@ Application.prototype.search.styleSingle = function(item) {
 Application.prototype.navigation.relocate = function(link, get) {
     this.get = get || true;
     this.initial = false;
-    
-    window.history.pushState({}, 'WhatTheHellDoesThisDo?!', link );//Push new URL before waiting for load to complete
-    if(this.get) {
+
+    window.history.pushState({}, 'WhatTheHellDoesThisDo?!', link);//Push new URL before waiting for load to complete
+    if (this.get) {
         $('.container').html(new Application.prototype.UI.Loader());
         $.get(link, {ajax: 'ajax'}, function(response) {
             var container = $(response);
@@ -2443,7 +2444,7 @@ Application.prototype.notification.getNotificationNumber = function() {
  * 1.4 Entity                                          *
  ****************************************************/
 Application.prototype.Entity = function() {
-    
+
 };
 
 Application.prototype.Entity.prototype.print = function() {
@@ -2469,25 +2470,25 @@ Application.prototype.Entity.prototype.printHeader = function(prop) {
     this.container.append("<span class='user_preview_name'>" + this.entity.name + "</span>");
     this.switch = new Application.prototype.UI.ButtonSwitch();
     var options = [{
-        text: "Feed",
-        icon: "fa-list-ul",
-        href: this.baseUrl + "?id=" + this.entity.id + "&t=p"
-    },
-    {
-        text: "Files",
-        icon: "fa-file",
-        href: this.baseUrl + "?id=" + this.entity.id + "&t=f"
-    }];
-    if(prop.tab === 'f'){
-    	options[0].selected = false;
-            options[1].selected = true;
+            text: "Feed",
+            icon: "fa-list-ul",
+            href: this.baseUrl + "?id=" + this.entity.id + "&t=p"
+        },
+        {
+            text: "Files",
+            icon: "fa-file",
+            href: this.baseUrl + "?id=" + this.entity.id + "&t=f"
+        }];
+    if (prop.tab === 'f') {
+        options[0].selected = false;
+        options[1].selected = true;
     }
     this.switch.addOptions(options);
     this.container.append(this.switch.print());
     prop.container.append(this.container);
 };
 
-Application.prototype.Entity.prototype.init  = function(entity) {
+Application.prototype.Entity.prototype.init = function(entity) {
     this.entity = entity;
     this.entity.pic = this.entity.pic || Application.prototype.default.pic;
     if (this.items[this.entity.id]) {
@@ -2505,7 +2506,7 @@ Application.prototype.Entity.prototype.printFeed = function(prop) {
 
 Application.prototype.Entity.prototype.printSharedFiles = function(prop) {
     var self = this;
-    this.feed = new Application.prototype.FileList('all', 0, this.entity.id, {container: prop.container, class:[]});
+    this.feed = new Application.prototype.FileList('all', 0, this.entity.id, {container: prop.container, class: []});
     this.feed.printItem = function(file) {
         return file.print_row();
     };
