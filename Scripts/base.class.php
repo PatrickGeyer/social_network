@@ -119,7 +119,7 @@ class Base {
 //    DATABASE
     const LARGEST_INT = 2147483648;
     const CAN_VIEW_POST = " group_id in (SELECT group_id FROM group_member WHERE user_id = :user_id) OR user_id = :user_id ";
-    const CAN_VIEW_FILE = " group_id in (SELECT group_id FROM group_member WHERE user_id = :user_id) OR user_id = :user_id ";
+    const CAN_VIEW_FILE = " group_id in (SELECT group_id FROM group_member WHERE user_id = :user_id) OR user_id = :user_id";
 }
 
 ?>

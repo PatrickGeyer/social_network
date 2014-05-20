@@ -18,7 +18,8 @@ Application.prototype.default = {
         icon: "Images/male-default-icon.jpg",
         thumb: "Images/male-default-icon.jpg",
         large: "Images/male-default-icon.jpg"
-    }
+    },
+    emptyFeed: $('<div class="contentblock post_height_restrictor">This feed contains no posts.</div>')
 };
 Application.prototype.App = function(options) {
     var self = this;
@@ -467,7 +468,7 @@ Application.prototype.file = function(file) {
     };
 
     this.print_row = function() {
-        var string = $("<div data-file_id='" + this.file.id + "' class='contentblock'></div>");
+        var string = $("<div data-file_id='" + this.file.id + "' class='contentblock post_height_restrictor'></div>");
 
         if (this.file.type != "Folder") {
             string.addClass('files');
@@ -793,23 +794,38 @@ Application.prototype.file.prototype.items = {};
 Application.prototype.FileList = function(type, pf, user_id, prop) {
     var self = this;
     this.prop = prop || {};
+    this.prop.class = this.prop.class || ['file_list'];
     this.user_id = user_id || MyUser.attr.id;
     this.items.push(this);
     this.type = type || 'all';
     this.pf = pf || 0;
-    this.container = $("<div class='file_list'></div>");
+    this.paths = new Array({name: 'Home', id: "0"});
+    this.container = $("<div></div>");
+    for (var i = 0; i < this.prop.class.length; i++) {
+    	this.container.addClass(this.prop.class[i]);
+    }
     this.onclick = function(file) {
         if(file.file.type === "Folder") {
-            self.pf = file.file.folder_id;
-            self.get();
+        	self.relocate(file.file.folder_id, file.file.name);
         }
     };
     this.printItem = function(file) {
         return file.printTag('none');
     };
     
+    this.relocate = function(id, name) {
+    	for(var i = 0; i < self.paths.length; i++) {
+    		if(self.paths[i].id > id){
+    			self.paths.splice(i, 1);
+    		}
+    	}
+    	self.pf = id;
+        self.paths.push({name: name, id: id});
+        self.get();
+    };
+    
     if(this.prop.container) {
-        this.prop.container.append(this.container);
+        this.prop.container.replaceWith(this.container);
     }
     this.print = function() {
         return this.container;
@@ -819,7 +835,18 @@ Application.prototype.FileList = function(type, pf, user_id, prop) {
 Application.prototype.FileList.prototype.get = function() {
     var self = this;
     self.container.html('');
+    var path = $('<div class="contentblock"></div>');
+    for(var i = 0; i < self.paths.length; i++) {
+    console.log(i + " - " + self.paths[i]);
+    	path.append("<span>" + self.paths[i].name + "/</span>").on('click', function() {
+    		
+    		self.relocate(self.paths[i].id, self.paths[i].name);
+    	});
+    };
+    self.container.append(new Application.prototype.UI.Loader());
     $.get('Scripts/files.class.php', {action: 'list', type: this.type, pf: this.pf, receiver_id: this.user_id}, function(response) {
+    	self.container.html('');
+    	self.container.append(path);
         response = $.parseJSON(response);
         for (var i = 0; i < response.length; i++) {
             (function(i) {
@@ -828,6 +855,16 @@ Application.prototype.FileList.prototype.get = function() {
                     self.onclick(file);
                 }));
             })(i);
+        }
+        if(response.length === 0) {
+        	self.container.append(Application.prototype.default.emptyFeed);
+        }
+        if(self.pf != 0) {
+        	self.container.append($('<button class="pure-button-blue">Back</button>').on('click', function() {
+        		self.pf = self.pf - 1;
+        		self.paths.pop();
+            	self.get();
+        	}));
         }
     });
 };
@@ -1221,7 +1258,7 @@ Application.prototype.navigation = {
 };
 Application.prototype.Feed = function(entity_id, entity_type, properties) {
     this.prop = properties || {};
-    this.prop.container.append(this.feed = $("<div></div>")).append(this.loader = new Application.prototype.UI.Loader());
+    this.prop.container.replaceWith(this.feed = $("<div></div>")).append(this.loader = new Application.prototype.UI.Loader());
     this.entity_id = entity_id;
     this.entity_type = entity_type;
     this.items = new Array();
@@ -1230,7 +1267,7 @@ Application.prototype.Feed = function(entity_id, entity_type, properties) {
     this.onfetch = function() {
         this.print();
     };
-    this.noItems = $('<div class="contentblock post_height_restrictor">This feed contains no posts.</div>');
+    this.noItems = Application.prototype.default.emptyFeed;
 //    this.loader = new Application.prototype.UI.Loader();
     this.get = function() {
         if(this.active !== true) {
@@ -1703,10 +1740,18 @@ Application.prototype.UI = {
         var self = this;
         this.container = $("<ul class='buttons'></ul>");
         this.addOptions = function(options) {
+        var hasSelect = false;
+            	for(var o = 0; o < options.length; o++) {
+            		if(options[o].selected) {
+            			hasSelect = true;
+            		}
+            	}
             for (var i = 0; i < options.length; i++) {
+            	
                 var item = $("<li class='ellipsis_overflow'></li>").attr('title', options[i].text).on('click', options[i].onclick);
                 var item_content = $("<div></div>");
-                if (options[i]['selected'] || this.container.children('li').length === 0) {
+                if (options[i]['selected'] || hasSelect === false) {
+                	hasSelect = true;
                     item.addClass('active');
                 }
                 if (options[i].unexecutable !== true) {
@@ -2434,7 +2479,8 @@ Application.prototype.Entity.prototype.printHeader = function(prop) {
         href: this.baseUrl + "?id=" + this.entity.id + "&t=f"
     }];
     if(prop.tab === 'f'){
-            options[1].active = true;
+    	options[0].selected = false;
+            options[1].selected = true;
     }
     this.switch.addOptions(options);
     this.container.append(this.switch.print());
@@ -2459,7 +2505,7 @@ Application.prototype.Entity.prototype.printFeed = function(prop) {
 
 Application.prototype.Entity.prototype.printSharedFiles = function(prop) {
     var self = this;
-    this.feed = new Application.prototype.FileList('all', 0, this.entity.id, {container: prop.container});
+    this.feed = new Application.prototype.FileList('all', 0, this.entity.id, {container: prop.container, class:[]});
     this.feed.printItem = function(file) {
         return file.print_row();
     };

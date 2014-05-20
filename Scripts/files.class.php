@@ -225,8 +225,8 @@ class Files {
         if(is_null($id)) {
             $id = Registry::get('user')->user_id;
         }
-        $sql = "SELECT *, @rec_pf:=parent_folder_id as 'rec_pf' FROM file WHERE user_id = :receiver_id AND :receiver_id = :user_id OR file.id IN "
-                . "(SELECT file_id FROM file_share WHERE" . constant('Base::CAN_VIEW_FILE') . ")"
+        $sql = "SELECT * FROM file WHERE user_id = :receiver_id AND (file.id IN "
+                . "(SELECT file_id FROM file_share WHERE" . constant('Base::CAN_VIEW_FILE') . ") OR :user_id = :receiver_id)"
                 . " AND type != 'Webpage' AND visible = 1 AND parent_folder_id = :pf ORDER BY name;";
         $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(

@@ -84,9 +84,9 @@ function print_body() {
                     <table>
                         <tr>
                             <?php
-                            foreach (Registry::get('files')->getSharedList() as $file) {
-                                echo Registry::get('files')->styleRecentlyShared($file);
-                            }
+//                             foreach (Registry::get('files')->getSharedList() as $file) {
+//                                 echo Registry::get('files')->styleRecentlyShared($file);
+//                             }
                             ?>
                         </tr>
                     </table>
