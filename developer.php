@@ -58,6 +58,20 @@ function print_body() { ?>
                         </div>
                     </div>
                 </section>
+                <section class='layer'>
+                    <div>
+                        <div>
+                            <a href="/developer/api">
+                                <div class="column"> <span class="fa fa-cogs"></span>
+                                    <div class="title">
+                                        <h3>API</h3>
+                                    </div>
+                                    <p>An overview of the Social Network API functions.</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </section>
     <?php } ?>
         </div>
 

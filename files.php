@@ -1,5 +1,5 @@
 <?php
-include_once 'Scripts/declare.php';
+include_once $_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php';
 function print_body() {
     global $used_width,
     $file_id,

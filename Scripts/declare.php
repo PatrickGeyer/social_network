@@ -5,37 +5,37 @@ class Registry {
 
     public static function setup() {
         if (!class_exists('System')) {
-            require 'system.class.php';
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/system.class.php';
         }
         if (!class_exists('App')) {
-            require 'app.class.php';
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/app.class.php';
         }
         if (!class_exists('Phrase')) {
-            require 'phrase.class.php';
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/phrase.class.php';
         }
         if (!class_exists('User')) {
-            require 'user.class.php';
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/user.class.php';
         }
         if (!class_exists('Entity')) {
-            require 'entity.class.php';
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/entity.class.php';
         }
         if (!class_exists('Files')) {
-            require 'files.class.php';
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/files.class.php';
         }
         if (!class_exists('FB')) {
-            require 'facebook.class.php';
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/facebook.class.php';
         }
         if (!class_exists('Calendar')) {
-            require 'calendar.class.php';
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/calendar.class.php';
         }
         if (!class_exists('Group')) {
-            require 'group.class.php';
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/group.class.php';
         }
         if (!class_exists('Notification')) {
-            require 'notifications.class.php';
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/notifications.class.php';
         }
         if (!class_exists('Home')) {
-            require 'home.class.php';
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/home.class.php';
         }
         self :: $objects['user'] = User::getInstance();
         self :: $objects['app'] = new App();

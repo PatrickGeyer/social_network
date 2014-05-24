@@ -15,9 +15,9 @@ function Application() {
 ;
 Application.prototype.default = {
     pic: {
-        icon: "Images/male-default-icon.jpg",
-        thumb: "Images/male-default-icon.jpg",
-        large: "Images/male-default-icon.jpg"
+        icon: "/Images/male-default-icon.jpg",
+        thumb: "/Images/male-default-icon.jpg",
+        large: "/Images/male-default-icon.jpg"
     },
     emptyFeed: $('<div class="contentblock post_height_restrictor">This feed contains no posts.</div>')
 };
@@ -29,7 +29,7 @@ Application.prototype.App = function(options) {
     this.temp = {};
     this.enlarge = this.container;
     this.create = function() {
-        $.post('Scripts/app.class.php', {action: 'create', name: this.attr.name}, function() { //this.name!
+        $.post('/Scripts/app.class.php', {action: 'create', name: this.attr.name}, function() { //this.name!
             alert('done');
         });
     };
@@ -43,31 +43,32 @@ Application.prototype.App = function(options) {
         }));
         this.frame[0].contentWindow.App = self;
     };
-
-    this.setHighscore = function(score, callback) {
-        callback = callback || function() {
-        };
-        $.post('Scripts/app.class.php', {action: "setHighscore", game_id: this.attr.id, score: score}, function(response) {
-            response = $.parseJSON(response);
-            callback(response);
-        });
-    };
-
-    this.getHighscores = function(min, max, callback) {
-        min = min || 0;
-        max = max || 10;
-        $.get('Scripts/app.class.php', {action: "getHighscores", game_id: this.attr.id, min: min, max: max}, function(response) {
-            response = $.parseJSON(response);
-            callback(response);
-        });
-    };
-    this.getHighscore = function(callback) {
-        $.get('Scripts/app.class.php', {action: "getHighscore", game_id: this.attr.id}, function(response) {
-            response = $.parseJSON(response);
-            callback(response);
-        });
+    this.game = {
+        getHighscore: function(callback) {
+            $.get('/Scripts/app.class.php', {action: "getHighscore", game_id: self.attr.id}, function(response) {
+                response = $.parseJSON(response);
+                callback(response);
+            });
+        },
+        getHighscores: function(min, max, callback) {
+            min = min || 0;
+            max = max || 10;
+            $.get('/Scripts/app.class.php', {action: "getHighscores", game_id: self.attr.id, min: min, max: max}, function(response) {
+                response = $.parseJSON(response);
+                callback(response);
+            });
+        },
+        setHighscore: function(score, callback) {
+            callback = callback || function() {
+            };
+            $.post('/Scripts/app.class.php', {action: "setHighscore", game_id: self.attr.id, score: score}, function(response) {
+                response = $.parseJSON(response);
+                callback(response);
+            });
+        },
     };
 };
+
 
 Date.mysql = function(string) {
     if (typeof string === 'string') {
@@ -214,7 +215,7 @@ Application.prototype.Upload = function(files) {
                     };
                     xhr.addEventListener("error", Application.prototype.Upload.error, false);
                     xhr.addEventListener("abort", Application.prototype.Upload.abort, false);
-                    xhr.open("post", "Scripts/files.class.php");
+                    xhr.open("post", "/Scripts/files.class.php");
                     xhr.send(formdata);
                 })(i, session, this);
             }
@@ -223,7 +224,7 @@ Application.prototype.Upload = function(files) {
             for (var i = 0; i < this.files.length; i++) {
                 items[i] = this.files[i].webkitRelativePath;
             }
-            $.post("Scripts/files.class.php", {action: "createFolders", files: items}, function(response) {
+            $.post("/Scripts/files.class.php", {action: "createFolders", files: items}, function(response) {
                 response = $.parseJSON(response);
                 self.pushFolder(response);
                 self.push();
@@ -293,9 +294,6 @@ Application.prototype.Upload = function(files) {
 Application.prototype.Upload.prototype.sessions = new Array();
 Application.prototype.Upload.prototype.count = new Array();
 Application.prototype.Upload.prototype.container = $('<div class="upload_file_container contentblock"></div>');
-$(function() {
-    $('.right_bar_container').append(Application.prototype.Upload.prototype.container.append(new Application.prototype.UI.DragUpload().print()));
-});
 
 /****************************************************
  * 1.3 Files                                         *
@@ -327,14 +325,14 @@ Application.prototype.file = function(file) {
          ****************************************************/
 
         this.view = function() {
-            $.post("Scripts/files.class.php", {file_id: this.file.id, action: "view"}, function() {
+            $.post("/Scripts/files.class.php", {file_id: this.file.id, action: "view"}, function() {
             });
         };
 
         this.list = function(element, type, callback) {
             callback = typeof callback !== 'undefined' ? callback : function() {
             };
-            $.post('Scripts/home.class.php', {type: type, action: "file_list"}, function(response) {
+            $.post('/Scripts/home.class.php', {type: type, action: "file_list"}, function(response) {
                 $(element).html(response);
                 $(element).mCustomScrollbar(SCROLL_OPTIONS);
                 callback();
@@ -349,7 +347,7 @@ Application.prototype.file = function(file) {
         };
 
         this.rename = function(id, text) {
-            $.post('Scripts/files.class.php', {action: "rename", file_id: this.file.id, name: text}, function() {
+            $.post('/Scripts/files.class.php', {action: "rename", file_id: this.file.id, name: text}, function() {
             });
         };
         this.printTag = function() {
@@ -846,7 +844,7 @@ Application.prototype.FileList.prototype.get = function() {
         }(i));
     };
     self.container.append(new Application.prototype.UI.Loader());
-    $.get('Scripts/files.class.php', {action: 'list', type: this.type, pf: this.f_id, receiver_id: this.user_id}, function(response) {
+    $.get('/Scripts/files.class.php', {action: 'list', type: this.type, pf: this.f_id, receiver_id: this.user_id}, function(response) {
         self.container.html('');
         self.container.append(path);
         response = $.parseJSON(response);
@@ -964,7 +962,7 @@ Application.prototype.theater = function() {
 
         self.adjust();
 
-        $.post('Scripts/files.class.php', {action: "preview", file_id: file_id, activity_id: activity_id}, function(response) {
+        $.post('/Scripts/files.class.php', {action: "preview", file_id: file_id, activity_id: activity_id}, function(response) {
             response = $.parseJSON(response);
             self.theater_info_padding.append("<div>" + string + "</div>");
             var image = $('<img class="image" />');
@@ -1118,7 +1116,7 @@ Application.prototype.Chat.prototype.getPrevious = function() {
             var element = self.chatoutput.find('.single_chat:first');
             self.loader.slideDown('fast');
             var object = {chat: self.id, all: "previous", oldest: new_oldest, newest: self.oldest - 1};
-            $.get("Scripts/chat.class.php", object, function(response) {
+            $.get("/Scripts/chat.class.php", object, function(response) {
                 response = $.parseJSON(response);
                 if (response.length == 0) {
                     self.last_chat = true;
@@ -1138,7 +1136,7 @@ Application.prototype.Chat.prototype.getPrevious = function() {
 
 Application.prototype.Chat.prototype.sendRequest = function(all) {
     var self = this;
-    $.get("Scripts/chat.class.php", {chat: self.id, all: all, oldest: 0, newest: self.newest}, function(response) {
+    $.get("/Scripts/chat.class.php", {chat: self.id, all: all, oldest: 0, newest: self.newest}, function(response) {
         $('[data-chat_room="' + self.id + '"] .chat_loader').slideUp('fast');
         response = $.parseJSON(response);
 
@@ -1241,7 +1239,7 @@ Application.prototype.Chat.prototype.submit = function(chat_text) {
         $('.chatinputtext').val('');
         $('.chatinputtext').attr('placeholder', "Sending...");
         $('.chatinputtext').attr('readonly', 'readonly');
-        $.post("Scripts/chat.class.php", {action: "addchat", aimed: self.id, chat_text: chat_text}, function(response) {
+        $.post("/Scripts/chat.class.php", {action: "addchat", aimed: self.id, chat_text: chat_text}, function(response) {
             response = $.parseJSON(response);
             self.list.append(self.styleResponse(response));
             $('.chatinputtext').removeAttr('readonly');
@@ -1284,7 +1282,7 @@ Application.prototype.Feed = function(entity_id, entity_type, properties) {
             entity_type: this.entity_type,
         };
         var self = this;
-        $.post('Scripts/home.class.php', data, function(response) {
+        $.post('/Scripts/home.class.php', data, function(response) {
             response = $.parseJSON(response);
             for (var i = 0; i < response.length; i++) {
                 self.items.push(new Application.prototype.Feed.prototype.Item(response[i]));
@@ -1317,9 +1315,9 @@ Application.prototype.Feed.prototype.Item = function(item) {
         this.item.status_text = typeof this.item.status_text !== 'undefined' && !isEmpty(this.item.status_text) ? this.item.status_text : '';
         var string = $("<div data-this.item_id='" + this.item.id + "' class='post_height_restrictor contentblock' id='post_height_restrictor_" + this.item.id + "'></div>");
         if (this.item.view == 'home') {
-            var user_link = $("<a class='user_name_post' href='user?id=" + this.item.user.id + "'></a>");
+            var user_link = $("<a class='user_name_post' href='/user?id=" + this.item.user.id + "'></a>");
             user_link.append(this.item.user.printImg());
-            var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.entity.id + "' href='user?id=" + this.item.user.entity.id + "'>" + this.item.user.entity.name + "</a>");
+            var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.entity.id + "' href='/user?id=" + this.item.user.entity.id + "'>" + this.item.user.entity.name + "</a>");
             var top_content = $("<div class='top_content'>").append(user_link).append(user_name);
             var single_post = $('<div id="single_post_' + this.item.id + '" class="singlepostdiv"></div').append(top_content);
             string.append(single_post);
@@ -1482,7 +1480,7 @@ Application.prototype.Post = function(options, element) {
     this.submit = function() {
         var text = this.status.val();
         if (text != "" || this.files.length != 0) {
-            $.post("Scripts/home.class.php", {action: "update_status", status_text: text, group_id: share_group_id, post_media_added_files: this.files}, function(data) {
+            $.post("/Scripts/home.class.php", {action: "update_status", status_text: text, group_id: share_group_id, post_media_added_files: this.files}, function(data) {
                 if (data == "") {
                     Application.prototype.Feed.update();
                 } else {
@@ -1535,7 +1533,7 @@ Application.prototype.CommentItem = function(item) {
 
 Application.prototype.CommentItem.prototype.delete = function() {
     this.comment.remove();
-    $.post('Scripts/home.class.php', {action: "deleteComment", comment_id: this.item.id}, function(response) {
+    $.post('/Scripts/home.class.php', {action: "deleteComment", comment_id: this.item.id}, function(response) {
     });
 };
 
@@ -1544,7 +1542,7 @@ Application.prototype.CommentItem.prototype.show = function() {
     this.item.like.like_text = (this.item.like.has_liked ? "Unlike" : "Like");
     this.comment.append("<div class='profile_picture_medium' style='background-image:url(\"" + this.item.user.pic.icon + "\");'></div>")
             .append(this.comment_info = $("<div class='single_comment_info'></div>")
-                    .append($("<a class='userdatabase_connection' href='user?id=" + this.item.user.id + "'></a>")
+                    .append($("<a class='userdatabase_connection' href='/user?id=" + this.item.user.id + "'></a>")
                             .append("<span class='user_preview user_preview_name post_comment_user_name' user_id='" + this.item.user.id + "'>" + this.item.user.name + " </span>"))
                     .append("<span class='post_comment_text'>" + this.item.text + "</span><br />")
                     .append(this.time = $("<span class='post_comment_time'>" + new Date.mysql(this.item.time).timeAgo('long') + " -</span>"))
@@ -1597,7 +1595,7 @@ Application.prototype.Comment = function(item) {
             return;
         }
 
-        $.post("Scripts/home.class.php", {comment_text: comment_text, post_id: this.item.id, action: 'submitComment'}, function(data) {
+        $.post("/Scripts/home.class.php", {comment_text: comment_text, post_id: this.item.id, action: 'submitComment'}, function(data) {
             self.input.val('');
             self.input.blur();
             data = $.parseJSON(data);
@@ -1647,7 +1645,7 @@ Application.prototype.ConnectionList = function(props) {
 Application.prototype.ConnectionList.prototype.update = function() {
     var self = this;
     self.props.container.append(self.loader);
-    $.get('Scripts/user.class.php', {action: 'connections'}, function(response) {
+    $.get('/Scripts/user.class.php', {action: 'connections'}, function(response) {
         self.object = $.parseJSON(response);
         self.onfetch();
     });
@@ -1672,11 +1670,39 @@ Application.prototype.ConnectionList.prototype.print = function() {
 };
 
 Application.prototype.UI = {
+    defaults: {
+        fileUpload: true,
+        connectionList: true
+    },
+    prop: {},
     init: function() {
+        this.fileUpload = Application.prototype.Upload.prototype.container;
+        this.fileUpload.append(new Application.prototype.UI.DragUpload().print());
+        $('.right_bar_container').append(this.fileUpload.hide());
+        this.connectionList = $("<div></div>");
+        new Application.prototype.ConnectionList({container: this.connectionList});
+        $('.left_bar_container').append(this.connectionList);
+        for(var i in this.defaults) {
+            if(!this.prop.hasOwnProperty(i)) {
+                this.prop[i] = this.defaults[i];
+            }
+        }
         this.update();
-        var connections = new Application.prototype.ConnectionList({container: $('.left_bar_container')});
     },
     update: function() {
+        if (this.prop.fileUpload === true) {
+            this.fileUpload.show();
+        } else {
+            this.fileUpload.hide();
+        }
+        if (this.prop.connectionList === true) {
+            this.connectionList.show();
+        } else {
+            this.connectionList.hide();
+        }
+        
+        this.prop = this.defaults;
+
         $('.createPost').each(function() {
             new Application.prototype.Post({}, $(this));
         });
@@ -1826,6 +1852,44 @@ Application.prototype.UI = {
         $(document).on('click', function() {
             self.object.removeClass('default_dropdown_active');
         });
+    },
+    vNav: function(options) {
+        this.prop = options;
+        this.object = $("<div class='vNav'></div>").append(this.list = $("<ul></ul>"));
+        this.prop.container.append(this.object);
+        this.addOptions = function(options, list) {
+            list = list || this.list;
+            var hasSelect = false;
+            for (var o = 0; o < options.length; o++) {
+                if (options[o].selected) {
+                    hasSelect = true;
+                }
+            }
+            for (var i = 0; i < options.length; i++) {
+
+                var item = $("<li class='ellipsis_overflow'></li>").attr('title', options[i].text).on('click', options[i].onclick);
+                var item_content = $("<div></div>");
+                if (options[i]['selected'] || hasSelect === false) {
+                    hasSelect = true;
+                    item.addClass('active');
+                }
+                if (options[i].unexecutable !== true) {
+                    item.on('click', function() {
+                        $(this).siblings().removeClass('active');
+                        $(this).addClass('active');
+                    });
+                }
+                if (options[i].href) {
+                    item_content.append(item_content = $("<a href='" + options[i].href + "'>" + options[i].text + "</a>"));
+                } else {
+                    item_content.text(options[i].text);
+                }
+                if (options[i].icon) {
+                    item_content.prepend("<i class='fa " + options[i].icon + "'></i>");
+                }
+                list.append(item.append(item_content));
+            }
+        }
     },
     DragUpload: function(options) {
         this.options = options || {};
@@ -2096,7 +2160,7 @@ Application.prototype.search.get = function(text, mode, element, callback) {
 //        $(element).prepend(loader);
         $(element).show();
     }
-    $.post("Scripts/searchbar.php", {search: mode, input_text: text}, function(response) {
+    $.post("/Scripts/searchbar.php", {search: mode, input_text: text}, function(response) {
         response = Application.prototype.search.style($.parseJSON(response));
         $(element).find('.search_slider').remove();
         var slider = $("<div class='search_slider'></div>");
@@ -2205,7 +2269,7 @@ String.prototype.replaceEmoticons = function() {
 
     return this.replace(new RegExp(patterns.join('|'), 'g'), function(match) {
         return typeof emoticons[match] != 'undefined' ?
-                '<img src="Images/' + emoticons[match] + '"/>' : //removed onload
+                '<img src="/Images/' + emoticons[match] + '"/>' : //removed onload
                 match;
     });
 };
@@ -2370,7 +2434,7 @@ Application.prototype.UI.adjustSwitches = function() {
  ****************************************************/
 
 Application.prototype.notification.getMessageBox = function() {
-    $.post('Scripts/notifications.class.php', {action: "messageList"}, function(response) {
+    $.post('/Scripts/notifications.class.php', {action: "messageList"}, function(response) {
         $('ul.message').html(response);
         $('#popup_message').height($('ul.message').outerHeight(true));
         $('#popup_message').mCustomScrollbar('update');
@@ -2378,7 +2442,7 @@ Application.prototype.notification.getMessageBox = function() {
 };
 
 Application.prototype.notification.getNotificationBox = function() {
-    $.post('Scripts/notifications.class.php', {action: "notificationList"}, function(response) {
+    $.post('/Scripts/notifications.class.php', {action: "notificationList"}, function(response) {
         $('ul.notify').html(response);
         $('#popup_notify').height($('ul.notify').outerHeight(true));
         $('#popup_notify').mCustomScrollbar('update');
@@ -2386,7 +2450,7 @@ Application.prototype.notification.getNotificationBox = function() {
 };
 
 Application.prototype.notification.getNetworkBox = function() {
-    $.post('Scripts/notifications.class.php', {action: "networkList"}, function(response) {
+    $.post('/Scripts/notifications.class.php', {action: "networkList"}, function(response) {
         $('ul.network').html(response);
         $('#popup_network').height($('ul.network').outerHeight(true));
         $('#popup_network').mCustomScrollbar('update');
@@ -2394,7 +2458,7 @@ Application.prototype.notification.getNetworkBox = function() {
 };
 
 Application.prototype.notification.getNotificationNumber = function() {
-    $.post('Scripts/notifications.class.php', {action: "alert_num"}, function(response) {
+    $.post('/Scripts/notifications.class.php', {action: "alert_num"}, function(response) {
         response = JSON.parse(response);
         if (response.message != '0') {
             $('#message_num').text(response.message);
@@ -2450,7 +2514,7 @@ Application.prototype.Entity = function() {
 Application.prototype.Entity.prototype.print = function() {
     var container = $("<div class='user-tag'></div>");
     container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.entity.pic.icon + "\");'"
-            + "href ='" + this.baseUrl + "?id=" + this.entity.id + "'>" + this.entity.name + "</a>");
+            + "href ='/" + this.baseUrl + "?id=" + this.entity.id + "'>" + this.entity.name + "</a>");
 
     return container;
 };
@@ -2472,12 +2536,12 @@ Application.prototype.Entity.prototype.printHeader = function(prop) {
     var options = [{
             text: "Feed",
             icon: "fa-list-ul",
-            href: this.baseUrl + "?id=" + this.entity.id + "&t=p"
+            href: "/" + this.baseUrl + "?id=" + this.entity.id + "&t=p"
         },
         {
             text: "Files",
             icon: "fa-file",
-            href: this.baseUrl + "?id=" + this.entity.id + "&t=f"
+            href: "/" + this.baseUrl + "?id=" + this.entity.id + "&t=f"
         }];
     if (prop.tab === 'f') {
         options[0].selected = false;
@@ -2543,7 +2607,7 @@ Application.prototype.User.prototype.MyUser = function() {
 //         });
 //     }
 //    this.setProfilePicture = function(file_id) {
-//        $.post('Scripts/user.class.php', {action: "profile_picture", file_id: file_id}, function(response) {
+//        $.post('/Scripts/user.class.php', {action: "profile_picture", file_id: file_id}, function(response) {
 //            Application.prototype.UI.removeDialog();
 //        });
 //    }
@@ -2605,7 +2669,7 @@ Application.prototype.user.preview.create = function(element, user_id) {
     element.append(cont);
     setTimeout(function() {
         if ($('*[data-user_id="' + user_id + '"]:hover').length > 0) {
-            $.post('Scripts/user.class.php', {action: "get_preview_info", id: user_id}, function(response) {
+            $.post('/Scripts/user.class.php', {action: "get_preview_info", id: user_id}, function(response) {
                 self.fill(response);
             });
             cont.fadeIn(200);
@@ -2662,7 +2726,7 @@ Application.prototype.user.preview.fill = function(response) {
     var user_string;
     user_string = ("<table style='height:100%;width:100%;' cellspacing='0'><tr><td rowspan='3' style='width:80px;'><div style='width:70px;height:70px;background-image:url(" +
             response[2] + ");background-size:cover;background-repeat:no-repeat;'></div></td>");
-    user_string += ("<td><a style='padding:0px;' href='user?id=" + response[0] +
+    user_string += ("<td><a style='padding:0px;' href='/user?id=" + response[0] +
             "'><span class='user_preview_name'>" + response[1] + "</span></a></td></tr>");
     user_string += "<tr><td><a style='padding:0px;display:inline;' href='community?id=" + response[6] +
             "'><span class='user_preview_community'>" + response[4] + "</span></a><span class='user_preview_position'> &bull; " + response[5] + "</span></td></tr>";
@@ -2688,13 +2752,13 @@ Application.prototype.user.preview.remove = function(mode, event) {
 };
 
 Application.prototype.user.connect = function(element, user_id) {
-    $.post('Scripts/user.class.php', {action: "connect", user_id: user_id}, function() {
+    $.post('/Scripts/user.class.php', {action: "connect", user_id: user_id}, function() {
         element.addClass('connect_button_invited');
     });
 };
 
 Application.prototype.user.connectAccept = function(invite_id) {
-    $.post('Scripts/user.class.php', {invite_id: invite_id, action: "acceptInvite"}, function() {
+    $.post('/Scripts/user.class.php', {invite_id: invite_id, action: "acceptInvite"}, function() {
 
     });
 };
@@ -2707,7 +2771,7 @@ Application.prototype.user.getOnlineMass = function() {
         }
     });
     if (typeof loggedIn != 'undefined' && users.length > 0) {
-        $.post('Scripts/user.class.php', {action: "getOnlineMass", users: users}, function(response) {
+        $.post('/Scripts/user.class.php', {action: "getOnlineMass", users: users}, function(response) {
             response = $.parseJSON(response);
             for (var prop in response) {
                 if (response.hasOwnProperty(prop)) {
@@ -2743,7 +2807,7 @@ Application.prototype.user.showInvite = function(group, id, group_id) {
 };
 
 Application.prototype.user.inviteUser = function(id, group_id) {
-    $.post("Scripts/group_actions.php", {action: "invite", user_id: id, group_id: group_id}, function(response) {
+    $.post("/Scripts/group_actions.php", {action: "invite", user_id: id, group_id: group_id}, function(response) {
         if (("success").indexOf(response))
         {
             removeDialog();
@@ -2788,7 +2852,7 @@ Application.prototype.user.submitData = function() {
     var email = '';
     var school = '';
     var year = '';
-    $.post('Scripts/user.class.php', {about: about, email: email, year: year}, function(response) {
+    $.post('/Scripts/user.class.php', {about: about, email: email, year: year}, function(response) {
         $('#about_saved').fadeIn(function() {
             $('#about_saved').fadeOut(1000);
         });
@@ -2801,7 +2865,7 @@ function calculateDistance(elem, mouseX, mouseY)
 }
 
 function deleteMessage(thread) {
-    $.post('Scripts/notifications.class.php', {action: "deleteMessage", thread: thread}, function(response) {
+    $.post('/Scripts/notifications.class.php', {action: "deleteMessage", thread: thread}, function(response) {
     });
     $('#inbox_message_' + thread).remove();
 }
@@ -2900,7 +2964,7 @@ Application.prototype.calendar.datetime.format = function(time) {
 };
 
 Application.prototype.calendar.getEvents = function(limit, callback) {
-    $.get('Scripts/calendar.class.php', {action: "get_events", limit: limit}, function(response) {
+    $.get('/Scripts/calendar.class.php', {action: "get_events", limit: limit}, function(response) {
         response = $.parseJSON(response);
         callback(response);
     });
@@ -2936,7 +3000,7 @@ Application.prototype.calendar.event.print = function(event, classes) {
  ****************************************************/
 
 function doneTyping(text) {
-    $.post('Scripts/user.class.php', {action: "update", id: 1, html: text}, function(response) {
+    $.post('/Scripts/user.class.php', {action: "update", id: 1, html: text}, function(response) {
     });
 }
 
@@ -3092,11 +3156,11 @@ $(function() {
         var entity = $(this).data('entity');
         var link;
         if (entity.entity_type == 'user') {
-            link = 'user?id=' + entity.id;
+            link = '/user?id=' + entity.id;
         } else if (entity.entity_type == 'group') {
-            link = 'group?id=' + entity.id;
+            link = '/group?id=' + entity.id;
         } else {
-            link = 'files?f=' + entity.id;
+            link = '/files?f=' + entity.id;
         }
         Application.prototype.navigation.relocate(link);
     });
@@ -3201,7 +3265,7 @@ $(function() {
         var text = $('[data-activity_id="' + activity_id + '"]').find('textarea.autoresize').val();
         $('[data-activity_id="' + activity_id + '"]').find('.edit_activity_save').attr('disabled', 'disabled').addClass('pure-buton-disabled');
 
-        $.post('Scripts/home.class.php', {activity_id: activity_id, action: "updatePost", text: text}, function() {
+        $.post('/Scripts/home.class.php', {activity_id: activity_id, action: "updatePost", text: text}, function() {
             $('[data-activity_id="' + activity_id + '"]').find('.post_text').show().html(text);
             $('[data-activity_id="' + activity_id + '"]').find('.post_text_editor').remove();
         });
@@ -3229,7 +3293,7 @@ $(function() {
             min: comments[post_id]['min'],
             max: comments[post_id]['max']
         }
-        $.post('Scripts/home.class.php', data, function(response) {
+        $.post('/Scripts/home.class.php', data, function(response) {
             reponse = $.parseJSON(response);
             activity.item = response;
             for (var i in activity.item.item) {
@@ -3260,7 +3324,7 @@ $(function() {
                     type: "success",
                     text: "OK",
                     onclick: function() {
-                        $.post('Scripts/files.class.php', {action: "removePostFile", file_id: file_id, activity_id: activity_id}, function() {
+                        $.post('/Scripts/files.class.php', {action: "removePostFile", file_id: file_id, activity_id: activity_id}, function() {
                         });
                         $(this).parents('.post_feed_item').remove();
                         delete_post(activity_id);
@@ -3280,7 +3344,7 @@ $(function() {
             });
         } else {
             $(this).parents('.post_feed_item').remove();
-            $.post('Scripts/files.class.php', {action: "removePostFile", file_id: file_id, activity_id: activity_id}, function() {
+            $.post('/Scripts/files.class.php', {action: "removePostFile", file_id: file_id, activity_id: activity_id}, function() {
             });
         }
     });
@@ -3308,7 +3372,7 @@ $(function() {
         }
         $('[data-activity_id="' + post_id + '"] .post_like_count:first').text(like_count);
 
-        $.post("Scripts/home.class.php", {type: 1, activity_id: post_id, action: "like"}, function(data)
+        $.post("/Scripts/home.class.php", {type: 1, activity_id: post_id, action: "like"}, function(data)
         {
             $('[data-activity_id="' + post_id + '"] .post_like_count:first').text(data);
         });
@@ -3331,7 +3395,7 @@ $(function() {
         }
 
         $('[data-comment_id="' + comment_id + '"] .post_comment_liked_num').text(like_count);
-        $.post('Scripts/home.class.php', {action: "comment_vote", comment_id: comment_id}, function(response) {
+        $.post('/Scripts/home.class.php', {action: "comment_vote", comment_id: comment_id}, function(response) {
             $('[data-comment_id="' + comment_id + '"] .post_comment_liked_num').text(response);
         });
     });
@@ -3369,7 +3433,7 @@ $(function() {
 
     $(document).on('focusout', 'div.files input', function() {
         var file_id = $(this).parents("[data-file_id]").data('file_id');
-        $.post('Scripts/files.class.php', {action: "rename", file_id: file_id, text: $(this).val()}, function() {
+        $.post('/Scripts/files.class.php', {action: "rename", file_id: file_id, text: $(this).val()}, function() {
 
         });
         $(this).prev('p.files').text($(this).val()).show();

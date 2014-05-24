@@ -28,9 +28,9 @@ $chat_rooms = $chat->get_chat_rooms();
 </head>
 
 <audio id='chat_new_message_sound'>
-    <source src="Audio/newmessage.ogg" type="audio/ogg"></source>
-    <source src="Audio/newmessage.mp3" type="audio/mpeg"></source>
-    <source src="Audio/newmessage.wav" type="audio/wav"></source>
+    <source src="/Audio/newmessage.ogg" type="audio/ogg"></source>
+    <source src="/Audio/newmessage.mp3" type="audio/mpeg"></source>
+    <source src="/Audio/newmessage.wav" type="audio/wav"></source>
 </audio>
 
 <!--// $chat->getUnreadNum($single_group['id'], NULL)-->

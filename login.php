@@ -1,5 +1,5 @@
 <?php
-include_once 'Scripts/declare.php';
+include_once $_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php';
 
 function login($user_id) {
     setcookie("home_feed", 'a', time() + 3600000, '/');
@@ -77,11 +77,11 @@ else {
 //         	echo $user['name']." => ".Registry::get('system')->encrypt($user['password']);
 //         }
         ?>
-        <script src='Scripts/external/jquery-1.10.2.min.js'></script>
-        <script src='Scripts/js.js'></script>
+        <script src='/Scripts/external/jquery-1.10.2.min.js'></script>
+        <script src='/Scripts/js.js'></script>
         <script src="//cdn.jsdelivr.net/jquery.mcustomscrollbar/2.8.1/jquery.mCustomScrollbar.min.js"></script>
-        <script>window.mCustomScrollbar || document.write('<script src="Scripts/external/jquery.mCustomScrollbar.min.js">\x3C/script>');</script>
-        <link href="Scripts/external/jquery.mCustomScrollbar.min.css" rel="stylesheet" type="text/css" />
+        <script>window.mCustomScrollbar || document.write('<script src="/Scripts/external/jquery.mCustomScrollbar.min.js">\x3C/script>');</script>
+        <link href="/Scripts/external/jquery.mCustomScrollbar.min.css" rel="stylesheet" type="text/css" />
         <title>Login</title>
         <script>
             function logIn() {
@@ -134,7 +134,7 @@ else {
                     var lastname = $('.last_name_signup').val();
                     var email = $('.email_signup').val();
                     var password = $('.password_signup').val();
-                    $.post('Scripts/verifysignup.php', {
+                    $.post('/Scripts/verifysignup.php', {
                         firstname: firstname,
                         lastname: lastname,
                         email: email,

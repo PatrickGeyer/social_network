@@ -83,19 +83,16 @@ class System {
             echo "<meta name='" . $meta . "' content='" . $value . "' />";
         }
         echo '<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">';
-        echo "<link rel='stylesheet' media='screen and (min-width: 180px) and (max-device-width : 780px)' href='CSS/style.mobile.css'/>";
+        echo "<link rel='stylesheet' media='screen and (min-width: 180px) and (max-device-width : 780px)' href='/CSS/style.mobile.css'/>";
         if(isset($_GET['m']) || isset($_COOKIE['mobile'])) {
             setcookie('mobile', 'true');
-            echo "<link rel='stylesheet' href='CSS/style.mobile.css'/>";
+            echo "<link rel='stylesheet' href='/CSS/style.mobile.css'/>";
         }
-        echo "<link rel='stylesheet' href='CSS/style.css' type='text/css'>"; //change to minified versions after development
+        echo "<link rel='stylesheet' href='/CSS/style.css' type='text/css'>"; //change to minified versions after development
 //      echo <link rel="stylesheet" media='screen and (min-width: 381px) and (max-width: 700px)' href="tablet.css"/>
         $base = Registry::get('base');
         echo "<link rel='shortcut icon' href='" . $base::SHORTCUT_ICON . "'>";
         echo "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>";
-        echo "<script>";
-        echo "var USER_PIC = '". Registry::get('user')->getProfilePicture('THUMB') . "';";
-        echo "</script>";
     }
 
     public function jsVars() {
@@ -455,7 +452,7 @@ class System {
 
 }
 
-if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
+if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once($_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php');
     $system = new System;
     if (isset($_POST['action'])) {
         if ($_POST['action'] == "get_page_preview") {

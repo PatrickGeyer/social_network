@@ -5,8 +5,7 @@ include_once('chat.php');
 ?>
 <html>
     <head>
-        <link rel="stylesheet" type="text/css" href="CSS/message.css">
-        <script src="Scripts/external/chart.min.js"></script>
+        <script src="/Scripts/external/chart.min.js"></script>
         <title>Statistics</title>
         <script>
         $(function(){

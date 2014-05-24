@@ -49,7 +49,6 @@ if (isset($_GET['tab'])) {
         }
     </script>
     <?php
-    $personaldir = "User/Profilepictures/" . Registry::get('user')->getId();
     if (is_file($personaldir)) {
         if ($handle = opendir($personaldir)) {
             while (false !== ($entry = readdir($handle))) {

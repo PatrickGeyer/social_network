@@ -4,11 +4,10 @@ function print_body() {
     
 }
 
-require_once('Scripts/lock.php');
+require_once('/Scripts/lock.php');
 $page_identifier = "inbox";
 $current_thread;
 ?>
-<link rel="stylesheet" type="text/css" href="CSS/message.css">
 <script>
     document.title = "Inbox";
     $(document).on('click', '#message_reply_button', function() {
@@ -86,7 +85,7 @@ if (isset($_GET['id'])) {
         $('.message_convo_container').append(string);
     });
     function get_message(min, max, callback) {
-        $.post('Scripts/notifications.class.php', {action: "get_thread", min: min, max: max, thread: <?php echo ($current_thread ? $current_thread : "null"); ?>}, function(response) {
+        $.post('/Scripts/notifications.class.php', {action: "get_thread", min: min, max: max, thread: <?php echo ($current_thread ? $current_thread : "null"); ?>}, function(response) {
             var string = '';
             response = $.parseJSON(response);
             for (var i in response) {
@@ -140,7 +139,7 @@ if (isset($_GET['id'])) {
             $('.message_reply_button').removeClass('pure-button-disabled');
             return;
         }
-        $.post("Scripts/notifications.class.php", {action: "sendMessage", reply: reply, message: message, receivers: message_receivers, thread_id: thread}, function(response)
+        $.post("/Scripts/notifications.class.php", {action: "sendMessage", reply: reply, message: message, receivers: message_receivers, thread_id: thread}, function(response)
         {
             if (response == "")
             {

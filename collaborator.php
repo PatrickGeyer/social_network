@@ -11,7 +11,6 @@ else {
 ?>
 <html>
     <head>
-        <!--<link rel="stylesheet" type="text/css" href="CSS/collaborator.css" />-->
         <link rel="stylesheet" type="text/css" href="Scripts/external/jQuery-TE_v.1.4.0/jquery-te-1.4.0.css" />
         <script src='Scripts/external/jQuery-TE_v.1.4.0/jquery-te-1.4.0.min.js'></script>
         <script>

@@ -49,7 +49,7 @@ else {
                 receivers: event_receivers,
                 event_id: <?php echo ($event_action=='edit' ? $event_id : '""'); ?>
             }
-            $.post('Scripts/calendar.class.php', data, function(response) {
+            $.post('/Scripts/calendar.class.php', data, function(response) {
                 alert('done');
             });
         });
@@ -77,11 +77,11 @@ else {
         }
         $(document).on('click', '#delete_button', function() {
             var event_id = <?php echo ($event_action=='edit' || $event_action=='view' ? $event_id : '""'); ?>;
-            $.post('Scripts/calendar.class.php', {action: "deleteEvent", event_id: event_id});
+            $.post('/Scripts/calendar.class.php', {action: "deleteEvent", event_id: event_id});
         });
         $(document).on('click', '#complete_button', function() {
             var event_id = <?php echo ($event_action=='edit' || $event_action=='view' ? $event_id : '""'); ?>;
-            $.post('Scripts/calendar.class.php', {action: "completeEvent", event_id: event_id});
+            $.post('/Scripts/calendar.class.php', {action: "completeEvent", event_id: event_id});
         });
 
         Application.prototype.FileList($('.file_box'), null, function() {

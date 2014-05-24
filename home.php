@@ -88,5 +88,5 @@ else {
     $filter = $feed_id = 'a';
 }
 $page_identifier = "home";
-require_once('Scripts/lock.php');
+require_once($_SERVER['DOCUMENT_ROOT'].'/Scripts/lock.php');
 ?>

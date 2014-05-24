@@ -5,7 +5,7 @@ class Notification {
 
     public function __construct() {
         if(!class_exists('Registry')) {
-            require 'declare.php';
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php';
         }
     }
 

@@ -699,7 +699,7 @@ class Files {
         $sql->execute(array(
             ":user_id" => Registry::get('user')->user_id,
             ":name" => $name,
-            ":path" => "User/Files/" . Registry::get('user')->user_id . "/" . $name . ".zip",
+            ":path" => "/User/Files/" . Registry::get('user')->user_id . "/" . $name . ".zip",
             ":type" => "Folder",
             ":folder_id" => $new_folder_id,
             ":parent_folder_id" => $parent_folder,
@@ -905,7 +905,7 @@ class Files {
 
         $tmpFilePath = $file['file']['tmp_name'];
         $savename = preg_replace("/[^a-z0-9]+/i", '', $file['file']['name']);
-        $savepath = 'User/Files/' . Registry::get('user')->user_id . "/";
+        $savepath = '/User/Files/' . Registry::get('user')->user_id . "/";
         $base_path = $_SERVER['DOCUMENT_ROOT'] . "/";
         $dir = $base_path . $savepath;
         $parent_folder = $post['parent_folder'];
@@ -1089,7 +1089,7 @@ class Files {
                     $lastActivityInsertId = Registry::get('db')->lastInsertId();
                     Registry::get('db')->commit();
                     if ($parent_folder == 0) {
-                        $path = "User/Files/" . Registry::get('user')->user_id . "/root.zip";
+                        $path = "/User/Files/" . Registry::get('user')->user_id . "/root.zip";
                     }
                     else {
                         $path = $this->getAttr($this->get_folder_file_id($parent_folder), 'path');
@@ -1165,7 +1165,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action'])) {
     }
 } 
 else if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['action'])) {
-    require_once('declare.php');
+    require_once($_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php');
     $files = Files::getInstance();
     if ($_GET['action'] === "list") {
         die(json_encode($files->getList($_GET['pf'], $_GET['receiver_id'])));

@@ -6,7 +6,6 @@ $file_id = $_GET['file_id'];
 ?>
 <head>
     <title><?php echo $file_name; ?></title>
-    <link rel="stylesheet" type="text/css" href="CSS/message.css">
     <script>
         function getnamesgroup()
         {

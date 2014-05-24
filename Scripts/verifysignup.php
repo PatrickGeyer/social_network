@@ -2,7 +2,7 @@
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    include_once('declare.php');
+    include_once($_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php');
     $user_info = $_POST;
 
     $user_query = "SELECT id, name, position FROM user WHERE email = :email";

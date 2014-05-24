@@ -6,7 +6,7 @@ class Entity {
 
     public function __construct() {
         if (!class_exists('Registry')) {
-            include_once 'declare.php';
+            include_once $_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php';
         }
     }
 

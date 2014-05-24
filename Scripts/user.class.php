@@ -194,6 +194,11 @@ class User {
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user_profile_picture = $user_query->fetch(PDO::FETCH_ASSOC);
+        if (is_array($user_profile_picture)) {
+            foreach ($user_profile_picture as $key => $value) {
+                $user_profile_picture[$key] = "/" . $value;
+            }
+        }
         return $user_profile_picture;
     }
 
@@ -437,7 +442,7 @@ class User {
     }
 
 }
-if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
+if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once($_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php');
     $user = new User();
     if (isset($_POST['about'])) {
         if (!isset($_POST['email'])) {
@@ -474,7 +479,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once('declare.php');
 } else if ($_SERVER['REQUEST_METHOD'] == "GET") {
     if (isset($_GET['action'])) {
         if ($_GET['action'] === "connections") {
-            require_once('declare.php');
+            require_once($_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php');
             $cons = array(
                 'Groups' => Registry::get('group')->getUserGroups(),
                 'Connections' => Registry::get('user')->getConnections(),

@@ -1,5 +1,5 @@
 <?php
-require_once 'declare.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php';
 class App {
 
     public function create($name, $type) {

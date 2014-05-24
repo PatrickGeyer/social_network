@@ -7,7 +7,7 @@ class Calendar {
 
     public function __construct() {
         if(!class_exists('Registry')) {
-            require 'declare.php';
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php';
         }
         $this->event_types['Homework'] = array('color' => 'rgb(50, 150, 50)');
     	$this->event_types['Event']['color'] = 'rgb(0, 40, 180)';

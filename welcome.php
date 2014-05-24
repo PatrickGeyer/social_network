@@ -114,7 +114,7 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
             var group_name = $('#group_name_input').val();
             var group_about = $('#group_about').val();
             var group_type = $('#group_type').val();
-            $.post("Scripts/group.class.php", {action: "create", group_name: group_name, group_about: group_about, group_type: group_type, invited_members: group_receivers}, function(response)
+            $.post("/Scripts/group.class.php", {action: "create", group_name: group_name, group_about: group_about, group_type: group_type, invited_members: group_receivers}, function(response)
             {
                 var status = response.split("/");
                 if (status[0] == "success")
@@ -125,11 +125,11 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
         }
         function markAllSeen(type)
         {
-            $.post("Scripts/notifications.class.php", {action: "mark", type: type}, function(response) {
+            $.post("/Scripts/notifications.class.php", {action: "mark", type: type}, function(response) {
             });
         }
         function markNotificationRead(id, nextPage) {
-            $.post("Scripts/notifications.class.php", {action: "markNotificationRead", id: id}, function(response) {
+            $.post("/Scripts/notifications.class.php", {action: "markNotificationRead", id: id}, function(response) {
 //                window.location.assign(nextPage);
             });
         }
@@ -146,32 +146,32 @@ function print_header($PRINT = TRUE) {
             <?php if(isset($_COOKIE['id'])) { ?>
                 <div class="circle">
                     <div class="ring">
-                        <a href="home" class="menuItem fa fa-home fa-2x <?php
+                        <a href="/home" class="menuItem fa fa-home fa-2x <?php
                         if ($pid == "home") {
                             echo "current_page";
                         }
                         ?>"></a>
-                        <a href="message" class="menuItem fa fa-comment fa-2x <?php
+                        <a href="/message" class="menuItem fa fa-comment fa-2x <?php
                         if ($pid == "message") {
                             echo "current_page";
                         }
                         ?>"></a>
-                        <a href="user?t=f" class="menuItem fa fa-play fa-2x <?php
+                        <a href="/user?t=f" class="menuItem fa fa-play fa-2x <?php
                         if ($pid == "files") {
                             echo "current_page";
                         }
                         ?>"></a>
-                        <a href="user" class="menuItem fa fa-user fa-2x <?php
+                        <a href="/user" class="menuItem fa fa-user fa-2x <?php
                         if ($pid == "user") {
                             echo "current_page";
                         }
                         ?>"></a>
-                        <a href="calendar" class="menuItem fa fa-calendar fa-2x <?php
+                        <a href="/calendar" class="menuItem fa fa-calendar fa-2x <?php
                         if ($pid == "calendar") {
                             echo "current_page";
                         }
                         ?>"></a>
-                        <a href="Scripts/logout.php" class="menuItem fa fa-sign-out fa-2x no-ajax"></a>
+                        <a href="/Scripts/logout.php" class="menuItem fa fa-sign-out fa-2x no-ajax"></a>
                     </div>
                     <a href="#" class="no-ajaxy center"></a>
                 </div>

@@ -2,7 +2,7 @@
 
 $return_data = array();
 $suggestions = 0;
-include_once('declare.php');
+include_once($_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php');
 $searchTxt = $_POST['input_text'];
 
 $sql = "SELECT id FROM user WHERE INSTR(CONCAT(`first_name`, ' ', `last_name`), '{$searchTxt}') > 0;";
