@@ -1,7 +1,7 @@
 <?php
 
 function print_body() { ?>
-    <div class="container">
+    <div class="container noRightBar noLeftBar">
         <div class='contentblock'>
             <?php if (isset($_GET['create'])) { ?>
                 <h2>Create</h2>
@@ -33,7 +33,7 @@ function print_body() { ?>
                 <section class='layer'>
                     <div>
                         <div>
-                            <a href="developer?create">
+                            <a class='no-ajax' href="/developer?create">
                                 <div class="column"> <span class="fa fa-legal"></span>
                                     <div class="title">
                                         <h3>Create</h3>
@@ -47,7 +47,7 @@ function print_body() { ?>
                 <section class='layer'>
                     <div>
                         <div>
-                            <a href="developer?view">
+                            <a class='no-ajax' href="/developer/dashboard">
                                 <div class="column"> <span class="fa fa-cogs"></span>
                                     <div class="title">
                                         <h3>Dashboard</h3>
@@ -61,7 +61,7 @@ function print_body() { ?>
                 <section class='layer'>
                     <div>
                         <div>
-                            <a href="/developer/api">
+                            <a class='no-ajax' href="/developer/api">
                                 <div class="column"> <span class="fa fa-cogs"></span>
                                     <div class="title">
                                         <h3>API</h3>

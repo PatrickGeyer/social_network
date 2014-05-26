@@ -35,9 +35,6 @@ Application.prototype.App = function(options) {
     };
     this.print = function() {
         this.frame = $('<iframe allowFullScreen="true" seamless sandbox="allow-popups allow-scripts allow-same-origin" src="' + this.attr.path + '"></iframe>');
-//        this.frame.on('load', function() {
-//        	console.log('App Loaded');
-//        });
         this.container.append(this.frame).append($("<i class='fa fa-expand'></i>").on('click', function() {
             Application.prototype.UI.launchFullscreen(self.enlarge[0]);
         }));
@@ -814,7 +811,7 @@ Application.prototype.FileList = function(type, f_id, user_id, prop) {
 
     this.relocate = function(id, name) {
         id = parseInt(id);
-        for (var i = self.paths.length -1; i >= 0; i--) {
+        for (var i = self.paths.length - 1; i >= 0; i--) {
             if (parseInt(self.paths[i].id) >= id) {
                 self.paths.splice(i, 1);
             }
@@ -842,7 +839,8 @@ Application.prototype.FileList.prototype.get = function() {
                 self.relocate(self.paths[i].id, self.paths[i].name);
             }));
         }(i));
-    };
+    }
+    ;
     self.container.append(new Application.prototype.UI.Loader());
     $.get('/Scripts/files.class.php', {action: 'list', type: this.type, pf: this.f_id, receiver_id: this.user_id}, function(response) {
         self.container.html('');
@@ -1682,8 +1680,8 @@ Application.prototype.UI = {
         this.connectionList = $("<div></div>");
         new Application.prototype.ConnectionList({container: this.connectionList});
         $('.left_bar_container').append(this.connectionList);
-        for(var i in this.defaults) {
-            if(!this.prop.hasOwnProperty(i)) {
+        for (var i in this.defaults) {
+            if (!this.prop.hasOwnProperty(i)) {
                 this.prop[i] = this.defaults[i];
             }
         }
@@ -1700,7 +1698,8 @@ Application.prototype.UI = {
         } else {
             this.connectionList.hide();
         }
-        
+        Application.prototype.UI.vNav.prototype.setActive();
+
         this.prop = this.defaults;
 
         $('.createPost').each(function() {
@@ -1763,9 +1762,12 @@ Application.prototype.UI = {
         };
         return this;
     },
-    ButtonSwitch: function() {
+    ButtonSwitch: function(props) {
         var self = this;
+        this.prop = props || {};
+        this.prop.container = this.prop.container || $("<div></div>");
         this.container = $("<ul class='buttons'></ul>");
+        this.prop.container.append(this.container);
         this.addOptions = function(options) {
             var hasSelect = false;
             for (var o = 0; o < options.length; o++) {
@@ -1854,11 +1856,15 @@ Application.prototype.UI = {
         });
     },
     vNav: function(options) {
-        this.prop = options;
-        this.object = $("<div class='vNav'></div>").append(this.list = $("<ul></ul>"));
+        var self = this;
+        this.items.push(this);
+        this.prop = options || {};
+        this.object = $("<div class='vNav'></div>");
+        this.prop.container.remove('.vNav');
         this.prop.container.append(this.object);
-        this.addOptions = function(options, list) {
-            list = list || this.list;
+
+        this.addOptions_ = function(options, list) {
+            list = list || this.object;
             var hasSelect = false;
             for (var o = 0; o < options.length; o++) {
                 if (options[o].selected) {
@@ -1867,19 +1873,16 @@ Application.prototype.UI = {
             }
             for (var i = 0; i < options.length; i++) {
 
-                var item = $("<li class='ellipsis_overflow'></li>").attr('title', options[i].text).on('click', options[i].onclick);
+                var item = $("<div class='ellipsis_overflow item'></div>").attr('title', options[i].text).on('click', options[i].onclick);
                 var item_content = $("<div></div>");
                 if (options[i]['selected'] || hasSelect === false) {
                     hasSelect = true;
-                    item.addClass('active');
+//                    item.addClass('active');
                 }
                 if (options[i].unexecutable !== true) {
-                    item.on('click', function() {
-                        $(this).siblings().removeClass('active');
-                        $(this).addClass('active');
-                    });
+                    item.on('click', function() {});
                 }
-                if (options[i].href) {
+                if (options[i].href || 1) {
                     item_content.append(item_content = $("<a href='" + options[i].href + "'>" + options[i].text + "</a>"));
                 } else {
                     item_content.text(options[i].text);
@@ -1888,7 +1891,23 @@ Application.prototype.UI = {
                     item_content.prepend("<i class='fa " + options[i].icon + "'></i>");
                 }
                 list.append(item.append(item_content));
+                if (options[i].children) {
+                    var new_list = $('<div></div>');
+                    item.append(new_list);
+                    this.addOptions_(options[i].children, new_list);
+                }
             }
+        };
+        this.addOptions = function(options) {
+            for (var i = 0; i < options.length; i++) {
+                options[i].children = options[i].children || new Array();
+                var sub = $("<div class='sub'></div>");
+                var header = $('<div class="header">' + options[i].text + '</div>');
+                sub.append(header);
+                this.addOptions_(options[i].children, sub);
+                this.object.append(sub);
+            }
+            self.setActive();
         }
     },
     DragUpload: function(options) {
@@ -1987,6 +2006,23 @@ Application.prototype.UI = {
         this.container.append(this.drag);
         this.print = function() {
             return this.container;
+        }
+    }
+};
+Application.prototype.UI.vNav.prototype.items = new Array();
+Application.prototype.UI.vNav.prototype.setActive = function(item) {
+    item = this || item;
+    if (item.object) {
+        item.object.find('a').each(function() {
+            if (document.location.href.indexOf($(this).attr('href')) >= 0) {
+                $(this).parents('div').first().addClass('active');
+            } else {
+                $(this).parents('div').first().removeClass('active');
+            }
+        });
+    } else {
+        for (var i = 0; i < Application.prototype.UI.vNav.prototype.items.length; i++ ) {
+            Application.prototype.UI.vNav.prototype.items[i].setActive(Application.prototype.UI.vNav.prototype.items[i]);
         }
     }
 };
@@ -2217,9 +2253,8 @@ Application.prototype.navigation.relocate = function(link, get) {
         $.get(link, {ajax: 'ajax'}, function(response) {
             var container = $(response);
             $('.container').replaceWith(container);
-
-            $('body').scrollTop(0);
             Application.prototype.UI.update();
+            $('body').scrollTop(0);
         });
     }
 }
