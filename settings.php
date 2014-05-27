@@ -7,7 +7,7 @@ if (isset($_GET['tab'])) {
     $current_tab = $_GET['tab'];
 }
 ?>
-    <script src="Scripts/external/jquery-ui-1.10.3.js"></script>
+    <script src="/Scripts/external/jquery-ui-1.10.3.js"></script>
     <title>Settings</title>
     <script>
         var current_tab = '<?php echo $current_tab; ?>';
@@ -48,18 +48,7 @@ if (isset($_GET['tab'])) {
             }
         }
     </script>
-    <?php
-    if (is_file($personaldir)) {
-        if ($handle = opendir($personaldir)) {
-            while (false !== ($entry = readdir($handle))) {
-                if (strlen($entry) > 4) {
-                    $personalfilepath = $personaldir . "/" . $entry;
-                }
-            }
-        }
-    }
-    ?>
-        <div class="container">
+        <div class="container noRightBar">
             <table>
                 <tr>
                     <td>
@@ -89,7 +78,7 @@ if (isset($_GET['tab'])) {
                             <?php if ($current_tab == "profile") : ?>
                                 <h3>Profile</h3>
                                 <ul>
-                                    <?php if(Base::$FB->getUser()) { ?>
+                                    <?php if(1===2) {//Base::$FB->getUser()) { ?>
                                     <li class='section'>
                                         <div>
                                             <img style='display:inline-block;' src='https://graph.facebook.com/<?php echo Base::$FB->getUser(); ?>/picture'></img>

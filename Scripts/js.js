@@ -827,6 +827,8 @@ Application.prototype.FileList = function(type, f_id, user_id, prop) {
     this.print = function() {
         return this.container;
     };
+    this.get();
+    return this;
 };
 
 Application.prototype.FileList.prototype.get = function() {
@@ -1302,6 +1304,12 @@ Application.prototype.Feed = function(entity_id, entity_type, properties) {
     };
 };
 
+Application.prototype.Feed.prototype.refresh = function() {
+    this.min = this.max;
+    this.max += 100;
+    this.get();
+};
+
 Application.prototype.Feed.prototype.Item = function(item) {
     this.item = item;
     this.print = function() {
@@ -1445,10 +1453,7 @@ Application.prototype.Post = function(options, element) {
             text: "Private",
             class: "",
         }]);
-    this.fileList = new Application.prototype.FileList();
-    this.fileList.onclick = function(file) {
-        self.addFile(file);
-    };
+    
 
     element
             .append($("<div class='home_feed_post_container_arrow_border'></div>")
@@ -1466,21 +1471,33 @@ Application.prototype.Post = function(options, element) {
                                 $('.home_feed_post_container_arrow_border').css('border-right-color', 'lightgrey');
                             }))
                             .append(this.file_container = $("<div class='post_media_wrapper'></div>")
-                                    .append(this.appended_files = $("<div class='appendFiles'></div>").append($("<div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div><img class='post_media_loader' src='Images/ajax-loader.gif'></img></div>")))
-                                    .append(this.fileList.print())
+                                    .append(this.appended_files = $("<div class='appendFiles'></div>").append(
+                                    this.filecont = $("<div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div><img class='post_media_loader' src='Images/ajax-loader.gif'></img></div>"))))
                                     ))
 
                     .append(this.post_options = $("<div class='post_more_options'></div>")
                             .append(this.post_button)
-                            .append(this.dropdown)));
+                            .append(this.dropdown.print()));
+                    
+    this.fileList = new Application.prototype.FileList('all', 0, MyUser.attr.id, {container: this.filecont});
+    this.fileList.onclick = function(file) {
+        self.addFile(file);
+    };
 
     this.files = new Array();
     this.submit = function() {
         var text = this.status.val();
-        if (text != "" || this.files.length != 0) {
-            $.post("/Scripts/home.class.php", {action: "update_status", status_text: text, group_id: share_group_id, post_media_added_files: this.files}, function(data) {
+        if (text != "" || this.files.length !== 0) {
+           
+            var files = new Array();
+            for( var i = 0; i < this.files.length; i++) {
+                files.push(this.files[i].file.id);
+            }
+            $.post("/Scripts/home.class.php", {action: "update_status", status_text: text, group_id: share_group_id, post_media_added_files: files}, function(data) {
                 if (data == "") {
-                    Application.prototype.Feed.update();
+                    alert('Post submitted - please refresh!');
+                    Application.prototype.Feed.prototype.update();
+                    self.clear();
                 } else {
                     alert(data);
                 }
@@ -1701,6 +1718,11 @@ Application.prototype.UI = {
         Application.prototype.UI.vNav.prototype.setActive();
 
         this.prop = this.defaults;
+        if($('.noLeftBar').length > 0) {
+            $('.left_bar_container').css('display', 'none');
+        } else {
+            $('.left_bar_container').css('display', 'block');
+        }
 
         $('.createPost').each(function() {
             new Application.prototype.Post({}, $(this));
@@ -2265,20 +2287,20 @@ Application.prototype.navigation.relocate = function(link, get) {
 
 String.prototype.replaceLinks = function() {
     var replacedText, replacePattern1, replacePattern2, replacePattern3;
-
+    replacedText = this;
     //URLs starting with http://, https://, or ftp://
     replacePattern1 = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
-    this.replace(replacePattern1, '<a href="$1" target="_blank">$1</a>');
+    replacedText = replacedText.replace(replacePattern1, '<a class="no-ajax" href="$1" target="_blank">$1</a>');
 
     //URLs starting with "www." (without // before it, or it'd re-link the ones done above).
     replacePattern2 = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
-    this.replace(replacePattern2, '$1<a href="http://$2" target="_blank">$2</a>');
+    replacedText = replacedText.replace(replacePattern2, '$1<a class="no-ajax" href="http://$2" target="_blank">$2</a>');
 
     //Change email addresses to mailto:: links.
     replacePattern3 = /(([a-zA-Z0-9\-\_\.])+@[a-zA-Z\_]+?(\.[a-zA-Z]{2,6})+)/gim;
-    this.replace(replacePattern3, '<a href="mailto:$1">$1</a>');
+    replacedText = replacedText.replace(replacePattern3, '<a class="no-ajax" href="mailto:$1">$1</a>');
 
-    return this;
+    return replacedText;
 };
 
 String.prototype.replaceEmoticons = function() {

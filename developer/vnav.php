@@ -15,8 +15,8 @@ if ($REQUEST == "FIRST") {
                                         href: "/developer/api/game",
                                         children: [
                                             {
-                                                text: "Functions",
-                                                href: "/developer/api/game/functions",
+                                                text: "Highscores",
+                                                href: "/developer/api/game/highscore",
                                             }
                                         ]
                                     },

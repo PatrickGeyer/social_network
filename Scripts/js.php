@@ -3,6 +3,10 @@ Registry::get('system')->getGlobalMeta();
 Registry::get('system')->jsVars();
 ?>
 
+<link rel="stylesheet" href="/Scripts/external/google-code-prettify/prettify.css" />
+<script src="/Scripts/external/google-code-prettify/prettify.js"></script>
+<script src="/Scripts/external/google-code-prettify/run_prettify.js"></script>
+
 <script src="/Scripts/external/jquery-1.10.2.js"></script>
 <!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>-->
 <!--<script>window.jQuery || document.write('<script src="Scripts/external/jquery-1.10.2.js">\x3C/script>');</script>-->

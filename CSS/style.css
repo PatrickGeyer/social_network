@@ -70,7 +70,9 @@
     border-bottom: 0;
 }
 
-
+pre {
+    background-color: #eee;
+}
 div > code {
     padding: 5px;
 }
@@ -78,6 +80,9 @@ code {
     font-family: Consolas, monospace;
     background-color: #eee;
     padding: 2px;
+}
+code * {
+    font-family: inherit;
 }
 /* CLEAN SECTION*/
 #header-featured {
@@ -232,6 +237,25 @@ ul{
     padding: 0px;
 }
 
+.container table {
+    width: 100%;
+    border: 0;
+}
+.container table tr:first-of-type {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.container table tr td {
+    padding: 5px;
+}
+
+.container table tr td:nth-child(odd) {
+    background: #eee;
+}
+.container table tr td {
+    background: whitesmoke;
+}
 
 /* SPINNY WHEEL */
 
@@ -3801,8 +3825,8 @@ div.chatoff{
     border-left: 1px solid lightgrey;
 }
 
-div.chat_text{
-
+div.chattext a{
+    color: rgb(0, 140, 250);
 }
 
 .chatheader{
