@@ -38,17 +38,19 @@ class App {
         return $sql->fetch(PDO::FETCH_ASSOC);
     }
     
-    public function getHighscores($game_id, $min, $max) {
-        Registry::get('db')->query("SET @curRank := 0;");
-        $sql = "SELECT *, @curRank := @curRank + 1 AS rank FROM app.highscore WHERE game_id = :game_id "
-                . "AND @curRank BETWEEN :min AND :max ORDER BY score DESC;";
+    public function getHighscores($game_id, $min = 0, $max = 9) {
+        $sql = "CALL app.getHighscores(:game_id, :min, :max);";
         $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":game_id" => $game_id,
             ":min" => $min,
-            ":max" => $max
+            ":max" => $max,
         ));
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
+        $high = $sql->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($high as $key => $value) {
+            $high[$key] = $this->formatHighscore($high[$key]);
+        }
+        return $high;
     }
     
     public function getHighscore($game_id) {
@@ -61,6 +63,11 @@ class App {
             ":user_id" => Registry::get('user')->user_id,
         ));
         return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    public function formatHighscore($item) {
+        $item['name'] = Registry::get('user')->getName($item['user_id']);
+        return $item;
     }
 
 }

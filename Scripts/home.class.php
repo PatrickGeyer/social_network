@@ -79,7 +79,8 @@ class Home {
         $sql->execute(array(
             ":activity_id" => $activity_id
         ));
-        return $sql->fetch(PDO::FETCH_ASSOC);
+        $final = $this->homeify($sql->fetch(PDO::FETCH_ASSOC));
+        return $final;
     }
 
     function getLikes($activity) {
@@ -498,6 +499,7 @@ class Home {
             $school_query = Registry::get('db')->prepare($school_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $school_query->execute(array(":group_id" => $group_id));
         }
+        return $activity;
     }
 
 }
@@ -572,10 +574,10 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 			$group = (empty($_POST['group_id']) ? 'a' : $_POST['group_id']);
             $type = 'Text';
 
-            $home->share_activity(
+            die(json_encode($home->getSingleActivity($home->share_activity(
                     $home->add_files_to_activity(
                             $home->create_activity($status_text, $type), $post_media_added_files)
-                            , $group);
+                            , $group))));
         }
         else if ($_POST['action'] == "add_files_to_activity") {
             die($home->add_files_to_activity($_POST['activity_id'], $_POST['media_added_files']));

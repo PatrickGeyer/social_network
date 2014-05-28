@@ -25,7 +25,9 @@ Application.prototype.App = function(options) {
     var self = this;
     this.attr = options;
     this.attr.path = "/Leo/Dev/Freeze%20tag.html";
+    this.controls = $('<p></p>');
     this.container = $('.app[data-game_id="' + this.attr.id + '"]');
+    this.container.parent('.contentblock').after(this.control_container = $('<div class="contentblock"></div>').append('<h3>Controls</h3>').append(this.controls).hide());
     this.temp = {};
     this.enlarge = this.container;
     this.create = function() {
@@ -62,6 +64,10 @@ Application.prototype.App = function(options) {
                 response = $.parseJSON(response);
                 callback(response);
             });
+        },
+        control: function(text) {
+            self.controls.html(text);
+            self.control_container.show();
         },
     };
 };
@@ -1261,6 +1267,7 @@ Application.prototype.Feed = function(entity_id, entity_type, properties) {
     this.entity_id = entity_id;
     this.entity_type = entity_type;
     this.items = new Array();
+    this.feed.push(this);
     this.min = 0;
     this.max = 9999999999;
     this.onfetch = function() {
@@ -1285,7 +1292,7 @@ Application.prototype.Feed = function(entity_id, entity_type, properties) {
         $.post('/Scripts/home.class.php', data, function(response) {
             response = $.parseJSON(response);
             for (var i = 0; i < response.length; i++) {
-                self.items.push(new Application.prototype.Feed.prototype.Item(response[i]));
+                self.addItem(response[i]);
             }
             self.loader.hide();
             self.onfetch(response);
@@ -1304,10 +1311,28 @@ Application.prototype.Feed = function(entity_id, entity_type, properties) {
     };
 };
 
-Application.prototype.Feed.prototype.refresh = function() {
+Application.prototype.Feed.prototype.feeds = new Array();
+
+Application.prototype.Feed.prototype.addItem = function(item) {
+	if(this.items) {
+		var item = new Application.prototype.Feed.prototype.Item(item);
+		this.items.push(item);
+		return item;
+	} else {
+		for(var i = 0; i < this.feeds.length; i++) {
+			this.feeds[i].feed.append(this.feeds[i].addItem(item).print());
+		}
+	}
+};
+
+Application.prototype.Feed.prototype.getNew = function() {
     this.min = this.max;
     this.max += 100;
     this.get();
+};
+
+Application.prototype.Feed.prototype.getOld = function() {
+
 };
 
 Application.prototype.Feed.prototype.Item = function(item) {
@@ -1494,13 +1519,10 @@ Application.prototype.Post = function(options, element) {
                 files.push(this.files[i].file.id);
             }
             $.post("/Scripts/home.class.php", {action: "update_status", status_text: text, group_id: share_group_id, post_media_added_files: files}, function(data) {
-                if (data == "") {
-                    alert('Post submitted - please refresh!');
-                    Application.prototype.Feed.prototype.update();
-                    self.clear();
-                } else {
-                    alert(data);
-                }
+                data = $.parseJSON(data);
+//                     alert('Post submitted - please refresh!');
+                    Application.prototype.Feed.prototype.addItem(data);
+//                     self.clear();
             });
         }
     };
@@ -1596,6 +1618,7 @@ Application.prototype.Comment = function(item) {
                         .append(this.input = $('<textarea placeholder="Write a comment..." '
                                 + 'class="home_comment_input_text inputtext" id="comment_' + this.item.id
                                 + '"></textarea>').on('keydown', function(event) {
+                                self.comment_text = $(this).val();
                             if (event.keyCode === 13) {
                                 self.submit();
                                 return false;
@@ -1605,12 +1628,12 @@ Application.prototype.Comment = function(item) {
     };
     this.submit = function(callback) {
         var self = this;
-        var comment_text = this.input.val().replace(/^\s+|\s+$/g, "");
-        if (comment_text == "") {
+//         var comment_text = this.input.val();//.replace(/^\s+|\s+$/g, "");
+        if (this.comment_text == "") {
             return;
         }
 
-        $.post("/Scripts/home.class.php", {comment_text: comment_text, post_id: this.item.id, action: 'submitComment'}, function(data) {
+        $.post("/Scripts/home.class.php", {comment_text: self.comment_text, post_id: this.item.id, action: 'submitComment'}, function(data) {
             self.input.val('');
             self.input.blur();
             data = $.parseJSON(data);
