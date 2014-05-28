@@ -25,11 +25,11 @@ Application.prototype.App = function(options) {
     var self = this;
     this.attr = options;
     this.attr.path = "/Leo/Dev/Freeze%20tag.html";
-    this.controls = $('<p></p>');
+    this.controls = $('<div></p>');
     this.container = $('.app[data-game_id="' + this.attr.id + '"]');
-    this.container.parent('.contentblock').after(this.control_container = $('<div class="contentblock"></div>').append('<h3>Controls</h3>').append(this.controls).hide());
+    this.container.append(this.controls = $('<div class="contentblock"></div>'));
     this.temp = {};
-    this.enlarge = this.container;
+    this.enlarge = this.container[0];
     this.create = function() {
         $.post('/Scripts/app.class.php', {action: 'create', name: this.attr.name}, function() { //this.name!
             alert('done');
@@ -37,10 +37,15 @@ Application.prototype.App = function(options) {
     };
     this.print = function() {
         this.frame = $('<iframe allowFullScreen="true" seamless sandbox="allow-popups allow-scripts allow-same-origin" src="' + this.attr.path + '"></iframe>');
-        this.container.append(this.frame).append($("<i class='fa fa-expand'></i>").on('click', function() {
-            Application.prototype.UI.launchFullscreen(self.enlarge[0]);
-        }));
+        this.container.prepend($("<div class='contentblock'></div>").append(this.frame));
         this.frame[0].contentWindow.App = self;
+        this.frame.height(this.frame.width() * 0.7142857 + 35);
+//        this.frame[0].height = "0px";
+//        this.frame[0].height = this.frame[0].contentWindow.document.body.scrollHeight + "px";
+
+        this.controls.append($("<i class='fa fa-expand'></i>").on('click', function() {
+            Application.prototype.UI.launchFullscreen(self.enlarge);
+        }));
     };
     this.game = {
         getHighscore: function(callback) {
@@ -65,9 +70,8 @@ Application.prototype.App = function(options) {
                 callback(response);
             });
         },
-        control: function(text) {
-            self.controls.html(text);
-            self.control_container.show();
+        block: function(options) {
+            self.container.append($("<div class='contentblock'></div>").append("<h3>" + options.header + "</h3>").append(options.text));
         },
     };
 };

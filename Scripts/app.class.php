@@ -47,9 +47,9 @@ class App {
             ":max" => $max,
         ));
         $high = $sql->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($high as $key => $value) {
-            $high[$key] = $this->formatHighscore($high[$key]);
-        }
+//        foreach ($high as $key => $value) {
+//            $high[$key] = $this->formatHighscore($value);
+//        }
         return $high;
     }
     
@@ -66,7 +66,7 @@ class App {
     }
     
     public function formatHighscore($item) {
-        $item['name'] = Registry::get('user')->getName($item['user_id']);
+        $item['name'] = Registry::get('user')->getName($item['user_id'], 3);
         return $item;
     }
 

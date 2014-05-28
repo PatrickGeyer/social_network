@@ -1,8 +1,10 @@
 <?php
+
 include_once('database.class.php');
 include_once('system.class.php');
 
 class User {
+
     public $user_id;
     private $password = NULL;
     public $email = NULL;
@@ -12,14 +14,15 @@ class User {
     public $gender = NULL;
     public $about = NULL;
     public $language = NULL;
-    public $profile_picture = array("original" => NULL, "chat"=> NULL, "thumb" => NULL, "icon" => NULL);
+    public $profile_picture = array("original" => NULL, "chat" => NULL, "thumb" => NULL, "icon" => NULL);
     public $attr = array();
-    
     private static $user = null;
+
     public function __construct() {
-       $this->user_id = (isset($_COOKIE['id']) ? ($_COOKIE['id']) : "''");
+        $this->user_id = (isset($_COOKIE['id']) ? ($_COOKIE['id']) : "''");
     }
-    public static function getInstance ( ) {
+
+    public static function getInstance() {
         if (self :: $user) {
             return self :: $user;
         }
@@ -68,23 +71,25 @@ class User {
     function getId() {
         return $this->user_id;
     }
+
     function getAttr($attr, $id = NULL) {
         $set = false;
         if (!isset($id)) {
             $set = true;
-            if(isset($this->attr[$attr]))
+            if (isset($this->attr[$attr]))
                 return $this->attr[$attr];
             $id = $this->user_id;
         }
         $user_query = "SELECT :attr FROM user WHERE id = :user_id;";
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $user_query->execute(array(":attr" => $attr,":user_id" => $id));
+        $user_query->execute(array(":attr" => $attr, ":user_id" => $id));
         $user = $user_query->fetchColumn();
-        if($set) {
+        if ($set) {
             $this->attr[$attr] = $user;
         }
         return $user;
     }
+
     function getName($id = null, $name = 3) {
         $set = false;
         if (!isset($id)) {
@@ -93,26 +98,28 @@ class User {
                 return $this->name[$name];
             $id = $this->user_id;
         }
-        if($name === 3) {
-            $user_query = "SELECT CONCAT(`first_name`, ' ' ,`last_name`)as name FROM user WHERE id = :user_id";
+        if ($name === 3) {
+            $user_query = "SELECT CONCAT(`first_name`, ' ' ,`last_name`)as name FROM `user` WHERE id = :user_id;";
         }
-        else if($name === 1) {
-            $user_query = "SELECT first_name FROM user WHERE id = :user_id";
+        else if ($name === 1) {
+            $user_query = "SELECT first_name FROM user WHERE id = :user_id;";
         }
-        else if($name === 2) {
-            $user_query = "SELECT last_name FROM user WHERE id = :user_id";
+        else if ($name === 2) {
+            $user_query = "SELECT last_name FROM user WHERE id = :user_id;";
         }
-        $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
-        $user_query->execute(array(":user_id" => $id));
+        $user_query = Registry::get('db')->prepare($user_query);
+        $user_query->execute(array(
+            ":user_id" => (int) $id
+        ));
         $user = $user_query->fetchColumn();
-        if($set) {
+        if ($set) {
             $this->name[$name] = $user;
         }
         return $user;
     }
 
     function getConnections($id = NULL) {
-        if(!isset($id)) {
+        if (!isset($id)) {
             $id = $this->user_id;
         }
         $query = "SELECT IF(receiver_id = :user_id, user_id, receiver_id)as user_id FROM connection "
@@ -130,7 +137,7 @@ class User {
         if (!isset($id)) {
             $set = true;
             $id = $this->user_id;
-            if(!is_null($this->position)) {
+            if (!is_null($this->position)) {
                 return $this->position;
             }
         }
@@ -138,18 +145,18 @@ class User {
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
-        if($set) {
+        if ($set) {
             $this->position = $user;
         }
         return $user;
     }
-    
+
     function getLocation($id = NULL) {
         $set = false;
-        if(!isset($id)) {
+        if (!isset($id)) {
             $id = $this->user_id;
             $set = true;
-            if(!is_null($this->location)) {
+            if (!is_null($this->location)) {
                 return $this->location;
             }
         }
@@ -157,13 +164,14 @@ class User {
         $location_query = Registry::get('db')->prepare($location_query);
         $location_query->execute(array(":user_id" => $id));
         $location = $location_query->fetch(PDO::FETCH_ASSOC);
-        if($set) {
+        if ($set) {
             //$this->comun_name = $user;
         }
         return $location;
     }
+
     function setLocation($id = NULL, $coords) {
-        if(!isset($id)) {
+        if (!isset($id)) {
             $id = $this->user_id;
         }
         Registry::get('db')->beginTransaction();
@@ -173,7 +181,7 @@ class User {
                 array(
                     ":lat" => $locations['latitude'],
                     ":long" => $locations['longitude'],
-                ));
+        ));
         $lid = Registry::get('db')->lastInsertId();
         Registry::get('db')->commit();
         $sql = "INSERT INTO marker (loc_id, user_id) VALUES (:lid, :id);";
@@ -182,7 +190,7 @@ class User {
                 array(
                     ":lid" => $lid,
                     ":id" => $id
-                ));
+        ));
     }
 
     function getProfilePicture($id = null) {
@@ -207,7 +215,7 @@ class User {
         if (!isset($id) || $id == "") {
             $id = $this->user_id;
             $set = true;
-            if(!is_null($this->gender)) {
+            if (!is_null($this->gender)) {
                 return $this->gender;
             }
         }
@@ -215,7 +223,7 @@ class User {
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
-        if($set) {
+        if ($set) {
             $this->gender = $user;
         }
         return $user;
@@ -226,7 +234,7 @@ class User {
         if (!isset($id) || $id == "") {
             $id = $this->user_id;
             $set = true;
-            if(!is_null($this->about)) {
+            if (!is_null($this->about)) {
                 return $this->about;
             }
         }
@@ -234,10 +242,10 @@ class User {
         $user_query = Registry::get('db')->prepare($user_query);
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
-        if(strtolower($user) == "null" || $user == "") {
+        if (strtolower($user) == "null" || $user == "") {
             $user = NULL;
         }
-        if($set) {
+        if ($set) {
             $this->about = $user;
         }
         return $user;
@@ -248,7 +256,7 @@ class User {
         if (!isset($id) || $id == "") {
             $id = $this->user_id;
             $set = true;
-            if(!is_null($this->language)) {
+            if (!is_null($this->language)) {
                 return $this->language;
             }
         }
@@ -256,7 +264,7 @@ class User {
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
-        if($set) {
+        if ($set) {
             $this->language = $user;
         }
         return $user;
@@ -267,7 +275,7 @@ class User {
         if (!isset($id)) {
             $id = $this->user_id;
             $set = true;
-            if(!is_null($this->email)) {
+            if (!is_null($this->email)) {
                 return $this->email;
             }
         }
@@ -275,17 +283,18 @@ class User {
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
-        if($set) {
+        if ($set) {
             $this->email = $user;
         }
         return $user;
     }
+
     function getPassword($id = NULL) {
         $set = false;
         if (!isset($id) || $id == "") {
             $id = $this->user_id;
             $set = true;
-            if(is_null($this->password)) {
+            if (is_null($this->password)) {
                 return $this->password;
             }
         }
@@ -293,11 +302,12 @@ class User {
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
-        if($set) {
+        if ($set) {
             return $set;
         }
         return $user;
     }
+
     function isAdmin($id = null) {
         if (!isset($id) || $id == "") {
             $id = $this->user_id;
@@ -335,6 +345,7 @@ class User {
         $user = $user_query->fetch();
         return $user;
     }
+
     /**
      * function notify (Send a notification to a User)
      * @param string $type
@@ -368,11 +379,11 @@ class User {
         if ($id == null) {
             return true;
         }
-        if($id === $this->user_id) {
+        if ($id === $this->user_id) {
             return true;
         }
-        $id = (int)$id;
-        if(is_int($id)) {
+        $id = (int) $id;
+        if (is_int($id)) {
             $sql = "SELECT id FROM user WHERE id = " . $id . " AND last_activity > DATE_SUB(NOW(), INTERVAL 1 MINUTE);";
             $sql = Registry::get('db')->prepare($sql);
             $sql->execute();
@@ -380,12 +391,13 @@ class User {
 
             if ($num == 0) {
                 return false;
-            } else {
+            }
+            else {
                 return true;
             }
         }
     }
-    
+
     function setProfilePicture($id) {
         $sql = "UPDATE user SET profile_picture = :id WHERE id = :user_id;";
         $sql = Registry::get('db')->prepare($sql);
@@ -394,18 +406,18 @@ class User {
             ":user_id" => $this->user_id
         ));
     }
-    
+
     function get_user_preview($user_id = null) {
-    	if(is_null($user_id)) {
-    		$user_id = $this->user_id;
-    	}
+        if (is_null($user_id)) {
+            $user_id = $this->user_id;
+        }
         $array = array();
         $array['id'] = $user_id;
         $array['name'] = $this->getName($user_id);
         $array['pic'] = $this->getProfilePicture($user_id);
         return $array;
     }
-    
+
     function getOnlineMass($users) {
         $array = array();
         foreach ($users as $user_id) {
@@ -421,7 +433,7 @@ class User {
         $sql->execute(array(
             ":user_id" => $this->user_id,
             ":receiver_id" => $user_id
-            ));
+        ));
         //echo $user_id;
     }
 
@@ -430,7 +442,7 @@ class User {
         $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":invite_id" => $invite_id
-            ));
+        ));
         $info = $sql->fetch(PDO::FETCH_ASSOC);
 
         $sql = "INSERT INTO connection(user_id, receiver_id) VALUES (:user_id, :receiver_id);";
@@ -438,11 +450,13 @@ class User {
         $sql->execute(array(
             ":user_id" => $info['user_id'],
             ":receiver_id" => $info['receiver_id']
-            ));
+        ));
     }
 
 }
-if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once($_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php');
+
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/Scripts/declare.php');
     $user = new User();
     if (isset($_POST['about'])) {
         if (!isset($_POST['email'])) {
@@ -462,45 +476,53 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") { require_once($_SERVER['DOCUMENT_ROOT
             $array[] = $user->getAbout($_POST['id']);
             $array[] = $user->getPosition($_POST['id']);
             echo json_encode($array);
-        } else if ($_POST['action'] == 'setOnline') {
+        }
+        else if ($_POST['action'] == 'setOnline') {
             $user->setOnline();
-        } else if($_POST['action'] == "getOnlineMass") {
-            die(json_encode($user->getOnlineMass((array)$_POST['users'])));
-        } else if ($_POST['action'] == "profile_picture") {
+        }
+        else if ($_POST['action'] == "getOnlineMass") {
+            die(json_encode($user->getOnlineMass((array) $_POST['users'])));
+        }
+        else if ($_POST['action'] == "profile_picture") {
             $user->setProfilePicture($_POST['file_id']);
-        } else if($_POST['action'] == "connect") {
+        }
+        else if ($_POST['action'] == "connect") {
             $user->connect($_POST['user_id']);
-        } else if($_POST['action'] == "acceptInvite") {
+        }
+        else if ($_POST['action'] == "acceptInvite") {
             $user->connectAccept($_POST['invite_id']);
-        } else if($_POST['action'] == "loc") {
+        }
+        else if ($_POST['action'] == "loc") {
             $user->setLocation(NULL, $_POST['coords']);
         }
     }
-} else if ($_SERVER['REQUEST_METHOD'] == "GET") {
+}
+else if ($_SERVER['REQUEST_METHOD'] == "GET") {
     if (isset($_GET['action'])) {
         if ($_GET['action'] === "connections") {
-            require_once($_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php');
+            require_once($_SERVER['DOCUMENT_ROOT'] . '/Scripts/declare.php');
             $cons = array(
                 'Groups' => Registry::get('group')->getUserGroups(),
                 'Connections' => Registry::get('user')->getConnections(),
                 'Users' => array()
             );
-            foreach($cons as $key => $value) {
-                if($key === "Groups") {
+            foreach ($cons as $key => $value) {
+                if ($key === "Groups") {
                     foreach ($cons[$key] as $i => $value) {
                         $cons["Groups"][$i] = array();
                         $cons["Groups"][$i]['id'] = $value;
                         $cons["Groups"][$i]['name'] = Registry::get('group')->getName($value);
                         $cons["Groups"][$i]['pic'] = Registry::get('group')->getProfilePicture($value);
                         $members = Registry::get('group')->getMembers_Connections($value);
-                         foreach ($members as $key => $value) {
+                        foreach ($members as $key => $value) {
                             $cons['Users'][$key] = array();
                             $cons['Users'][$key]['id'] = $value['id'];
                             $cons['Users'][$key]['name'] = Registry::get('user')->getName($value['id']);
                             $cons['Users'][$key]['pic'] = Registry::get('user')->getProfilePicture($value['id']);
-                         }
+                        }
                     }
-                } else if($key === "Connections") {
+                }
+                else if ($key === "Connections") {
                     foreach ($cons[$key] as $i => $value) {
                         $cons['Connections'][$i] = array();
                         $cons['Connections'][$i]['id'] = $value[0];
