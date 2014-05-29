@@ -1,7 +1,7 @@
 <?php
 $chat_feed = 'undefined';
 include_once('Scripts/chat.class.php');
-$chat = new Chat();
+$chat = Registry::get('chat');
 $chat_rooms = $chat->get_chat_rooms();
 if (!isset($_COOKIE['chat_feed'])) {
 	$chat_feed = "";

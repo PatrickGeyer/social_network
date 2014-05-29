@@ -37,12 +37,16 @@ class Registry {
         if (!class_exists('Home')) {
             require $_SERVER['DOCUMENT_ROOT'].'/Scripts/home.class.php';
         }
+        if (!class_exists('Chat')) {
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/chat.class.php';
+        }
         self :: $objects['user'] = User::getInstance();
         self :: $objects['app'] = new App();
         self :: $objects['entity'] = Entity::getInstance();
         self :: $objects['calendar'] = Calendar::getInstance();
         self :: $objects['base'] = new Base();
         self :: $objects['files'] = Files::getInstance();
+        self :: $objects['chat'] = Chat::getInstance();
         self :: $objects['group'] = Group::getInstance();
         self :: $objects['system'] = System::getInstance();
         self :: $objects['phrase'] = Phrase::getInstance();
