@@ -274,9 +274,9 @@ class Files {
         if ($file['type'] != "Folder") {
             $file['type'] = $this->getType($this->mime_content_type($file['path']));
         }
-        if (!isset($file['type_preview'])) {
-            $file['type_preview'] = $this->getFileTypeImage($file, 'THUMB');
-        }
+//        if (!isset($file['type_preview'])) {
+//            $file['type_preview'] = $this->getFileTypeImage($file, 'THUMB');
+//        }
         if (!isset($file['uid'])) {
             $file['uid'] = str_replace('.', '', uniqid('', true));
         }

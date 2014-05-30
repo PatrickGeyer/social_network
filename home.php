@@ -4,7 +4,7 @@ function print_body() {
     global $feed_id;
     ?>
     <div class="container">
-        <div class='contentblock home_feed_post_container createPost'></div>
+        <!--<div class='contentblock home_feed_post_container createPost'></div>-->
         <div id='feed_refresh'> 
             <div class='feed_container'>
                 <!--  Activity Here -->
@@ -14,7 +14,7 @@ function print_body() {
     <script>
         var share_group_id = <?php echo (is_int($feed_id) ? $feed_id : "'$feed_id'"); ?>;
         var activity_id = null;
-        var Feed = new Application.prototype.Feed(share_group_id, 'home', {container: $('.feed_container')});
+        var Feed = new Application.prototype.Feed(share_group_id, 'home', {container: $('.feed_container'), post: true});
         Feed.min = <?php echo (isset($max) ? $max : '0'); ?>;
         Feed.get();
         Feed.onfetch = function() {

@@ -19,6 +19,12 @@ Application.prototype.default = {
         thumb: "/Images/male-default-icon.jpg",
         large: "/Images/male-default-icon.jpg"
     },
+    file: {
+        type: ['aac', 'ai', 'aiff', 'asp', 'avi', 'bmp', 'c', 'cpp', 'css', 'dat', 'dmg', 'doc', 'docx', 'dot', 'dotx', 'dwg', 'dxf', 'eps', 'exe',
+        'flv', 'gif', 'h', 'html', 'ics', 'iso', 'java', 'jpg', 'key', 'm4v', 'mid', 'mov', 'mp3', 'mp4', 'mpg', 'odp', 'ods', 'odt', 'otp', 'ots', 
+        'ott', 'pdf', 'php', 'png', 'pps', 'ppt', 'pptx', 'psd', 'py', 'qt', 'rar', 'rb', 'rtf', 'sql', 'tga', 'tgz', 'tiff', 'txt', 'wav', 'xls',
+        'xlsx', 'xml', 'yml', 'zip']
+    },
     emptyFeed: $('<div class="contentblock post_height_restrictor">This feed contains no posts.</div>')
 };
 Application.prototype.App = function(options) {
@@ -325,6 +331,22 @@ Application.prototype.file = function(file) {
         this.file.time = typeof this.file.time !== 'undefined' && !isEmpty(this.file.time) ? this.file.time : 'No Date';
         this.file.type_preview = typeof this.file.type_preview !== 'undefined' && !isEmpty(this.file.type_preview) ? this.file.type_preview : file.thumb_path;
         this.items[this.file.id] = this;
+        
+//        Configure file icon
+        this.file.extension = this.file.path.split('.').pop();
+        var ext = false;
+        for(var i = 0; i < Application.prototype.default.file.type.length; i++) {
+            if(this.file.extension === Application.prototype.default.file.type[i]) {
+                ext = true;
+            }
+        }
+        if (ext && this.file.type !== "Folder") {
+            this.file.type_preview = "/images/icons/file_type/png/" + this.file.extension + '.png';
+        } else if (this.file.type !== 'Folder') {
+            this.file.type_preview = "/images/icons/file_type/png/blank.png";
+        } else {
+            this.file.type_preview = FOLDER_THUMB;
+        }
 
         this.file.item = new Application.prototype.Comment(this.file.activity);
         /****************************************************
@@ -373,7 +395,6 @@ Application.prototype.file = function(file) {
             } else if (this.file.type == "Video") {
                 string.append(this.printDoc());
                 string.addClass("post_media_video");
-//        post_content += video_player(file, classes, "height:100%;", "home_feed_video_", true);
             } else if (this.file.type === "WORD Document"
                     || this.file.type === "PDF Document"
                     || this.file.type === "EXCEL Document"
@@ -387,17 +408,6 @@ Application.prototype.file = function(file) {
                 string.addClass("post_media_double");
                 string.append(this.printDoc());
             } else if (this.file.type == "Webpage") {
-//            post_classes += "post_media_full";
-//            post_styles += "height:auto;";
-//            post_content += "<table style='height:100%;'><tr><td rowspan='3'>";
-//            post_content += "<div class='post_media_webpage_favicon' style='background-image:url(&quot;";
-//            post_content += this.file.web_favicon + "&quot;);'></div></td>" + "<td>";
-//            post_content += "<a class='user_preview_name' target='_blank' href='";
-//            post_content += this.file.URL + "'><span style='font-size:13px;'>";
-//            post_content += this.file.web_title + "</span></a></div></td></tr>";
-//            post_content += "<tr><td><span style='font-size:12px;' class='user_preview_community'>";
-//            post_content += this.file.web_description + "</span></td></tr>";
-//            post_content += "</table>";
             } else {
                 string.addClass("post_media_full");
                 string.append(this.printDoc());
@@ -430,25 +440,33 @@ Application.prototype.file = function(file) {
         this.preview = $("<div class='post_media_preview'></div>");
         this.actions = $("<div style='margin-top:5px;'></div>");
         this.stats = $("<div style='margin-top:5px;'></div>");
-
+        
         if (this.file.type == "Folder") {
-            this.file.type_preview = FOLDER_THUMB;
-            link = "files?pd=" + this.file.enc_parent_folder_id;
+            
+//            link = "files?pd=" + this.file.enc_parent_folder_id;
+            
         } else if (this.file.type == "Image") {
+            
             this.preview.addClass("post_media_photo");
-//            preview_styles += " width:auto;height:auto; ";
-            this.preview.append("<img style='max-width:150px;max-height:150px;' src='" + this.file.thumb_path + "'></img>");
+            this.preview.css("background-image", "url(\"" + this.file.thumbnail + "\")");
+            
         } else if (this.file.type == "Video") {
+            
             this.preview.addClass("post_media_photo");
             this.preview.append("<img style='position:absolute;top:40%;left:40%;' src='" + VIDEO_BUTTON + "'></img>");
             this.preview.css("background-image", "url(\"" + this.file.thumbnail + "\")");
+            
         } else if (this.file.type == "Audio") {
+            
             this.preview.css('background-image', 'none !important');
             this.preview.append("<i class='fa fa-music'></i>");
             this.preview.append(this.audioPlayer('button'));
             this.file_activity_section.append(this.audioPlayer('timeline'));
+            
         } else {
-            this.preview.css('background-image', 'url(' + this.file.type_preview + ')');
+            
+            this.preview.css('background-image', 'url("' + this.file.type_preview + '")');
+
         }
 
         this.file_activity_section
@@ -480,9 +498,6 @@ Application.prototype.file = function(file) {
             string.addClass('files');
         } else {
             string.addClass('folder');
-//            string.on('click', function() {
-//                Application.prototype.navigation.relocate('files?pd=' + self.file.folder_id);
-//            });
         }
 
         string.append("<div class='files_icon_preview' style='background-image:url(\"" + this.file.type_preview + "\");'></div>");
@@ -800,15 +815,15 @@ Application.prototype.file.prototype.items = {};
 Application.prototype.FileList = function(type, f_id, user_id, prop) {
     var self = this;
     this.prop = prop || {};
-    this.prop.class = this.prop.class || ['file_list'];
+    this.prop.class = this.prop.class || ['file_list_done'];
     this.user_id = user_id || MyUser.attr.id;
     this.items.push(this);
     this.type = type || 'all';
     this.f_id = f_id || 0;
     this.paths = new Array({name: 'Files', id: 0});
-    this.container = $("<div></div>");
+    this.element = $("<div></div>");
     for (var i = 0; i < this.prop.class.length; i++) {
-        this.container.addClass(this.prop.class[i]);
+        this.element.addClass(this.prop.class[i]);
     }
     this.onclick = function(file) {
         if (file.file.type === "Folder") {
@@ -832,7 +847,7 @@ Application.prototype.FileList = function(type, f_id, user_id, prop) {
     };
 
     if (this.prop.container) {
-        this.prop.container.replaceWith(this.container.addClass('box_container contentblock'));
+        this.prop.container.replaceWith(this.element.addClass('box_container contentblock'));
     }
     this.print = function() {
         return this.container;
@@ -843,7 +858,7 @@ Application.prototype.FileList = function(type, f_id, user_id, prop) {
 
 Application.prototype.FileList.prototype.get = function() {
     var self = this;
-    self.container.html('');
+    self.element.html('');
     var path = $('<h3></h3>');
     for (var i = 0; i < self.paths.length; i++) {
         (function(i) {
@@ -853,21 +868,21 @@ Application.prototype.FileList.prototype.get = function() {
         }(i));
     }
     ;
-    self.container.append(new Application.prototype.UI.Loader());
+    self.element.append(new Application.prototype.UI.Loader());
     $.get('/Scripts/files.class.php', {action: 'list', type: this.type, pf: this.f_id, receiver_id: this.user_id}, function(response) {
-        self.container.html('');
-        self.container.append(path);
+        self.element.html('');
+        self.element.append(path);
         response = $.parseJSON(response);
         for (var i = 0; i < response.length; i++) {
             (function(i) {
                 var file = new Application.prototype.file(response[i]);
-                self.container.append(self.printItem(file).on('click', function() {
+                self.element.append(self.printItem(file).on('click', function() {
                     self.onclick(file);
                 }));
             })(i);
         }
         if (response.length === 0) {
-            self.container.append(Application.prototype.default.emptyFeed.clone().text('There are no available files in this Folder.'));
+            self.element.append(Application.prototype.default.emptyFeed.clone().text('There are no available files in this Folder.'));
         }
 //        if (self.pf != 0) {
 //            self.container.append($('<button class="pure-button-blue">Back</button>').on('click', function() {
@@ -885,7 +900,7 @@ Application.prototype.FileList.prototype.addFile = function(file) {
     for (var i = 0; i < this.items.length; i++) {
         var self = this.items[i];
         var file = new Application.prototype.file(file);
-        self.container.append(file.printTag('none').on('click', function() {
+        self.element.append(file.printTag('none').on('click', function() {
             self.onclick(file);
         }));
     }
@@ -1267,7 +1282,9 @@ Application.prototype.navigation = {
 };
 Application.prototype.Feed = function(entity_id, entity_type, properties) {
     this.prop = properties || {};
+    this.post = new Application.prototype.Post({}).element;
     this.prop.container.replaceWith(this.feed = $("<div></div>")).append(this.loader = new Application.prototype.UI.Loader());
+    this.feed.prepend(this.post);
     this.entity_id = entity_id;
     this.entity_type = entity_type;
     this.items = new Array();
@@ -1460,9 +1477,11 @@ Application.prototype.Feed.prototype.Item.prototype.Stats = function(item) {
 };
 
 Application.prototype.Post = function(options, element) {
-    this.element = element;
+    this.element = element || $("<div class='contentblock'></div>");
     var self = this;
-    this.post_button = $('<button class="post-button pure-button-green small">Post</button>').on('click', function() {
+    this.onsubmit = function(data) {
+    };
+    this.post_button = $('<button class="post-button pure-button-blue">Post</button>').on('click', function() {
         self.submit();
     });
 
@@ -1479,39 +1498,43 @@ Application.prototype.Post = function(options, element) {
         },
         {
             value: '',
-            text: "Private",
+            text: "Only friends can see this post",
             class: "",
         }]);
-    
+    this.fileList = new Application.prototype.FileList('all', 0, MyUser.attr.id, {});
+    this.fileList.onclick = function(file) {
+        self.dia.slideToggle();
+        self.addFile(file);
+    };
+    this.dia = this.fileList.element.hide();
 
-    element
-            .append($("<div class='home_feed_post_container_arrow_border'></div>")
-                    .append("<div class='home_feed_post_container_arrow'></div>"))
+    this.element
             .append(this.post_wrapper = $("<div class='post_wrapper'></div>")
                     .append($("<div class='post_content_wrapper'></div>")
                             .append(this.status = $('<textarea tabindex="1" placeholder= "Update Status or Share Files..." class="status_text autoresize"></textarea>')
                                     .focus(function() {
                                         $(this).css('min-height', '100px');
-                                        self.file_container.css('display', 'table');
                                         self.post_options.show();
-                                        $('.post_wrapper').css('padding-bottom', $('.post_more_options').height());
                                         $('.home_feed_post_container_arrow_border').css('border-right-color', 'rgb(70, 180,220)');
                                     }).focusout(function() {
                                 $('.home_feed_post_container_arrow_border').css('border-right-color', 'lightgrey');
                             }))
                             .append(this.file_container = $("<div class='post_media_wrapper'></div>")
-                                    .append(this.appended_files = $("<div class='appendFiles'></div>").append(
-                                    this.filecont = $("<div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div><img class='post_media_loader' src='Images/ajax-loader.gif'></img></div>"))))
-                                    ))
+                                    .append(this.filecont = $("<div class='post_media_wrapper_background timestamp' style='text-align:left;'><span>Dropbox</span></div></div>")
+                                            )
+                                    .append(this.appended_files = $("<div class='appendFiles'></div>")
+                                            )
+                                            )).append(this.dia)
 
                     .append(this.post_options = $("<div class='post_more_options'></div>")
-                            .append(this.post_button)
-                            .append(this.dropdown.print()));
-                    
-    this.fileList = new Application.prototype.FileList('all', 0, MyUser.attr.id, {container: this.filecont});
-    this.fileList.onclick = function(file) {
-        self.addFile(file);
-    };
+                            .append($("<div class='rfloat'></div>")
+                                    .append(this.post_button)
+                                    .append(this.dropdown.print().addClass('lfloat')))
+                            .append($("<div class='lfloat'></div>")
+                                    .append(this.addFileButton = $("<div class='action lfloat'><i class='fa fa-file'></i></div>").on('click', function() {
+                                        self.dia.slideToggle();
+                                    })))
+                            ));
 
     this.files = new Array();
     this.submit = function() {
@@ -1524,16 +1547,17 @@ Application.prototype.Post = function(options, element) {
             }
             $.post("/Scripts/home.class.php", {action: "update_status", status_text: text, group_id: share_group_id, post_media_added_files: files}, function(data) {
                 data = $.parseJSON(data);
-//                     alert('Post submitted - please refresh!');
-                    Application.prototype.Feed.prototype.addItem(data);
-//                     self.clear();
+                self.onsubmit(data);
+//              self.clear();
             });
         }
     };
+    return this;
 };
 
 Application.prototype.Post.prototype.addFile = function(object) {
-    this.appended_files.append(object.print());
+    this.file_container.show();
+    this.appended_files.show().append(object.print());
     this.files.push(object);
 };
 Application.prototype.Post.prototype.removeFile = function(object) {
@@ -1751,9 +1775,9 @@ Application.prototype.UI = {
             $('.left_bar_container').css('display', 'block');
         }
 
-        $('.createPost').each(function() {
-            new Application.prototype.Post({}, $(this));
-        });
+//        $('.createPost').each(function() {
+//            new Application.prototype.Post({}, $(this));
+//        });
         $('.upload_here').each(function() {
             $(this).replaceWith(new Application.prototype.UI.DragUpload().print());
         });
@@ -1878,7 +1902,7 @@ Application.prototype.UI = {
 
         this.print = function() {
             this.wrapper.append(this.list);
-            this.object.append($("<i class='fa fa-angle-down'></i>"));
+            this.object.append($("<i class='fa fa-caret-down'></i>"));
             this.object.append(this.wrapper);
             return this.object;
         };
@@ -1891,7 +1915,7 @@ Application.prototype.UI = {
 //                Immediate Function Invokation
                 (function(i) {
                     options[i]['value'] = options[i]['value'] || options[i]['text'];
-                    self.list.append($("<li value='" + options[i]['value'] + "' class='default_dropdown_item " + options[i].class + "'>" + options[i].text + "</li>").on('click', function(event) {
+                    self.list.append($("<li value='" + options[i]['value'] + "' class='default_dropdown_item " + options[i].class + "'><span>" + options[i].text + "</span></li>").on('click', function(event) {
                         event.stopPropagation();
                         self.preview.html(options[i].text);
                         self.object.val(options[i]['value']);
@@ -2158,8 +2182,8 @@ Application.prototype.UI.Dialog = function(properties) {
 
     this.dialog_container = $("<div class='dialog_container'></div>").css({'opacity': '0'});
 
-    var closingX = $("<span class='dialog_close_button'>x</span>").click(function() {
-        self.removeDialog();
+    var closingX = $("<i class='dialog_close_button fa fa-times'></i>").click(function() {
+        self.remove();
     });
     this.title = $("<div class='dialog_title'>" + this.properties.title + "</div>").append(closingX);
 
@@ -2174,10 +2198,10 @@ Application.prototype.UI.Dialog = function(properties) {
     this.dialog_container.append(dialog_buttons);
     dialog_buttons.append(this.button_complete);
 
-    this.content_container.mCustomScrollbar({
-        scrollInertia: 10,
-        autoHideScrollbar: true,
-    });
+//    this.content_container.mCustomScrollbar({
+//        scrollInertia: 10,
+//        autoHideScrollbar: true,
+//    });
 
 };
 
@@ -2186,7 +2210,9 @@ Application.prototype.UI.Dialog.prototype.show = function() {
 // 	if (this.properties.modal == true) {
 // 		$('body').append("<div class='background-overlay'></div>");
 // 	} else {
-    $('body').append(this.background = $("<div onclick='removeDialog()' style='opacity:0.5' class='background_white_overlay'></div>"));
+    $('body').append(this.background = $("<div style='opacity:0.5' class='background_white_overlay'></div>").click(function() {
+        self.remove();
+    }));
 // 	}
     $('body').append(this.dialog_container);
     this.alignDialog();
@@ -2194,9 +2220,9 @@ Application.prototype.UI.Dialog.prototype.show = function() {
     this.dialog_container.css({height: "0px"});
     this.dialog_container.animate({minHeight: real_height + "px", opacity: 1}, 100, function() {
         $(this).css({height: "auto", opacity: 1}, 'fast');
-        self.content_container.mCustomScrollbar("update");
+//        self.content_container.mCustomScrollbar("update");
         setTimeout(function() {
-            self.content_container.mCustomScrollbar("update");
+//            self.content_container.mCustomScrollbar("update");
         }, 200);
     });
 };
@@ -2219,7 +2245,7 @@ Application.prototype.UI.Dialog.prototype.alignDialog = function() {
     });
 };
 
-Application.prototype.UI.Dialog.prototype.removeDialog = function() {
+Application.prototype.UI.Dialog.prototype.remove = function() {
     this.background.remove();
 
     this.dialog_container.css('min-height', '0px');
@@ -2228,7 +2254,7 @@ Application.prototype.UI.Dialog.prototype.removeDialog = function() {
     });
 };
 Application.prototype.UI.Dialog.prototype.content = function(content) {
-    this.dialog_container.append(content);
+    this.content_container.append(content);
 };
 Application.prototype.UI.Dialog.prototype.title = function(content) {
     this.title.html(content);
@@ -2704,7 +2730,7 @@ Application.prototype.user = function() {
 };
 Application.prototype.user.showPhotoChoose = function() {
     var content = $("<div><table><tr><td><div class='upload_here'></div></td><td><div class='profile_picture_chooser' style='max-height:200px;overflow:auto;margin-left:20px;height:100%;' id='file_container'>Loading...</div></td></tr></table></div>");
-    Application.prototype.UI.dialog(
+    var photo = Application.prototype.UI.dialog(
             content = {
                 content: content.html(),
                 type: "html"
@@ -2720,7 +2746,7 @@ Application.prototype.user.showPhotoChoose = function() {
             type: "neutral",
             text: "Cancel",
             onclick: function() {
-                removeDialog();
+                photo.remove();
             }
         }],
     properties = {
@@ -2894,7 +2920,7 @@ Application.prototype.user.inviteUser = function(id, group_id) {
     $.post("/Scripts/group_actions.php", {action: "invite", user_id: id, group_id: group_id}, function(response) {
         if (("success").indexOf(response))
         {
-            removeDialog();
+//            removeDialog();
         }
         else
         {
@@ -3306,7 +3332,7 @@ $(function() {
 
     $(document).on('click', '.delete_activity', function() {
         var activity_id = $(this).parents('[data-activity_id]').data('activity_id');
-        Application.prototype.UI.dialog(
+        var deleter = Application.prototype.UI.dialog(
                 content = {
                     type: "html",
                     content: "Are you sure you want to delete this Post?"
@@ -3316,7 +3342,7 @@ $(function() {
                 text: "Delete",
                 onclick: function() {
                     delete_post(activity_id);
-                    Application.prototype.UI.removeDialog();
+                    deleter.remove();
                 }
             }],
         properties = {
@@ -3398,7 +3424,7 @@ $(function() {
         var post_text = $('[data-activity_id="' + activity_id + '"] .post_text').text();
 
         if ($(this).parents('.post_feed_item').siblings('.post_feed_item').length == 0 && post_text == "") {
-            Application.prototype.UI.dialog(
+           var remover = Application.prototype.UI.dialog(
                     content = {
                         type: "html",
                         content: "If you delete this file, your post will be removed, as it does not contain any content. Continue?"
@@ -3412,14 +3438,14 @@ $(function() {
                         });
                         $(this).parents('.post_feed_item').remove();
                         delete_post(activity_id);
-                        removeDialog();
+                        remover.remove();
                     }
                 },
                 {
                     type: "neutral",
                     text: "Cancel",
                     onclick: function() {
-                        removeDialog();
+                        remover.remove();
                     }
                 }],
             properties = {

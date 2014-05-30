@@ -257,6 +257,15 @@ ul{
     background: whitesmoke;
 }
 
+/*FLOATS*/
+
+.lfloat {
+    float: left;
+}
+.rfloat {
+    float: right;
+}
+
 /* SPINNY WHEEL */
 
 
@@ -470,7 +479,7 @@ h3 > button{
 .contentblock{
     border-radius: 2px;
     background-color: white;
-    border: 1px solid !important;
+    border: 1px solid;
     border-color: #e5e6e9 #dfe0e4 #d0d1d5 !important;
     padding: 10px;
     margin-top: 20px;
@@ -732,17 +741,18 @@ input:focus, textarea:focus, div[contenteditable]:focus{
     color: dimgrey;
     cursor: pointer;
     box-sizing: border-box;
+    vertical-align: middle;
 }
 .default_dropdown_selector{
     border:1px solid transparent;
-    padding:2px;
+    padding:4px;
     padding-left: 5px;
     padding-right: 5px;
     font-size: 13px;
     max-width: 200px;
     min-width: 50px;
     background-color: white;
-    border-radius: 5px;
+    border-radius: 2px;
 }
 
 .default_dropdown_active > i {
@@ -759,10 +769,9 @@ input:focus, textarea:focus, div[contenteditable]:focus{
     background-size: 11px auto;
     vertical-align: bottom;
 }
-
 .default_dropdown_selector:hover{
     background-image: -webkit-linear-gradient(top, white, #EDEDED);
-    border:1px solid lightgrey;
+    border:1px solid grey;
 }
 
 .default_dropdown_actions .default_dropdown_preview{
@@ -787,14 +796,13 @@ input:focus, textarea:focus, div[contenteditable]:focus{
 
 .default_dropdown_selector .default_dropdown_wrapper{
     right: 0px;
-    left: 0px;
 }
 .default_dropdown_active .default_dropdown_wrapper{
     display: block;
 }
 
 .default_dropdown_wrapper{
-    border: 1px solid rgba(0, 0, 0, .15);
+    border: 1px solid grey;
     box-shadow: 0 3px 8px rgba(0, 0, 0, .3);
     padding-top:5px;
     padding-bottom: 5px;
@@ -802,6 +810,9 @@ input:focus, textarea:focus, div[contenteditable]:focus{
     position: absolute;
     z-index: 8;
     max-height: 200px;
+    top: 100%;
+    min-width: 100%;
+    max-width: 340px;
     display: none;
 }
 
@@ -819,11 +830,11 @@ input:focus, textarea:focus, div[contenteditable]:focus{
 }
 .default_dropdown_item{
     background-color: white;
-    height:20px;
     font-size: 13px;
     padding:3px;
     text-align: left;
     border:1px solid transparent;
+    white-space: nowrap;
 }
 .default_dropdown_item:hover{
     background-color:rgb(0, 140, 250);
@@ -1125,6 +1136,9 @@ button.large, input[type="submit"].large {
     width:200px;
     height:200px;
 }
+button {
+    margin: 0px;
+}
 .pure-button-green,
 .pure-button-error,
 .pure-button-warning,
@@ -1138,7 +1152,6 @@ button.large, input[type="submit"].large {
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
     border:1px solid grey;
     font-weight: bold;
-    margin: 2px;
     padding: 4px;
     padding-left: 10px;
     padding-right: 10px;
@@ -1547,17 +1560,6 @@ input[type="text"].search_box{
     background-repeat: no-repeat;
     background-image: url("../Images/Icons/Icon_Pacs/Batch-master/Batch-master/PNG/16x16/search-2-grey.png");
 }
-img.logout_image_small{
-    top:8px;
-}
-
-img.privacy_image_small{
-    top:8px;
-    position: fixed;
-    vertical-align: middle;
-    line-height: 100%;
-    right:280px;
-}
 
 img.message{
     height:20px;
@@ -1593,13 +1595,7 @@ img.network{
     filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
     padding-top:3px;
 }
-#network{
-    padding-top: 1px;
-}
-.active_image {
-    border-radius: 50%;
-    box-shadow: 0px 0px 5px white;
-}
+
 span.message_notification{
     position: absolute;
     top: 0px;
@@ -1622,34 +1618,6 @@ td.navigation{
 
 img.navigationpicture{
     margin-left: 70px;
-}
-
-td.welcome{
-    margin: 0px;
-    white-space: nowrap;
-    vertical-align: middle;
-    padding-left: 20%;
-}
-td.welcome:hover{
-    cursor: pointer;
-}
-
-table.divide{
-    float: left;
-    padding: 0px;
-    margin: 0px;
-    height: 100%;
-}
-
-li.name{
-    height:32px;
-    border-bottom:0px;
-    border-top: 0px;
-    padding-top:1px;
-}
-li.name:hover{
-    height:30px;
-    border-bottom: 3px solid grey;
 }
 
 .current_page{
@@ -1893,12 +1861,12 @@ tr{
 html, body { 
     margin: 0px; 
     padding: 0px;
+    vertical-align: top;
     background-color: rgb(241, 242, 246);
 }
 * {
     font-family: Helvetica, Arial, 'lucida grande',tahoma,verdana,arial,sans-serif;
-    vertical-align: top;
-    line-height: 1.38;
+    vertical-align: inherit;
     box-sizing: border-box;
 }
 
@@ -2535,11 +2503,6 @@ HOME
 
 }
 
-.post_feed_item .comment_box{
-    padding-top: 0px;
-    padding-bottom: 0px;
-    border-top: 1px dotted;
-}
 .feed_container {
     position: relative;
 }
@@ -2574,6 +2537,7 @@ HOME
 
 div.comment_box{
     position:relative;
+    border: 0px;
     border-top: 1px solid #e1e2e3;
     background-color: #FAFAFA;
     margin: -12px;
@@ -2784,9 +2748,7 @@ table.singleupdate{
     background-size: 10px 10px;
     background-image: url('../Images/stripe.png');
 }
-.post_feed_item .comment_box{
-    margin: 0px !important;
-}
+
 .post_feed_media_wrapper .file_info{
     display: none;
 }
@@ -2814,6 +2776,10 @@ table.singleupdate{
     box-sizing: border-box;
     display: none;
 }
+/*.post_media_wrapper > * {
+    display: table-cell;
+}*/
+
 .post_media_wrapper_background{
     /*position: absolute;*/
     /*left: 10px;*/
@@ -3000,7 +2966,7 @@ table.singleupdate{
     position: relative;
 }
 
-.file_list{
+.file_list {
     padding-left:5px;
     border-left:1px solid lightgrey;
     right:0px;
@@ -3016,16 +2982,27 @@ table.singleupdate{
     display: table-cell;
 }
 
-.post_more_options{
-    position: absolute;
-    bottom: 0px;
-    left:0px;
-    right:0px;
-    border-top:1px solid lightgrey; 
-    display:none; 
-    background-color: white;
+.post_more_options {
+    display: none; 
+    height: 40px;
+    border-top: 1px solid lightgrey;
 }
-
+.post_more_options > * {
+    height: 40px;
+}
+.post_more_options > .rfloat {
+    margin: 5px;
+}
+.post_more_options > .rfloat > * {
+    margin-left: 5px;
+}
+.post_more_options .action {
+    padding: 12px;
+    height: 39px;
+    cursor: pointer;
+    background-color: #EDEDED;
+    border-right: 1px solid lightgrey;
+}
 div[data-placeholder]:not(:focus):not([data-div-placeholder-content]):before {
     content: attr(data-placeholder);
     font-size:13px;
@@ -3094,24 +3071,9 @@ a.user_name_post .profile_picture_medium {
     left: 0;
     margin-right: 8px;
 }
-td.update{
-    vertical-align: top;
-}
 
-td.updatepic{
-    vertical-align: top;
-}
 img.icon{
     margin-left: 12px;
-}
-
-div.chatinput{
-    margin-top: 0em;
-}
-
-span.vote_percentage{
-    margin-left: 50px;
-    color: grey;
 }
 
 div.inputtext{
