@@ -27,23 +27,30 @@ Application.prototype.default = {
     },
     emptyFeed: $('<div class="contentblock post_height_restrictor">This feed contains no posts.</div>')
 };
-Application.prototype.App = function(options) {
+Application.prototype.App = function() {
+    };
+    Application.prototype.App.prototype.Application = function(options) {
     var self = this;
     this.attr = options;
-    this.attr.path = "/Leo/Dev/Freeze%20tag.html";
-    this.controls = $('<div></p>');
-    this.container = $('.app[data-game_id="' + this.attr.id + '"]');
-    this.container.append(this.controls = $('<div class="contentblock"></div>'));
+    this.attr.info.path = "/Leo/Freezetag.html";
     this.temp = {};
-    this.enlarge = this.container[0];
     this.create = function() {
         $.post('/Scripts/app.class.php', {action: 'create', name: this.attr.name}, function() { //this.name!
             alert('done');
         });
     };
+    this.printTag = function(options) {
+        var cont = $("<div class='contentblock'></div>")
+                .append('<img class="profile_picture_medium" src="' + this.attr.pic.thumb + '"/>')
+                .append($("<a href='/app/" + this.attr.info.id + "/'>" + this.attr.info.name + "</a>"));
+        options.container.append(cont);
+    };
     this.print = function() {
-        this.frame = $('<iframe allowFullScreen="true" seamless sandbox="allow-popups allow-scripts allow-same-origin" src="' + this.attr.path + '"></iframe>');
+        this.container = $('.app[data-game_id="' + this.attr.info.id + '"]');
+        this.container.append(this.controls = $('<div class="contentblock"></div>'));
+        this.frame = $('<iframe allowFullScreen="true" seamless sandbox="allow-popups allow-scripts allow-same-origin" src="' + this.attr.info.path + '"></iframe>');
         this.container.prepend($("<div class='contentblock'></div>").append(this.frame));
+        this.enlarge = this.container[0];
         this.frame[0].contentWindow.App = self;
         this.frame.height(this.frame.width() * 0.7142857 + 35);
 //        this.frame[0].height = "0px";
@@ -55,7 +62,7 @@ Application.prototype.App = function(options) {
     };
     this.game = {
         getHighscore: function(callback) {
-            $.get('/Scripts/app.class.php', {action: "getHighscore", game_id: self.attr.id}, function(response) {
+            $.get('/Scripts/app.class.php', {action: "getHighscore", game_id: self.attr.info.id}, function(response) {
                 response = $.parseJSON(response);
                 callback(response);
             });
@@ -63,7 +70,7 @@ Application.prototype.App = function(options) {
         getHighscores: function(min, max, callback) {
             min = min || 0;
             max = max || 10;
-            $.get('/Scripts/app.class.php', {action: "getHighscores", game_id: self.attr.id, min: min, max: max}, function(response) {
+            $.get('/Scripts/app.class.php', {action: "getHighscores", game_id: self.attr.info.id, min: min, max: max}, function(response) {
                 response = $.parseJSON(response);
                 callback(response);
             });
@@ -71,7 +78,8 @@ Application.prototype.App = function(options) {
         setHighscore: function(score, callback) {
             callback = callback || function() {
             };
-            $.post('/Scripts/app.class.php', {action: "setHighscore", game_id: self.attr.id, score: score}, function(response) {
+            $.post('/Scripts/app.class.php', {action: "setHighscore", game_id: self.attr.info.id, score: score}, function(response) {
+            	console.log(response);
                 response = $.parseJSON(response);
                 callback(response);
             });
@@ -82,6 +90,23 @@ Application.prototype.App = function(options) {
     };
 };
 
+Application.prototype.App.prototype.AppList = function(options) {
+    var self = this;
+    this.attr = options || {};
+    this.attr.header = this.attr.header || "Popular Apps";
+    this.attr.box = $("<div class='contentblock'></div>").append("<b>" + this.attr.header + "</b>");
+    this.get = function() {
+        $.get('/Scripts/app.class.php', {action: "getPopularApps"}, function(response) {
+            response = $.parseJSON(response);
+            for(var i = 0; i < response.length; i++) {
+                var app = new Application.prototype.App.prototype.Application(response[i]);
+                app.printTag({container: self.attr.box});
+            }
+        })
+    };
+    this.attr.container.append(this.attr.box)
+    this.get();
+};
 
 Date.mysql = function(string) {
     if (typeof string === 'string') {
@@ -1367,9 +1392,9 @@ Application.prototype.Feed.prototype.Item = function(item) {
         this.item.status_text = typeof this.item.status_text !== 'undefined' && !isEmpty(this.item.status_text) ? this.item.status_text : '';
         var string = $("<div data-this.item_id='" + this.item.id + "' class='post_height_restrictor contentblock' id='post_height_restrictor_" + this.item.id + "'></div>");
         if (this.item.view == 'home') {
-            var user_link = $("<a class='user_name_post' href='/user?id=" + this.item.user.id + "'></a>");
+            var user_link = $("<a class='user_name_post' href='/user/" + this.item.user.id + "'></a>");
             user_link.append(this.item.user.printImg());
-            var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.entity.id + "' href='/user?id=" + this.item.user.entity.id + "'>" + this.item.user.entity.name + "</a>");
+            var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.entity.id + "' href='/user/" + this.item.user.entity.id + "'>" + this.item.user.entity.name + "</a>");
             var top_content = $("<div class='top_content'>").append(user_link).append(user_name);
             var single_post = $('<div id="single_post_' + this.item.id + '" class="singlepostdiv"></div').append(top_content);
             string.append(single_post);
@@ -1769,15 +1794,17 @@ Application.prototype.UI = {
         Application.prototype.UI.vNav.prototype.setActive();
 
         this.prop = this.defaults;
-        if($('.noLeftBar').length > 0) {
+        if($('.noLeftBar').length > 0 || Application.prototype.UI.prop.leftBar === false) {
             $('.left_bar_container').css('display', 'none');
         } else {
             $('.left_bar_container').css('display', 'block');
         }
+        if($('.noRightBar').length > 0 || Application.prototype.UI.prop.rightBar === false) {
+            $('.right_bar_container').css('display', 'none');
+        } else {
+            $('.right_bar_container').css('display', 'block');
+        }
 
-//        $('.createPost').each(function() {
-//            new Application.prototype.Post({}, $(this));
-//        });
         $('.upload_here').each(function() {
             $(this).replaceWith(new Application.prototype.UI.DragUpload().print());
         });
@@ -2624,7 +2651,7 @@ Application.prototype.Entity = function() {
 Application.prototype.Entity.prototype.print = function() {
     var container = $("<div class='user-tag'></div>");
     container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.entity.pic.icon + "\");'"
-            + "href ='/" + this.baseUrl + "?id=" + this.entity.id + "'>" + this.entity.name + "</a>");
+            + "href ='/" + this.baseUrl + "/" + this.entity.id + "/'>" + this.entity.name + "</a>");
 
     return container;
 };
@@ -2836,7 +2863,7 @@ Application.prototype.user.preview.fill = function(response) {
     var user_string;
     user_string = ("<table style='height:100%;width:100%;' cellspacing='0'><tr><td rowspan='3' style='width:80px;'><div style='width:70px;height:70px;background-image:url(" +
             response[2] + ");background-size:cover;background-repeat:no-repeat;'></div></td>");
-    user_string += ("<td><a style='padding:0px;' href='/user?id=" + response[0] +
+    user_string += ("<td><a style='padding:0px;' href='/user/" + response[0] +
             "'><span class='user_preview_name'>" + response[1] + "</span></a></td></tr>");
     user_string += "<tr><td><a style='padding:0px;display:inline;' href='community?id=" + response[6] +
             "'><span class='user_preview_community'>" + response[4] + "</span></a><span class='user_preview_position'> &bull; " + response[5] + "</span></td></tr>";
@@ -2929,34 +2956,6 @@ Application.prototype.user.inviteUser = function(id, group_id) {
     });
 };
 
-$(function()
-{
-    $('#about_edit_show').mouseenter(function() {
-        $('#profile_about_edit').show();
-    }).mouseleave(
-            function() {
-                $('#profile_about_edit').hide();
-            });
-
-    $('.profilepicture').mouseenter(function() {
-        $('#profile_picture_edit').show();
-    }).mouseleave(
-            function() {
-                $('#profile_picture_edit').hide();
-            });
-    $('#about_edit_show').blur(function()
-    {
-        submitData();
-    });
-
-    $("#about_edit_show").focusin(function() {
-        $("#about_edit_show").css("background", "white");
-    });
-    $("#about_edit_show").focusout(function() {
-        $("#about_edit_show").css("background", "");
-    });
-    //createMap('<?php echo $user->getLocation($userid)['country']; ?>', '<?php echo $user->getLocation($userid)['city']; ?>');
-});
 Application.prototype.user.submitData = function() {
     var about = $('#about_edit_show').html();
     var email = '';
@@ -3211,6 +3210,11 @@ $(function() {
     $(document).on('mouseleave', ".user_preview", function(event) {
         Application.prototype.user.preview.remove('force', event);
     });
+    /****************************************************
+     * 2.1.3 Startup - Apps                              *
+     ****************************************************/
+    
+    new Application.prototype.App.prototype.AppList({container: $('.right_bar_container')});
 
     /****************************************************
      * 2.1.3 Startup - Search                            *
@@ -3266,11 +3270,11 @@ $(function() {
         var entity = $(this).data('entity');
         var link;
         if (entity.entity_type == 'user') {
-            link = '/user?id=' + entity.id;
+            link = '/user/' + entity.id;
         } else if (entity.entity_type == 'group') {
-            link = '/group?id=' + entity.id;
+            link = '/group/' + entity.id;
         } else {
-            link = '/files?f=' + entity.id;
+            link = '/files/' + entity.id;
         }
         Application.prototype.navigation.relocate(link);
     });

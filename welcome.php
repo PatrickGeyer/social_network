@@ -138,7 +138,7 @@ style="max-height:100px; position:relative; padding:2px;border: 1px solid lightg
 <?php
 
 function print_header($PRINT = TRUE) {
-    global $pid;
+    global $pid, $developer;
     if ($PRINT) {
         ?>
         <div class="headerbar">
@@ -180,6 +180,7 @@ function print_header($PRINT = TRUE) {
                         <input class="search_box search plain" autocomplete='off' mode='universal' type='text' id='names_input' placeholder='Search for people, groups and files' name='receiver'>
                         <div class="search_results"></div>
                     </div>
+                    <?php if(!$developer) { ?>
                     <div class='global_header_icon_container'>
                         <div class="message" id="message_click">
                             <img id="message" class ="message" src='<?php $base = Registry::get('base');
@@ -221,7 +222,7 @@ function print_header($PRINT = TRUE) {
                         </div>
                     </div>
                 <div class='contentblock global_media_container square plain'></div>
-            
+            <?php } ?>
             <?php } else { ?>
             <div class='global_header_container'>
             	<div class="loginbox">

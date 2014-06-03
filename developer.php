@@ -82,27 +82,5 @@ function print_body() { ?>
     <?php
 }
 
-$min_activity_id = $user_id = $group_id = $filter = NULL;
-if (isset($_GET['min_activity_id'])) {
-    $min_activity_id = $_GET['min_activity_id'];
-}
-if (isset($_GET['fg'])) {
-    $group_id = $feed_id = $_GET['fg'];
-}
-else if (isset($_GET['f'])) {
-    if ($_GET['f'] == 'a') {
-        $filter = $feed_id = 'a';
-    }
-    else {
-        $filter = $feed_id = $_GET['f'];
-    }
-}
-else if (isset($_GET['u'])) {
-    $user_id = $_GET['u'];
-    $feed_id = 'u_' . $user_id;
-}
-else {
-    $filter = $feed_id = 'a';
-}
 require_once('Scripts/lock.php');
 ?>

@@ -4,6 +4,12 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/Scripts/declare.php';
 
 class App {
 
+	public function __construct() {
+		if(!class_exists('Registry')) {
+            include_once $_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php';
+        }
+	}
+
     public function create($name, $type) {
         Registry::get('db')->startTransaction();
         $sql = "INSERT INTO app.app (user_id, name, type) VALUES (:user_id, :name, :type);";
@@ -19,7 +25,6 @@ class App {
     }
 
     public function highscore($score, $game_id) {
-        Registry::get('db')->beginTransaction();
         $sql = "INSERT INTO app.highscore (score, user_id, game_id) VALUES (:score, :user_id, :game_id);";
         $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
@@ -27,18 +32,49 @@ class App {
             ":game_id" => $game_id,
             ":user_id" => Registry::get('user')->user_id,
         ));
-        $game_id = Registry::get('db')->lastInsertId();
-        Registry::get('db')->commit();
-        return $game_id;
+//         return $game_id;
+    }
+    
+    public function getPopularApps() {
+        $sql = "CALL app.getPopularApps();";
+        $sql = Registry::get('db')->prepare($sql);
+        $sql->execute();
+        
+        $r = $sql->fetchAll(PDO::FETCH_ASSOC);
+        $sql->closeCursor();
+        foreach($r as $key => $val) {
+            $r[$key] = $this->get($val['id']);
+        }
+        return $r;
+    }
+    
+    public function getPic($id) {
+        return array('thumb' => '/images/icons/app/thumb.png');
+    }
+    public function getMode($id) {
+        return 0;
     }
 
     public function get($id) {
-        $sql = "SELECT * FROM app.app WHERE id = :id;";
+        $id = (int) $id;
+        $sql = "SELECT * FROM `app`.`app` WHERE `app`.`id` = :id";
         $sql = Registry::get('db')->prepare($sql);
+        Registry::get('db')->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $sql->execute(array(
-            ":id" => $id,
+            ":id" => (int) $id,
         ));
-        return $sql->fetch(PDO::FETCH_ASSOC);
+
+        $r = array();
+        $r['info'] = $sql->fetch(PDO::FETCH_ASSOC);
+        $r['pic'] = $this->getPic($id);
+        return $r;
+    }
+    public function getAll($id) {
+        $array = array();
+        $array['info'] = $this->get($id);
+        $array['pic'] = $this->getPic($id);
+        $array['mode'] = $this->getMode($id);
+        return $array;
     }
 
     public function getHighscores($game_id, $min = 0, $max = 9) {
@@ -49,7 +85,9 @@ class App {
             ":min" => $min,
             ":max" => $max,
         ));
+        
         $high = $sql->fetchAll(PDO::FETCH_ASSOC);
+        $sql->closeCursor();
 //        foreach ($high as $key => $value) {
 //            $high[$key] = $this->formatHighscore($value);
 //        }
@@ -81,6 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action'])) {
     }
     else if ($_POST['action'] === 'setHighscore') {
         Registry::get('app')->highscore($_POST['score'], $_POST['game_id']);
+        die(json_encode(array()));
     }
 }
 else if ($_SERVER['REQUEST_METHOD'] === "GET" && isset($_GET['action'])) {
@@ -89,5 +128,7 @@ else if ($_SERVER['REQUEST_METHOD'] === "GET" && isset($_GET['action'])) {
             die(json_encode(Registry::get('app')->getHighscores($_GET['game_id'], $_GET['min'], $_GET['max']), JSON_HEX_APOS));
         case "getHighscore" :
             die(json_encode(Registry::get('app')->getHighscore($_GET['game_id']), JSON_HEX_APOS));
+        case "getPopularApps" :
+            die(json_encode(Registry::get('app')->getPopularApps(), JSON_HEX_APOS));
     }
 }

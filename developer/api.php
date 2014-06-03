@@ -23,9 +23,6 @@ function print_body() {
 //                    selected: <?php echo ($tab === 'intro' ? 'true' : 'false'); ?>
 //                },
 //            ]);
-        Application.prototype.UI.prop.fileUpload = false;
-        Application.prototype.UI.prop.connectionList = false;
-        Application.prototype.UI.prop.chat = false;
         document.title = 'Developer API - Social Network';
     </script>
     <?php

@@ -84,6 +84,10 @@ code {
 code * {
     font-family: inherit;
 }
+span.comment {
+    font-size: 12px;
+    color: #898f9c;
+}
 /* CLEAN SECTION*/
 #header-featured {
     position:relative;
@@ -237,23 +241,23 @@ ul{
     padding: 0px;
 }
 
-.container table {
+.container table.rows {
     width: 100%;
     border: 0;
 }
-.container table tr:first-of-type {
+.container table.rows tr:first-of-type {
     font-weight: bold;
     text-transform: uppercase;
 }
 
-.container table tr td {
+.container table.rows tr td {
     padding: 5px;
 }
 
-.container table tr td:nth-child(odd) {
+.container table.rows tr td:nth-child(odd) {
     background: #eee;
 }
-.container table tr td {
+.container table.rows tr td {
     background: whitesmoke;
 }
 
@@ -385,14 +389,11 @@ ul{
 .box_container{
 }
 
-.box_container > h3{
+.contentblock > h3{
     margin: 0px;
     border-top-left-radius: 1px;
     border-top-right-radius: 1px;
-    background-color: white;
-    /*    background-image: -webkit-linear-gradient(#fafafa, #e0e0e0);
-        background-image: linear-gradient(#fafafa, #e0e0e0);
-        background-repeat: repeat-x;*/
+    background-color: #f6f7f8;
     padding: 10px 10px 11px 10px;
     font-size: 14px;
     text-shadow: 0px 1px 0px #fff;
@@ -400,20 +401,12 @@ ul{
     font: 14px Helvetica, arial, freesans, clean, sans-serif;
     font-weight: bold;
 }
-h3 > button{
+.contentblock > h3 > button{
     margin-top: -5px !important;
     float: right !important;
 }
 
-.box_container textarea{
-    border-radius: 5px;
-    padding: 7px;
-    resize: none;
-    width: 100%;
-    min-height: 32px;
-    height: 32px;
-}
-.box_container label {
+.contentblock label {
     display: block;
     margin-bottom: 10px;
 }
@@ -757,6 +750,7 @@ input:focus, textarea:focus, div[contenteditable]:focus{
 
 .default_dropdown_active > i {
     color: white;
+    float: right;
 }
 
 .default_dropdown_actions{
@@ -784,7 +778,7 @@ input:focus, textarea:focus, div[contenteditable]:focus{
     display: inline-block;
     padding-left: 5px;
     margin-right: 10px;
-    max-width: 100%;
+    max-width: 90%;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
@@ -1133,8 +1127,8 @@ button.large, input[type="submit"].large {
     height:30px;
 }
 .profile_picture_thumb {
-    width:200px;
-    height:200px;
+    width:128px;
+    height:128px;
 }
 button {
     margin: 0px;
@@ -1897,6 +1891,11 @@ h1{
     color: #333;
     text-align: center;
 }
+div.title {
+    color: #4e5665;
+    font-size: 32px;
+}
+
 a{
     color: inherit;
     text-decoration: none;
