@@ -5,7 +5,7 @@ function print_body() { ?>
         <div class='contentblock'>
             <h2>Highscore methods</h2>
             <p>
-            <table>
+            <table class='rows'>
                 <tr>
                     <td>Function</td>
                     <td>Description</td>

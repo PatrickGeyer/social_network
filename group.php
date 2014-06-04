@@ -5,7 +5,7 @@ function print_body() {
     $is_member = Registry::get('group')->isMember(Registry::get('user')->user_id, $group_id);
 
 
-    if (isset($_GET['t']) && $_GET['t'] == 'f') {
+    if (isset($_GET['tab']) && $_GET['tab'] == 'files') {
         $feed_id = 'f';
     }
     else {

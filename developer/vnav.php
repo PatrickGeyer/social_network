@@ -12,17 +12,17 @@ if ($REQUEST == "FIRST") {
                                 [
                                     {
                                         text: "Game",
-                                        href: "/developer/api/game",
+                                        href: "/developer/docs/game",
                                         children: [
                                             {
                                                 text: "Highscores",
-                                                href: "/developer/api/game/highscore",
+                                                href: "/developer/docs/game/highscore",
                                             }
                                         ]
                                     },
                                     {
                                         text: "Else",
-                                        href: "/developer/api/else"
+                                        href: "/developer/docs/else"
                                     },
                                 ]
                     }]);

@@ -21,6 +21,12 @@ class App {
         ));
         $game_id = Registry::get('db')->lastInsertId;
         Registry::get('db')->commit();
+        $sql = "INSERT INTO app.developer (user_id, app_id) VALUES (:user_id, :app_id);";
+        $sql = Registry::get('db')->prepare($sql);
+        $sql->execute(array(
+            ":user_id" => Registry::get('user')->user_id,
+            ":app_id" => $game_id
+        ));
         return $game_id;
     }
 
@@ -48,6 +54,20 @@ class App {
         return $r;
     }
     
+    public function getDevelopersApps($id) {
+        $sql = "SELECT id FROM `app`.`app` WHERE app.id IN (SELECT app_id FROM app.developer WHERE user_id = :id);";
+        $sql = Registry::get('db')->prepare($sql);
+        $sql->execute(array(
+            ":id" => $id,
+        ));
+
+        $r = $sql->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($r as $key => $value) {
+           $r[$key] = $this->get($value['id']);
+        }
+        return $r;
+    }
+    
     public function getPic($id) {
         return array('thumb' => '/images/icons/app/thumb.png');
     }
@@ -61,7 +81,7 @@ class App {
         $sql = Registry::get('db')->prepare($sql);
         Registry::get('db')->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $sql->execute(array(
-            ":id" => (int) $id,
+            ":id" => $id,
         ));
 
         $r = array();
@@ -71,8 +91,7 @@ class App {
     }
     public function getAll($id) {
         $array = array();
-        $array['info'] = $this->get($id);
-        $array['pic'] = $this->getPic($id);
+        $array = $this->get($id);
         $array['mode'] = $this->getMode($id);
         return $array;
     }

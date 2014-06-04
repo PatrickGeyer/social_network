@@ -41,8 +41,9 @@ Application.prototype.App = function() {
     };
     this.printTag = function(options) {
         var cont = $("<div class='contentblock'></div>")
+        .append($("<a href='/app/" + this.attr.info.id + "/'></a>")
                 .append('<img class="profile_picture_medium" src="' + this.attr.pic.thumb + '"/>')
-                .append($("<a href='/app/" + this.attr.info.id + "/'>" + this.attr.info.name + "</a>"));
+                .append(""  + this.attr.info.name +  ""));
         options.container.append(cont);
     };
     this.print = function() {
@@ -94,7 +95,7 @@ Application.prototype.App.prototype.AppList = function(options) {
     var self = this;
     this.attr = options || {};
     this.attr.header = this.attr.header || "Popular Apps";
-    this.attr.box = $("<div class='contentblock'></div>").append("<b>" + this.attr.header + "</b>");
+    this.attr.box = $("<div class='contentblock'></div>").append("<h3>" + this.attr.header + "</h3>");
     this.get = function() {
         $.get('/Scripts/app.class.php', {action: "getPopularApps"}, function(response) {
             response = $.parseJSON(response);
@@ -1309,7 +1310,9 @@ Application.prototype.Feed = function(entity_id, entity_type, properties) {
     this.prop = properties || {};
     this.post = new Application.prototype.Post({}).element;
     this.prop.container.replaceWith(this.feed = $("<div></div>")).append(this.loader = new Application.prototype.UI.Loader());
-    this.feed.prepend(this.post);
+    if(entity_type !== 'activity') {
+    	this.feed.prepend(this.post);
+    }
     this.entity_id = entity_id;
     this.entity_type = entity_type;
     this.items = new Array();
@@ -1392,9 +1395,9 @@ Application.prototype.Feed.prototype.Item = function(item) {
         this.item.status_text = typeof this.item.status_text !== 'undefined' && !isEmpty(this.item.status_text) ? this.item.status_text : '';
         var string = $("<div data-this.item_id='" + this.item.id + "' class='post_height_restrictor contentblock' id='post_height_restrictor_" + this.item.id + "'></div>");
         if (this.item.view == 'home') {
-            var user_link = $("<a class='user_name_post' href='/user/" + this.item.user.id + "'></a>");
+            var user_link = $("<a class='user_name_post' href='/user/" + this.item.user.id + "/'></a>");
             user_link.append(this.item.user.printImg());
-            var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.entity.id + "' href='/user/" + this.item.user.entity.id + "'>" + this.item.user.entity.name + "</a>");
+            var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.entity.id + "' href='/user/" + this.item.user.entity.id + "/'>" + this.item.user.entity.name + "</a>");
             var top_content = $("<div class='top_content'>").append(user_link).append(user_name);
             var single_post = $('<div id="single_post_' + this.item.id + '" class="singlepostdiv"></div').append(top_content);
             string.append(single_post);
@@ -1699,7 +1702,7 @@ Application.prototype.Comment = function(item) {
         var string = $("<div></div>");
         this.item.comment.format = this.item.comment.format || 'all';
         if (this.item.comment.format == 'top') {
-            string.append("<div class='activity_actions user_preview_name post_comment_user_name' style='font-weight:100;'><a href='post?a=" + this.item.id + "'>Show <span class='num_comments'>" + this.item.comment.hidden + "</span> more comments...</a></div>");
+            string.append("<div class='activity_actions user_preview_name post_comment_user_name' style='font-weight:100;'><a href='post/" + this.item.id + "/'>Show <span class='num_comments'>" + this.item.comment.hidden + "</span> more comments...</a></div>");
         }
         for (var i in this.item.comment.comment) {
             this.comments[this.item.id].push(this.item.comment.comment[i].id);
@@ -1745,7 +1748,7 @@ Application.prototype.ConnectionList.prototype.update = function() {
 Application.prototype.ConnectionList.prototype.print = function() {
     for (var i in this.object) {
         if (this.object[i].length > 0) {
-            var container = $("<div class='contentblock'></div>").append("<b>" + i + "</b>");
+            var container = $("<div class='contentblock'></div>").append("<h3>" + i + "</h3>");
             for (var key in this.object[i]) {
                 if (i === 'Users' || i === 'Connections') {
                     var user = new Application.prototype.User(this.object[i][key]);
@@ -1768,7 +1771,7 @@ Application.prototype.UI = {
     prop: {},
     init: function() {
         this.fileUpload = Application.prototype.Upload.prototype.container;
-        this.fileUpload.append(new Application.prototype.UI.DragUpload().print());
+        new Application.prototype.UI.DragUpload({container: this.fileUpload});
         $('.right_bar_container').append(this.fileUpload.hide());
         this.connectionList = $("<div></div>");
         new Application.prototype.ConnectionList({container: this.connectionList});
@@ -1806,7 +1809,7 @@ Application.prototype.UI = {
         }
 
         $('.upload_here').each(function() {
-            $(this).replaceWith(new Application.prototype.UI.DragUpload().print());
+//             $(this).replaceWith(new Application.prototype.UI.DragUpload().print());
         });
         $('.file_container').each(function() {
             $(this).replaceWith(new Application.prototype.FileList().print());
@@ -1814,7 +1817,10 @@ Application.prototype.UI = {
         $('select.dropdown').each(function() {
             var dropdown = new Application.prototype.UI.Dropdown({
                 id: 'select',
-                type: 'selector'
+                type: 'selector',
+                name: $(this).data('text'),
+                change: $(this).data('change'),
+                href: $(this).data('href')
             });
             var options = new Array();
             var i = 0;
@@ -1822,7 +1828,8 @@ Application.prototype.UI = {
                 options[i] = {
                     value: $(this).val(),
                     text: $(this).text(),
-                    selected: $(this).attr('selected')
+                    selected: $(this).attr('selected'),
+                    href: $(this).data('href')
                 };
                 i++;
             });
@@ -1877,8 +1884,8 @@ Application.prototype.UI = {
             }
             for (var i = 0; i < options.length; i++) {
 
-                var item = $("<li class='ellipsis_overflow'></li>").attr('title', options[i].text).on('click', options[i].onclick);
-                var item_content = $("<div></div>");
+                var item = $("<li></li>").attr('title', options[i].text).on('click', options[i].onclick);
+                var item_content = $("<div class='ellipsis_overflow'></div>");
                 if (options[i]['selected'] || hasSelect === false) {
                     hasSelect = true;
                     item.addClass('active');
@@ -1914,40 +1921,58 @@ Application.prototype.UI = {
     },
     Dropdown: function(controller) {
         var self = this;
+        this.options = controller || {};
+        this.options.change = this.options.change || true;
         this.class = 'default_dropdown_' + controller.type;
-        this.object = $("<div class='" + this.class + "' style='display:inline-block;' wrapper_id='" + controller.id + "'></div>")
+        this.object = $("<div class='" + this.class + "' wrapper_id='" + this.options.id + "'></div>")
                 .on('click', function(event) {
                     event.stopPropagation();
                     self.object.toggleClass('default_dropdown_active');
                 });
-        self.preview = $('<div class="default_dropdown_preview">' + controller.name + '</div>')
-        if (controller.type == 'selector') {
+                
+        if (typeof this.options.href != 'undefined') {
+            self.preview = $('<a href="' + this.options.href + '"><div class="default_dropdown_preview">' + this.options.name + '</div></a>');
+        } else {
+            self.preview = $('<div class="default_dropdown_preview">' + this.options.name + '</div>');
+        }
+        
+        if (this.options.type == 'selector') {
             this.object.append(self.preview);
         }
         this.wrapper = $("<div class='default_dropdown_wrapper'></div>");
         this.list = $("<ul class='default_dropdown_menu'></ul>");
 
         this.print = function() {
-            this.wrapper.append(this.list);
-            this.object.append($("<i class='fa fa-caret-down'></i>"));
-            this.object.append(this.wrapper);
+            if(this.list.find("li").length > 0) {
+                this.wrapper.append(this.list);
+                this.preview.append($("<i class='fa fa-caret-down'></i>"));
+                this.object.append(this.wrapper);
+            }
             return this.object;
         };
         this.addOptions = function(options) {
             for (var i = 0; i < options.length; i++) {
-                if (options[i]['selected'] || self.list.children('li').length === 0) {
+                if (options[i]['selected'] || self.list.children('li').length === 0 && this.options['name'] == "") {
                     self.preview.html(options[i].text);
                     self.object.val(options[i]['value']);
                 }
 //                Immediate Function Invokation
                 (function(i) {
                     options[i]['value'] = options[i]['value'] || options[i]['text'];
-                    self.list.append($("<li value='" + options[i]['value'] + "' class='default_dropdown_item " + options[i].class + "'><span>" + options[i].text + "</span></li>").on('click', function(event) {
+                    var item = $("<li value='" + options[i]['value'] + "' class='default_dropdown_item " + options[i].class + "'></li>").on('click', function(event) {
                         event.stopPropagation();
-                        self.preview.html(options[i].text);
-                        self.object.val(options[i]['value']);
+                        if(this.options['change'] === true) {
+                            self.preview.html(options[i].text);
+                            self.object.val(options[i]['value']);
+                        }
                         self.object.toggleClass('default_dropdown_active');
-                    }));
+                    });
+                    if(typeof options[i].href != 'undefined') {
+                        item.html("<a href='" + options[i].href + "'><span>" + options[i].text + "</span></a>");
+                    } else {
+                        item.html("<span>" + options[i].text + "</span>");
+                    }
+                    self.list.append(item);
                 }(i));
             }
         };
@@ -2049,10 +2074,9 @@ Application.prototype.UI = {
         var entered = 0;
         var self = this;
         var upload = new Application.prototype.Upload();
-        this.container = $("<div></div>");
-        this.buttonSwitch = new Application.prototype.UI.ButtonSwitch();
+        this.options.container.append('<h3>File Upload</h3>');
+        this.buttonSwitch = new Application.prototype.UI.ButtonSwitch({container: this.options.container});
         this.buttonSwitch.addOptions(this.options.buttons);
-        this.container.append(this.buttonSwitch.print());
         this.drag = $("<div class='upload_replaced'></div>");
         if (this.options.round === true) {
             this.drag.addClass('round');
@@ -2103,7 +2127,7 @@ Application.prototype.UI = {
             e.preventDefault();
             e.stopPropagation();
         });
-        this.container.append(this.drag);
+//         this.container.append(this.drag); //NOT SHOWING DRAG UPLOADER
         this.print = function() {
             return this.container;
         }
@@ -2673,12 +2697,12 @@ Application.prototype.Entity.prototype.printHeader = function(prop) {
     var options = [{
             text: "Feed",
             icon: "fa-list-ul",
-            href: "/" + this.baseUrl + "?id=" + this.entity.id + "&t=p"
+            href: "/" + this.baseUrl + "/" + this.entity.id + "/feed"
         },
         {
             text: "Files",
             icon: "fa-file",
-            href: "/" + this.baseUrl + "?id=" + this.entity.id + "&t=f"
+            href: "/" + this.baseUrl + "/" + this.entity.id + "/files"
         }];
     if (prop.tab === 'f') {
         options[0].selected = false;
@@ -2779,14 +2803,6 @@ Application.prototype.user.showPhotoChoose = function() {
     properties = {
         title: "Choose a photo"
     });
-    Application.prototype.file.list('div#file_container', 'Image');
-    $(document).on('click', '.profile_picture_chooser .file_item', function(event) {
-        event.stopPropagation();
-        var file = $(this).data('file');
-        $('.upload_here').css('background-size', 'cover');
-        $('.upload_here').css('background-image', 'url("' + file.thumb_path + '")');
-        profile_picture_id = file.id;
-    });
 };
 Application.prototype.user.preview = function() {
 };
@@ -2864,7 +2880,7 @@ Application.prototype.user.preview.fill = function(response) {
     user_string = ("<table style='height:100%;width:100%;' cellspacing='0'><tr><td rowspan='3' style='width:80px;'><div style='width:70px;height:70px;background-image:url(" +
             response[2] + ");background-size:cover;background-repeat:no-repeat;'></div></td>");
     user_string += ("<td><a style='padding:0px;' href='/user/" + response[0] +
-            "'><span class='user_preview_name'>" + response[1] + "</span></a></td></tr>");
+            "/'><span class='user_preview_name'>" + response[1] + "</span></a></td></tr>");
     user_string += "<tr><td><a style='padding:0px;display:inline;' href='community?id=" + response[6] +
             "'><span class='user_preview_community'>" + response[4] + "</span></a><span class='user_preview_position'> &bull; " + response[5] + "</span></td></tr>";
     user_string += "<tr><td><span class='user_preview_about'>" + response[3] + "</span></td></tr>";
@@ -3270,11 +3286,11 @@ $(function() {
         var entity = $(this).data('entity');
         var link;
         if (entity.entity_type == 'user') {
-            link = '/user/' + entity.id;
+            link = '/user/' + entity.id + "/";
         } else if (entity.entity_type == 'group') {
-            link = '/group/' + entity.id;
+            link = '/group/' + entity.id + "/";
         } else {
-            link = '/files/' + entity.id;
+            link = '/files/' + entity.id + "/";
         }
         Application.prototype.navigation.relocate(link);
     });

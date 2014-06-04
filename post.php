@@ -1,6 +1,6 @@
 <?php
 function print_body() { 
-    $activity_id = $_GET['a'];
+    $activity_id = $_GET['id'];
     ?>
 <div class="container" id="home_container">
     <div class='post_container'>

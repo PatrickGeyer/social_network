@@ -1,6 +1,6 @@
 <?php
 if (!isset($page_identifier)) {
-    $pid = "home";
+    $pid = "unset";
 }
 print_header();
 ?>
@@ -156,12 +156,12 @@ function print_header($PRINT = TRUE) {
                             echo "current_page";
                         }
                         ?>"></a>
-                        <a href="/user?t=f" class="menuItem fa fa-play fa-2x <?php
+                        <a href="/user/<?= Registry::get('user')->user_id; ?>/files" class="menuItem fa fa-play fa-2x <?php
                         if ($pid == "files") {
                             echo "current_page";
                         }
                         ?>"></a>
-                        <a href="/user" class="menuItem fa fa-user fa-2x <?php
+                        <a href="/user/<?= Registry::get('user')->user_id; ?>/" class="menuItem fa fa-user fa-2x <?php
                         if ($pid == "user") {
                             echo "current_page";
                         }
@@ -222,6 +222,13 @@ function print_header($PRINT = TRUE) {
                         </div>
                     </div>
                 <div class='contentblock global_media_container square plain'></div>
+            <?php } else { ?>
+                <select class='dropdown' data-text="Apps" data-change="0">
+                    <?php foreach(Registry::get('app')->getDevelopersApps(Registry::get('user')->user_id) as $app) { ?>
+                        <option data-href='/developer/app/<?php echo $app['info']['id']; ?>/'><?php echo $app['info']['name'] ?></option>
+                    <?php } ?>       
+                </select>
+                <select class='dropdown' data-href='/developer/docs/' data-text="Docs" data-change="0"></select>
             <?php } ?>
             <?php } else { ?>
             <div class='global_header_container'>

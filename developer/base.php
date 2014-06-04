@@ -82,5 +82,5 @@ function print_body() { ?>
     <?php
 }
 
-require_once('Scripts/lock.php');
+require_once($_SERVER['DOCUMENT_ROOT'].'/Scripts/lock.php');
 ?>

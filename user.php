@@ -13,7 +13,7 @@ function print_body() {
     }
 
 
-    if (isset($_GET['t']) && $_GET['t'] == 'f') {
+    if (isset($_GET['tab']) && $_GET['tab'] == 'files') {
         $feed_id = 'f';
     }
     else {
