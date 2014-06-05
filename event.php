@@ -177,7 +177,7 @@ else {
                                                 <?php
                                                 echo "<div class='post_feed_media_wrapper' activity_id='" . $event['id'] . "'>";
                                                 foreach ($event['files'] as $file) {
-                                                    echo "<script>$('.post_feed_media_wrapper').append(Application.prototype.file.print(".json_encode($files->format_file($file))."));</script>";
+                                                    echo "<script>$('.post_feed_media_wrapper').append(Application.prototype.File.print(".json_encode($files->format_file($file))."));</script>";
                                                 }
                                                 echo "</div>";
                                                 ?>

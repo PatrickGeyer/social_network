@@ -60,7 +60,7 @@ class User {
         $user_id = Registry::get('db')->lastInsertId();
         Registry::get('db')->commit();
 
-        $dir = $_SERVER['DOCUMENT_ROOT'] . '/User/Files/' . $user_id;
+        $dir = $_SERVER['DOCUMENT_ROOT'] . '/Files/' . $user_id;
         if (!is_dir($dir)) {
             mkdir($dir, 0777);
         }

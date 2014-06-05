@@ -4,7 +4,6 @@ function print_body() { ?>
     <div class="container noRightBar">
         <div class='contentblock'>
             <h2>Highscore methods</h2>
-            <p>
             <table class='rows'>
                 <tr>
                     <td>Function</td>
@@ -53,7 +52,6 @@ function print_body() { ?>
                     </td>
                 </tr>
             </table>
-            </p>
         </div>
     </div>
     <script>

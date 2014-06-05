@@ -337,7 +337,7 @@ Application.prototype.Upload.prototype.container = $('<div class="upload_file_co
 /****************************************************
  * 1.3 Files                                         *
  ****************************************************/
-Application.prototype.file = function(file) {
+Application.prototype.File = function(file) {
     var self = this;
     this.getById = function(file_id) {
         return this.items[file_id] || null;
@@ -352,22 +352,30 @@ Application.prototype.file = function(file) {
         this.init = false;
         this.playing = false;
         this.file = file;
+        
         this.file.name = typeof this.file.name !== 'undefined' && !isEmpty(this.file.name) ? this.file.name : 'Untitled';
         this.file.description = typeof this.file.description !== 'undefined' && !isEmpty(this.file.description) ? this.file.description : '';
         this.file.time = typeof this.file.time !== 'undefined' && !isEmpty(this.file.time) ? this.file.time : 'No Date';
-        this.file.type_preview = typeof this.file.type_preview !== 'undefined' && !isEmpty(this.file.type_preview) ? this.file.type_preview : file.thumb_path;
+
         this.items[this.file.id] = this;
         
+        this.file.path = '/Files/' + this.file.user_id + "/" + this.file.url_name + "." + this.file.ext;
+        this.file.icon_path = '/Files/' + this.file.user_id + "/icon_" + this.file.url_name + "." + this.file.ext;
+        this.file.thumb_path = '/Files/' + this.file.user_id + "/thumb_" + this.file.url_name + "." + this.file.ext;
+        this.file.thumbnail = '/Files/' + this.file.user_id + "/thumbnail_" + this.file.url_name + ".jpg";
+        this.file.flv_path = '/Files/' + this.file.user_id + "/" + this.file.url_name + ".flv";
+        this.file.mp4_path = '/Files/' + this.file.user_id + "/" + this.file.url_name + ".mp4";
+        this.file.ogg_path = '/Files/' + this.file.user_id + "/" + this.file.url_name + ".ogg";
+//        
 //        Configure file icon
-        this.file.extension = this.file.path.split('.').pop();
         var ext = false;
         for(var i = 0; i < Application.prototype.default.file.type.length; i++) {
-            if(this.file.extension === Application.prototype.default.file.type[i]) {
+            if(this.file.ext === Application.prototype.default.file.type[i]) {
                 ext = true;
             }
         }
         if (ext && this.file.type !== "Folder") {
-            this.file.type_preview = "/images/icons/file_type/png/" + this.file.extension + '.png';
+            this.file.type_preview = "/images/icons/file_type/png/" + this.file.ext + '.png';
         } else if (this.file.type !== 'Folder') {
             this.file.type_preview = "/images/icons/file_type/png/blank.png";
         } else {
@@ -461,7 +469,7 @@ Application.prototype.file = function(file) {
 
     this.printDoc = function() {
         var string = $('<div></div>');
-        var link = "files?f=" + this.file.id;
+        var link = "/files/" + this.file.id + "/";
         this.file_activity_section = $("<div class='file_activity_section'></div>");
         this.preview = $("<div class='post_media_preview'></div>");
         this.actions = $("<div style='margin-top:5px;'></div>");
@@ -474,7 +482,7 @@ Application.prototype.file = function(file) {
         } else if (this.file.type == "Image") {
             
             this.preview.addClass("post_media_photo");
-            this.preview.css("background-image", "url(\"" + this.file.thumbnail + "\")");
+            this.preview.css("background-image", "url(\"" + this.file.thumb_path + "\")");
             
         } else if (this.file.type == "Video") {
             
@@ -530,7 +538,7 @@ Application.prototype.file = function(file) {
         string.append("<p class='files ellipsis_overflow'>" + this.file.name + "</p>");
         var actions = $("<div class='files_actions'></div>");
 
-        actions.append("<a href='download.php?id=" + this.file.id + "' download><div class='files_actions_item files_actions_download'></div></a>");
+        actions.append("<a href='/download.php?id=" + this.file.id + "' download><div class='files_actions_item files_actions_download'></div></a>");
         actions.append("<hr class='files_actions_seperator'>");
 
         actions.append("<div class='files_actions_item files_actions_delete' "
@@ -836,7 +844,7 @@ Application.prototype.file = function(file) {
         }
     };
 };
-Application.prototype.file.prototype.items = {};
+Application.prototype.File.prototype.items = {};
 
 Application.prototype.FileList = function(type, f_id, user_id, prop) {
     var self = this;
@@ -901,7 +909,7 @@ Application.prototype.FileList.prototype.get = function() {
         response = $.parseJSON(response);
         for (var i = 0; i < response.length; i++) {
             (function(i) {
-                var file = new Application.prototype.file(response[i]);
+                var file = new Application.prototype.File(response[i]);
                 self.element.append(self.printItem(file).on('click', function() {
                     self.onclick(file);
                 }));
@@ -925,7 +933,7 @@ Application.prototype.FileList.prototype.items = new Array();
 Application.prototype.FileList.prototype.addFile = function(file) {
     for (var i = 0; i < this.items.length; i++) {
         var self = this.items[i];
-        var file = new Application.prototype.file(file);
+        var file = new Application.prototype.File(file);
         self.element.append(file.printTag('none').on('click', function() {
             self.onclick(file);
         }));
@@ -942,13 +950,13 @@ Application.prototype.Folder.prototype.items = new Array();
 
 Application.prototype.Folder.prototype.print = function() {
     for (var file in this.files) {
-        this.prop.container.append(new Application.prototype.file(this.files[file]).print_row());
+        this.prop.container.append(new Application.prototype.File(this.files[file]).print_row());
     }
 };
 Application.prototype.Folder.prototype.addFile = function(file) {
     for (var i = 0; i < this.items.length; i++) {
         var self = this.items[i];
-        var file = new Application.prototype.file(file);
+        var file = new Application.prototype.File(file);
         self.prop.container.append(file.print_row());
     }
 };
@@ -960,7 +968,7 @@ Application.prototype.theater = function() {
 
     this.initiate = function() {
         var self = this;
-        Application.prototype.file.view(file_id);
+        Application.prototype.File.view(file_id);
         if (self.active) {
             self.remove();
         }
@@ -1030,8 +1038,8 @@ Application.prototype.theater = function() {
                 });
             }
             else {
-                self.theater_picture_container.append(Application.prototype.file.videoFrame(response.media[0].uid));
-                image = Application.prototype.file.videoPlayer(response.media[0], function(video) {
+                self.theater_picture_container.append(Application.prototype.File.videoFrame(response.media[0].uid));
+                image = Application.prototype.File.videoPlayer(response.media[0], function(video) {
                     video.play();
                     setTimeout(function() {
                         self.adjust();
@@ -1103,6 +1111,7 @@ Application.prototype.Chat = function(chat_id, name) {
     this.last = false;
     this.name = name;
     this.items = new Array();
+    this.bottom = true;
 
     this.all.push(this);
 
@@ -1147,8 +1156,11 @@ Application.prototype.Chat.prototype.get = function() {
 Application.prototype.Chat.prototype.iniScroll = function() {
     var self = this;
     this.chatoutput.on('scroll', function() {
+        self.bottom = false;
         if ($(this)[0].scrollTop === 0) {
             self.getPrevious();
+        } else if($(this)[0].scrollTop === $(this)[0].scrollHeight) {
+            self.bottom = true;
         }
     });
 };
@@ -1244,10 +1256,11 @@ Application.prototype.Chat.prototype.styleResponse = function(response) {
 };
 
 Application.prototype.Chat.prototype.ChatItem = function(item) {
+    this.item = item;
     this.time = {};
     this.time.time = item['time'];
-    this.pic = item['pic'];
-    this.preview = $('<span><img style="width:20px;" src="' + this.pic.icon + '"/> ' + item['text'] + '</span>');
+    this.item.pic = item['pic'] || Application.prototype.default.pic;
+    this.preview = $('<span><img style="width:20px;" src="' + this.item.pic.icon + '"/> ' + item['text'] + '</span>');
     this.id = item['id'];
 
     this.print = function() {
@@ -1256,7 +1269,7 @@ Application.prototype.Chat.prototype.ChatItem = function(item) {
         var string = $("<li class='single_chat'></li>")
         var chat_wrapper = $("<div class='chat_wrapper " + (MyUser.attr.id == item['user_id'] ? 'self-chat' : 'other-chat') + "'>");
         var profile_picture = $("<div data-user_id='" + item['user_id'] + "' class='profile_picture_medium online_status'>");
-        profile_picture.css('background-image', 'url("' + item['pic'].icon + '")');
+        profile_picture.css('background-image', 'url("' + this.item.pic.icon + '")');
         var chat_bubble = $("<div class='chat-content'></div>");
         var chat_name = $("<div class='chatname'></div>").append("<span class='user_preview user_preview_name chatname' user_id='" + item['user_id'] + "'>" + item['name'] + "</span>");
         var chat_text = $("<div class='chattext'>").append(item['text'].replaceLinks().replaceEmoticons());
@@ -1408,7 +1421,7 @@ Application.prototype.Feed.prototype.Item = function(item) {
                 var media_wrapper = $("<div class='post_feed_media_wrapper'></div>");
                 content_wrapper.append(media_wrapper);
                 for (var i in this.item.media) {
-                    media_wrapper.append(new Application.prototype.file(this.item.media[i]).print(this.item.type));
+                    media_wrapper.append(new Application.prototype.File(this.item.media[i]).print(this.item.type));
                 }
             }
             single_post.append(content_wrapper);
@@ -2925,9 +2938,9 @@ Application.prototype.user.getOnlineMass = function() {
             for (var prop in response) {
                 if (response.hasOwnProperty(prop)) {
                     if (response[prop] == true) {
-                        $('.online_status[data-user_id="' + prop + '"]').addClass('profile_online');
+                        $('.online_status[data-user_id="' + prop + '"]').addClass('profile_online').removeClass('profile_offline');
                     } else {
-                        $('.online_status[data-user_id="' + prop + '"]').addClass('profile_offline');
+                        $('.online_status[data-user_id="' + prop + '"]').addClass('profile_offline').removeClass('profile_online');
                     }
                 }
             }
@@ -3383,7 +3396,7 @@ $(function() {
 
         var file_container = $("<div class='file_box' style='max-height:200px;'></div>");
         $('[data-activity_id="' + activity_id + '"] .post_feed_media_wrapper').prepend(file_container);
-        Application.prototype.file.list(file_container, '');
+        Application.prototype.File.list(file_container, '');
     });
 
     $(document).on('click', '.edit_activity_save', function() {
@@ -3671,8 +3684,8 @@ $(function() {
         for (var chat in Application.prototype.Chat.prototype.get()) {
 //            chat.detectChange();
         }
-//         if (Application.prototype.file.theater.active) {
-//             Application.prototype.file.theater.adjust();
+//         if (Application.prototype.File.theater.active) {
+//             Application.prototype.File.theater.adjust();
 //         }
     });
 

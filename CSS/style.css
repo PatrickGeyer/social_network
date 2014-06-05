@@ -2828,12 +2828,7 @@ table.singleupdate{
     margin-bottom: 10px;
     background-size: cover;
     background-repeat: no-repeat;
-    vertical-align: top;
     position: relative;
-    border-collapse: separate;
-    border-spacing: 5px;
-    padding: 0px !important;
-    box-shadow: none;
 }
 .post_feed_item .audio_container{
     border: 0px;
@@ -2867,15 +2862,11 @@ table.singleupdate{
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
-    border-bottom: 1px solid lightgrey;
     min-height: 130px;
     height: 150px;
     width: 150px;
     margin-right: -1px;
     position: relative;
-    float: left;
-    /*padding: 10px 0px 10px 10px;*/
-    /*height: 100%;*/
 }
 
 .post_media_preview:not(.post_media_photo) {
@@ -2894,6 +2885,13 @@ table.singleupdate{
     white-space: nowrap;
     border: 1px solid lightgrey;
 }
+.post_feed_item > div {
+    display: table;
+    width: 100%;
+}
+.post_feed_item > div > div {
+    display: table-cell;
+}
 
 .post_feed_item > *:not(.comment_box) {
     vertical-align: top;
@@ -2902,7 +2900,6 @@ table.singleupdate{
 }
 
 .file_activity_section {
-    display: block;
     overflow: hidden;
     padding: 10px;
     position: relative;
@@ -3392,18 +3389,13 @@ h3{
 
 .file_hidden_container{
     display: none;
-    padding-top: 10px;
-    padding-right: 0px;
-    padding-left: 0px;
-    margin-left: -5;
-    /*border-top: 1px solid lightgrey;*/
+    top: 100%;
+    margin-left: -6;
+    margin-right: -6px;
 }
 .file_hidden_container p {
     vertical-align: top;
     margin-top: 0px;
-}
-.file_hidden_container .post_feed_item{
-    border:0px;
 }
 
 .file_hidden_container_active {
@@ -3412,12 +3404,6 @@ h3{
 
 .file_hidden_container_active > .file_hidden_container{
     display: block;
-}
-
-#container {
-    box-shadow: 0 5px 10px -5px rgba(0,0,0,0.5);
-    position: relative;
-    background: white; 
 }
 
 .files_recently_shared{

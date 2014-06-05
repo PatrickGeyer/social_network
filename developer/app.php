@@ -35,6 +35,9 @@ function print_body() {
                 </tr>
             </table>
         </div>
+        <div class='contentblock'>
+        	<h3>Website</h3>
+        </div>
     </div>
     <script>
         document.title = 'Dashboard - <?= $info['info']['name'] ?>';

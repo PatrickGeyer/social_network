@@ -224,6 +224,7 @@ function print_header($PRINT = TRUE) {
                 <div class='contentblock global_media_container square plain'></div>
             <?php } else { ?>
                 <select class='dropdown' data-text="Apps" data-change="0">
+                	<option data-href='/developer/app/create'>Create an App</option>
                     <?php foreach(Registry::get('app')->getDevelopersApps(Registry::get('user')->user_id) as $app) { ?>
                         <option data-href='/developer/app/<?php echo $app['info']['id']; ?>/'><?php echo $app['info']['name'] ?></option>
                     <?php } ?>       

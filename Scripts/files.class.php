@@ -272,7 +272,7 @@ class Files {
         $this->home = Home::getInstance($args = array());
         $activity = array('id' => $this->getActivity($file['id']));
         if ($file['type'] != "Folder") {
-            $file['type'] = $this->getType($this->mime_content_type($file['path']));
+//            $file['type'] = $this->getType($this->mime_content_type($file['url_name']));
         }
 //        if (!isset($file['type_preview'])) {
 //            $file['type_preview'] = $this->getFileTypeImage($file, 'THUMB');
@@ -293,41 +293,6 @@ class Files {
         }
         $file['activity']['stats'] = $this->home->getStats($activity);
         return $file;
-    }
-
-    public function styleRecentlyShared($file) {
-        $post_classes = " class='files_feed_item ";
-        $post_styles = " style='";
-        $container = "<div";
-        $post_content = "";
-
-        if ($file['type'] == "Audio") {
-            $post_classes .= "files_shared_audio";
-            $post_styles .= " height:auto; ";
-            $post_content .= $this->audioPlayer($file['thumb_path'], $file['name'], false, false);
-        }
-        else if ($file['type'] == "Image") {
-            //$post_styles .= "background-image:url(\"" . $file['thumb_path'] . "\")' "
-            //. "onclick='initiateTheater(\"no_text\", " . $file['id'] . ");";
-        }
-        else if ($file['type'] == "Video") {
-            $post_classes .= "files_shared_video";
-            $post_content .= $this->videoPlayer(
-                    $file['id'], $file['path'], $classes, "height:100%;", "home_feed_video_", TRUE, "display:none;");
-        }
-        else if ($file['type'] == "PDF Document") {
-            //$post_styles .= " display:none; ";
-            //$post_content .= "<embed src='viewer?id=" . $file['id'] . "' width='100%' height='100%'>";    TOO MANY RESOURCES
-        }
-        else if ($file['type'] == "Webpage") {
-            $post_classes .= "post_media_full";
-            $post_styles .= "height:auto;";
-            $post_content .= "<table style='height:100%;'><tr><td rowspan='3'><div class='post_media_webpage_favicon' style='background-image:url(&quot;" . $file['web_favicon'] . "&quot;);'></div></td>"
-                    . "<td><div class='ellipsis_overflow' style='position:relative;margin-right:30px;'>" .
-                    "<a class='user_preview_name' target='_blank' href='" . $file['URL'] . "'><span style='font-size:13px;'>" . $file['web_title'] . "</span></a></div></td></tr>" .
-                    "<tr><td><span style='font-size:12px;' class='user_preview_community'>" . $file['web_description'] . "</span></td></tr></table>";
-        }
-        return "<td><div " . $post_classes . "' " . $post_styles . "'>" . $post_content . "</div></td>";
     }
 
     function get_shared($file_id) {
@@ -574,27 +539,6 @@ class Files {
         return $sql->fetchColumn();
     }
 
-    public function filePreview($file, $size = 'icon') {
-//        if ($file['type'] == NULL) {
-//            $file['type'] == $this->getType($info['path']);
-//        }
-        if ($size == 'icon') {
-            return $this->tinyPreview($file);
-        }
-        else if ($size == 'thumb') {
-            return $this->thumbPreview($file);
-        }
-    }
-
-    public function tinyPreview($file) {
-        if ($file['type'] == "Image") {
-            return $this->tinyPreviewHelper($file['thumb_path'], "files_icon_preview_image");
-        }
-        else {
-            return $this->tinyPreviewHelper($this->getFileTypeImage($file, 'ICON'), "files_icon_preview_image");
-        }
-    }
-
     public function getPath($file_id, $size = 'thumb') {
         if ($size != "") {
             $size .= "_";
@@ -608,38 +552,12 @@ class Files {
     }
 
     public function getAttr($file_id, $attr) {
-        $sql = "SELECT " . $attr . " FROM file WHERE id = :file_id;";
+        $sql = "SELECT " . $attr . " FROM `file` WHERE id = :file_id;";
         $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
             ":file_id" => $file_id
         ));
         return $sql->fetchColumn();
-    }
-
-    private function tinyPreviewHelper($path, $div_classes = NULL) {
-        return "<div class='files_icon_preview " . $div_classes . "' style='background-image:url(\"" . $path . "\");'></div>";
-    }
-
-    private function thumbPreview($file) {
-        if ($file['type'] == "Audio") {
-            echo $this->audioPreview($file);
-        }
-        else if ($file['type'] == "Image") {
-            echo $this->imagePreview($file);
-        }
-        else if ($file['type'] == "Video") {
-            echo $this->videoPreview($file);
-        }
-        else if ($file['type'] == "Folder") {
-            echo $this->folderPreview($file);
-        }
-        else if ($file['type'] == "PDF Document") {
-            echo $this->pdfPreview($file);
-        }
-        else {
-            $file['thumb_path'] = $this->getFileTypeImage($file);
-            echo $this->imagePreview($file);
-        }
     }
 
     function getFileTypeImage($file, $size = "THUMB") {
@@ -699,14 +617,14 @@ class Files {
         $sql->execute(array(
             ":user_id" => Registry::get('user')->user_id,
             ":name" => $name,
-            ":path" => "/User/Files/" . Registry::get('user')->user_id . "/" . $name . ".zip",
+            ":path" => "/Files/" . Registry::get('user')->user_id . "/" . $name . ".zip",
             ":type" => "Folder",
             ":folder_id" => $new_folder_id,
             ":parent_folder_id" => $parent_folder,
             ":time" => time(),
         ));
 
-//        $this->create_zip($_SERVER['DOCUMENT_ROOT'] . "/User/Files/" . Registry::get('user')->user_id . "/" . $name . ".zip", array(), true);
+//        $this->create_zip($_SERVER['DOCUMENT_ROOT'] . "/Files/" . Registry::get('user')->user_id . "/" . $name . ".zip", array(), true);
 
         return $new_folder_id;
     }
@@ -902,13 +820,15 @@ class Files {
 
     function upload($post, $file) {
         require_once ('thumbnail.php');
-
-        $tmpFilePath = $file['file']['tmp_name'];
-        $savename = preg_replace("/[^a-z0-9]+/i", '', $file['file']['name']);
-        $savepath = '/User/Files/' . Registry::get('user')->user_id . "/";
-        $base_path = $_SERVER['DOCUMENT_ROOT'] . "/";
+        
+        $savepath = '/Files/' . Registry::get('user')->user_id . "/";
+        $base_path = $_SERVER['DOCUMENT_ROOT'];
         $dir = $base_path . $savepath;
         $parent_folder = $post['parent_folder'];
+        $tmpFilePath = $file['file']['tmp_name'];
+        
+        $savename = uniqid(rand(), true);
+
         if (!file_exists($dir)) {
             mkdir($dir, 0777, true);
         }
@@ -952,22 +872,23 @@ class Files {
             if ($file['file']['name'] != "" || ".") {
                 $return_info = array();
                 $lastInsertId;
-                $name = preg_replace("/[^A-Za-z0-9]/", '', Registry::get('system')->stripexts($file['file']['name']));
                 $ext = pathinfo($file['file']['name'], PATHINFO_EXTENSION);
-                $file_name = $name . ($ext != null && $ext != "" ? "." : "" ) . $ext;
-                $thumbnail = $savepath . $name . ".jpg";
+                $file_name = $savename . ($ext != null && $ext != "" ? "." : "" ) . $ext;
+                $thumbnail = $savepath . "thumbnail_" . $savename . ".jpg";
 
                 $flv_path = $mp4_path = $ogg_path = $swf_path = $webm_path = $mp3_path = $thumbsavepath = $iconsavepath = '';
                 ignore_user_abort(true);
                 set_time_limit(0);
-                if (move_uploaded_file($tmpFilePath, "../" . $savepath . $file_name)) {
+                if (move_uploaded_file($tmpFilePath, $base_path . $savepath . $file_name)) {
+                    
                     $mimetype = $this->mime_content_type($savepath . $file_name);
                     $size = filesize("../" . $savepath . $file_name);
                     $type = $this->getType($mimetype);
+                    
                     if ($type == "Audio") {
                         $convert_path = $base_path . $savepath . $file_name;
-                        $iconsavepath = $mp3_path = $savepath . $name . "_thumb.mp3";
-                        $thumbsavepath = $savepath . $name . "_thumb.ogg";
+                        $iconsavepath = $mp3_path = $savepath . $savename . "_thumb.mp3";
+                        $thumbsavepath = $savepath . $savename . "_thumb.ogg";
                         $convert = $this->convert($convert_path, $base_path . $mp3_path, '-ab 64');
                         if ($convert != $base_path . $mp3_path) {
                             echo ("Error: " . $convert);
@@ -1037,31 +958,18 @@ class Files {
                         $resizeObj->saveImage("../" . $iconsavepath);
                     }
                     Registry::get('db')->beginTransaction();
-                    $sql = "INSERT INTO `file` (user_id, "
-                            . "size, path, thumb_path, icon_path, "
-                            . "thumbnail, flv_path, mp4_path, ogg_path, webm_path, "
-                            . "name, type, mime_type, parent_folder_id, time, last_mod) "
-                            . "VALUES (:user_id, :size, :file_path, "
-                            . ":thumbsavepath, :iconsavepath, :thumbnail, "
-                            . ":flv_path, :mp4_path, :ogg_path, :webm_path, "
-                            . ":name, :type, :mime_type, :parent_folder, :time, :time);";
+                    $sql = "INSERT INTO `file` (user_id, size, url_name, ext, name, type, mime_type, parent_folder_id) "
+                            . "VALUES (:user_id, :size, :path, :ext, :name, :type, :mime_type, :parent_folder);";
                     $sql = Registry::get('db')->prepare($sql);
                     $sql->execute(array(
                         ":user_id" => Registry::get('user')->user_id,
                         ":size" => $size,
-                        ":file_path" => $savepath . $file_name,
-                        ":thumbsavepath" => $thumbsavepath,
-                        ":iconsavepath" => $iconsavepath,
-                        ":thumbnail" => $thumbnail,
-                        ":name" => $file['file']['name'],
+                        ":path" => $savename,
+                        ":ext" => $ext,
+                        ":name" => pathinfo($file['file']['name'], PATHINFO_FILENAME),
                         ":type" => $type,
                         ":mime_type" => $mimetype,
                         ":parent_folder" => $parent_folder,
-                        ":flv_path" => $flv_path,
-                        ":mp4_path" => $mp4_path,
-                        ":ogg_path" => $ogg_path,
-                        ":webm_path" => $webm_path,
-                        ":time" => time(),
                     ));
                     $lastInsertId = Registry::get('db')->lastInsertId();
                     Registry::get('db')->commit();
@@ -1089,10 +997,10 @@ class Files {
                     $lastActivityInsertId = Registry::get('db')->lastInsertId();
                     Registry::get('db')->commit();
                     if ($parent_folder == 0) {
-                        $path = "/User/Files/" . Registry::get('user')->user_id . "/root.zip";
+                        $path = "/Files/" . Registry::get('user')->user_id . "/root.zip";
                     }
                     else {
-                        $path = $this->getAttr($this->get_folder_file_id($parent_folder), 'path');
+                        $path = $this->getAttr($this->get_folder_file_id($parent_folder), 'url_name');
                     }
 //                    $this->add_to_zip($path, array($savepath . $file_name), TRUE);
                     return $this->format_file($this->getInfo($lastInsertId));
