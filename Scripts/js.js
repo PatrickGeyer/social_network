@@ -1,4 +1,4 @@
-/****************************************************
+/**************************************************** 
  * This script provides client-side functionality.   *
  * It is split into a few parts.                     *
  * 0. Global Setup                                   *
@@ -1193,8 +1193,8 @@ Application.prototype.Chat.prototype.sendRequest = function(all) {
 
         if (all == 'true') {
             $('.chatcomplete').fadeIn("fast");
-            $(self.list).append(self.styleResponse(response));
-            $(self.chatoutput).scrollTop(self.chatoutput.get(0).scrollHeight);
+            self.list.append(self.styleResponse(response));
+            self.chatoutput.scrollTop(self.chatoutput.get(0).scrollHeight);
 
         } else {
             $(self.list).append(self.styleResponse(response));
@@ -1204,10 +1204,6 @@ Application.prototype.Chat.prototype.sendRequest = function(all) {
                 if (response[i]['user_id'] != MyUser.attr.id) {
                     $('#chat_new_message_sound').get(0).play();
                 }
-            }
-            if (self.id != chat_room) {
-                $('.chat_feed_selector[chat_feed="' + self.id + '"] *').css('color', 'red');
-                alert('unread in another chat');
             }
         }
         var timeout = 3000;
@@ -1945,7 +1941,7 @@ Application.prototype.UI = {
         this.print = function() {
             if(this.list.find("li").length > 0) {
                 this.wrapper.append(this.list);
-                this.preview.append($("<i class='fa fa-caret-down'></i>"));
+                this.preview.after($("<i class='fa fa-caret-down'></i>"));
                 this.object.append(this.wrapper);
             }
             return this.object;
@@ -1961,8 +1957,8 @@ Application.prototype.UI = {
                     options[i]['value'] = options[i]['value'] || options[i]['text'];
                     var item = $("<li value='" + options[i]['value'] + "' class='default_dropdown_item " + options[i].class + "'></li>").on('click', function(event) {
                         event.stopPropagation();
-                        if(this.options['change'] === true) {
-                            self.preview.html(options[i].text);
+                        if(self.options.change !== false) {
+                            self.preview.text(options[i].text);
                             self.object.val(options[i]['value']);
                         }
                         self.object.toggleClass('default_dropdown_active');
@@ -1984,7 +1980,7 @@ Application.prototype.UI = {
         var self = this;
         this.items.push(this);
         this.prop = options || {};
-        this.object = $("<div class='vNav'></div>");
+        this.object = $("<div class='vNav contentblock'></div>");
         this.prop.container.remove('.vNav');
         this.prop.container.append(this.object);
 
@@ -2027,8 +2023,8 @@ Application.prototype.UI = {
             for (var i = 0; i < options.length; i++) {
                 options[i].children = options[i].children || new Array();
                 var sub = $("<div class='sub'></div>");
-                var header = $('<div class="header">' + options[i].text + '</div>');
-                sub.append(header);
+                var header = $('<h3 class="header">' + options[i].text + '</h3>');
+                this.object.append(header);
                 this.addOptions_(options[i].children, sub);
                 this.object.append(sub);
             }
