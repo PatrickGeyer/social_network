@@ -28,7 +28,14 @@ else {
         echo "</div></div>";
     }
     else {
+        echo '<div class="global_container"><div class="content">';
+        require_once $_SERVER['DOCUMENT_ROOT'].'/left_bar.php';
+        if(!isset($_GET['developer'])) {
+            require_once $_SERVER['DOCUMENT_ROOT'].'/right_bar.php';
+        }
+
         print_body();
+        echo "</div></div>";
     }
 }
 ?>

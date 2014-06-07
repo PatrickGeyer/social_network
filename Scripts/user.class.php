@@ -470,11 +470,11 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'get_preview_info') {
-            $array[] = $_POST['id'];
-            $array[] = $user->getName($_POST['id']);
-            $array[] = $user->getProfilePicture('chat', $_POST['id']);
-            $array[] = $user->getAbout($_POST['id']);
-            $array[] = $user->getPosition($_POST['id']);
+            $array['id'] = $_POST['id'];
+            $array['name'] = $user->getName($_POST['id']);
+            $array['pic'] = $user->getProfilePicture($_POST['id']);
+//            $array['about'] = $user->getAbout($_POST['id']);
+//            $array['pos'] = $user->getPosition($_POST['id']);
             echo json_encode($array);
         }
         else if ($_POST['action'] == 'setOnline') {

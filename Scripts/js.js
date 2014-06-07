@@ -16,7 +16,7 @@ function Application() {
 Application.prototype.default = {
     pic: {
         icon: "/Images/male-default-icon.jpg",
-        thumb: "/Images/male-default-icon.jpg",
+        thumb: "/Images/male-default-chat.jpg",
         large: "/Images/male-default-icon.jpg"
     },
     file: {
@@ -332,7 +332,6 @@ Application.prototype.Upload = function(files) {
 
 Application.prototype.Upload.prototype.sessions = new Array();
 Application.prototype.Upload.prototype.count = new Array();
-Application.prototype.Upload.prototype.container = $('<div class="upload_file_container contentblock"></div>');
 
 /****************************************************
  * 1.3 Files                                         *
@@ -1102,14 +1101,15 @@ Application.prototype.theater = function() {
 //            </div>
 //        </div>
 //    </div>
-Application.prototype.Chat = function(chat_id, name) {
-    this.id = chat_id;
+Application.prototype.Chat = function(prop) {
+    this.prop = prop;
+    this.id = this.prop.id;
     this.entry = new Array();
     this.oldest = 0;
     this.newest = 998999999;
     this.getting_previous = false;
     this.last = false;
-    this.name = name;
+    this.name = this.prop.name;
     this.items = new Array();
     this.bottom = true;
 
@@ -1132,7 +1132,10 @@ Application.prototype.Chat = function(chat_id, name) {
                     .append($("<div class='text_input_container'></div>")
                             .append(this.input = $("<textarea class='chatinputtext autoresize' placeholder='Press Enter to send...'></textarea>"))));
 
-
+    
+    if(this.prop.active === true) {
+        this.container.addClass('active');
+    }
     $('.right_bar_container').append(this.container);
     this.iniScroll();
     this.sendRequest('true');
@@ -1406,7 +1409,7 @@ Application.prototype.Feed.prototype.Item = function(item) {
         if (this.item.view == 'home') {
             var user_link = $("<a class='user_name_post' href='/user/" + this.item.user.id + "/'></a>");
             user_link.append(this.item.user.printImg());
-            var user_name = $("<a class='user_name_post user_preview user_preview_name' user_id='" + this.item.user.entity.id + "' href='/user/" + this.item.user.entity.id + "/'>" + this.item.user.entity.name + "</a>");
+            var user_name = $("<a class='user_name_post user_preview user_preview_name' data-user_id='" + this.item.user.entity.id + "' href='/user/" + this.item.user.entity.id + "/'>" + this.item.user.entity.name + "</a>");
             var top_content = $("<div class='top_content'>").append(user_link).append(user_name);
             var single_post = $('<div id="single_post_' + this.item.id + '" class="singlepostdiv"></div').append(top_content);
             string.append(single_post);
@@ -1645,7 +1648,7 @@ Application.prototype.CommentItem.prototype.show = function() {
     this.comment.append("<div class='profile_picture_medium' style='background-image:url(\"" + this.item.user.pic.icon + "\");'></div>")
             .append(this.comment_info = $("<div class='single_comment_info'></div>")
                     .append($("<a class='userdatabase_connection' href='/user?id=" + this.item.user.id + "'></a>")
-                            .append("<span class='user_preview user_preview_name post_comment_user_name' user_id='" + this.item.user.id + "'>" + this.item.user.name + " </span>"))
+                            .append("<span class='user_preview user_preview_name post_comment_user_name' data-user_id='" + this.item.user.id + "'>" + this.item.user.name + " </span>"))
                     .append("<span class='post_comment_text'>" + this.item.text + "</span><br />")
                     .append(this.time = $("<span class='post_comment_time'>" + new Date.mysql(this.item.time).timeAgo('long') + " -</span>"))
                     .append("<span class='post_comment_time post_comment_liked_num'>" + this.item.like.count + "</span>")
@@ -1761,10 +1764,10 @@ Application.prototype.ConnectionList.prototype.print = function() {
             for (var key in this.object[i]) {
                 if (i === 'Users' || i === 'Connections') {
                     var user = new Application.prototype.User(this.object[i][key]);
-                    container.append(user.print());
+                    container.append(user.print({online_status: true}));
                 } else {
                     var group = new Application.prototype.Group(this.object[i][key]);
-                    container.append(group.print());
+                    container.append(group.print({}));
                 }
             }
             this.props.container.append(container);
@@ -1779,12 +1782,6 @@ Application.prototype.UI = {
     },
     prop: {},
     init: function() {
-        this.fileUpload = Application.prototype.Upload.prototype.container;
-        new Application.prototype.UI.DragUpload({container: this.fileUpload});
-        $('.right_bar_container').append(this.fileUpload.hide());
-        this.connectionList = $("<div></div>");
-        new Application.prototype.ConnectionList({container: this.connectionList});
-        $('.left_bar_container').append(this.connectionList);
         for (var i in this.defaults) {
             if (!this.prop.hasOwnProperty(i)) {
                 this.prop[i] = this.defaults[i];
@@ -1793,15 +1790,23 @@ Application.prototype.UI = {
         this.update();
     },
     update: function() {
+        this.fileUpload = $('<div class="upload_file_container contentblock"></div>');
+        new Application.prototype.UI.DragUpload({container: this.fileUpload});
+        $('.right_bar_container').append(this.fileUpload.hide());
+        
+        this.connectionList = $("<div></div>");
+        new Application.prototype.ConnectionList({container: this.connectionList});
+        $('.left_bar_container').append(this.connectionList);
+        
         if (this.prop.fileUpload === true) {
             this.fileUpload.show();
         } else {
-            this.fileUpload.hide();
+            this.fileUpload.remove();
         }
         if (this.prop.connectionList === true) {
             this.connectionList.show();
         } else {
-            this.connectionList.hide();
+            this.connectionList.remove();
         }
         Application.prototype.UI.vNav.prototype.setActive();
 
@@ -1882,8 +1887,9 @@ Application.prototype.UI = {
         var self = this;
         this.prop = props || {};
         this.prop.container = this.prop.container || $("<div></div>");
-        this.container = $("<ul class='buttons'></ul>");
-        this.prop.container.append(this.container);
+        this.containerg = $("<div class='buttons'></div>").append(
+        this.container = $("<ul class='buttons'></ul>"));
+        this.prop.container.append(this.containerg);
         this.addOptions = function(options) {
             var hasSelect = false;
             for (var o = 0; o < options.length; o++) {
@@ -1917,7 +1923,7 @@ Application.prototype.UI = {
             }
         }
         this.print = function() {
-            return this.container;
+            return this.containerg;
         }
     },
     Loader: function(props) {
@@ -2384,10 +2390,10 @@ Application.prototype.navigation.relocate = function(link, get) {
 
     window.history.pushState({}, 'WhatTheHellDoesThisDo?!', link);//Push new URL before waiting for load to complete
     if (this.get) {
-        $('.container').html(new Application.prototype.UI.Loader());
+        $('.global_container').html(new Application.prototype.UI.Loader());
         $.get(link, {ajax: 'ajax'}, function(response) {
             var container = $(response);
-            $('.container').replaceWith(container);
+            $('.global_container').replaceWith(container);
             Application.prototype.UI.update();
             $('body').scrollTop(0);
         });
@@ -2681,10 +2687,16 @@ Application.prototype.Entity = function() {
 
 };
 
-Application.prototype.Entity.prototype.print = function() {
-    var container = $("<div class='user-tag'></div>");
-    container.append("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.entity.pic.icon + "\");'"
+Application.prototype.Entity.prototype.print = function(props) {
+    props = props || {};
+    var container = $("<div class='user-tag' data-user_id='" + this.entity.id + "'></div>");
+    var a = $("<a class='friend_list ellipsis_overflow' style='background-image:url(\"" + this.entity.pic.icon + "\");'"
             + "href ='/" + this.baseUrl + "/" + this.entity.id + "/'>" + this.entity.name + "</a>");
+    if(props.online_status === true) {
+        container.addClass('user_preview');
+        a.append("<div class='online_status online_circle rfloat' data-user_id='" + this.entity.id + "'></div>");
+    }
+    container.append(a);
 
     return container;
 };
@@ -2722,10 +2734,34 @@ Application.prototype.Entity.prototype.printHeader = function(prop) {
     prop.container.append(this.container);
 };
 
-Application.prototype.Entity.prototype.init = function(entity) {
+Application.prototype.Entity.prototype.printPreview = function(prop) {
+    this.container = $("<div class='userHeader'></div>");
+    this.container.append($('<img class="profile_picture_thumb" src="' + this.entity.pic.thumb + '"></img>'));
+    this.container.append("<span class='user_preview_name'>" + this.entity.name + "</span>");
+    this.switch = new Application.prototype.UI.ButtonSwitch();
+    var options = [{
+            text: "Feed",
+            icon: "fa-list-ul",
+            href: "/" + this.baseUrl + "/" + this.entity.id + "/feed"
+        },
+        {
+            text: "Files",
+            icon: "fa-file",
+            href: "/" + this.baseUrl + "/" + this.entity.id + "/files"
+        }];
+    if (prop.tab === 'f') {
+        options[0].selected = false;
+        options[1].selected = true;
+    }
+    this.switch.addOptions(options);
+    this.container.append(this.switch.print());
+    prop.container.append(this.container);
+};
+
+Application.prototype.Entity.prototype.init = function(entity, type) {
     this.entity = entity;
     this.entity.pic = this.entity.pic || Application.prototype.default.pic;
-    if (this.items[this.entity.id]) {
+    if (this.items[this.entity.id] && this.items[this.entity.id].type === type) {
         return this.items[this.entity.id];
     } else {
         this.items[this.entity.id] = this;
@@ -2745,6 +2781,15 @@ Application.prototype.Entity.prototype.printSharedFiles = function(prop) {
         return file.print_row();
     };
     this.feed.get();
+};
+
+Application.prototype.Entity.prototype.getInfo = function(callback) {
+    var self = this;
+    $.post('/Scripts/' + this.baseUrl + '.class.php', {action: "get_preview_info", id: this.entity.id}, function(response) {
+        response = $.parseJSON(response);
+        self.entity.pic = response.pic || Application.prototype.default.pic;
+        callback();
+    });
 };
 
 
@@ -2783,7 +2828,54 @@ Application.prototype.User.prototype.MyUser = function() {
 //    }
 };
 
+Application.prototype.User.prototype.Preview = function(props) {
+    var self = this;
+    this.prop = props || {};
+    this.user = new Application.prototype.User({id: this.prop.id});
+    this.prop.element.on('mouseleave', function() {
+        self.remove();
+    });
+    this.loader = new Application.prototype.UI.Loader();
+    this.container = $('<div class="user_preview_info"></div>').append(this.object = $("<div class='contentblock force'></div>").append(this.loader));
+};
+Application.prototype.User.prototype.Preview.prototype.show = function() {
+    var self = this;
+    setTimeout(function() {
+        if (self.prop.element.parent().find("[data-user_id='" + self.prop.id + "']:hover").length > 0) {
+            self.prop.element.append(self.container);
+            self.user.getInfo(function() {
+                self.loader.remove();
+                self.align();
+                self.fill();
+            });
+        }
+    }, 500);
+};
 
+Application.prototype.User.prototype.Preview.prototype.align = function() {
+    var arrow;
+    if (this.prop.element.parents('.container').length > 0) {
+        alignment = "vertical";
+    } else {
+        alignment = "left";
+    }
+
+    if (this.prop.element.parents('.this.objectainer').length > 0) {
+        alignment = "vertical";
+    }
+    arrow = 'user_preview_arrow-' + alignment;
+
+    this.object.append('<div class="' + arrow + '-border"></div>');
+    this.object.append('<div class="' + arrow + '"></div>');
+};
+
+Application.prototype.User.prototype.Preview.prototype.fill = function() {
+    this.user.printPreview({container: this.object});
+};
+
+Application.prototype.User.prototype.Preview.prototype.remove = function() {
+    this.container.remove();
+};
 
 
 Application.prototype.user = function() {
@@ -2812,105 +2904,6 @@ Application.prototype.user.showPhotoChoose = function() {
     properties = {
         title: "Choose a photo"
     });
-};
-Application.prototype.user.preview = function() {
-};
-Application.prototype.user.preview.show = function(element, user_id) {
-    if (this.showing === false) {
-        this.remove();
-        if (element.children('.user_preview_info').length === 0) {
-            this.create(element, user_id);
-        }
-    }
-};
-
-Application.prototype.user.preview.create = function(element, user_id) {
-    var self = this;
-    var bg = "<div id='user_preview_initial_loader' style='width:100%;height:100px;background-image:url(Images/ajax-loader.gif);background-position:center;background-repeat:no-repeat;'></div>";
-    var cont = $('<div id="user_preview_' + user_id + '" style="display:none;" class="user_preview_info">' + bg + '</div>');
-    element.append(cont);
-    setTimeout(function() {
-        if ($('*[data-user_id="' + user_id + '"]:hover').length > 0) {
-            $.post('/Scripts/user.class.php', {action: "get_preview_info", id: user_id}, function(response) {
-                self.fill(response);
-            });
-            cont.fadeIn(200);
-            this.showing = true;
-            self.align(element);
-        }
-    }, 500);
-};
-
-Application.prototype.user.preview.align = function(element) {
-    $(document).off('scroll');
-    $(document).on('scroll', function() {
-        this.align(element);
-    });
-    var arrow;
-    if (element.parents('.chatcomplete').length > 0) {
-        alignment = "right";
-    } else {
-        alignment = "left";
-    }
-
-    if (element.parents('.container').length > 0) {
-        alignment = "vertical";
-    }
-    arrow = 'user_preview_arrow-' + alignment;
-
-    $('.user_preview_info').append('<div class="' + arrow + '-border"></div>');
-    $('.user_preview_info').append('<div class="' + arrow + '"></div>');
-    var top = element.offset().top;
-    var element_height = element.outerHeight(true);
-    var scrolled_height = $(document).scrollTop();
-    var top_total = top - scrolled_height - element_height / 2;
-    var arrow_height = $('.' + arrow + "-border").outerHeight(true) / 2 - 2;
-    var left = element.offset().left;
-    var width = element.width();
-    var left_total = left + width + 20;
-    if (alignment == "vertical") {
-        left_total = element.offset().left;
-        top_total += element.height() + 25;
-    } else if (alignment == "right") {
-        left_total = element.offset().left - $('.user_preview_info').outerWidth(true) - 25;
-        top_total += element.height() - 5;
-    } else if (alignment == "left") {
-        left_total = element.offset().left + element.outerWidth(true) + 25;
-        top_total += element.height();
-    }
-
-    $('.user_preview_info').css('left', left_total + "px");
-    $('.user_preview_info').css('top', top_total + "px");
-};
-
-Application.prototype.user.preview.fill = function(response) {
-    response = $.parseJSON(response);
-    var user_string;
-    user_string = ("<table style='height:100%;width:100%;' cellspacing='0'><tr><td rowspan='3' style='width:80px;'><div style='width:70px;height:70px;background-image:url(" +
-            response[2] + ");background-size:cover;background-repeat:no-repeat;'></div></td>");
-    user_string += ("<td><a style='padding:0px;' href='/user/" + response[0] +
-            "/'><span class='user_preview_name'>" + response[1] + "</span></a></td></tr>");
-    user_string += "<tr><td><a style='padding:0px;display:inline;' href='community?id=" + response[6] +
-            "'><span class='user_preview_community'>" + response[4] + "</span></a><span class='user_preview_position'> &bull; " + response[5] + "</span></td></tr>";
-    user_string += "<tr><td><span class='user_preview_about'>" + response[3] + "</span></td></tr>";
-    user_string += "<tr><td></td><td><div class='user_preview_buttons'>" +
-            "<button onclick='window.location.assign(\"message?c=" + response[0] + "\");' class='pure-button-green smallest'><span>Message</span></button></div></td></tr>";
-    user_string += "</table>";
-    $('.user_preview_info').find('#user_preview_initial_loader').remove();
-    $('.user_preview_info').append(user_string);
-};
-
-Application.prototype.user.preview.remove = function(mode, event) {
-    if ($('.user_preview_info').length > 0) {
-        this.showing = false;
-        if (mode == "check mouse") {
-            if (calculateDistance($('.user_preview_info'), event.pageX, event.pageY) > 300) {
-                $('.user_preview_info').remove();
-            }
-        } else {
-            $('.user_preview_info').remove();
-        }
-    }
 };
 
 Application.prototype.user.connect = function(element, user_id) {
@@ -3227,13 +3220,10 @@ $(function() {
         Application.prototype.user.connectAccept($(this).data('invite_id'));
     });
 
-    $(document).on('mouseover', '.user_preview', function(event) {
+    $(document).on('mouseenter', '.user_preview', function(event) {
         var user_id = $(this).data('user_id');
-        Application.prototype.user.preview.show($(this), user_id);
-    });
-
-    $(document).on('mouseleave', ".user_preview", function(event) {
-        Application.prototype.user.preview.remove('force', event);
+        var preview = new Application.prototype.User.prototype.Preview({element: $(this), id: user_id});
+        preview.show();
     });
     /****************************************************
      * 2.1.3 Startup - Apps                              *
