@@ -16,7 +16,7 @@ class Chat {
         return self :: $chat;
     }
     public function get_chat_rooms() {
-        $sql = "SELECT chat_room.name, chat_room.id FROM chat_room JOIN chat_pref ON (chat_room.id = chat_pref.chat_id)"
+        $sql = "SELECT chat_room.name, chat_room.id FROM chat_room LEFT JOIN chat_pref ON (chat_room.id = chat_pref.chat_id)"
                 . " WHERE chat_room.id IN"
                 . "(SELECT chat_room FROM chat_member WHERE chat_member.user_id = :user_id OR chat_member.group_id IN "
                 . "(SELECT group_id FROM group_member WHERE group_member.user_id = :user_id))"
@@ -27,6 +27,19 @@ class Chat {
         ));
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+    
+    public function get_chat_room($receiver) {
+        $receiver[] = Registry::get('user')->user_id;
+        $sql = "SELECT id FROM chat_room WHERE id = ("
+                . "SELECT chat_id FROM chat_member WHERE" 
+                . ")";
+        $sql = Registry::get('db')->prepare($sql);
+        $sql->execute(array(
+             ":user_id" => Registry::get('user')->user_id,
+        ));
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
     public function submitChat($aimed, $text) {
         
         $text = strip_tags($text);
@@ -192,6 +205,12 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             $newest = $_GET['newest'];
         }
         echo ($chat->getContent($_GET['chat'], $_GET['all'], $oldest, $newest));
-    } 
+    }
+    if (isset($_GET['action'])) {
+        switch ($_GET['action']) {
+            case "getChat" :
+                die(json_encode($chat->get_chat_room($_GET['receiver']), JSON_HEX_APOS));
+        }
+    }
 }
 ?>

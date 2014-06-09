@@ -49,7 +49,7 @@ Application.prototype.App = function() {
     this.print = function() {
         this.container = $('.app[data-game_id="' + this.attr.info.id + '"]');
         this.container.append(this.controls = $('<div class="contentblock"></div>'));
-        this.frame = $('<iframe allowFullScreen="true" seamless sandbox="allow-popups allow-scripts allow-same-origin" src="' + this.attr.info.path + '"></iframe>');
+        this.frame = $('<iframe allowFullScreen="true" seamless sandbox="allow-scripts" src="' + this.attr.info.path + '"></iframe>');
         this.container.prepend($("<div class='contentblock'></div>").append(this.frame));
         this.enlarge = this.container[0];
         this.frame[0].contentWindow.App = self;
@@ -1103,6 +1103,7 @@ Application.prototype.theater = function() {
 //    </div>
 Application.prototype.Chat = function(prop) {
     this.prop = prop;
+    this.prop.element = this.prop.element || $('.right_bar_container');
     this.id = this.prop.id;
     this.entry = new Array();
     this.oldest = 0;
@@ -1112,6 +1113,9 @@ Application.prototype.Chat = function(prop) {
     this.name = this.prop.name;
     this.items = new Array();
     this.bottom = true;
+    this.beforesubmit = function(callback) {
+        callback();
+    };
 
     this.all.push(this);
 
@@ -1126,8 +1130,7 @@ Application.prototype.Chat = function(prop) {
             .append(this.chatcontainer = $("<div class='chat-container'></div")
                     .append("<div></div>")
                     .append(this.chatoutput = $("<div class='chatoutput'></div>")
-                            .append(this.loader = $("<div class='chat_loader'></div>")
-                                    .append("<div class='loader_inside_small'></div>"))
+                            .append(this.loader = new Application.prototype.UI.Loader())
                             .append(this.list = $("<ul class='chatreceive'></ul>")))
                     .append($("<div class='text_input_container'></div>")
                             .append(this.input = $("<textarea class='chatinputtext autoresize' placeholder='Press Enter to send...'></textarea>"))));
@@ -1136,16 +1139,20 @@ Application.prototype.Chat = function(prop) {
     if(this.prop.active === true) {
         this.container.addClass('active');
     }
-    $('.right_bar_container').append(this.container);
+    this.prop.element.prepend(this.container);
     this.iniScroll();
     this.sendRequest('true');
 
     var self = this;
     this.input.on("propertychange keydown input change", function(e) {
+        var element = $(this);
         if (e.keyCode == 13) {
             if (e.shiftKey !== true) {
                 e.preventDefault();
-                self.submit($(this).val());
+                self.beforesubmit(function() {
+                    self.submit(element.val());
+                });
+                
             }
         }
 //        self.detectChange();
@@ -1162,8 +1169,9 @@ Application.prototype.Chat.prototype.iniScroll = function() {
         self.bottom = false;
         if ($(this)[0].scrollTop === 0) {
             self.getPrevious();
-        } else if($(this)[0].scrollTop === $(this)[0].scrollHeight) {
+        } else if($(this)[0].scrollHeight - $(this)[0].scrollTop - $(this).height() < 20) {
             self.bottom = true;
+            console.log($(this)[0].scrollHeight - $(this)[0].scrollTop - $(this).height())
         }
     });
 };
@@ -1292,7 +1300,7 @@ Application.prototype.Chat.prototype.ChatItem = function(item) {
 
 Application.prototype.Chat.prototype.scroll2Bottom = function(force) {
     if (this.bottom === true || force === true) {
-        this.chatoutput.scrollTop(this.chatoutput[0].scrollHeight);
+        this.chatoutput[0].scrollTop = this.chatoutput[0].scrollHeight;
     }
 };
 
@@ -2735,6 +2743,7 @@ Application.prototype.Entity.prototype.printHeader = function(prop) {
 };
 
 Application.prototype.Entity.prototype.printPreview = function(prop) {
+    var self = this;
     this.container = $("<div class='userHeader'></div>");
     this.container.append($('<img class="profile_picture_thumb" src="' + this.entity.pic.thumb + '"></img>'));
     this.container.append("<span class='user_preview_name'>" + this.entity.name + "</span>");
@@ -2748,6 +2757,25 @@ Application.prototype.Entity.prototype.printPreview = function(prop) {
             text: "Files",
             icon: "fa-file",
             href: "/" + this.baseUrl + "/" + this.entity.id + "/files"
+        },
+        {
+            text: "Message",
+            icon: "fa-comment",
+            onclick: function() {
+                var chat = new Application.prototype.Chat({
+                    id: "unknown",
+                    receiver: [self.entity.id],
+                    name: self.entity.name,
+                    active: true,
+                    beforesubmit: function(execute) {
+                        $.get("/Scripts/chat.class.php", {action: "getChat", receiver: chat.prop.receiver}, function(response) {
+                            response = $.parseJSON(response);
+                            chat.id = response['id'];
+                            execute();
+                        });
+                    }
+                });
+            }
         }];
     if (prop.tab === 'f') {
         options[0].selected = false;

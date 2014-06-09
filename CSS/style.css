@@ -1864,6 +1864,7 @@ tr{
 
 ::selection{
     background: lightblue;
+    color: white;
 }
 
 html, body { 
@@ -2252,7 +2253,7 @@ table td tr{
 
 
 /*FRIEND LIST*/
-.online_circle {
+.online_circle.profile_online {
     background: rgb(0, 140, 250);
     border-radius: 50%;
     height: 7px;
@@ -3802,11 +3803,16 @@ div.chatoutput{
     overflow-x: hidden;
 }
 
+div.chatoutput ul {
+    /*padding-bottom: 20px;*/
+}
+
 .text_input_container{
     padding: 0px;
+    border-top: 1px solid #EDEDED;
 }
 .chatinputtext {
-    border: 1px solid lightgrey;
+    border: 0px;
     width:100%;
     resize:none;
     overflow:hidden;
@@ -3860,8 +3866,12 @@ table.chatbox {
 
 li.single_chat{
     border: 0px;
-    padding-right: 10px;
-    padding-bottom: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+li.single_chat:last-of-type{
+    margin-bottom: 0px;
 }
 
 .chat_wrapper{
@@ -3904,7 +3914,7 @@ span.chatname:hover{
 
 .chat_time{
     display: block;
-    margin-top: 5px;
+    margin-top: 2px;
 }
 #school_tab, #year_tab, .group_tab{
     cursor: pointer;
