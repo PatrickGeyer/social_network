@@ -49,7 +49,7 @@ Application.prototype.App = function() {
     this.print = function() {
         this.container = $('.app[data-game_id="' + this.attr.info.id + '"]');
         this.container.append(this.controls = $('<div class="contentblock"></div>'));
-        this.frame = $('<iframe allowFullScreen="true" seamless sandbox="allow-scripts" src="' + this.attr.info.path + '"></iframe>');
+        this.frame = $('<iframe allowFullScreen="true" seamless sandbox="allow-same-origin allow-scripts" src="' + this.attr.info.path + '"></iframe>');
         this.container.prepend($("<div class='contentblock'></div>").append(this.frame));
         this.enlarge = this.container[0];
         this.frame[0].contentWindow.App = self;
@@ -1130,7 +1130,7 @@ Application.prototype.Chat = function(prop) {
             .append(this.chatcontainer = $("<div class='chat-container'></div")
                     .append("<div></div>")
                     .append(this.chatoutput = $("<div class='chatoutput'></div>")
-                            .append(this.loader = new Application.prototype.UI.Loader())
+                            .append(this.loader = new Application.prototype.UI.Loader().hide())
                             .append(this.list = $("<ul class='chatreceive'></ul>")))
                     .append($("<div class='text_input_container'></div>")
                             .append(this.input = $("<textarea class='chatinputtext autoresize' placeholder='Press Enter to send...'></textarea>"))));
@@ -1171,7 +1171,6 @@ Application.prototype.Chat.prototype.iniScroll = function() {
             self.getPrevious();
         } else if($(this)[0].scrollHeight - $(this)[0].scrollTop - $(this).height() < 20) {
             self.bottom = true;
-            console.log($(this)[0].scrollHeight - $(this)[0].scrollTop - $(this).height())
         }
     });
 };
@@ -1909,7 +1908,7 @@ Application.prototype.UI = {
 
                 var item = $("<li></li>").attr('title', options[i].text).on('click', options[i].onclick);
                 var item_content = $("<div class='ellipsis_overflow'></div>");
-                if (options[i]['selected'] || hasSelect === false) {
+                if (options[i]['selected'] || (hasSelect === false && options[i]['selected'] !== false)) {
                     hasSelect = true;
                     item.addClass('active');
                 }
@@ -2746,21 +2745,24 @@ Application.prototype.Entity.prototype.printPreview = function(prop) {
     var self = this;
     this.container = $("<div class='userHeader'></div>");
     this.container.append($('<img class="profile_picture_thumb" src="' + this.entity.pic.thumb + '"></img>'));
-    this.container.append("<span class='user_preview_name'>" + this.entity.name + "</span>");
+    this.container.append("<a href='/user/" + this.entity.id + "/'><span class='user_preview_name'>" + this.entity.name + "</span></a>");
     this.switch = new Application.prototype.UI.ButtonSwitch();
     var options = [{
             text: "Feed",
             icon: "fa-list-ul",
-            href: "/" + this.baseUrl + "/" + this.entity.id + "/feed"
+            href: "/" + this.baseUrl + "/" + this.entity.id + "/feed",
+            selected: false
         },
         {
             text: "Files",
             icon: "fa-file",
-            href: "/" + this.baseUrl + "/" + this.entity.id + "/files"
+            href: "/" + this.baseUrl + "/" + this.entity.id + "/files",
+            selected: false
         },
         {
             text: "Message",
             icon: "fa-comment",
+            selected: false,
             onclick: function() {
                 var chat = new Application.prototype.Chat({
                     id: "unknown",

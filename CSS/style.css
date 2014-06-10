@@ -3804,7 +3804,8 @@ div.chatoutput{
 }
 
 div.chatoutput ul {
-    /*padding-bottom: 20px;*/
+    padding-bottom: 20px;
+    padding-top: 20px;
 }
 
 .text_input_container{
