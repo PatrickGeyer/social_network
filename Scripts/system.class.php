@@ -83,15 +83,15 @@ class System {
             echo "<meta name='" . $meta . "' content='" . $value . "' />";
         }
         echo '<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">';
-        echo "<link rel='stylesheet' media='screen and (min-width: 180px) and (max-device-width : 780px)' href='/CSS/style.mobile.css'/>";
+        echo "<link rel='stylesheet' media='screen and (min-width: 180px) and (max-device-width : 780px)' href='" . constant("Base::CURRENT_DOMAIN") . "/CSS/style.mobile.css'/>";
         if(isset($_GET['m']) || isset($_COOKIE['mobile'])) {
             setcookie('mobile', 'true');
-            echo "<link rel='stylesheet' href='/CSS/style.mobile.css'/>";
+            echo "<link rel='stylesheet' href='" . constant("Base::CURRENT_DOMAIN") . "/CSS/style.mobile.css'/>";
         }
-        echo "<link rel='stylesheet' href='/CSS/style.css' type='text/css'>"; //change to minified versions after development
+        echo "<link rel='stylesheet' href='" . constant("Base::CURRENT_DOMAIN") . "/CSS/style.css' type='text/css'>"; //change to minified versions after development
 //      echo <link rel="stylesheet" media='screen and (min-width: 381px) and (max-width: 700px)' href="tablet.css"/>
         $base = Registry::get('base');
-        echo "<link rel='shortcut icon' href='" . $base::SHORTCUT_ICON . "'>";
+        echo "<link rel='shortcut icon' href='" . constant("Base::CURRENT_DOMAIN") . $base::SHORTCUT_ICON . "'>";
         echo "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>";
     }
 
@@ -99,12 +99,13 @@ class System {
         echo "<script id='js_vars'>";
         $refl = new ReflectionClass('Base');
         $constant = $refl->getConstants();
+        echo "var Environment = {";
         foreach ($constant as $var_name => $value) {
             if($var_name != "COPYRIGHT_ZIP") {
-                echo "var " . $var_name . "='" . $value . "';";
+                echo $var_name . ": '" . $value . "',";
             }
         }
-        echo "var SCROLL_OPTIONS = {
+        echo "}; var SCROLL_OPTIONS = {
                 scrollButtons:  
                 {
                     enable:false
@@ -119,7 +120,14 @@ class System {
                 autoHideScrollbar: true,
                 mouseWheelPixels: 100 
             };</script>";
-        ;
+        
+        echo "var Language = {";
+        foreach (Registry::get('lan')->getVars() as $var_name => $value) {
+            if($var_name != "COPYRIGHT_ZIP") {
+                echo $var_name . ": '" . $value . "',";
+            }
+        }
+        echo "};";
     }
     /**
      * AudioPlayer function

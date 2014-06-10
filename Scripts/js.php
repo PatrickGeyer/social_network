@@ -3,28 +3,28 @@ Registry::get('system')->getGlobalMeta();
 Registry::get('system')->jsVars();
 ?>
 
-<link rel="stylesheet" href="/Scripts/external/google-code-prettify/prettify.css" />
-<script src="/Scripts/external/google-code-prettify/prettify.js"></script>
-<script src="/Scripts/external/google-code-prettify/run_prettify.js"></script>
+<link rel="stylesheet" href="<?php echo constant("Base::CURRENT_DOMAIN"); ?>/Scripts/external/google-code-prettify/prettify.css" />
+<script src="<?php echo constant("Base::CURRENT_DOMAIN"); ?>/Scripts/external/google-code-prettify/prettify.js"></script>
+<script src="<?php echo constant("Base::CURRENT_DOMAIN"); ?>/Scripts/external/google-code-prettify/run_prettify.js"></script>
 
-<script src="/Scripts/external/jquery-1.10.2.js"></script>
+<script src="<?php echo constant("Base::CURRENT_DOMAIN"); ?>/Scripts/external/jquery-1.10.2.js"></script>
 <!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>-->
 <!--<script>window.jQuery || document.write('<script src="Scripts/external/jquery-1.10.2.js">\x3C/script>');</script>-->
 
 <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/smoothness/jquery-ui.min.css" />
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-<script>window.jQuery.ui || document.write('<script src="/Scripts/external/jquery-1.10.2.js">\x3C/script>');</script>
+<script>window.jQuery.ui || document.write('<script src="<?php echo constant("Base::CURRENT_DOMAIN"); ?>/Scripts/external/jquery-1.10.2.js">\x3C/script>');</script>
 
-<script src="/Scripts/external/cookie.min.js"></script>
+<script src="<?php echo constant("Base::CURRENT_DOMAIN"); ?>/Scripts/external/cookie.min.js"></script>
 
 <script src="//cdn.jsdelivr.net/jquery.mcustomscrollbar/2.8.1/jquery.mCustomScrollbar.min.js"></script>
-<script>window.mCustomScrollbar || document.write('<script src="/Scripts/external/jquery.mCustomScrollbar.min.js">\x3C/script>');</script>
-<link href="/Scripts/external/jquery.mCustomScrollbar.min.css" rel="stylesheet" type="text/css" />
+<script>window.mCustomScrollbar || document.write('<script src="<?php echo constant("Base::CURRENT_DOMAIN"); ?>/Scripts/external/jquery.mCustomScrollbar.min.js">\x3C/script>');</script>
+<link href="<?php echo constant("Base::CURRENT_DOMAIN"); ?>/Scripts/external/jquery.mCustomScrollbar.min.css" rel="stylesheet" type="text/css" />
 
-<link href="/Scripts/external/video-js/video-js.css" rel="stylesheet">
-<script src="/Scripts/external/video-js/video.js"></script>
+<link href="<?php echo constant("Base::CURRENT_DOMAIN"); ?>/Scripts/external/video-js/video-js.css" rel="stylesheet">
+<script src="<?php echo constant("Base::CURRENT_DOMAIN"); ?>/Scripts/external/video-js/video.js"></script>
 
-<script src="/Scripts/external/swfobject/swfobject.js"></script>
+<script src="<?php echo constant("Base::CURRENT_DOMAIN"); ?>/Scripts/external/swfobject/swfobject.js"></script>
 
 <script>
 if(swfobject.hasFlashPlayerVersion("3")) {
@@ -44,7 +44,7 @@ if(swfobject.hasFlashPlayerVersion("3")) {
 <!--<script defer src="Scripts/external/ajaxify-html5.js"></script>-->
 
 
-<script type='text/javascript' src="/Scripts/js.js"></script>
+<script type='text/javascript' src="<?php echo constant("Base::CURRENT_DOMAIN"); ?>/Scripts/js.js"></script>
 
 <!--<script src="Scripts/external/wavesurfer.js"></script>-->
 
@@ -53,7 +53,6 @@ if(swfobject.hasFlashPlayerVersion("3")) {
 
 
 <script>
-//     
     _V_.options.flash.swf = "/Scripts/external/video-js/video-js.swf";
 </script>
 

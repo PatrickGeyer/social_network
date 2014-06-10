@@ -40,6 +40,9 @@ class Registry {
         if (!class_exists('Chat')) {
             require $_SERVER['DOCUMENT_ROOT'].'/Scripts/chat.class.php';
         }
+        if (!class_exists('Language')) {
+            require $_SERVER['DOCUMENT_ROOT'].'/Scripts/language.class.php';
+        }
         self :: $objects['user'] = User::getInstance();
         self :: $objects['app'] = new App();
         self :: $objects['entity'] = Entity::getInstance();
@@ -52,6 +55,7 @@ class Registry {
         self :: $objects['phrase'] = Phrase::getInstance();
         self :: $objects['notification'] = Notification::getInstance();
         self :: $objects['home'] = Home::getInstance();
+        self :: $objects['lan'] = new Language();
         self :: $objects['db'] = Database::getConnection();
         self :: $objects['facebook'] = new FB(array(
             'appId' => '219388501582266',

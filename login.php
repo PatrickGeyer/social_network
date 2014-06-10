@@ -3,7 +3,7 @@ include_once $_SERVER['DOCUMENT_ROOT'].'/Scripts/declare.php';
 
 function login($user_id) {
     setcookie("home_feed", 'a', time() + 3600000, '/');
-    setcookie("id", $user_id, time() + 3600000);
+    setcookie("id", $user_id, time() + 3600000, "/", '.tritoncode.com');
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

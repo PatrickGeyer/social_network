@@ -3,84 +3,86 @@
 function print_body() { ?>
     <div class="container noRightBar noLeftBar">
         <div class='contentblock'>
-            <?php if (isset($_GET['create'])) { ?>
-                <h2>Create</h2>
-                <section class='layer'>
+            <h2>Developer</h2>
+            <section class='layer'>
+                <div>
                     <div>
-                        <div>
-                            <div class="column">
+                        <a class='no-ajax createApp' href="/developer/app/create">
+                            <div class="column"> <span class="fa fa-legal"></span>
                                 <div class="title">
-                                    <h3>App Name</h3>
+                                    <h3>Create</h3>
                                 </div>
-                                <input type="text" placeholder="App Name"/>
-                                <div class="title">
-                                    <h3>App Type</h3>
-                                </div>
-                                <select class='dropdown'>
-                                    <option value='0'>Game</option>
-                                </select>
-                                <div class="title"> </div>
-                                <button class='pure-button-blue large'>Create</button>
+                                <p>Create or register awesome apps here.</p>
                             </div>
-                        </div>
+                        </a>
                     </div>
-                </section>
-            <?php
-            }
-            else {
-                ?>
-                <h2>Developer</h2>
-                <section class='layer'>
+                </div>
+            </section>
+            <section class='layer'>
+                <div>
                     <div>
-                        <div>
-                            <a class='no-ajax' href="/developer?create">
-                                <div class="column"> <span class="fa fa-legal"></span>
-                                    <div class="title">
-                                        <h3>Create</h3>
-                                    </div>
-                                    <p>Create or register awesome apps here.</p>
+                        <a class='no-ajax' href="/developer/dashboard">
+                            <div class="column"> <span class="fa fa-cogs"></span>
+                                <div class="title">
+                                    <h3>Dashboard</h3>
                                 </div>
-                            </a>
-                        </div>
+                                <p>Here you can modify existing application settings.</p>
+                            </div>
+                        </a>
                     </div>
-                </section>
-                <section class='layer'>
+                </div>
+            </section>
+            <section class='layer'>
+                <div>
                     <div>
-                        <div>
-                            <a class='no-ajax' href="/developer/dashboard">
-                                <div class="column"> <span class="fa fa-cogs"></span>
-                                    <div class="title">
-                                        <h3>Dashboard</h3>
-                                    </div>
-                                    <p>Here you can modify existing application settings.</p>
+                        <a class='no-ajax' href="/developer/api">
+                            <div class="column"> <span class="fa fa-cogs"></span>
+                                <div class="title">
+                                    <h3>API</h3>
                                 </div>
-                            </a>
-                        </div>
+                                <p>An overview of the Social Network API functions.</p>
+                            </div>
+                        </a>
                     </div>
-                </section>
-                <section class='layer'>
-                    <div>
-                        <div>
-                            <a class='no-ajax' href="/developer/api">
-                                <div class="column"> <span class="fa fa-cogs"></span>
-                                    <div class="title">
-                                        <h3>API</h3>
-                                    </div>
-                                    <p>An overview of the Social Network API functions.</p>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-                </section>
-    <?php } ?>
+                </div>
+            </section>
         </div>
 
     </div>
     <script>
         document.title = 'Developer';
+        $(document).on('click', 'a.createApp', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var dialog = new Application.prototype.UI.Dialog({title: "Create a new app", subheader: "Get started integrating our service into your app or website", hover: true});
+            dialog.addButton({text: "Create", onclick: function() {
+                    alert('Creating');
+                }});
+            var content = $("<div></div>");
+            content.append("<span class='label'>App Name</span>").append('<input type="text" placeholder="App Name"/>');
+            content.append("<span class='label'>Choose Category</span>");
+            var dropdown = new Application.prototype.UI.Dropdown({
+                name: "Choose Category"
+            });
+            dropdown.addOptions(
+                    [
+                        {
+                            text: "Games",
+                            value: 0
+                        },
+                        {
+                            text: "Entertainment",
+                            value: 1
+                        }
+                    ]
+                    );
+            content.append(dropdown.print());
+            dialog.content(content);
+            dialog.show();
+        });
     </script>
     <?php
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'].'/Scripts/lock.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . '/Scripts/lock.php');
 ?>

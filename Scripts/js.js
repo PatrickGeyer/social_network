@@ -11,8 +11,11 @@
  ****************************************************/
 function Application() {
 
-}
-;
+};
+Application.prototype.Environment = Environment;
+Application.prototype.Language = Language;
+delete Environment;
+delete Language;
 Application.prototype.default = {
     pic: {
         icon: "/Images/male-default-icon.jpg",
@@ -1945,7 +1948,15 @@ Application.prototype.UI = {
         var self = this;
         this.options = controller || {};
         this.options.change = this.options.change || true;
-        this.class = 'default_dropdown_' + controller.type;
+        this.options.type = this.options.type || "selector";
+        this.options.hover = this.options.hover || "undefined";
+        
+        this.class = 'default_dropdown_' + this.options.type;
+        if(this.options.hover === true) {
+            this.class += " default_dropdown_hover";
+        } else if(this.options.hover === false) {
+            this.class += " default_dropdown_nohover";
+        }
         this.object = $("<div class='" + this.class + "' wrapper_id='" + this.options.id + "'></div>")
                 .on('click', function(event) {
                     event.stopPropagation();
@@ -2252,13 +2263,14 @@ Application.prototype.UI.Dialog = function(properties) {
     this.properties.loading = (typeof this.properties.loading === "undefined") ? false : this.properties.loading;
     this.properties.title = (typeof this.properties.title === "undefined") ? "Undefined Title" : this.properties.title;
     this.properties.width = (typeof this.properties.width === "undefined") ? "auto" : this.properties.width;
+    this.properties.subheader = this.properties.subheader || "";
 
-    this.dialog_container = $("<div class='dialog_container'></div>").css({'opacity': '0'});
+    this.dialog_container = $("<div class='dialog_container contentblock'></div>").css({'opacity': '0'});
 
     var closingX = $("<i class='dialog_close_button fa fa-times'></i>").click(function() {
         self.remove();
     });
-    this.title = $("<div class='dialog_title'>" + this.properties.title + "</div>").append(closingX);
+    this.title = $("<h3>" + this.properties.title + "<span>" + this.properties.subheader + "</span></h3>");//.append(closingX)
 
     this.content_container = $("<div class='dialog_content_container'></div>");
     this.dialog_container.append(this.title);
@@ -2267,7 +2279,7 @@ Application.prototype.UI.Dialog = function(properties) {
     this.dialog_container.width(properties.width);
     this.button_complete = $('<div></div>');
 
-    var dialog_buttons = $("<div class='dialog_buttons'><img class='dialog_loading' src='Images/ajax-loader.gif'></img></div>");
+    var dialog_buttons = $("<div class='dialog_buttons'></div>");
     this.dialog_container.append(dialog_buttons);
     dialog_buttons.append(this.button_complete);
 
