@@ -394,7 +394,6 @@ ul {
     border-top-right-radius: 1px;
     background-color: #f6f7f8;
     padding: 10px 10px 11px 10px;
-    font-size: 20px;
     text-shadow: 0px 1px 0px #fff;
     color: #333333;
     font-weight: lighter;
@@ -779,7 +778,7 @@ input:focus, textarea:focus, div[contenteditable]:focus{
 
 .default_dropdown_selector.default_dropdown_active {
     background: #3A62C0 !important;
-    border-color: #475d91 #3c5389 #3a5186;
+    border-color: #475d91 #3c5389 #3a5186 !important;
 }
 
 .global_header_container .default_dropdown_selector {
@@ -985,7 +984,7 @@ select.dropdown {
     max-height: 400px;
 }
 
-.dialog_container div.title {
+.dialog_container h3 {
     font-size: 24px !important;
 }
 .dialog_buttons {
@@ -1876,7 +1875,7 @@ a{
     color: inherit;
     text-decoration: none;
 }
-a > p, a > span:not(.default_dropdown_selector a > span) {
+a > p, a > span:not(.default_dropdown_selector) {
     color: rgb(0, 140, 250);
 }
 a:visited{
@@ -3324,11 +3323,11 @@ h2 {
     margin-top: 5px;
 }
 
-h3{
+h3 {
     color: rgb(60,60,60);
     text-decoration: none;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 13px;
     margin-bottom: 5px;
     padding: 0 0 12px 0; 
 }
@@ -3342,6 +3341,7 @@ span.label {
     display: block;
     margin-top: 20px;
 }
+
 .file_hidden_container{
     display: none;
     top: 100%;

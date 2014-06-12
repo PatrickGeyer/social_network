@@ -15,6 +15,43 @@ class Chat {
         self :: $chat = new Chat();
         return self :: $chat;
     }
+    
+    public function create_chat_room($receiver) {
+        if(count($receiver) === 1) {
+            $room = $this->get_chat_room($receiver);
+            if($room !== -1) {
+                return $room;
+            } else {
+                Registry::get('db')->beginTransaction();
+                $sql = "INSERT INTO chat_room (name, type) VALUES (:nm, :type);";
+                $sql = Registry::get('db')->prepare($sql);
+                $sql->execute(array(
+                    ":type" => 'user',
+                    ":nm" => '--user--'
+                ));
+                $c = Registry::get('db')->lastInsertId();
+                Registry::get('db')->commit();
+                $this->add_member($receiver, $c);
+                return $c;
+            }
+        } else {
+                Registry::get('db')->beginTransaction();
+                $sql = "INSERT INTO chat_room (name, type) VALUES (:nm, :type);";
+                $sql = Registry::get('db')->prepare($sql);
+                $sql->execute(array(
+                    ":type" => 'multiple',
+                    ":nm" => '--mutiple--'
+                ));
+                $c = Registry::get('db')->lastInsertId();
+                Registry::get('db')->commit();
+                $this->add_member($receiver, $c);
+                return $c;
+        }
+        
+        $sql = "";
+        return $sql;
+    }
+    
     public function get_chat_rooms() {
         $sql = "SELECT chat_room.name, chat_room.id FROM chat_room LEFT JOIN chat_pref ON (chat_room.id = chat_pref.chat_id)"
                 . " WHERE chat_room.id IN"
@@ -30,16 +67,31 @@ class Chat {
     
     public function get_chat_room($receiver) {
         $receiver[] = Registry::get('user')->user_id;
-        $sql = "SELECT id FROM chat_room WHERE id = ("
-                . "SELECT chat_id FROM chat_member WHERE" 
-                . ")";
+        $sql = "SELECT *, COUNT(c.chat_room) as tal FROM chat_room JOIN chat_member c ON chat_room.id = c.chat_room INNER JOIN chat_member ON chat_member.chat_room = c.chat_room WHERE chat_member.user_id = :user_id LIMIT 1;";
         $sql = Registry::get('db')->prepare($sql);
         $sql->execute(array(
-             ":user_id" => Registry::get('user')->user_id,
+             ":user_id" => $receiver[0],
         ));
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
+        $row = $sql->fetch(PDO::FETCH_ASSOC);
+        if ($row['tal'] == 2 AND $sql->rowCount() == 1) {
+            return $row['chat_room'];
+        } else {
+            return -1;
+        }
     }
     
+    public function add_member($receivers, $id) {
+        foreach ($receivers as $receiver) {
+            $sql = "INSERT INTO chat_member (user_id, chat_room) VALUES (:user_id, :id);";
+            $sql = Registry::get('db')->prepare($sql);
+            $sql->execute(array(
+                ":id" => $id,
+                ":user_id" => $receiver
+            ));
+        }
+        return array("status" => "success");
+    }
+
     public function submitChat($aimed, $text) {
         
         $text = strip_tags($text);
@@ -190,8 +242,15 @@ class Chat {
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $chat = Chat::getInstance();
-    if (isset($_POST['action']) && $_POST['action'] == "addchat") {
-        die(json_encode($chat->submitChat($_POST['aimed'], $_POST['chat_text'])));
+    if(isset($_POST['action'])) {
+        switch ($_POST['action']) {
+            case 'addchat' :
+                die(json_encode($chat->submitChat($_POST['aimed'], $_POST['chat_text'])));
+            case 'newchat' :
+                die(json_encode($chat->create_chat_room($_POST['receiver'])));
+            case 'addmember' : 
+                die(json_encode($chat->add_member($_POST['receiver'], $_POST['id'])));
+        }
     }
 } else if ($_SERVER['REQUEST_METHOD'] == "GET"){    
     $chat = Chat::getInstance();

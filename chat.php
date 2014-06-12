@@ -20,7 +20,8 @@ $chat_rooms = $chat->get_chat_rooms();
         setCookie("chat_feed", chat_room);
 
         var timer;
-        <?php foreach ($chat_rooms as $single_group) { ?>
+        <?php foreach ($chat_rooms as $single_group) { 
+                    ?>
                     var Chat = new Application.prototype.Chat({
                         id: <?php echo $single_group['id']; ?>, 
                         name: '<?php echo $single_group['name']; ?>', 

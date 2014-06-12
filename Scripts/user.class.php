@@ -260,10 +260,13 @@ class User {
                 return $this->language;
             }
         }
-        $user_query = "SELECT default_language FROM user WHERE id = :user_id";
+        $user_query = "SELECT lan FROM language.user WHERE user_id = :user_id";
         $user_query = Registry::get('db')->prepare($user_query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
         $user_query->execute(array(":user_id" => $id));
         $user = $user_query->fetchColumn();
+        if(!$user || $user == "") {
+            $user = 'en';
+        }
         if ($set) {
             $this->language = $user;
         }

@@ -119,15 +119,13 @@ class System {
                 theme:'dark',
                 autoHideScrollbar: true,
                 mouseWheelPixels: 100 
-            };</script>";
+            };";
         
         echo "var Language = {";
         foreach (Registry::get('lan')->getVars() as $var_name => $value) {
-            if($var_name != "COPYRIGHT_ZIP") {
-                echo $var_name . ": '" . $value . "',";
-            }
+            echo $var_name . ": '" . $value . "',";
         }
-        echo "};";
+        echo "};</script>";
     }
     /**
      * AudioPlayer function

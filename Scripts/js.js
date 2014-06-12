@@ -1082,28 +1082,6 @@ Application.prototype.theater = function() {
         }
     };
 };
-//    <div class="chatcomplete contentblock" data-chat_room="<?php echo $single_group['id']; ?>">
-//        <div class='chatheader'>
-//            <div class="chat-head"></div>
-//            <div class='chat-info'>
-//                <div class='chat_feed_selector <?php echo ($chat_feed == $single_group['id'] ? "active_feed" : "") ?>'>
-//                    <p class='chat_header_text ellipsis_overflow'><?php echo $single_group['name']; ?></p>
-//                </div><br />
-//                <div class='chat-preview'></div>
-//            </div>
-//        </div>
-//        <div class="chat-container">
-//            <div></div>
-//            <div class="chatoutput" data-chat_room="<?php echo $single_group['id']; ?>" <?php echo($chat_feed != $single_group['id'] ? "style='display:none'" : ""); ?>>
-//                <div class='chat_loader' style='display:none;'><div class='loader_outside_small'></div><div class='loader_inside_small'></div></div>
-//                <ul style='max-width:225px;' class='chatreceive'>
-//                </ul>
-//            </div>
-//            <div class='text_input_container'>
-//                <textarea id="text" class="chatinputtext autoresize"  placeholder="Press Enter to send..."></textarea>
-//            </div>
-//        </div>
-//    </div>
 Application.prototype.Chat = function(prop) {
     this.prop = prop;
     this.prop.element = this.prop.element || $('.right_bar_container');
@@ -1119,6 +1097,10 @@ Application.prototype.Chat = function(prop) {
     this.beforesubmit = function(callback) {
         callback();
     };
+    this.oninit = this.prop.oninit || function() {
+        
+    };
+    this.oninit();
 
     this.all.push(this);
 
@@ -1164,6 +1146,18 @@ Application.prototype.Chat = function(prop) {
 Application.prototype.Chat.prototype.all = new Array();
 Application.prototype.Chat.prototype.get = function() {
     return this.all;
+};
+Application.prototype.Chat.prototype.getChatRoom = function() {
+    var self = this;
+    $.get("/Scripts/chat.class.php", {action: "getChat", receiver: self.prop.receiver}, function(response) {
+        response = parseInt($.parseJSON(response));
+        if(response === -1) {
+            self.id = 'create';
+        } else {
+            self.id = response;
+        }
+        console.log(response);
+    });
 };
 
 Application.prototype.Chat.prototype.iniScroll = function() {
@@ -1308,6 +1302,7 @@ Application.prototype.Chat.prototype.scroll2Bottom = function(force) {
 
 Application.prototype.Chat.prototype.submit = function(chat_text) {
     var self = this;
+    console.log(self.id);
     if (chat_text != "") {
         $('.chatinputtext').val('');
         $('.chatinputtext').attr('placeholder', "Sending...");
@@ -1506,7 +1501,7 @@ Application.prototype.Feed.prototype.Item.prototype.Stats = function(item) {
         string += '<span has_liked="';
         string += (this.item.stats.like.has_liked === true ? "true" : "false");
         string += '" class="post_comment_time user_preview_name activity_like_text post_like_activity">';
-        string += (this.item.stats.like.has_liked === true ? COMMENT_UNLIKE_TEXT : COMMENT_LIKE_TEXT) + '</span><span class="post_comment_time">|</span></div>';
+        string += (this.item.stats.like.has_liked === true ? Application.prototype.Language['unlike_text'] : Application.prototype.Language['like_text']) + '</span><span class="post_comment_time">|</span></div>';
         string += "</span>";
         string += '<div class="who_liked" id="who_liked_' + this.item.id + '">';
         for (var i = 0; i < this.item.stats.like.count; i++) {
@@ -2776,17 +2771,14 @@ Application.prototype.Entity.prototype.printPreview = function(prop) {
             icon: "fa-comment",
             selected: false,
             onclick: function() {
+                var chat
                 var chat = new Application.prototype.Chat({
                     id: "unknown",
                     receiver: [self.entity.id],
                     name: self.entity.name,
                     active: true,
-                    beforesubmit: function(execute) {
-                        $.get("/Scripts/chat.class.php", {action: "getChat", receiver: chat.prop.receiver}, function(response) {
-                            response = $.parseJSON(response);
-                            chat.id = response['id'];
-                            execute();
-                        });
+                    oninit: function() {
+                        this.getChatRoom();
                     }
                 });
             }
@@ -3536,9 +3528,9 @@ $(function() {
             $(this).toggleClass('pure-button-blue');
         } else {
             if (has_liked === "false") {
-                $(this).text(COMMENT_UNLIKE_TEXT);
+                $(this).text(Application.prototype.Language['unlike_text']);
             } else {
-                $(this).text(COMMENT_LIKE_TEXT);
+                $(this).text(Application.prototype.Language['like_text']);
             }
         }
         $('[data-activity_id="' + post_id + '"] .post_like_count:first').text(like_count);
@@ -3557,12 +3549,12 @@ $(function() {
         if (has_liked == "true") {
             like_count--;
             $(this).data('has_liked', "false");
-            $(this).text(COMMENT_LIKE_TEXT);
+            $(this).text(Application.prototype.Language['like_text']);
         }
         else {
             like_count++;
             $(this).data('has_liked', "true");
-            $(this).text(COMMENT_UNLIKE_TEXT);
+            $(this).text(Application.prototype.Language['unlike_text']);
         }
 
         $('[data-comment_id="' + comment_id + '"] .post_comment_liked_num').text(like_count);
